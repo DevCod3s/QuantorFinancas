@@ -1,0 +1,139 @@
+# Quantor - Sistema de Gestão Financeira com IA
+
+## Overview
+
+Quantor é um sistema web moderno de gestão financeira integrado com inteligência artificial. A aplicação permite que usuários gerenciem receitas, despesas, orçamentos e recebam conselhos financeiros personalizados através de um assistente IA especializado.
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18+ com TypeScript
+- **Build Tool**: Vite para desenvolvimento rápido e hot reload
+- **UI Library**: Shadcn/ui com Radix UI primitives
+- **Styling**: Tailwind CSS com design system customizado
+- **State Management**: TanStack Query (React Query) para gerenciamento de estado servidor
+- **Routing**: Wouter para roteamento client-side
+- **Forms**: React Hook Form com validação Zod
+
+### Backend Architecture
+- **Runtime**: Node.js com Express.js
+- **Language**: TypeScript
+- **Database ORM**: Drizzle ORM
+- **Database**: PostgreSQL (via Neon serverless)
+- **Authentication**: Replit Auth com OpenID Connect
+- **Session Management**: Express sessions com PostgreSQL store
+- **AI Integration**: OpenAI GPT-4o para assistente financeiro
+
+### Database Design
+O sistema utiliza PostgreSQL com as seguintes entidades principais:
+- **Users**: Informações dos usuários (obrigatório para Replit Auth)
+- **Categories**: Categorias de receitas e despesas personalizáveis
+- **Transactions**: Registro de transações financeiras
+- **Budgets**: Orçamentos por categoria e período
+- **AI Interactions**: Histórico de conversas com o assistente IA
+- **Sessions**: Gerenciamento de sessões (obrigatório para Replit Auth)
+
+## Key Components
+
+### Authentication System
+- Integração completa com Replit Auth
+- Middleware de autenticação obrigatório para todas as rotas da API
+- Gerenciamento de sessões com PostgreSQL
+- Redirecionamento automático para login quando não autenticado
+
+### Financial Management Core
+- **Dashboard**: Visão geral com métricas, gráficos e tendências
+- **Transactions**: CRUD completo para receitas e despesas
+- **Categories**: Sistema de categorização customizável
+- **Budgets**: Criação e monitoramento de orçamentos por período
+- **Reports**: Relatórios visuais com Chart.js
+
+### AI Financial Assistant
+- Chat interface para interação com GPT-4o
+- Contexto financeiro automático baseado nos dados do usuário
+- Conselhos personalizados em português brasileiro
+- Histórico de interações salvo no banco
+
+### UI/UX Features
+- Design responsivo para desktop e mobile
+- Floating labels nos formulários
+- Animações suaves e transições
+- Theme system com CSS variables
+- Componentes reutilizáveis com Shadcn/ui
+
+## Data Flow
+
+### Authentication Flow
+1. Usuário acessa a aplicação
+2. Middleware verifica autenticação via Replit Auth
+3. Se não autenticado, redireciona para `/api/login`
+4. Após login, dados do usuário são obtidos via `/api/auth/user`
+
+### Financial Data Flow
+1. Dashboard carrega dados via `/api/dashboard`
+2. Transações são gerenciadas via endpoints CRUD em `/api/transactions`
+3. Categorias e orçamentos seguem padrão similar
+4. Todas as operações são filtradas por `userId` para segurança
+
+### AI Interaction Flow
+1. Usuário envia mensagem via chat interface
+2. Sistema coleta contexto financeiro atual (dashboard, transações, orçamentos)
+3. Dados são enviados para OpenAI GPT-4o com prompt especializado
+4. Resposta é salva no banco e exibida ao usuário
+
+## External Dependencies
+
+### Core Technologies
+- **@neondatabase/serverless**: Conexão com PostgreSQL serverless
+- **drizzle-orm**: ORM type-safe para TypeSQL
+- **@tanstack/react-query**: Gerenciamento de estado servidor
+- **wouter**: Roteamento React minimalista
+
+### UI Dependencies
+- **@radix-ui/**: Componentes acessíveis (accordion, dialog, etc.)
+- **tailwindcss**: Framework CSS utility-first
+- **class-variance-authority**: Gerenciamento de variantes CSS
+- **chart.js**: Biblioteca de gráficos
+
+### Authentication & Security
+- **openid-client**: Cliente OpenID Connect para Replit Auth
+- **passport**: Middleware de autenticação
+- **express-session**: Gerenciamento de sessões
+- **connect-pg-simple**: Store PostgreSQL para sessões
+
+### AI Integration
+- **openai**: Cliente oficial OpenAI para GPT-4o
+
+## Deployment Strategy
+
+### Development Environment
+- Vite dev server com HMR
+- Express server com middleware de desenvolvimento
+- Automatic database migrations com Drizzle
+- Environment variables para configuração
+
+### Production Build
+- Vite build para frontend estático
+- esbuild para bundle do servidor
+- Servir arquivos estáticos via Express
+- PostgreSQL como store de sessões
+
+### Environment Variables Required
+- `DATABASE_URL`: String de conexão PostgreSQL
+- `OPENAI_API_KEY`: Chave da API OpenAI
+- `SESSION_SECRET`: Segredo para sessões
+- `REPLIT_DOMAINS`: Domínios autorizados (Replit Auth)
+- `ISSUER_URL`: URL do issuer OpenID (Replit Auth)
+
+### Key Architectural Decisions
+
+1. **Drizzle ORM**: Escolhido por type-safety, performance e simplicidade sobre ORMs mais pesados
+2. **Shadcn/ui**: Fornece componentes acessíveis e customizáveis sem lock-in
+3. **TanStack Query**: Gerencia cache, sincronização e estado servidor de forma eficiente
+4. **Replit Auth**: Integração nativa com a plataforma de deployment
+5. **OpenAI GPT-4o**: Modelo mais recente para assistente IA com melhor compreensão contextual
+6. **PostgreSQL**: Banco robusto para dados financeiros com suporte a JSON para flexibilidade
