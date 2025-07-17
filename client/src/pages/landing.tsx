@@ -113,6 +113,7 @@ export default function Landing() {
             </div>
           </div>
         </div>
+      </div>
 
       {/* Right Panel - Large Circle */}
       <div className="w-1/2 relative overflow-hidden">
