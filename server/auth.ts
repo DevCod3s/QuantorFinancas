@@ -55,7 +55,9 @@ export function logout(req: Request, res: Response) {
     if (err) {
       console.error("Session destroy error:", err);
     }
-    res.redirect("/");
+    // Limpar cookie de sessão
+    res.clearCookie('connect.sid');
+    res.redirect("/login");
   });
 }
 

@@ -1,5 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
+import path from "path";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import pkg from "pg";
@@ -71,6 +72,11 @@ app.use((req, res, next) => {
 (async () => {
   // Initialize authentication
   await initializeAuth();
+  
+  // Rota para página de login
+  app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/login.html'));
+  });
   
   // Configure API routes
   app.use("/api", apiRoutes);

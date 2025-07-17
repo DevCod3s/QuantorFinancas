@@ -6,6 +6,7 @@ import { Transactions } from "@/pages/Transactions";
 import { Categories } from "@/pages/Categories";
 import { Budgets } from "@/pages/Budgets";
 import { Reports } from "@/pages/Reports";
+import { Login } from "@/pages/Login";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth.tsx";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -19,9 +20,8 @@ function AppContent() {
   }
 
   if (!user) {
-    // Redireciona para login se não estiver autenticado
-    window.location.href = "/api/login";
-    return <LoadingSpinner />;
+    // Exibe tela de login se não estiver autenticado
+    return <Login />;
   }
 
   return (
