@@ -191,10 +191,27 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[580px] flex relative">
+      <div className="flex relative">
         
-        {/* Sidebar esquerda */}
-        <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative rounded-l-3xl">
+        {/* Sidebar esquerda - mais baixa */}
+        <div className="w-32 h-[400px] bg-gray-50 flex flex-col items-center py-8 relative rounded-l-3xl shadow-lg">
+          {/* Barra de progresso na BORDA ESQUERDA */}
+          {activeSection === 'login' && (
+            <div className="absolute left-0 top-1/4 w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'signup' && (
+            <div className="absolute left-0 top-1/2 w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'about' && (
+            <div className="absolute left-0 top-3/4 w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+          
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
             <img src={quantorLogo} alt="Quantor" className="w-12 h-12 mb-3" />
@@ -212,11 +229,6 @@ export function Login() {
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {activeSection === 'login' && (
-                <div className="absolute -right-4 top-0 w-1 h-full bg-blue-600 overflow-hidden">
-                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <User className="w-6 h-6" />
             </button>
             
@@ -226,11 +238,6 @@ export function Login() {
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {activeSection === 'signup' && (
-                <div className="absolute -right-4 top-0 w-1 h-full bg-blue-600 overflow-hidden">
-                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <UserPlus className="w-6 h-6" />
             </button>
             
@@ -240,18 +247,13 @@ export function Login() {
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {activeSection === 'about' && (
-                <div className="absolute -right-4 top-0 w-1 h-full bg-blue-600 overflow-hidden">
-                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <Info className="w-6 h-6" />
             </button>
           </div>
         </div>
         
-        {/* Card central azul - ligeiramente mais alto que os outros */}
-        <div className="flex-1 bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white relative -my-4 mx-0 shadow-2xl z-10">
+        {/* Card central azul - MUITO mais alto que os outros */}
+        <div className="w-[500px] h-[600px] bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white shadow-2xl z-10">
           <div className="text-center mb-16">
             <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
             <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
@@ -267,8 +269,8 @@ export function Login() {
           </div>
         </div>
         
-        {/* Card direito */}
-        <div className="w-96 bg-white flex flex-col justify-center items-center p-12 rounded-r-3xl">
+        {/* Card direito - mais baixo */}
+        <div className="w-96 h-[400px] bg-white flex flex-col justify-center items-center p-12 rounded-r-3xl shadow-lg">
           {renderRightCard()}
         </div>
         
