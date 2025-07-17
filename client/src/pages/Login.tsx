@@ -191,7 +191,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-6xl w-full h-[650px] flex relative">
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[580px] flex relative">
         
         {/* Sidebar esquerda */}
         <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative rounded-l-3xl">
@@ -213,7 +213,9 @@ export function Login() {
               }`}
             >
               {activeSection === 'login' && (
-                <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-700 rounded-r-lg shadow-lg animate-pulse"></div>
+                <div className="absolute -right-4 top-0 w-1 h-full bg-blue-600 overflow-hidden">
+                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
+                </div>
               )}
               <User className="w-6 h-6" />
             </button>
@@ -225,7 +227,9 @@ export function Login() {
               }`}
             >
               {activeSection === 'signup' && (
-                <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-700 rounded-r-lg shadow-lg animate-pulse"></div>
+                <div className="absolute -right-4 top-0 w-1 h-full bg-blue-600 overflow-hidden">
+                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
+                </div>
               )}
               <UserPlus className="w-6 h-6" />
             </button>
@@ -237,16 +241,18 @@ export function Login() {
               }`}
             >
               {activeSection === 'about' && (
-                <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-700 rounded-r-lg shadow-lg animate-pulse"></div>
+                <div className="absolute -right-4 top-0 w-1 h-full bg-blue-600 overflow-hidden">
+                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
+                </div>
               )}
               <Info className="w-6 h-6" />
             </button>
           </div>
         </div>
         
-        {/* Card central azul - mais alto que os outros */}
-        <div className="flex-1 bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white relative -my-8 mx-4 rounded-2xl shadow-2xl z-10">
-          <div className="text-center mb-12">
+        {/* Card central azul - ligeiramente mais alto que os outros */}
+        <div className="flex-1 bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white relative -my-4 mx-0 shadow-2xl z-10">
+          <div className="text-center mb-16">
             <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
             <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
             <p className="text-blue-200 text-lg">gestão financeira</p>
@@ -265,6 +271,14 @@ export function Login() {
         <div className="w-96 bg-white flex flex-col justify-center items-center p-12 rounded-r-3xl">
           {renderRightCard()}
         </div>
+        
+        {/* Adicionar CSS para animação */}
+        <style>{`
+          @keyframes expand {
+            from { height: 0%; }
+            to { height: 100%; }
+          }
+        `}</style>
         
       </div>
     </div>
