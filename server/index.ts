@@ -1,10 +1,42 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { createServer } from "http";
+import session from "express-session";
+import ConnectPgSimple from "connect-pg-simple";
+import pkg from "pg";
+const { Pool } = pkg;
+import apiRoutes from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeAuth, addUser } from "./auth";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Configure session store
+const pgSession = ConnectPgSimple(session);
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+app.use(
+  session({
+    store: new pgSession({
+      pool: pool,
+      tableName: "sessions",
+    }),
+    secret: process.env.SESSION_SECRET || "your-secret-key-here",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    },
+  })
+);
+
+// Add user to request if available
+app.use(addUser);
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -37,7 +69,13 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  const server = await registerRoutes(app);
+  // Initialize authentication
+  await initializeAuth();
+  
+  // Configure API routes
+  app.use("/api", apiRoutes);
+  
+  const server = createServer(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

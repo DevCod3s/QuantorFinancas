@@ -1,270 +1,230 @@
-import type { Express } from "express";
-import { createServer, type Server } from "http";
+import { Router } from "express";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { generateFinancialAdvice } from "./openai";
-import {
-  insertCategorySchema,
-  insertTransactionSchema,
-  insertBudgetSchema,
-  insertAiInteractionSchema,
-} from "@shared/schema";
+import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema } from "@shared/schema";
 import { z } from "zod";
+import { getLoginUrl, handleCallback, logout, requireAuth as authMiddleware } from "./auth";
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
+const router = Router();
 
-  // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      res.json(user);
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Erro ao buscar usuário" });
+// Authentication middleware
+const requireAuth = (req: any, res: any, next: any) => {
+  if (!req.user) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  next();
+};
+
+// Auth routes
+router.get("/login", (req, res) => {
+  try {
+    const loginUrl = getLoginUrl();
+    res.redirect(loginUrl);
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Failed to initialize login" });
+  }
+});
+
+router.get("/auth/callback", handleCallback);
+
+router.get("/logout", logout);
+
+router.get("/auth/user", (req: any, res) => {
+  if (req.user) {
+    res.json(req.user);
+  } else {
+    res.status(401).json({ error: "Not authenticated" });
+  }
+});
+
+// Dashboard
+router.get("/dashboard", requireAuth, async (req: any, res) => {
+  try {
+    const stats = await storage.getDashboardStats(req.user.id);
+    res.json(stats);
+  } catch (error) {
+    console.error("Dashboard error:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard data" });
+  }
+});
+
+// Categories
+router.get("/categories", requireAuth, async (req: any, res) => {
+  try {
+    const categories = await storage.getCategoriesByUserId(req.user.id);
+    res.json(categories);
+  } catch (error) {
+    console.error("Categories error:", error);
+    res.status(500).json({ error: "Failed to fetch categories" });
+  }
+});
+
+router.post("/categories", requireAuth, async (req: any, res) => {
+  try {
+    const validatedData = insertCategorySchema.parse({
+      ...req.body,
+      userId: req.user.id,
+    });
+    const category = await storage.createCategory(validatedData);
+    res.status(201).json(category);
+  } catch (error) {
+    console.error("Create category error:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: "Failed to create category" });
     }
-  });
+  }
+});
 
-  // Dashboard route
-  app.get('/api/dashboard', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const dashboardData = await storage.getDashboardData(userId);
-      res.json(dashboardData);
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
-      res.status(500).json({ message: "Erro ao buscar dados do dashboard" });
+router.put("/categories/:id", requireAuth, async (req: any, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const validatedData = insertCategorySchema.partial().parse(req.body);
+    const category = await storage.updateCategory(id, validatedData);
+    res.json(category);
+  } catch (error) {
+    console.error("Update category error:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: "Failed to update category" });
     }
-  });
+  }
+});
 
-  // Category routes
-  app.get('/api/categories', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const categories = await storage.getCategories(userId);
-      res.json(categories);
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-      res.status(500).json({ message: "Erro ao buscar categorias" });
+router.delete("/categories/:id", requireAuth, async (req: any, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await storage.deleteCategory(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Delete category error:", error);
+    res.status(500).json({ error: "Failed to delete category" });
+  }
+});
+
+// Transactions
+router.get("/transactions", requireAuth, async (req: any, res) => {
+  try {
+    const transactions = await storage.getTransactionsByUserId(req.user.id);
+    res.json(transactions);
+  } catch (error) {
+    console.error("Transactions error:", error);
+    res.status(500).json({ error: "Failed to fetch transactions" });
+  }
+});
+
+router.post("/transactions", requireAuth, async (req: any, res) => {
+  try {
+    const validatedData = insertTransactionSchema.parse({
+      ...req.body,
+      userId: req.user.id,
+    });
+    const transaction = await storage.createTransaction(validatedData);
+    res.status(201).json(transaction);
+  } catch (error) {
+    console.error("Create transaction error:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: "Failed to create transaction" });
     }
-  });
+  }
+});
 
-  app.post('/api/categories', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const categoryData = insertCategorySchema.parse({
-        ...req.body,
-        userId,
-      });
-      const category = await storage.createCategory(categoryData);
-      res.json(category);
-    } catch (error) {
-      console.error("Error creating category:", error);
-      res.status(500).json({ message: "Erro ao criar categoria" });
+router.put("/transactions/:id", requireAuth, async (req: any, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const validatedData = insertTransactionSchema.partial().parse(req.body);
+    const transaction = await storage.updateTransaction(id, validatedData);
+    res.json(transaction);
+  } catch (error) {
+    console.error("Update transaction error:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: "Failed to update transaction" });
     }
-  });
+  }
+});
 
-  app.put('/api/categories/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const categoryId = parseInt(req.params.id);
-      const categoryData = req.body;
-      const category = await storage.updateCategory(categoryId, categoryData, userId);
-      if (!category) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
-      }
-      res.json(category);
-    } catch (error) {
-      console.error("Error updating category:", error);
-      res.status(500).json({ message: "Erro ao atualizar categoria" });
+router.delete("/transactions/:id", requireAuth, async (req: any, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await storage.deleteTransaction(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Delete transaction error:", error);
+    res.status(500).json({ error: "Failed to delete transaction" });
+  }
+});
+
+// Budgets
+router.get("/budgets", requireAuth, async (req: any, res) => {
+  try {
+    const budgets = await storage.getBudgetsByUserId(req.user.id);
+    res.json(budgets);
+  } catch (error) {
+    console.error("Budgets error:", error);
+    res.status(500).json({ error: "Failed to fetch budgets" });
+  }
+});
+
+router.post("/budgets", requireAuth, async (req: any, res) => {
+  try {
+    const validatedData = insertBudgetSchema.parse({
+      ...req.body,
+      userId: req.user.id,
+    });
+    const budget = await storage.createBudget(validatedData);
+    res.status(201).json(budget);
+  } catch (error) {
+    console.error("Create budget error:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: "Failed to create budget" });
     }
-  });
+  }
+});
 
-  app.delete('/api/categories/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const categoryId = parseInt(req.params.id);
-      const deleted = await storage.deleteCategory(categoryId, userId);
-      if (!deleted) {
-        return res.status(404).json({ message: "Categoria não encontrada" });
-      }
-      res.json({ message: "Categoria excluída com sucesso" });
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      res.status(500).json({ message: "Erro ao excluir categoria" });
+router.put("/budgets/:id", requireAuth, async (req: any, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const validatedData = insertBudgetSchema.partial().parse(req.body);
+    const budget = await storage.updateBudget(id, validatedData);
+    res.json(budget);
+  } catch (error) {
+    console.error("Update budget error:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      res.status(500).json({ error: "Failed to update budget" });
     }
-  });
+  }
+});
 
-  // Transaction routes
-  app.get('/api/transactions', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { limit = 50, offset = 0 } = req.query;
-      const transactions = await storage.getTransactions(userId, parseInt(limit), parseInt(offset));
-      res.json(transactions);
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      res.status(500).json({ message: "Erro ao buscar transações" });
-    }
-  });
+router.delete("/budgets/:id", requireAuth, async (req: any, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await storage.deleteBudget(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Delete budget error:", error);
+    res.status(500).json({ error: "Failed to delete budget" });
+  }
+});
 
-  app.post('/api/transactions', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const transactionData = insertTransactionSchema.parse({
-        ...req.body,
-        userId,
-      });
-      const transaction = await storage.createTransaction(transactionData);
-      res.json(transaction);
-    } catch (error) {
-      console.error("Error creating transaction:", error);
-      res.status(500).json({ message: "Erro ao criar transação" });
-    }
-  });
+// Reports
+router.get("/reports", requireAuth, async (req: any, res) => {
+  try {
+    // Placeholder for reports data
+    res.json({ message: "Reports endpoint - to be implemented" });
+  } catch (error) {
+    console.error("Reports error:", error);
+    res.status(500).json({ error: "Failed to fetch reports" });
+  }
+});
 
-  app.put('/api/transactions/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const transactionId = parseInt(req.params.id);
-      const transactionData = req.body;
-      const transaction = await storage.updateTransaction(transactionId, transactionData, userId);
-      if (!transaction) {
-        return res.status(404).json({ message: "Transação não encontrada" });
-      }
-      res.json(transaction);
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      res.status(500).json({ message: "Erro ao atualizar transação" });
-    }
-  });
-
-  app.delete('/api/transactions/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const transactionId = parseInt(req.params.id);
-      const deleted = await storage.deleteTransaction(transactionId, userId);
-      if (!deleted) {
-        return res.status(404).json({ message: "Transação não encontrada" });
-      }
-      res.json({ message: "Transação excluída com sucesso" });
-    } catch (error) {
-      console.error("Error deleting transaction:", error);
-      res.status(500).json({ message: "Erro ao excluir transação" });
-    }
-  });
-
-  // Budget routes
-  app.get('/api/budgets', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const budgets = await storage.getBudgets(userId);
-      res.json(budgets);
-    } catch (error) {
-      console.error("Error fetching budgets:", error);
-      res.status(500).json({ message: "Erro ao buscar orçamentos" });
-    }
-  });
-
-  app.post('/api/budgets', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const budgetData = insertBudgetSchema.parse({
-        ...req.body,
-        userId,
-      });
-      const budget = await storage.createBudget(budgetData);
-      res.json(budget);
-    } catch (error) {
-      console.error("Error creating budget:", error);
-      res.status(500).json({ message: "Erro ao criar orçamento" });
-    }
-  });
-
-  app.put('/api/budgets/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const budgetId = parseInt(req.params.id);
-      const budgetData = req.body;
-      const budget = await storage.updateBudget(budgetId, budgetData, userId);
-      if (!budget) {
-        return res.status(404).json({ message: "Orçamento não encontrado" });
-      }
-      res.json(budget);
-    } catch (error) {
-      console.error("Error updating budget:", error);
-      res.status(500).json({ message: "Erro ao atualizar orçamento" });
-    }
-  });
-
-  app.delete('/api/budgets/:id', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const budgetId = parseInt(req.params.id);
-      const deleted = await storage.deleteBudget(budgetId, userId);
-      if (!deleted) {
-        return res.status(404).json({ message: "Orçamento não encontrado" });
-      }
-      res.json({ message: "Orçamento excluído com sucesso" });
-    } catch (error) {
-      console.error("Error deleting budget:", error);
-      res.status(500).json({ message: "Erro ao excluir orçamento" });
-    }
-  });
-
-  // AI assistant routes
-  app.get('/api/ai/interactions', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { limit = 50 } = req.query;
-      const interactions = await storage.getAiInteractions(userId, parseInt(limit));
-      res.json(interactions);
-    } catch (error) {
-      console.error("Error fetching AI interactions:", error);
-      res.status(500).json({ message: "Erro ao buscar interações da IA" });
-    }
-  });
-
-  app.post('/api/ai/chat', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { message } = req.body;
-
-      if (!message) {
-        return res.status(400).json({ message: "Mensagem é obrigatória" });
-      }
-
-      // Get user's financial data for context
-      const dashboardData = await storage.getDashboardData(userId);
-      const transactions = await storage.getTransactions(userId, 100);
-      const budgets = await storage.getBudgets(userId);
-
-      // Generate AI response
-      const aiResponse = await generateFinancialAdvice(message, {
-        dashboardData,
-        transactions,
-        budgets,
-      });
-
-      // Save interaction
-      const interaction = await storage.createAiInteraction({
-        userId,
-        message,
-        response: aiResponse,
-      });
-
-      res.json({
-        message: aiResponse,
-        interaction,
-      });
-    } catch (error) {
-      console.error("Error processing AI chat:", error);
-      res.status(500).json({ message: "Erro ao processar chat com IA" });
-    }
-  });
-
-  const httpServer = createServer(app);
-  return httpServer;
-}
+export default router;

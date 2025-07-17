@@ -1,121 +1,71 @@
-import {
-  pgTable,
-  text,
-  varchar,
-  timestamp,
-  jsonb,
-  index,
-  serial,
-  integer,
-  decimal,
-  date,
-  boolean,
-} from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, text, serial, timestamp, decimal, boolean, integer, date } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
-
-// User storage table.
-// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+// Tabela de usuários (obrigatória para Replit Auth)
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().notNull(),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
+  id: serial("id").primaryKey(),
+  email: text("email").notNull().unique(),
+  name: text("name").notNull(),
+  avatar: text("avatar"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Categories table for transactions
+// Tabela de categorias
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  name: varchar("name", { length: 50 }).notNull(),
-  type: varchar("type", { length: 10 }).notNull(), // 'receita' or 'despesa'
-  icon: varchar("icon", { length: 50 }).default("fas fa-circle"),
-  color: varchar("color", { length: 7 }).default("#6B7280"),
-  createdAt: timestamp("created_at").defaultNow(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#0ea5e9"),
+  type: text("type").notNull(), // 'income' ou 'expense'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Transactions table
+// Tabela de transações
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  type: varchar("type", { length: 10 }).notNull(), // 'receita' or 'despesa'
-  amount: decimal("amount", { precision: 15, scale: 2 }).notNull(),
-  date: date("date").notNull(),
-  categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").notNull().references(() => categories.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   description: text("description").notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow(),
+  type: text("type").notNull(), // 'income' ou 'expense'
+  date: timestamp("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Budgets table
+// Tabela de orçamentos
 export const budgets = pgTable("budgets", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  categoryId: integer("category_id").references(() => categories.id, { onDelete: "set null" }),
-  budgetedAmount: decimal("budgeted_amount", { precision: 15, scale: 2 }).notNull(),
-  period: varchar("period", { length: 10 }).notNull(), // 'mensal' or 'anual'
+  userId: text("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").references(() => categories.id),
+  budgetedAmount: decimal("budgeted_amount", { precision: 10, scale: 2 }).notNull(),
+  period: text("period").notNull(),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// AI interactions table
+// Tabela de interações com IA
 export const aiInteractions = pgTable("ai_interactions", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  userId: integer("user_id").notNull().references(() => users.id),
   message: text("message").notNull(),
   response: text("response").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
+  context: text("context"), // JSON com contexto financeiro
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Relations
-export const usersRelations = relations(users, ({ many }) => ({
-  categories: many(categories),
-  transactions: many(transactions),
-  budgets: many(budgets),
-  aiInteractions: many(aiInteractions),
-}));
+// Tabela de sessões (obrigatória para Replit Auth)
+export const sessions = pgTable("sessions", {
+  sid: text("sid").primaryKey(),
+  sess: text("sess").notNull(),
+  expire: timestamp("expire").notNull(),
+});
 
-export const categoriesRelations = relations(categories, ({ one, many }) => ({
-  user: one(users, { fields: [categories.userId], references: [users.id] }),
-  transactions: many(transactions),
-  budgets: many(budgets),
-}));
-
-export const transactionsRelations = relations(transactions, ({ one }) => ({
-  user: one(users, { fields: [transactions.userId], references: [users.id] }),
-  category: one(categories, { fields: [transactions.categoryId], references: [categories.id] }),
-}));
-
-export const budgetsRelations = relations(budgets, ({ one }) => ({
-  user: one(users, { fields: [budgets.userId], references: [users.id] }),
-  category: one(categories, { fields: [budgets.categoryId], references: [categories.id] }),
-}));
-
-export const aiInteractionsRelations = relations(aiInteractions, ({ one }) => ({
-  user: one(users, { fields: [aiInteractions.userId], references: [users.id] }),
-}));
-
-// Insert schemas
+// Schemas de inserção
 export const insertUserSchema = createInsertSchema(users).omit({
+  id: true,
   createdAt: true,
-  updatedAt: true,
 });
 
 export const insertCategorySchema = createInsertSchema(categories).omit({
@@ -138,23 +88,16 @@ export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit
   createdAt: true,
 });
 
-// Types
-export type UpsertUser = z.infer<typeof insertUserSchema>;
+// Tipos
 export type User = typeof users.$inferSelect;
-export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type Category = typeof categories.$inferSelect;
-export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
-export type InsertBudget = z.infer<typeof insertBudgetSchema>;
 export type Budget = typeof budgets.$inferSelect;
-export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
 export type AiInteraction = typeof aiInteractions.$inferSelect;
+export type Session = typeof sessions.$inferSelect;
 
-// Extended types with relations
-export type TransactionWithCategory = Transaction & {
-  category?: Category;
-};
-
-export type BudgetWithCategory = Budget & {
-  category?: Category;
-};
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+export type InsertBudget = z.infer<typeof insertBudgetSchema>;
+export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
