@@ -50,12 +50,20 @@ export function Login() {
                 className="border-gray-300 rounded-md"
               />
               
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
-                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
+                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
                 >
-                  <ArrowRight className="w-5 h-5 text-white" />
+                  <svg 
+                    className="w-5 h-5 text-white" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </Button>
               </div>
             </div>
@@ -113,12 +121,20 @@ export function Login() {
                 className="border-gray-300 rounded-md"
               />
               
-              <div className="flex justify-end mt-6">
+              <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
-                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
+                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
                 >
-                  <ArrowRight className="w-5 h-5 text-white" />
+                  <svg 
+                    className="w-5 h-5 text-white" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </Button>
               </div>
             </div>
@@ -175,58 +191,61 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[600px] flex">
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-6xl w-full h-[650px] flex relative">
         
         {/* Sidebar esquerda */}
-        <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative">
+        <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative rounded-l-3xl">
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
             <img src={quantorLogo} alt="Quantor" className="w-12 h-12 mb-3" />
-            <span className="text-gray-600 text-sm font-medium tracking-wide">QUANTOR</span>
+            <span className="text-gray-700 text-sm font-bold tracking-wide drop-shadow-sm" 
+                  style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
+              QUANTOR
+            </span>
           </div>
           
           {/* Ícones de navegação */}
           <div className="flex flex-col space-y-8">
             <button
               onClick={() => setActiveSection('login')}
-              className={`relative p-3 rounded-lg transition-colors ${
+              className={`relative p-3 rounded-lg transition-all duration-300 ${
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {activeSection === 'login' && (
-                <div className="absolute left-0 top-0 w-1 h-full bg-blue-600 rounded-r-lg"></div>
+                <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-700 rounded-r-lg shadow-lg animate-pulse"></div>
               )}
               <User className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('signup')}
-              className={`relative p-3 rounded-lg transition-colors ${
+              className={`relative p-3 rounded-lg transition-all duration-300 ${
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {activeSection === 'signup' && (
-                <div className="absolute left-0 top-0 w-1 h-full bg-blue-600 rounded-r-lg"></div>
+                <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-700 rounded-r-lg shadow-lg animate-pulse"></div>
               )}
               <UserPlus className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('about')}
-              className={`relative p-3 rounded-lg transition-colors ${
+              className={`relative p-3 rounded-lg transition-all duration-300 ${
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {activeSection === 'about' && (
-                <div className="absolute left-0 top-0 w-1 h-full bg-blue-600 rounded-r-lg"></div>
+                <div className="absolute -left-4 top-0 w-1 h-full bg-gradient-to-b from-blue-500 to-blue-700 rounded-r-lg shadow-lg animate-pulse"></div>
               )}
               <Info className="w-6 h-6" />
             </button>
           </div>
         </div>
         
-        {/* Card central azul */}
-        <div className="flex-1 bg-blue-600 flex flex-col justify-center items-center text-white p-12 relative">
+        {/* Card central azul - mais alto que os outros */}
+        <div className="flex-1 bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white relative -my-8 mx-4 rounded-2xl shadow-2xl z-10">
           <div className="text-center mb-12">
             <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
             <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
@@ -243,7 +262,7 @@ export function Login() {
         </div>
         
         {/* Card direito */}
-        <div className="w-96 bg-white flex flex-col justify-center items-center p-12">
+        <div className="w-96 bg-white flex flex-col justify-center items-center p-12 rounded-r-3xl">
           {renderRightCard()}
         </div>
         
