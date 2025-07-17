@@ -193,15 +193,15 @@ export function Login() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[500px] flex relative">
         
-        {/* Barra lateral azul - na borda absoluta esquerda */}
+        {/* Barra lateral azul - na borda absoluta esquerda alinhada com ícones */}
         {activeSection === 'login' && (
-          <div className="absolute left-0 top-[180px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
+          <div className="absolute left-0 top-[140px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
         )}
         {activeSection === 'signup' && (
-          <div className="absolute left-0 top-[250px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
+          <div className="absolute left-0 top-[212px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
         )}
         {activeSection === 'about' && (
-          <div className="absolute left-0 top-[320px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
+          <div className="absolute left-0 top-[284px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
         )}
         
         {/* Sidebar esquerda */}
