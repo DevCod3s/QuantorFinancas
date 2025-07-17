@@ -77,9 +77,14 @@ export function requireAuth(req: Request, res: Response, next: any) {
 
 // Middleware para adicionar usuário ao request se disponível
 export function addUser(req: Request, res: Response, next: any) {
-  const user = getUser(req);
-  if (user) {
-    (req as any).user = user;
+  try {
+    const user = getUser(req);
+    if (user) {
+      (req as any).user = user;
+    }
+    next();
+  } catch (error) {
+    console.error("Error in addUser middleware:", error);
+    next();
   }
-  next();
 }
