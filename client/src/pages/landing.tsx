@@ -21,13 +21,10 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center relative overflow-hidden">
-      {/* Background Circle */}
-      <div className="absolute right-0 top-0 w-96 h-96 bg-gradient-to-br from-slate-400 via-slate-600 to-slate-800 rounded-full transform translate-x-48 -translate-y-48"></div>
-      
-      <div className="w-full max-w-6xl mx-auto flex items-center justify-between px-8 relative z-10">
-        {/* Left Panel - Login Form */}
-        <div className="w-1/2 max-w-md">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Panel - Login Form */}
+      <div className="w-1/2 flex items-center justify-center p-8">
+        <div className="w-full max-w-sm">
           <div className="bg-white rounded-lg p-8 shadow-lg">
             {/* Header */}
             <div className="text-center mb-8">
@@ -117,22 +114,21 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Right Panel - Circle with Financial Content */}
-        <div className="w-1/2 flex justify-end">
-          <div className="w-80 h-80 bg-gradient-to-br from-slate-400 via-slate-600 to-slate-800 rounded-full flex flex-col items-center justify-center text-white p-8 relative">
-            <h1 className="text-4xl font-bold mb-4 text-center">Quantor</h1>
-            <p className="text-sm text-center leading-relaxed opacity-90">
-              Transforme sua gestão financeira com inteligência artificial. 
-              Controle suas finanças, monitore investimentos e receba 
-              conselhos personalizados para alcançar seus objetivos financeiros.
-            </p>
-            <div className="mt-6 flex items-center space-x-3">
-              <button className="bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm border border-white/30">
-                Saiba Mais
-              </button>
-              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                <i className="fas fa-play text-white text-xs"></i>
-              </div>
+      {/* Right Panel - Large Circle */}
+      <div className="w-1/2 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-400 via-slate-600 to-slate-800"></div>
+        <div className="absolute -left-32 top-1/2 transform -translate-y-1/2 w-96 h-96 bg-gradient-to-br from-slate-300 via-slate-500 to-slate-700 rounded-full flex flex-col items-center justify-center text-white">
+          <h1 className="text-4xl font-bold mb-4 text-center">Quantor</h1>
+          <p className="text-sm text-center leading-relaxed opacity-90 px-8">
+            Transforme sua gestão financeira com inteligência artificial. 
+            Controle receitas, despesas e investimentos com conselhos personalizados.
+          </p>
+          <div className="mt-6 flex items-center space-x-3">
+            <button className="bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm border border-white/30">
+              Saiba Mais
+            </button>
+            <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+              <i className="fas fa-play text-white text-xs"></i>
             </div>
           </div>
         </div>
