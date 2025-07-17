@@ -7,6 +7,7 @@ Quantor é um sistema web moderno de gestão financeira integrado com inteligên
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Always communicate in Portuguese.
 
 ## System Architecture
 
