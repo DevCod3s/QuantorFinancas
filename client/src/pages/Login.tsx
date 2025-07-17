@@ -191,21 +191,27 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[500px] flex relative">
+      <div className="flex items-center relative">
         
-        {/* Barra lateral azul - na borda absoluta esquerda alinhada com ícones */}
-        {activeSection === 'login' && (
-          <div className="absolute left-0 top-[140px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
-        )}
-        {activeSection === 'signup' && (
-          <div className="absolute left-0 top-[212px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
-        )}
-        {activeSection === 'about' && (
-          <div className="absolute left-0 top-[284px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
-        )}
-        
-        {/* Sidebar esquerda */}
-        <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative">
+        {/* Card esquerdo */}
+        <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
+          {/* Barra progressiva na borda esquerda alinhada com ícones */}
+          {activeSection === 'login' && (
+            <div className="absolute left-0 top-[140px] w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.6s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'signup' && (
+            <div className="absolute left-0 top-[212px] w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.6s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'about' && (
+            <div className="absolute left-0 top-[284px] w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.6s_ease-out_forwards]"></div>
+            </div>
+          )}
+          
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
             <img src={quantorLogo} alt="Quantor" className="w-12 h-12 mb-3" />
@@ -245,8 +251,8 @@ export function Login() {
           </div>
         </div>
         
-        {/* Card central azul - ligeiramente mais alto */}
-        <div className="flex-1 bg-blue-600 flex flex-col justify-center items-center text-white relative -my-4 mx-0 shadow-xl z-10">
+        {/* Card central azul - SUSPENSO com sombreamento */}
+        <div className="w-[500px] h-[520px] bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white shadow-2xl z-10 relative -mx-4">
           <div className="text-center mb-16">
             <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
             <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
@@ -263,9 +269,17 @@ export function Login() {
         </div>
         
         {/* Card direito */}
-        <div className="w-96 bg-white flex flex-col justify-center items-center p-12">
+        <div className="w-96 h-[480px] bg-white rounded-r-3xl shadow-lg flex flex-col justify-center items-center p-12">
           {renderRightCard()}
         </div>
+        
+        {/* CSS para animação de preenchimento */}
+        <style>{`
+          @keyframes fillProgress {
+            from { height: 0%; }
+            to { height: 100%; }
+          }
+        `}</style>
         
       </div>
     </div>
