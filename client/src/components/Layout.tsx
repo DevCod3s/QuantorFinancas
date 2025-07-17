@@ -75,9 +75,9 @@ export function Layout({ children }: LayoutProps) {
               
               return (
                 <Link key={item.name} href={item.href}>
-                  <a
+                  <div
                     className={`
-                      flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors
+                      flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer
                       ${isActive 
                         ? 'bg-primary text-white' 
                         : 'text-gray-700 hover:bg-gray-100'
@@ -87,7 +87,7 @@ export function Layout({ children }: LayoutProps) {
                   >
                     <Icon className="h-5 w-5 mr-3" />
                     {item.name}
-                  </a>
+                  </div>
                 </Link>
               );
             })}
