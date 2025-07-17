@@ -191,70 +191,62 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl shadow-2xl overflow-visible flex items-center max-w-6xl relative">
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[500px] flex relative">
         
-        {/* Sidebar esquerda - centralizada */}
-        <div className="w-32 h-[480px] bg-gray-50 flex flex-col items-center py-8 relative rounded-l-3xl shadow-lg">
+        {/* Barra lateral azul - na borda absoluta esquerda */}
+        {activeSection === 'login' && (
+          <div className="absolute left-0 top-[180px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
+        )}
+        {activeSection === 'signup' && (
+          <div className="absolute left-0 top-[250px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
+        )}
+        {activeSection === 'about' && (
+          <div className="absolute left-0 top-[320px] w-1 h-12 bg-blue-600 z-30 rounded-r"></div>
+        )}
+        
+        {/* Sidebar esquerda */}
+        <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative">
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
             <img src={quantorLogo} alt="Quantor" className="w-12 h-12 mb-3" />
-            <span className="text-gray-700 text-sm font-bold tracking-wide drop-shadow-sm" 
-                  style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.1)' }}>
+            <span className="text-gray-700 text-sm font-bold tracking-wide">
               QUANTOR
             </span>
           </div>
           
           {/* Ícones de navegação */}
-          <div className="flex flex-col space-y-8 relative">
+          <div className="flex flex-col space-y-8">
             <button
               onClick={() => setActiveSection('login')}
-              className={`relative p-3 rounded-lg transition-all duration-300 ${
+              className={`p-3 rounded-lg transition-colors ${
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra de progresso alinhada com o ícone */}
-              {activeSection === 'login' && (
-                <div className="absolute -left-8 top-0 w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <User className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('signup')}
-              className={`relative p-3 rounded-lg transition-all duration-300 ${
+              className={`p-3 rounded-lg transition-colors ${
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra de progresso alinhada com o ícone */}
-              {activeSection === 'signup' && (
-                <div className="absolute -left-8 top-0 w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <UserPlus className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('about')}
-              className={`relative p-3 rounded-lg transition-all duration-300 ${
+              className={`p-3 rounded-lg transition-colors ${
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra de progresso alinhada com o ícone */}
-              {activeSection === 'about' && (
-                <div className="absolute -left-8 top-0 w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-gradient-to-b from-blue-500 to-blue-700 animate-[expand_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <Info className="w-6 h-6" />
             </button>
           </div>
         </div>
         
-        {/* Card central azul - sobressai um pouco */}
-        <div className="w-[500px] h-[520px] bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white shadow-2xl z-10 relative">
+        {/* Card central azul - ligeiramente mais alto */}
+        <div className="flex-1 bg-blue-600 flex flex-col justify-center items-center text-white relative -my-4 mx-0 shadow-xl z-10">
           <div className="text-center mb-16">
             <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
             <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
@@ -270,18 +262,10 @@ export function Login() {
           </div>
         </div>
         
-        {/* Card direito - centralizado */}
-        <div className="w-96 h-[480px] bg-white flex flex-col justify-center items-center p-12 rounded-r-3xl shadow-lg">
+        {/* Card direito */}
+        <div className="w-96 bg-white flex flex-col justify-center items-center p-12">
           {renderRightCard()}
         </div>
-        
-        {/* CSS para animação */}
-        <style>{`
-          @keyframes expand {
-            from { height: 0%; }
-            to { height: 100%; }
-          }
-        `}</style>
         
       </div>
     </div>
