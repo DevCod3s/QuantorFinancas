@@ -1,40 +1,252 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
+import quantorLogo from "@assets/Simbolo_New_1752793618491.png";
+
+type ActiveSection = 'login' | 'signup' | 'about';
 
 export function Login() {
+  const [activeSection, setActiveSection] = useState<ActiveSection>('login');
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    confirmPassword: ''
+  });
+
   const handleLogin = () => {
     window.location.href = "/api/login";
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Quantor</h1>
-          <p className="text-gray-600 mb-8">Gestão Financeira Inteligente</p>
-          
-          <div className="bg-white rounded-lg shadow-md p-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Fazer Login</h2>
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const renderRightCard = () => {
+    switch (activeSection) {
+      case 'login':
+        return (
+          <div className="w-full max-w-sm">
+            <div className="mb-6">
+              <h3 className="text-blue-600 font-semibold mb-2">Login</h3>
+              <p className="text-gray-500 text-sm">to your account to browse through projects and explore our tools.</p>
+            </div>
             
             <div className="space-y-4">
-              <div className="text-gray-600 text-sm">
-                Para acessar o sistema, clique no botão abaixo:
-              </div>
+              <Input
+                type="email"
+                placeholder="edison.andreal@gmail.com"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="border-gray-300 rounded-md"
+              />
               
-              <Button 
-                onClick={handleLogin}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
-                Entrar no Sistema
-              </Button>
+              <Input
+                type="password"
+                placeholder="PASSWORD"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                className="border-gray-300 rounded-md"
+              />
+              
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={handleLogin}
+                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
+                >
+                  <ArrowRight className="w-5 h-5 text-white" />
+                </Button>
+              </div>
             </div>
             
             <div className="mt-6 text-center">
-              <p className="text-xs text-gray-500">
-                Sistema de desenvolvimento - Usuário padrão será carregado
-              </p>
+              <span className="text-gray-500 text-sm">Don't have an account? </span>
+              <button 
+                onClick={() => setActiveSection('signup')}
+                className="text-blue-600 text-sm font-medium hover:underline"
+              >
+                Sign up
+              </button>
             </div>
           </div>
+        );
+        
+      case 'signup':
+        return (
+          <div className="w-full max-w-sm">
+            <div className="mb-6">
+              <h3 className="text-blue-600 font-semibold mb-2">Sign up</h3>
+              <p className="text-gray-500 text-sm">Create your account to get started with financial management.</p>
+            </div>
+            
+            <div className="space-y-4">
+              <Input
+                type="text"
+                placeholder="Nome completo"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                className="border-gray-300 rounded-md"
+              />
+              
+              <Input
+                type="email"
+                placeholder="seu.email@gmail.com"
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
+                className="border-gray-300 rounded-md"
+              />
+              
+              <Input
+                type="password"
+                placeholder="SENHA"
+                value={formData.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                className="border-gray-300 rounded-md"
+              />
+              
+              <Input
+                type="password"
+                placeholder="CONFIRMAR SENHA"
+                value={formData.confirmPassword}
+                onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                className="border-gray-300 rounded-md"
+              />
+              
+              <div className="flex justify-end mt-6">
+                <Button
+                  onClick={handleLogin}
+                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center"
+                >
+                  <ArrowRight className="w-5 h-5 text-white" />
+                </Button>
+              </div>
+            </div>
+            
+            <div className="mt-6 text-center">
+              <span className="text-gray-500 text-sm">Already have an account? </span>
+              <button 
+                onClick={() => setActiveSection('login')}
+                className="text-blue-600 text-sm font-medium hover:underline"
+              >
+                Login
+              </button>
+            </div>
+          </div>
+        );
+        
+      case 'about':
+        return (
+          <div className="w-full max-w-sm">
+            <div className="mb-6">
+              <h3 className="text-blue-600 font-semibold mb-2">About</h3>
+              <p className="text-gray-500 text-sm">Learn more about our financial management system.</p>
+            </div>
+            
+            <div className="space-y-4 text-sm text-gray-600">
+              <p>
+                O Quantor é um sistema inteligente de gestão financeira projetado para 
+                simplificar o controle das suas finanças pessoais e empresariais.
+              </p>
+              
+              <p>
+                Com recursos avançados de categorização, relatórios detalhados e 
+                assistente IA, você terá total controle sobre receitas, despesas e orçamentos.
+              </p>
+              
+              <p>
+                Nossa plataforma oferece insights valiosos para tomada de decisões 
+                financeiras mais inteligentes e eficazes.
+              </p>
+            </div>
+            
+            <div className="mt-6 text-center">
+              <button 
+                onClick={() => setActiveSection('login')}
+                className="text-blue-600 text-sm font-medium hover:underline"
+              >
+                Começar agora
+              </button>
+            </div>
+          </div>
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-5xl w-full h-[600px] flex">
+        
+        {/* Sidebar esquerda */}
+        <div className="w-32 bg-gray-50 flex flex-col items-center py-8 relative">
+          {/* Logo */}
+          <div className="flex flex-col items-center mb-12">
+            <img src={quantorLogo} alt="Quantor" className="w-12 h-12 mb-3" />
+            <span className="text-gray-600 text-sm font-medium tracking-wide">QUANTOR</span>
+          </div>
+          
+          {/* Ícones de navegação */}
+          <div className="flex flex-col space-y-8">
+            <button
+              onClick={() => setActiveSection('login')}
+              className={`relative p-3 rounded-lg transition-colors ${
+                activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {activeSection === 'login' && (
+                <div className="absolute left-0 top-0 w-1 h-full bg-blue-600 rounded-r-lg"></div>
+              )}
+              <User className="w-6 h-6" />
+            </button>
+            
+            <button
+              onClick={() => setActiveSection('signup')}
+              className={`relative p-3 rounded-lg transition-colors ${
+                activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {activeSection === 'signup' && (
+                <div className="absolute left-0 top-0 w-1 h-full bg-blue-600 rounded-r-lg"></div>
+              )}
+              <UserPlus className="w-6 h-6" />
+            </button>
+            
+            <button
+              onClick={() => setActiveSection('about')}
+              className={`relative p-3 rounded-lg transition-colors ${
+                activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              {activeSection === 'about' && (
+                <div className="absolute left-0 top-0 w-1 h-full bg-blue-600 rounded-r-lg"></div>
+              )}
+              <Info className="w-6 h-6" />
+            </button>
+          </div>
         </div>
+        
+        {/* Card central azul */}
+        <div className="flex-1 bg-blue-600 flex flex-col justify-center items-center text-white p-12 relative">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
+            <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
+            <p className="text-blue-200 text-lg">gestão financeira</p>
+          </div>
+          
+          {/* Ícones sociais */}
+          <div className="flex space-x-6 absolute bottom-8">
+            <Facebook className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
+            <Instagram className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
+            <Twitter className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
+            <Linkedin className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
+          </div>
+        </div>
+        
+        {/* Card direito */}
+        <div className="w-96 bg-white flex flex-col justify-center items-center p-12">
+          {renderRightCard()}
+        </div>
+        
       </div>
     </div>
   );
