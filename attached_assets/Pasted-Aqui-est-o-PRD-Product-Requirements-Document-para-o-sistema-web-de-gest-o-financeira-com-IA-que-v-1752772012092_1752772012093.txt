@@ -1,0 +1,139 @@
+Aqui está o PRD (Product Requirements Document) para o sistema web de gestão financeira com IA que você deseja construir no Replit.com. Ele inclui os requisitos, funcionalidades, schema do banco de dados em Postgres/SQL e detalhes sobre o design e integração da IA, conforme solicitado.
+
+---
+
+# PRD: Sistema Web de Gestão Financeira com IA
+
+## Resumo Executivo
+O sistema web de gestão financeira com IA é uma ferramenta inovadora que combina funcionalidades de gestão financeira com o suporte de uma inteligência artificial especialista em finanças e contabilidade. Com uma interface moderna, clean e intuitiva, o sistema oferece uma experiência de usuário excepcional, permitindo o gerenciamento eficiente de finanças pessoais ou empresariais.
+
+## Objetivo
+Fornecer uma solução acessível e poderosa para indivíduos e pequenas/médias empresas gerenciarem suas finanças, com o auxílio de uma IA que oferece conselhos personalizados e insights baseados em dados.
+
+## Público-Alvo
+- Indivíduos que buscam controle financeiro pessoal.
+- Pequenas e médias empresas que necessitam de uma ferramenta de gestão financeira simples e eficaz.
+
+## Funcionalidades Principais
+1. **Gestão Financeira**
+   - Cadastro de receitas e despesas com categorias personalizáveis.
+   - Criação e gerenciamento de orçamentos.
+   - Relatórios financeiros com gráficos e estatísticas.
+   - Alertas para despesas excessivas ou orçamentos estourados.
+
+2. **IA Especialista**
+   - Interface de chat para interação com a IA.
+   - Análise dos dados financeiros do usuário para conselhos personalizados.
+   - Sugestões de otimização de gastos e investimentos.
+
+3. **Interface Moderna**
+   - Design responsivo para diferentes dispositivos.
+   - Formulários com labels suspensos na borda superior dos inputs quando ganham foco.
+   - Layout ajustado para evitar barras de scroll desnecessárias.
+   - Animações suaves e transições para uma experiência fluida.
+
+4. **Banco de Dados**
+   - Armazenamento de dados em Postgres/SQL com schema otimizado.
+
+## Schema do Banco de Dados (Postgres/SQL)
+Abaixo está o schema detalhado para o banco de dados em Postgres/SQL, projetado para suportar as funcionalidades do sistema.
+
+```sql
+-- Tabela de Usuários
+CREATE TABLE usuarios (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de Categorias
+CREATE TABLE categorias (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    nome VARCHAR(50) NOT NULL,
+    tipo VARCHAR(10) CHECK (tipo IN ('receita', 'despesa')),
+    UNIQUE (usuario_id, nome, tipo)
+);
+
+-- Tabela de Transações
+CREATE TABLE transacoes (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    tipo VARCHAR(10) CHECK (tipo IN ('receita', 'despesa')),
+    valor DECIMAL(15, 2) NOT NULL,
+    data DATE NOT NULL,
+    categoria_id INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
+    descricao TEXT,
+    data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tabela de Orçamentos
+CREATE TABLE orcamentos (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    categoria_id INTEGER REFERENCES categorias(id) ON DELETE SET NULL,
+    valor_orcado DECIMAL(15, 2) NOT NULL,
+    periodo VARCHAR(10) CHECK (periodo IN ('mensal', 'anual')),
+    data_inicio DATE NOT NULL,
+    data_fim DATE NOT NULL
+);
+
+-- Tabela de Interações com a IA
+CREATE TABLE interacoes_ia (
+    id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
+    mensagem TEXT NOT NULL,
+    resposta TEXT NOT NULL,
+    data TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Descrição das Tabelas
+- **usuarios**: Armazena informações dos usuários (nome, email, senha).
+- **categorias**: Categorias personalizáveis criadas pelos usuários para receitas e despesas.
+- **transacoes**: Registro de todas as transações financeiras (receitas e despesas).
+- **orcamentos**: Definição de orçamentos por categoria e período.
+- **interacoes_ia**: Histórico de conversas com a IA para aprendizado e referência.
+
+## Design e UX/UI
+- **Estilo**: Minimalista, com cores suaves e tipografia legível.
+- **Responsividade**: Layout ajustável para desktops, tablets e smartphones.
+- **Formulários**: Inputs com labels que se movem para a borda superior ao ganhar foco.
+- **Layout**: Conteúdo bem ajustado ao tamanho da tela, evitando barras de scroll desnecessárias.
+- **Animações**: Transições suaves para interações como abertura de modais e envio de formulários.
+
+## Integração da IA
+- **Acesso aos Dados**: A IA utiliza APIs para consultar os dados financeiros do usuário (transações, orçamentos) com permissão.
+- **Funcionalidade**: Analisa os dados e oferece sugestões personalizadas, como redução de gastos ou estratégias de investimento.
+- **Implementação**: Pode ser construída com bibliotecas de machine learning (ex.: TensorFlow) ou integrada a serviços de IA existentes.
+
+## Tecnologias
+- **Frontend**: HTML, CSS, JavaScript (React ou Vue.js para uma interface moderna).
+- **Backend**: Python (Flask ou Django) para lógica e APIs.
+- **Banco de Dados**: Postgres/SQL.
+- **IA**: Python com bibliotecas de machine learning ou serviços externos.
+- **Hospedagem**: Replit.com (com possibilidade de migração para Heroku/AWS).
+
+## Considerações de Segurança
+- Autenticação robusta (ex.: JWT).
+- Criptografia de dados sensíveis (ex.: senhas com hash).
+- Permissões para acesso da IA aos dados do usuário.
+
+## Cronograma Estimado
+- **Fase 1**: Definição de requisitos e design (2 semanas).
+- **Fase 2**: Backend e banco de dados (4 semanas).
+- **Fase 3**: Frontend e integração (4 semanas).
+- **Fase 4**: Desenvolvimento da IA (6 semanas).
+- **Fase 5**: Testes e ajustes (2 semanas).
+- **Fase 6**: Deploy (1 semana).
+
+## Benefícios
+- Controle financeiro simplificado e visual com relatórios.
+- Conselhos personalizados da IA para decisões financeiras inteligentes.
+- Interface agradável e fácil de usar.
+
+---
+
+Esse PRD cobre todos os pontos solicitados: funcionalidades, schema do banco de dados, design moderno com formulários de labels suspensos e layout ajustado, além da integração da IA. Você pode começar a implementação no Replit.com com base nisso! Se precisar de ajustes ou mais detalhes, é só avisar.
