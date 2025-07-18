@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,47 @@ export function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [activeTab, setActiveTab] = useState("visao-geral");
+  const [progressWidth, setProgressWidth] = useState(0);
+  const tabListRef = useRef<HTMLDivElement>(null);
+
+  // Calcula a posição e largura da barra de progressão
+  useEffect(() => {
+    const updateProgressBar = () => {
+      if (!tabListRef.current) return;
+      
+      const activeTabElement = tabListRef.current.querySelector(`[data-state="active"]`) as HTMLElement;
+      if (activeTabElement) {
+        const tabListRect = tabListRef.current.getBoundingClientRect();
+        const activeTabRect = activeTabElement.getBoundingClientRect();
+        
+        const leftOffset = activeTabRect.left - tabListRect.left;
+        const width = activeTabRect.width;
+        
+        // Define a posição e largura da barra
+        setProgressWidth(width);
+        
+        // Aplica a posição através de CSS custom properties
+        const progressBar = tabListRef.current.querySelector('.progress-bar') as HTMLElement;
+        if (progressBar) {
+          // Reset da animação - primeiro vai para largura 0
+          progressBar.style.setProperty('--progress-left', `${leftOffset}px`);
+          progressBar.style.setProperty('--progress-width', `0px`);
+          
+          // Força repaint
+          progressBar.offsetHeight;
+          
+          // Depois anima para a largura total
+          setTimeout(() => {
+            progressBar.style.setProperty('--progress-width', `${width}px`);
+          }, 10);
+        }
+      }
+    };
+
+    // Delay para garantir que o DOM foi atualizado
+    const timer = setTimeout(updateProgressBar, 100);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
 
   const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -45,8 +86,8 @@ export function Transactions() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="relative">
-          <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg">
+        <div className="relative" ref={tabListRef}>
+          <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg relative">
             <TabsTrigger 
               value="visao-geral" 
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
@@ -77,17 +118,16 @@ export function Transactions() {
             </TabsTrigger>
           </TabsList>
           
-          {/* Barra de progressão animada */}
-          <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-transparent">
+          {/* Barra de progressão inteligente e animada */}
+          <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
             <div 
-              className={`h-full bg-blue-600 transition-all duration-500 ease-in-out rounded-full ${
-                activeTab === "visao-geral" ? "w-1/4 translate-x-0" :
-                activeTab === "movimentacoes" ? "w-1/4 translate-x-full" :
-                activeTab === "contas" ? "w-1/4 translate-x-[200%]" :
-                activeTab === "centro-custo" ? "w-1/4 translate-x-[300%]" : "w-0"
-              }`}
+              className="progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
               style={{
-                transformOrigin: "left center"
+                left: 'var(--progress-left, 0px)',
+                width: 'var(--progress-width, 0px)',
+                transition: 'left 0.3s ease-in-out, width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                transformOrigin: 'left center',
+                willChange: 'width, left'
               }}
             />
           </div>
