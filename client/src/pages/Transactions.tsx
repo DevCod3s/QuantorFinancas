@@ -1,12 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubTabs } from "@/components/SubTabs";
 import { Transaction } from "@shared/schema";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -39,6 +53,10 @@ export function Transactions() {
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
+  const [currentMonth, setCurrentMonth] = useState("julho 2025");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [filterPeriod, setFilterPeriod] = useState("Mensal");
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   // Calcula a posição e largura da barra de progressão
   useEffect(() => {
@@ -93,6 +111,40 @@ export function Transactions() {
       style: 'currency',
       currency: 'BRL',
     }).format(parseFloat(amount));
+  };
+
+  // Funções para navegação temporal
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 
+                   'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const [monthName, year] = currentMonth.split(' ');
+    const currentIndex = months.indexOf(monthName);
+    
+    let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+    let newYear = parseInt(year);
+    
+    if (newIndex > 11) {
+      newIndex = 0;
+      newYear++;
+    } else if (newIndex < 0) {
+      newIndex = 11;
+      newYear--;
+    }
+    
+    setCurrentMonth(`${months[newIndex]} ${newYear}`);
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDate(date);
+      const monthName = format(date, 'MMMM yyyy', { locale: ptBR });
+      setCurrentMonth(monthName);
+      setIsCalendarOpen(false);
+    }
+  };
+
+  const handleFilterChange = (period: string) => {
+    setFilterPeriod(period);
   };
 
   return (
@@ -171,8 +223,96 @@ export function Transactions() {
                       {/* Card Fluxo de Caixa */}
                       <Card className="col-span-1 lg:col-span-2">
                         <CardHeader>
-                          <CardTitle className="text-lg font-semibold">Fluxo de caixa</CardTitle>
-                          <CardDescription className="text-sm text-gray-500">Evolução mensal</CardDescription>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-lg font-semibold">Fluxo de caixa</CardTitle>
+                              <CardDescription className="text-sm text-gray-500">Evolução mensal</CardDescription>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              {/* Navegação de mês */}
+                              <div className="flex items-center gap-1">
+                                <button 
+                                  onClick={() => navigateMonth('prev')}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                <span className="text-sm font-medium min-w-[100px] text-center">
+                                  {currentMonth}
+                                </span>
+                                <button 
+                                  onClick={() => navigateMonth('next')}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </button>
+                              </div>
+
+                              {/* Ícone do calendário */}
+                              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                <PopoverTrigger asChild>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Calendar className="h-4 w-4" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={handleDateSelect}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+
+                              {/* Ícone de engrenagem com dropdown */}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Settings className="h-4 w-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem 
+                                    onClick={() => handleFilterChange('Semanal')}
+                                    className={filterPeriod === 'Semanal' ? 'bg-blue-50 text-blue-600' : ''}
+                                  >
+                                    Semanal
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleFilterChange('Mensal')}
+                                    className={filterPeriod === 'Mensal' ? 'bg-blue-50 text-blue-600' : ''}
+                                  >
+                                    Mensal
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleFilterChange('Trimestral')}
+                                    className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                  >
+                                    Trimestral
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleFilterChange('Semestral')}
+                                    className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                  >
+                                    Semestral
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleFilterChange('Anual')}
+                                    className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
+                                  >
+                                    Anual
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem 
+                                    onClick={() => handleFilterChange('Personalizar')}
+                                    className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
+                                  >
+                                    Personalizar
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                          </div>
                         </CardHeader>
                         <CardContent>
                           <div className="h-64">
