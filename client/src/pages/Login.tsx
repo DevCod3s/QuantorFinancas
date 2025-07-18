@@ -215,7 +215,7 @@ export function Login() {
             >
               {/* Barra progressiva na borda esquerda alinhada com este ícone */}
               {activeSection === 'login' && (
-                <div className="absolute -left-20 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                <div className="absolute -left-24 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
                   <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
                 </div>
               )}
@@ -230,7 +230,7 @@ export function Login() {
             >
               {/* Barra progressiva na borda esquerda alinhada com este ícone */}
               {activeSection === 'signup' && (
-                <div className="absolute -left-20 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                <div className="absolute -left-24 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
                   <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
                 </div>
               )}
@@ -245,7 +245,7 @@ export function Login() {
             >
               {/* Barra progressiva na borda esquerda alinhada com este ícone */}
               {activeSection === 'about' && (
-                <div className="absolute -left-20 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                <div className="absolute -left-24 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
                   <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
                 </div>
               )}
