@@ -193,8 +193,9 @@ export function Login() {
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="flex items-center relative">
         
-        {/* Card esquerdo */}
-        <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative overflow-visible">
+        {/* Card esquerdo com barra progressiva */}
+        <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
+          
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
             <img src={quantorLogo} alt="Quantor" className="w-12 h-12 mb-3" />
@@ -203,50 +204,51 @@ export function Login() {
             </span>
           </div>
           
-          {/* Ícones de navegação */}
+          {/* Container dos ícones com barra lateral */}
           <div className="flex flex-col space-y-8 relative">
+            {/* Barra progressiva fixa na borda esquerda */}
+            <div className="absolute -left-8 top-0 w-1 h-full">
+              {activeSection === 'login' && (
+                <div className="absolute top-[15px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                  <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+                </div>
+              )}
+              {activeSection === 'signup' && (
+                <div className="absolute top-[87px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                  <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+                </div>
+              )}
+              {activeSection === 'about' && (
+                <div className="absolute top-[159px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                  <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={() => setActiveSection('login')}
-              className={`relative p-3 rounded-lg transition-colors ${
+              className={`p-3 rounded-lg transition-colors ${
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra na borda esquerda do card alinhada com este ícone */}
-              {activeSection === 'login' && (
-                <div className="absolute -left-16 top-3 w-1 h-6 bg-blue-600 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <User className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('signup')}
-              className={`relative p-3 rounded-lg transition-colors ${
+              className={`p-3 rounded-lg transition-colors ${
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra na borda esquerda do card alinhada com este ícone */}
-              {activeSection === 'signup' && (
-                <div className="absolute -left-16 top-3 w-1 h-6 bg-blue-600 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <UserPlus className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('about')}
-              className={`relative p-3 rounded-lg transition-colors ${
+              className={`p-3 rounded-lg transition-colors ${
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra na borda esquerda do card alinhada com este ícone */}
-              {activeSection === 'about' && (
-                <div className="absolute -left-16 top-3 w-1 h-6 bg-blue-600 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
               <Info className="w-6 h-6" />
             </button>
           </div>
