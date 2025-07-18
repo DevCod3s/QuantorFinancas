@@ -519,89 +519,201 @@ export function Transactions() {
                 icon: <FileText className="h-4 w-4" />,
                 content: (
                   <div className="space-y-6">
-                    {/* Resumo de lançamentos */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Últimos Lançamentos</CardTitle>
-                          <CardDescription>
-                            Transações recentes registradas
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <div>
-                                  <p className="font-medium text-sm">Salário</p>
-                                  <p className="text-xs text-gray-500">15/01/2025</p>
-                                </div>
-                              </div>
-                              <span className="text-green-600 font-medium">+R$ 3.500,00</span>
+                    {/* Card 1: Seletor de Data de Referência */}
+                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
+                        <div className="flex items-center justify-between">
+                          <button className="p-2 hover:bg-white rounded-full transition-colors">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <CardTitle className="text-lg font-semibold text-gray-800">junho 2025</CardTitle>
+                          <button className="p-2 hover:bg-white rounded-full transition-colors">
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <input type="checkbox" checked className="text-pink-500" readOnly />
+                              <span className="text-sm text-gray-600">Considerar lançamentos pendentes</span>
                             </div>
-                            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <div>
-                                  <p className="font-medium text-sm">Aluguel</p>
-                                  <p className="text-xs text-gray-500">10/01/2025</p>
-                                </div>
-                              </div>
-                              <span className="text-red-600 font-medium">-R$ 1.200,00</span>
-                            </div>
-                            <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                              <div className="flex items-center gap-3">
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <div>
-                                  <p className="font-medium text-sm">Supermercado</p>
-                                  <p className="text-xs text-gray-500">08/01/2025</p>
-                                </div>
-                              </div>
-                              <span className="text-red-600 font-medium">-R$ 285,50</span>
+                            <div className="flex items-center gap-2">
+                              <input type="checkbox" className="text-gray-400" />
+                              <span className="text-sm text-gray-600">Não considerar transferências internas</span>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div className="flex items-center gap-2">
+                            <button className="p-2 hover:bg-gray-100 rounded">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                              </svg>
+                            </button>
+                            <button className="p-2 hover:bg-gray-100 rounded">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
 
-                      <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">Estatísticas do Mês</CardTitle>
-                          <CardDescription>
-                            Resumo das movimentações
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Total de Lançamentos</span>
-                              <span className="font-semibold">24 transações</span>
+                    {/* Card 2: Lançamentos Diários */}
+                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-semibold">Demonstrativo Diário</CardTitle>
+                        <CardDescription className="text-sm text-gray-500">Saldo em 31 jul</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {/* Header das colunas */}
+                          <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-600 border-b pb-2">
+                            <div></div>
+                            <div className="text-center">Entradas (R$)</div>
+                            <div className="text-center">Saídas (R$)</div>
+                            <div className="text-center">Resultado (R$)</div>
+                            <div className="text-center">Saldo (R$)</div>
+                            <div></div>
+                          </div>
+
+                          {/* Contas resumo */}
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-6 gap-4 text-sm items-center">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-blue-500" readOnly />
+                                <span>Banco Inter</span>
+                              </div>
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div className="text-right font-medium">2.264,77</div>
+                              <div className="text-right text-green-600 font-medium">860,92</div>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Média Diária</span>
-                              <span className="font-semibold">R$ 142,30</span>
+                            <div className="grid grid-cols-6 gap-4 text-sm items-center">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-orange-500" readOnly />
+                                <span>Bancos | Pessoa Física</span>
+                              </div>
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div className="text-right font-medium">59,88</div>
+                              <div className="text-right text-green-600 font-medium">2.779,92</div>
                             </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Maior Entrada</span>
-                              <span className="font-semibold text-green-600">R$ 3.500,00</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                              <span className="text-sm text-gray-600">Maior Saída</span>
-                              <span className="font-semibold text-red-600">R$ 1.200,00</span>
+                            <div className="grid grid-cols-6 gap-4 text-sm items-center border-t pt-2 font-semibold">
+                              <div>Total</div>
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div className="text-right">2.324,65</div>
+                              <div></div>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    </div>
 
-                    {/* Botão de ação */}
-                    <Card>
-                      <CardContent className="pt-6">
-                        <div className="text-center">
-                          <Button className="gap-2">
-                            <Plus className="h-4 w-4" />
-                            Novo Lançamento
-                          </Button>
+                          {/* Lançamentos por data */}
+                          <div className="space-y-1 mt-6">
+                            {[
+                              { date: "05/07/2025", entrada: "2.315,00", saida: "0,00", resultado: "2.315,00", saldo: "" },
+                              { date: "07/07/2025", entrada: "0,00", saida: "35,00", resultado: "-35,00", saldo: "2.740,92" },
+                              { date: "08/07/2025", entrada: "0,00", saida: "141,34", resultado: "-141,34", saldo: "2.399,58" },
+                              { date: "10/07/2025", entrada: "2.826,00", saida: "2.142,50", resultado: "407,50", saldo: "2.807,08" },
+                              { date: "11/07/2025", entrada: "0,00", saida: "1.307,28", resultado: "-1.307,28", saldo: "1.499,80" },
+                              { date: "14/07/2025", entrada: "370,00", saida: "99,00", resultado: "271,00", saldo: "1.770,80" },
+                              { date: "15/07/2025", entrada: "1.449,00", saida: "0,00", resultado: "1.449,00", saldo: "3.219,80" },
+                              { date: "17/07/2025", entrada: "865,00", saida: "1.137,74", resultado: "-267,74", saldo: "953,14" },
+                              { date: "20/07/2025", entrada: "1.069,00", saida: "0,00", resultado: "1.069,00", saldo: "2.023,14" },
+                              { date: "21/07/2025", entrada: "1.200,00", saida: "0,00", resultado: "1.200,00", saldo: "3.223,14" },
+                              { date: "25/07/2025", entrada: "0,00", saida: "2.176,49", resultado: "-2.176,49", saldo: "1.024,65" },
+                              { date: "26/07/2025", entrada: "1.300,00", saida: "0,00", resultado: "1.300,00", saldo: "2.324,65" }
+                            ].map((item, index) => (
+                              <div key={index} className="grid grid-cols-6 gap-4 text-sm py-1 hover:bg-gray-50 rounded">
+                                <div className="text-gray-700">{item.date}</div>
+                                <div className="text-center text-green-600">{item.entrada !== "0,00" ? item.entrada : ""}</div>
+                                <div className="text-center text-red-600">{item.saida !== "0,00" ? item.saida : ""}</div>
+                                <div className={`text-center font-medium ${item.resultado.startsWith("-") ? "text-red-600" : "text-green-600"}`}>
+                                  {item.resultado}
+                                </div>
+                                <div className="text-right font-medium">{item.saldo}</div>
+                                <div></div>
+                              </div>
+                            ))}
+                            
+                            {/* Total */}
+                            <div className="grid grid-cols-6 gap-4 text-sm py-2 border-t font-semibold bg-gray-50 rounded">
+                              <div>Total</div>
+                              <div className="text-center text-green-600">11.195,00</div>
+                              <div className="text-center text-red-600">9.241,27</div>
+                              <div className="text-center text-green-600">1.953,73</div>
+                              <div></div>
+                              <div></div>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Card 3: Gráfico Resultado de Caixa */}
+                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                      <CardHeader>
+                        <CardTitle className="text-lg font-semibold">Resultado de caixa</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="h-64">
+                          <Bar
+                            data={{
+                              labels: ['05/07', '07/07', '08/07', '10/07', '11/07', '14/07', '15/07', '17/07', '20/07', '21/07', '25/07', '26/07'],
+                              datasets: [{
+                                data: [2315, -35, -141.34, 407.5, -1307.28, 271, 1449, -267.74, 1069, 1200, -2176.49, 1300],
+                                backgroundColor: function(context: any) {
+                                  const value = context.parsed.y;
+                                  return value >= 0 ? '#10b981' : '#ef4444';
+                                },
+                                borderRadius: 4,
+                                borderSkipped: false,
+                              }]
+                            }}
+                            options={{
+                              responsive: true,
+                              maintainAspectRatio: false,
+                              plugins: {
+                                legend: {
+                                  display: false
+                                },
+                                tooltip: {
+                                  callbacks: {
+                                    label: function(context) {
+                                      const value = context.parsed.y;
+                                      return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                                    }
+                                  }
+                                }
+                              },
+                              scales: {
+                                y: {
+                                  beginAtZero: true,
+                                  grid: {
+                                    color: '#f3f4f6'
+                                  },
+                                  ticks: {
+                                    callback: function(value) {
+                                      return 'R$ ' + Number(value).toLocaleString('pt-BR');
+                                    }
+                                  }
+                                },
+                                x: {
+                                  grid: {
+                                    display: false
+                                  }
+                                }
+                              }
+                            }}
+                          />
                         </div>
                       </CardContent>
                     </Card>
