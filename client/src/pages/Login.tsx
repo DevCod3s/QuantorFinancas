@@ -278,7 +278,7 @@ export function Login() {
         
         {/* CSS para animação de preenchimento */}
         <style>{`
-          @keyframes fillProgress {
+          @keyframes fillUp {
             from { height: 0%; }
             to { height: 100%; }
           }
