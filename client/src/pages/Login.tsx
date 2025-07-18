@@ -197,8 +197,8 @@ export function Login() {
         <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
           
           {/* Logo */}
-          <div className="flex flex-col items-center mb-12">
-            <img src={quantorLogo} alt="Quantor" className="w-20 h-20 mb-3" />
+          <div className="flex flex-col items-center mb-10">
+            <img src={quantorLogo} alt="Quantor" className="w-14 h-14 mb-2" />
             <span className="text-gray-700 text-sm font-bold tracking-wide">
               QUANTOR
             </span>
@@ -206,17 +206,17 @@ export function Login() {
           
           {/* Barra progressiva na borda absoluta esquerda do card alinhada com ícones */}
           {activeSection === 'login' && (
-            <div className="absolute left-0 top-[172px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[165px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
               <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
             </div>
           )}
           {activeSection === 'signup' && (
-            <div className="absolute left-0 top-[244px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[237px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
               <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
             </div>
           )}
           {activeSection === 'about' && (
-            <div className="absolute left-0 top-[316px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[309px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
               <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
             </div>
           )}
