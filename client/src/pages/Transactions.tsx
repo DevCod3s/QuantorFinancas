@@ -7,6 +7,31 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubTabs } from "@/components/SubTabs";
 import { Transaction } from "@shared/schema";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+import { Line, Doughnut, Bar } from 'react-chartjs-2';
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  ArcElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
 export function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -141,68 +166,350 @@ export function Transactions() {
                 icon: <Activity className="h-4 w-4" />,
                 content: (
                   <div className="space-y-6">
-                    {/* Cards de resumo */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card className="border-l-4 border-l-green-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Receitas do Mês
-                          </CardTitle>
-                          <TrendingUp className="h-4 w-4 text-green-600" />
+                    {/* Grid de cards com gráficos */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Card Fluxo de Caixa */}
+                      <Card className="col-span-1 lg:col-span-2">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Fluxo de caixa</CardTitle>
+                          <CardDescription className="text-sm text-gray-500">Evolução mensal</CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold text-green-600">R$ 5.420,00</div>
-                          <p className="text-xs text-gray-500">
-                            +12% em relação ao mês anterior
-                          </p>
+                          <div className="h-64">
+                            <Line
+                              data={{
+                                labels: ['04 Jul', '06 Jul', '08 Jul', '10 Jul', '12 Jul', '14 Jul', '16 Jul', '18 Jul', '20 Jul', '22 Jul', '24 Jul', '26 Jul', '28 Jul', '30 Jul'],
+                                datasets: [
+                                  {
+                                    label: 'Banco Inter',
+                                    data: [1000, 2500, 2800, 1500, 2200, 2800, 3500, 3200, 2800, 3200, 3500, 3800, 2500, 2264.77],
+                                    borderColor: '#3b82f6',
+                                    backgroundColor: 'transparent',
+                                    tension: 0.4,
+                                    pointRadius: 3,
+                                  },
+                                  {
+                                    label: 'Bancos | Pessoa Física',
+                                    data: [500, 800, 600, 900, 750, 650, 850, 700, 950, 800, 900, 850, 750, 59.88],
+                                    borderColor: '#10b981',
+                                    backgroundColor: 'transparent',
+                                    tension: 0.4,
+                                    pointRadius: 3,
+                                  }
+                                ]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                  legend: {
+                                    position: 'bottom' as const,
+                                    labels: {
+                                      usePointStyle: true,
+                                      padding: 20,
+                                    }
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      callback: function(value) {
+                                        return 'R$ ' + Number(value).toLocaleString('pt-BR');
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="mt-4 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span>Banco Inter</span>
+                              </div>
+                              <span className="font-medium">2.264,77</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span>Bancos | Pessoa Física</span>
+                              </div>
+                              <span className="font-medium">59,88</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
+                              <span>Total</span>
+                              <span>R$ 2.324,65</span>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="border-l-4 border-l-red-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Despesas do Mês
-                          </CardTitle>
-                          <TrendingDown className="h-4 w-4 text-red-600" />
+                      {/* Card Saldos de Caixa */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Saldos de caixa</CardTitle>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold text-red-600">R$ 3.280,00</div>
-                          <p className="text-xs text-gray-500">
-                            -8% em relação ao mês anterior
-                          </p>
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-blue-600" readOnly />
+                                <span className="text-sm">Banco Inter</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">640,00</div>
+                                <div className="text-xs text-gray-500">2.264,77</div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-orange-600" readOnly />
+                                <span className="text-sm">Bancos | Pessoa Física</span>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-sm font-medium">59,88</div>
+                                <div className="text-xs text-gray-500">-</div>
+                              </div>
+                            </div>
+                            <div className="border-t pt-3">
+                              <div className="flex items-center justify-between font-semibold">
+                                <span>Total</span>
+                                <div className="text-right">
+                                  <div>699,88</div>
+                                  <div className="text-xs font-normal text-gray-500">2.264,65</div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Gráfico de resultado do mês */}
+                            <div className="mt-6">
+                              <h4 className="text-sm font-medium mb-2">Resultado do mês</h4>
+                              <p className="text-xs text-gray-500 mb-4">Despesas projetadas</p>
+                              <div className="h-32">
+                                <Bar
+                                  data={{
+                                    labels: ['Receitas', 'Despesas'],
+                                    datasets: [{
+                                      data: [11105.00, 9242.27],
+                                      backgroundColor: ['#10b981', '#ef4444'],
+                                      borderRadius: 4,
+                                    }]
+                                  }}
+                                  options={{
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                      legend: {
+                                        display: false
+                                      }
+                                    },
+                                    scales: {
+                                      y: {
+                                        display: false
+                                      },
+                                      x: {
+                                        display: false
+                                      }
+                                    }
+                                  }}
+                                />
+                              </div>
+                              <div className="mt-3 space-y-1">
+                                <div className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                    <span>Receitas</span>
+                                  </div>
+                                  <span className="font-medium">11.105,00</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                    <span>Despesas</span>
+                                  </div>
+                                  <span className="font-medium">9.242,27</span>
+                                </div>
+                                <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
+                                  <span>Resultado</span>
+                                  <span className="text-green-600">R$ 1.862,73</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Saldo Atual
-                          </CardTitle>
-                          <DollarSign className="h-4 w-4 text-blue-600" />
+                      {/* Card Despesas por Categoria */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Despesas por categoria</CardTitle>
+                          <CardDescription className="text-sm text-gray-500">Gastos projetados</CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-2xl font-bold text-blue-600">R$ 2.140,00</div>
-                          <p className="text-xs text-gray-500">
-                            Saldo disponível
-                          </p>
+                          <div className="h-48">
+                            <Doughnut
+                              data={{
+                                labels: ['Fornecedores', 'Pessoas', 'Prestador de Serviço', 'Residencial', 'Pessoal/Saúde e Bem-estar', 'Diversos'],
+                                datasets: [{
+                                  data: [73.24, 10.84, 7.97, 5.06, 1.93, 0.97],
+                                  backgroundColor: [
+                                    '#3b82f6',
+                                    '#10b981', 
+                                    '#f59e0b',
+                                    '#ef4444',
+                                    '#8b5cf6',
+                                    '#6b7280'
+                                  ],
+                                  borderWidth: 0,
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '60%',
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="mt-4 space-y-2 text-sm">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span>Fornecedores</span>
+                                <span className="text-gray-500">73,24%</span>
+                              </div>
+                              <span className="font-medium text-red-600">-R$ 6.769,50</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span>Pessoas</span>
+                                <span className="text-gray-500">10,84%</span>
+                              </div>
+                              <span className="font-medium text-red-600">-R$ 1.002,33</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <span>Prestador de Serviço</span>
+                                <span className="text-gray-500">7,97%</span>
+                              </div>
+                              <span className="font-medium text-red-600">-R$ 700,00</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span>Residencial</span>
+                                <span className="text-gray-500">5,06%</span>
+                              </div>
+                              <span className="font-medium text-red-600">-R$ 587,74</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                <span>Pessoal | Saúde e Bem-estar</span>
+                                <span className="text-gray-500">1,93%</span>
+                              </div>
+                              <span className="font-medium text-red-600">-R$ 178,70</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                <span>Diversos</span>
+                                <span className="text-gray-500">0,97%</span>
+                              </div>
+                              <span className="font-medium text-red-600">-R$ 90,00</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Card Receitas por Categoria */}
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Receitas por Categoria</CardTitle>
+                          <CardDescription className="text-sm text-gray-500">Entradas projetadas</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-48">
+                            <Doughnut
+                              data={{
+                                labels: ['Vendas', 'Serviços', 'Freelances', 'Investimentos', 'Outros'],
+                                datasets: [{
+                                  data: [65.5, 20.3, 8.7, 3.8, 1.7],
+                                  backgroundColor: [
+                                    '#10b981',
+                                    '#3b82f6', 
+                                    '#f59e0b',
+                                    '#8b5cf6',
+                                    '#6b7280'
+                                  ],
+                                  borderWidth: 0,
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '60%',
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="mt-4 space-y-2 text-sm">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                                <span>Vendas</span>
+                                <span className="text-gray-500">65,5%</span>
+                              </div>
+                              <span className="font-medium text-green-600">+R$ 7.273,78</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                <span>Serviços</span>
+                                <span className="text-gray-500">20,3%</span>
+                              </div>
+                              <span className="font-medium text-green-600">+R$ 2.254,32</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                <span>Freelances</span>
+                                <span className="text-gray-500">8,7%</span>
+                              </div>
+                              <span className="font-medium text-green-600">+R$ 966,14</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                <span>Investimentos</span>
+                                <span className="text-gray-500">3,8%</span>
+                              </div>
+                              <span className="font-medium text-green-600">+R$ 421,99</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                                <span>Outros</span>
+                                <span className="text-gray-500">1,7%</span>
+                              </div>
+                              <span className="font-medium text-green-600">+R$ 188,77</span>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
-
-                    {/* Gráfico de fluxo de caixa */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Fluxo de Caixa Mensal</CardTitle>
-                        <CardDescription>
-                          Acompanhe as entradas e saídas de dinheiro
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-center py-8 text-gray-500">
-                          Gráfico de fluxo de caixa será implementado aqui
-                        </div>
-                      </CardContent>
-                    </Card>
                   </div>
                 )
               },
