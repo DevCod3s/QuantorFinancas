@@ -149,3 +149,5 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 - **Login com Enter**: Navegação fluida entre campos usando tecla Enter, com submit automático no último campo
 - **Interface em Português**: Toda interface traduzida para português brasileiro mantendo "Quantor" em inglês
 - **UX Aprimorada**: Foco automático entre campos, validação em tempo real e experiência sem mouse
+- **Sistema de Abas Finanças**: Menu "Transações" renomeado para "Finanças" com 4 abas profissionais: Visão Geral, Movimentações, Contas e Centro de Custo
+- **Centro de Custo**: Nova aba com categorização de gastos (Pessoal, Casa, Trabalho, Lazer, Educação), barras de progresso visuais e resumo consolidado

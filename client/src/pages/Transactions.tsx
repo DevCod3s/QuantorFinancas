@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,7 +44,7 @@ export function Transactions() {
       </div>
 
       <Tabs defaultValue="visao-geral" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-fit lg:grid-cols-3 bg-gray-100 p-1 rounded-lg">
+        <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg">
           <TabsTrigger 
             value="visao-geral" 
             className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all"
@@ -65,6 +65,13 @@ export function Transactions() {
           >
             <Building className="h-4 w-4 mr-2" />
             Contas
+          </TabsTrigger>
+          <TabsTrigger 
+            value="centro-custo"
+            className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all"
+          >
+            <Target className="h-4 w-4 mr-2" />
+            Centro de Custo
           </TabsTrigger>
         </TabsList>
 
@@ -322,6 +329,209 @@ export function Transactions() {
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Conta
               </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="centro-custo" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Centro de Custo - Pessoal */}
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-purple-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-purple-600" />
+                  <CardTitle className="text-lg">Pessoal</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-purple-600 mb-2">R$ 2.450,00</div>
+                <p className="text-sm text-gray-500 mb-4">Gastos pessoais este mês</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Orçamento:</span>
+                  <span>R$ 3.000,00</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className="bg-purple-600 h-2 rounded-full" style={{width: '82%'}}></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Centro de Custo - Casa */}
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-green-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                  <Building className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-lg">Casa</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600 mb-2">R$ 1.850,00</div>
+                <p className="text-sm text-gray-500 mb-4">Despesas da casa este mês</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Orçamento:</span>
+                  <span>R$ 2.200,00</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className="bg-green-600 h-2 rounded-full" style={{width: '84%'}}></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Centro de Custo - Trabalho */}
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-blue-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="text-lg">Trabalho</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600 mb-2">R$ 680,00</div>
+                <p className="text-sm text-gray-500 mb-4">Gastos profissionais este mês</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Orçamento:</span>
+                  <span>R$ 800,00</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className="bg-blue-600 h-2 rounded-full" style={{width: '85%'}}></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Centro de Custo - Lazer */}
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-orange-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-orange-600" />
+                  <CardTitle className="text-lg">Lazer</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-orange-600 mb-2">R$ 420,00</div>
+                <p className="text-sm text-gray-500 mb-4">Entretenimento este mês</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Orçamento:</span>
+                  <span>R$ 600,00</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className="bg-orange-600 h-2 rounded-full" style={{width: '70%'}}></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Centro de Custo - Educação */}
+            <Card className="hover:shadow-lg transition-shadow border-l-4 border-l-indigo-500">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                  <Search className="h-5 w-5 text-indigo-600" />
+                  <CardTitle className="text-lg">Educação</CardTitle>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-indigo-600 mb-2">R$ 320,00</div>
+                <p className="text-sm text-gray-500 mb-4">Cursos e livros este mês</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Orçamento:</span>
+                  <span>R$ 500,00</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div className="bg-indigo-600 h-2 rounded-full" style={{width: '64%'}}></div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Botão para adicionar novo centro de custo */}
+            <Card className="border-2 border-dashed border-gray-300 hover:border-purple-400 transition-colors">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Plus className="h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-600 mb-2">Novo Centro de Custo</h3>
+                <p className="text-sm text-gray-500 text-center mb-4">
+                  Organize seus gastos por categorias personalizadas
+                </p>
+                <Button>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Criar Centro
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Resumo dos Centros de Custo */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Resumo dos Centros de Custo</CardTitle>
+              <CardDescription>
+                Acompanhe o desempenho de cada centro de custo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                    <span className="font-medium">Pessoal</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">82% do orçamento</span>
+                    <span className="font-bold text-purple-600">R$ 2.450,00</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="font-medium">Casa</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">84% do orçamento</span>
+                    <span className="font-bold text-green-600">R$ 1.850,00</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="font-medium">Trabalho</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">85% do orçamento</span>
+                    <span className="font-bold text-blue-600">R$ 680,00</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                    <span className="font-medium">Lazer</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">70% do orçamento</span>
+                    <span className="font-bold text-orange-600">R$ 420,00</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                    <span className="font-medium">Educação</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-500">64% do orçamento</span>
+                    <span className="font-bold text-indigo-600">R$ 320,00</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
