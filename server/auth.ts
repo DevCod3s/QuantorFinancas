@@ -1,11 +1,21 @@
 import { Request, Response } from "express";
 import { storage } from "./storage";
+import bcrypt from "bcryptjs";
 
 // Para desenvolvimento, vamos usar um usuário padrão
 const DEFAULT_USER = {
   id: "test-user-1",
   email: "teste@exemplo.com",
   name: "Usuário Teste",
+  avatar: "https://via.placeholder.com/150",
+};
+
+// Usuário mestre
+const MASTER_USER = {
+  email: "master@quantor.com",
+  name: "Cod3s",
+  username: "Cod3s",
+  password: "Jr@C0d3$",
   avatar: "https://via.placeholder.com/150",
 };
 
@@ -20,7 +30,16 @@ export async function initializeAuth() {
         avatar: DEFAULT_USER.avatar,
       });
     }
-    console.log("Auth initialized successfully with default user");
+    
+    // Verificar se o usuário mestre existe
+    let masterUser = await storage.getUserByUsername(MASTER_USER.username.toLowerCase());
+    if (masterUser) {
+      console.log("Master user already exists");
+    } else {
+      console.log("Master user not found in database");
+    }
+    
+    console.log("Auth initialized successfully with default user and master user");
   } catch (error) {
     console.error("Failed to initialize auth:", error);
   }
@@ -47,6 +66,32 @@ export async function handleCallback(req: Request, res: Response) {
   } catch (error) {
     console.error("Auth callback error:", error);
     res.status(500).json({ error: "Authentication failed" });
+  }
+}
+
+// Função para login com username/password
+export async function loginWithCredentials(username: string, password: string) {
+  try {
+    // Buscar usuário por username (case-insensitive)
+    const user = await storage.getUserByUsername(username.toLowerCase());
+    
+    if (!user || !user.password) {
+      return null;
+    }
+    
+    // Verificar senha
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    
+    if (!isPasswordValid) {
+      return null;
+    }
+    
+    // Retornar usuário sem a senha
+    const { password: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  } catch (error) {
+    console.error("Login error:", error);
+    return null;
   }
 }
 

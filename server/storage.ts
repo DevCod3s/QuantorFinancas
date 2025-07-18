@@ -22,6 +22,7 @@ export interface IStorage {
   // Users
   getUserById(id: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
+  getUserByUsername(username: string): Promise<User | null>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
 
@@ -68,12 +69,17 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUserById(id: string): Promise<User | null> {
-    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, id));
+    const [user] = await db.select().from(schema.users).where(eq(schema.users.id, parseInt(id)));
     return user || null;
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
     const [user] = await db.select().from(schema.users).where(eq(schema.users.email, email));
+    return user || null;
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    const [user] = await db.select().from(schema.users).where(eq(sql`LOWER(${schema.users.username})`, username.toLowerCase()));
     return user || null;
   }
 
@@ -86,7 +92,7 @@ export class DatabaseStorage implements IStorage {
     const [updatedUser] = await db
       .update(schema.users)
       .set(user)
-      .where(eq(schema.users.id, id))
+      .where(eq(schema.users.id, parseInt(id)))
       .returning();
     return updatedUser;
   }

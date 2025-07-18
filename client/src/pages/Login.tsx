@@ -9,14 +9,49 @@ type ActiveSection = 'login' | 'signup' | 'about';
 export function Login() {
   const [activeSection, setActiveSection] = useState<ActiveSection>('login');
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: '',
     name: '',
+    email: '',
     confirmPassword: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleLogin = () => {
-    window.location.href = "/api/login";
+  const handleLogin = async () => {
+    if (activeSection === 'login') {
+      setIsLoading(true);
+      setError('');
+      
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Login bem-sucedido, redirecionar para dashboard
+          window.location.href = "/";
+        } else {
+          setError(data.error || 'Erro ao fazer login');
+        }
+      } catch (error) {
+        setError('Erro de conexão');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Para signup e about, usar o comportamento anterior
+      window.location.href = "/api/login";
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -35,25 +70,32 @@ export function Login() {
             
             <div className="space-y-4">
               <Input
-                type="email"
-                placeholder="edison.andreal@gmail.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                type="text"
+                placeholder="Usuário"
+                value={formData.username}
+                onChange={(e) => handleInputChange('username', e.target.value)}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
                 type="password"
-                placeholder="PASSWORD"
+                placeholder="Senha"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
+              {error && (
+                <div className="text-red-500 text-sm text-center">
+                  {error}
+                </div>
+              )}
+              
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
-                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
+                  disabled={isLoading}
+                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50"
                 >
                   <svg 
                     className="w-5 h-5 text-white" 

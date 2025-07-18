@@ -2,7 +2,7 @@ import { Router } from "express";
 import { storage } from "./storage";
 import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema } from "@shared/schema";
 import { z } from "zod";
-import { getLoginUrl, handleCallback, logout, requireAuth as authMiddleware } from "./auth";
+import { getLoginUrl, handleCallback, logout, requireAuth as authMiddleware, loginWithCredentials } from "./auth";
 
 const router = Router();
 
@@ -34,6 +34,31 @@ router.get("/auth/user", (req: any, res) => {
     res.json(req.user);
   } else {
     res.status(401).json({ error: "Not authenticated" });
+  }
+});
+
+// Login com credentials
+router.post("/auth/login", async (req: any, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    if (!username || !password) {
+      return res.status(400).json({ error: "Username e senha são obrigatórios" });
+    }
+    
+    const user = await loginWithCredentials(username, password);
+    
+    if (!user) {
+      return res.status(401).json({ error: "Credenciais inválidas" });
+    }
+    
+    // Salvar usuário na sessão
+    req.session.user = user;
+    
+    res.json({ success: true, user });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 
