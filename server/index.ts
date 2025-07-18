@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
 import path from "path";
+import { fileURLToPath } from "url";
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import pkg from "pg";
@@ -8,6 +9,9 @@ const { Pool } = pkg;
 import apiRoutes from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeAuth, addUser } from "./auth";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json());

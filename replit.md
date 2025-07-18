@@ -42,9 +42,11 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 ## Key Components
 
 ### Authentication System
-- Integração completa com Replit Auth
+- Sistema híbrido: Replit Auth + autenticação local com username/password
 - Middleware de autenticação obrigatório para todas as rotas da API
 - Gerenciamento de sessões com PostgreSQL
+- Usuário mestre configurado: Cod3s / Jr@C0d3$ (case-insensitive)
+- Autenticação bcrypt para senhas
 - Redirecionamento automático para login quando não autenticado
 
 ### Financial Management Core
