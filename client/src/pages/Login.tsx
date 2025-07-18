@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
@@ -17,6 +17,16 @@ export function Login() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Refs para os inputs do login
+  const usernameLoginRef = useRef<HTMLInputElement>(null);
+  const passwordLoginRef = useRef<HTMLInputElement>(null);
+
+  // Refs para os inputs do cadastro
+  const usernameSignupRef = useRef<HTMLInputElement>(null);
+  const emailSignupRef = useRef<HTMLInputElement>(null);
+  const passwordSignupRef = useRef<HTMLInputElement>(null);
+  const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
   const handleLogin = async () => {
     if (activeSection === 'login') {
@@ -58,6 +68,39 @@ export function Login() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Função para lidar com Enter nos inputs do login
+  const handleLoginKeyPress = (e: React.KeyboardEvent, currentField: 'username' | 'password') => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (currentField === 'username') {
+        passwordLoginRef.current?.focus();
+      } else if (currentField === 'password') {
+        handleLogin();
+      }
+    }
+  };
+
+  // Função para lidar com Enter nos inputs do cadastro
+  const handleSignupKeyPress = (e: React.KeyboardEvent, currentField: 'username' | 'email' | 'password' | 'confirmPassword') => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      switch (currentField) {
+        case 'username':
+          emailSignupRef.current?.focus();
+          break;
+        case 'email':
+          passwordSignupRef.current?.focus();
+          break;
+        case 'password':
+          confirmPasswordRef.current?.focus();
+          break;
+        case 'confirmPassword':
+          handleLogin(); // Submete o formulário
+          break;
+      }
+    }
+  };
+
   const renderRightCard = () => {
     switch (activeSection) {
       case 'login':
@@ -70,18 +113,22 @@ export function Login() {
             
             <div className="space-y-4">
               <Input
+                ref={usernameLoginRef}
                 type="text"
                 placeholder="Usuário"
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
+                onKeyPress={(e) => handleLoginKeyPress(e, 'username')}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
+                ref={passwordLoginRef}
                 type="password"
                 placeholder="Senha"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
+                onKeyPress={(e) => handleLoginKeyPress(e, 'password')}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
@@ -132,34 +179,42 @@ export function Login() {
             
             <div className="space-y-4">
               <Input
+                ref={usernameSignupRef}
                 type="text"
                 placeholder="Nome de usuário"
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
+                onKeyPress={(e) => handleSignupKeyPress(e, 'username')}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
+                ref={emailSignupRef}
                 type="email"
                 placeholder="seu.email@gmail.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
+                onKeyPress={(e) => handleSignupKeyPress(e, 'email')}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
+                ref={passwordSignupRef}
                 type="password"
                 placeholder="Senha"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
+                onKeyPress={(e) => handleSignupKeyPress(e, 'password')}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
+                ref={confirmPasswordRef}
                 type="password"
                 placeholder="Confirmar senha"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                onKeyPress={(e) => handleSignupKeyPress(e, 'confirmPassword')}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
