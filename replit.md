@@ -68,7 +68,7 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 - Animações suaves e transições
 - Theme system com CSS variables
 - Componentes reutilizáveis com Shadcn/ui
-- **Tela de Login Customizada**: Layout de 3 cards com card central suspenso, barra progressiva lateral alinhada com ícones, inputs com sombras em vez de bordas (Janeiro 2025)
+- **Tela de Login Customizada**: Layout de 3 cards com card central suspenso, barra progressiva lateral alinhada com ícones, inputs com sombras em vez de bordas, navegação com Enter entre campos, interface em português brasileiro (Janeiro 2025)
 
 ## Data Flow
 
@@ -142,3 +142,10 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 4. **Replit Auth**: Integração nativa com a plataforma de deployment
 5. **OpenAI GPT-4o**: Modelo mais recente para assistente IA com melhor compreensão contextual
 6. **PostgreSQL**: Banco robusto para dados financeiros com suporte a JSON para flexibilidade
+
+## Recent Changes (Janeiro 2025)
+
+- **Sidebar Renovada**: Implementado design baseado na Vizta com gradiente azul, botão de colapsar/expandir, logo laranja e animações suaves
+- **Login com Enter**: Navegação fluida entre campos usando tecla Enter, com submit automático no último campo
+- **Interface em Português**: Toda interface traduzida para português brasileiro mantendo "Quantor" em inglês
+- **UX Aprimorada**: Foco automático entre campos, validação em tempo real e experiência sem mouse
