@@ -8,7 +8,13 @@ import {
   MessageSquare,
   LogOut,
   Menu,
-  X
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Users,
+  FileText,
+  DollarSign,
+  Settings
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +28,7 @@ const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Transações", href: "/transactions", icon: Receipt },
   { name: "Categorias", href: "/categories", icon: FolderOpen },
-  { name: "Orçamentos", href: "/budgets", icon: Target },
+  { name: "Orçamentos", href: "/budgets", icon: DollarSign },
   { name: "Relatórios", href: "/reports", icon: BarChart3 },
   { name: "Assistente IA", href: "/ai-chat", icon: MessageSquare },
 ];
@@ -30,11 +36,15 @@ const navigation = [
 export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { user } = useAuth();
 
   const handleLogout = () => {
     window.location.href = "/api/logout";
   };
+
+  const sidebarWidth = sidebarCollapsed ? "w-16" : "w-64";
+  const mainMargin = sidebarCollapsed ? "lg:ml-16" : "lg:ml-64";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -56,19 +66,45 @@ export function Layout({ children }: LayoutProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed inset-y-0 left-0 z-40 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out
+        fixed inset-y-0 left-0 z-40 ${sidebarWidth} bg-gradient-to-b from-blue-600 via-blue-700 to-blue-800 shadow-xl transform transition-all duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0
       `}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-primary">Quantor</h1>
-            <p className="text-sm text-gray-600">Gestão Financeira Inteligente</p>
+        <div className="flex flex-col h-full relative">
+          {/* Collapse button */}
+          <div className="absolute -right-3 top-80 z-50">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="h-6 w-6 bg-white hover:bg-gray-50 border-gray-300 rounded-full shadow-md hidden lg:flex"
+            >
+              {sidebarCollapsed ? (
+                <ChevronRight className="h-3 w-3" />
+              ) : (
+                <ChevronLeft className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+
+          {/* Header com logo */}
+          <div className="p-6 border-b border-blue-500/30">
+            <div className="flex items-center space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">Q</span>
+                </div>
+              </div>
+              {!sidebarCollapsed && (
+                <div>
+                  <h1 className="text-xl font-bold text-white">Quantor</h1>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
+          <nav className="flex-1 px-3 py-6 space-y-1">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
@@ -77,50 +113,77 @@ export function Layout({ children }: LayoutProps) {
                 <Link key={item.name} href={item.href}>
                   <div
                     className={`
-                      flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer
+                      flex items-center px-3 py-3 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer group
                       ${isActive 
-                        ? 'bg-primary text-white' 
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'bg-blue-500/20 text-white border-r-2 border-white' 
+                        : 'text-blue-100 hover:bg-blue-500/10 hover:text-white'
                       }
+                      ${sidebarCollapsed ? 'justify-center' : ''}
                     `}
                     onClick={() => setSidebarOpen(false)}
+                    title={sidebarCollapsed ? item.name : ''}
                   >
-                    <Icon className="h-5 w-5 mr-3" />
-                    {item.name}
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    {!sidebarCollapsed && (
+                      <span className="ml-3 truncate">{item.name}</span>
+                    )}
                   </div>
                 </Link>
               );
             })}
           </nav>
 
-          {/* User info and logout */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center mb-3">
-              <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary flex items-center justify-center">
+          {/* Logout button */}
+          {!sidebarCollapsed && (
+            <div className="p-3">
+              <Button
+                onClick={handleLogout}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md transition-colors duration-200"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          )}
+
+          {/* User info */}
+          <div className="p-4 border-t border-blue-500/30">
+            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center border-2 border-blue-300">
                 <span className="text-white text-sm font-medium">
                   {user?.name?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">{user?.name}</p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
-              </div>
+              {!sidebarCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                  <p className="text-xs text-blue-200 truncate">Administrador</p>
+                </div>
+              )}
+              {!sidebarCollapsed && (
+                <ChevronRight className="h-4 w-4 text-blue-300" />
+              )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleLogout}
-              className="w-full"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sair
-            </Button>
           </div>
+
+          {/* Collapsed logout button */}
+          {sidebarCollapsed && (
+            <div className="p-3">
+              <Button
+                onClick={handleLogout}
+                size="icon"
+                className="w-full bg-red-600 hover:bg-red-700 text-white aspect-square rounded-md"
+                title="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64 flex flex-col min-h-screen">
+      <div className={`${mainMargin} flex flex-col min-h-screen transition-all duration-300`}>
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div 
