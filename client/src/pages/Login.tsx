@@ -39,7 +39,7 @@ export function Login() {
                 placeholder="edison.andreal@gmail.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="border-gray-300 rounded-md"
+                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
@@ -47,7 +47,7 @@ export function Login() {
                 placeholder="PASSWORD"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="border-gray-300 rounded-md"
+                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <div className="flex justify-center mt-6">
@@ -94,7 +94,7 @@ export function Login() {
                 placeholder="Nome completo"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                className="border-gray-300 rounded-md"
+                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
@@ -102,7 +102,7 @@ export function Login() {
                 placeholder="seu.email@gmail.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="border-gray-300 rounded-md"
+                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
@@ -110,7 +110,7 @@ export function Login() {
                 placeholder="SENHA"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="border-gray-300 rounded-md"
+                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <Input
@@ -118,7 +118,7 @@ export function Login() {
                 placeholder="CONFIRMAR SENHA"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                className="border-gray-300 rounded-md"
+                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
               <div className="flex justify-center mt-6">
@@ -197,18 +197,18 @@ export function Login() {
         <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
           {/* Barra progressiva na borda esquerda alinhada com ícones */}
           {activeSection === 'login' && (
-            <div className="absolute left-0 top-[140px] w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
-              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.6s_ease-out_forwards]"></div>
+            <div className="absolute left-0 top-[152px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
             </div>
           )}
           {activeSection === 'signup' && (
-            <div className="absolute left-0 top-[212px] w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
-              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.6s_ease-out_forwards]"></div>
+            <div className="absolute left-0 top-[224px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
             </div>
           )}
           {activeSection === 'about' && (
-            <div className="absolute left-0 top-[284px] w-1 h-12 bg-blue-600 rounded-r overflow-hidden">
-              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.6s_ease-out_forwards]"></div>
+            <div className="absolute left-0 top-[296px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
             </div>
           )}
           
