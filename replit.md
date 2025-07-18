@@ -162,3 +162,9 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Gráficos Rosca**: Distribuição percentual de despesas e receitas por categoria
   - **Layout Responsivo**: Grid 2x2 otimizado para desktop e mobile
   - **Dados Realistas**: Baseados em referência visual fornecida pelo usuário
+- **Sistema de Lançamentos Analíticos**: Sub-aba "Lançamentos" com 3 cards demonstrativos
+  - **Card Seletor**: Navegação temporal (junho 2025) com checkboxes de configuração
+  - **Card Demonstrativo**: Tabela detalhada com entradas, saídas, resultado e saldo diário
+  - **Card Gráfico**: Resultado de caixa em barras coloridas (verde/vermelho) por período
+  - **Design Elevado**: Cards suspensos com sombreamento e transições hover elegantes
+  - **Dados Estruturados**: Layout tabular organizado baseado em referência visual específica
