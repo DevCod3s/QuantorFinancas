@@ -26,7 +26,7 @@ interface LayoutProps {
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Transações", href: "/transactions", icon: Receipt },
+  { name: "Finanças", href: "/transactions", icon: Receipt },
   { name: "Categorias", href: "/categories", icon: FolderOpen },
   { name: "Orçamentos", href: "/budgets", icon: DollarSign },
   { name: "Relatórios", href: "/reports", icon: BarChart3 },
