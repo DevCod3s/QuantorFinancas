@@ -33,23 +33,22 @@ export function Transactions() {
         // Aplica a posição através de CSS custom properties
         const progressBar = tabListRef.current.querySelector('.progress-bar') as HTMLElement;
         if (progressBar) {
-          // Reset da animação - primeiro vai para largura 0
+          // Define a posição e largura final
           progressBar.style.setProperty('--progress-left', `${leftOffset}px`);
-          progressBar.style.setProperty('--progress-width', `0px`);
+          progressBar.style.setProperty('--progress-width', `${width}px`);
           
-          // Força repaint
-          progressBar.offsetHeight;
+          // Remove animação anterior e força reset
+          progressBar.style.animation = 'none';
+          progressBar.offsetHeight; // Força repaint
           
-          // Depois anima para a largura total
-          setTimeout(() => {
-            progressBar.style.setProperty('--progress-width', `${width}px`);
-          }, 10);
+          // Aplica nova animação
+          progressBar.style.animation = 'progressFill 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
         }
       }
     };
 
     // Delay para garantir que o DOM foi atualizado
-    const timer = setTimeout(updateProgressBar, 100);
+    const timer = setTimeout(updateProgressBar, 50);
     return () => clearTimeout(timer);
   }, [activeTab]);
 
@@ -124,10 +123,8 @@ export function Transactions() {
               className="progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
               style={{
                 left: 'var(--progress-left, 0px)',
-                width: 'var(--progress-width, 0px)',
-                transition: 'left 0.3s ease-in-out, width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                transformOrigin: 'left center',
-                willChange: 'width, left'
+                width: '0px',
+                transformOrigin: 'left center'
               }}
             />
           </div>

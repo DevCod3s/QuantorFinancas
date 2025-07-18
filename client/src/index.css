@@ -74,6 +74,25 @@
   --sidebar-ring: hsl(212, 12%, 84%);
 }
 
+/* Animação da barra de progressão das abas */
+@keyframes progressFill {
+  0% {
+    width: 0px;
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    width: var(--progress-width, 0px);
+    opacity: 1;
+  }
+}
+
+.progress-bar {
+  animation-fill-mode: forwards;
+}
+
 @layer base {
   * {
     @apply border-border;
