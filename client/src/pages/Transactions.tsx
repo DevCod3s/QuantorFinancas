@@ -659,56 +659,99 @@ export function Transactions() {
                 icon: <FileText className="h-4 w-4" />,
                 content: (
                   <div className="space-y-6">
-                    {/* Card 1: Seletor de Data de Referência */}
-                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-                      <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg">
-                        <div className="flex items-center justify-between">
-                          <button className="p-2 hover:bg-white rounded-full transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          <CardTitle className="text-lg font-semibold text-gray-800">junho 2025</CardTitle>
-                          <button className="p-2 hover:bg-white rounded-full transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" checked className="text-pink-500" readOnly />
-                              <span className="text-sm text-gray-600">Considerar lançamentos pendentes</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" className="text-gray-400" />
-                              <span className="text-sm text-gray-600">Não considerar transferências internas</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button className="p-2 hover:bg-gray-100 rounded">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                              </svg>
-                            </button>
-                            <button className="p-2 hover:bg-gray-100 rounded">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Card 2: Lançamentos Diários */}
+                    {/* Card Demonstrativo Diário com controles temporais */}
                     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <CardHeader>
-                        <CardTitle className="text-lg font-semibold">Demonstrativo Diário</CardTitle>
-                        <CardDescription className="text-sm text-gray-500">Saldo em 31 jul</CardDescription>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <CardTitle className="text-lg font-semibold">Demonstrativo Diário</CardTitle>
+                            <CardDescription className="text-sm text-gray-500">Saldo em 31 jul</CardDescription>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {/* Navegação de mês */}
+                            <div className="flex items-center gap-1">
+                              <button 
+                                onClick={() => navigateMonth('prev')}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </button>
+                              <span className="text-sm font-medium min-w-[100px] text-center">
+                                {currentMonth}
+                              </span>
+                              <button 
+                                onClick={() => navigateMonth('next')}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </button>
+                            </div>
+
+                            {/* Ícone do calendário */}
+                            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                              <PopoverTrigger asChild>
+                                <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                  <Calendar className="h-4 w-4" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="end">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={selectedDate}
+                                  onSelect={handleDateSelect}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+
+                            {/* Ícone de engrenagem com dropdown */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                  <Settings className="h-4 w-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem 
+                                  onClick={() => handleFilterChange('Semanal')}
+                                  className={filterPeriod === 'Semanal' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Semanal
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleFilterChange('Mensal')}
+                                  className={filterPeriod === 'Mensal' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Mensal
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleFilterChange('Trimestral')}
+                                  className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Trimestral
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleFilterChange('Semestral')}
+                                  className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Semestral
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleFilterChange('Anual')}
+                                  className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Anual
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  onClick={() => handleFilterChange('Personalizar')}
+                                  className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Personalizar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
@@ -798,7 +841,7 @@ export function Transactions() {
                       </CardContent>
                     </Card>
 
-                    {/* Card 3: Gráfico Resultado de Caixa */}
+                    {/* Card Gráfico Resultado de Caixa */}
                     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <CardHeader>
                         <CardTitle className="text-lg font-semibold">Resultado de caixa</CardTitle>
