@@ -102,7 +102,7 @@ export function logout(req: Request, res: Response) {
     }
     // Limpar cookie de sessão
     res.clearCookie('connect.sid');
-    res.redirect("/login");
+    res.redirect("/");
   });
 }
 
