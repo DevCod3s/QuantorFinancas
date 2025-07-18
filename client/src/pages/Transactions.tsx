@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Transaction } from "@shared/schema";
 export function Transactions() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
+  const [activeTab, setActiveTab] = useState("visao-geral");
 
   const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
@@ -43,37 +44,54 @@ export function Transactions() {
         </Button>
       </div>
 
-      <Tabs defaultValue="visao-geral" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg">
-          <TabsTrigger 
-            value="visao-geral" 
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all"
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Visão Geral
-          </TabsTrigger>
-          <TabsTrigger 
-            value="movimentacoes"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all"
-          >
-            <TrendingUp className="h-4 w-4 mr-2" />
-            Movimentações
-          </TabsTrigger>
-          <TabsTrigger 
-            value="contas"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all"
-          >
-            <Building className="h-4 w-4 mr-2" />
-            Contas
-          </TabsTrigger>
-          <TabsTrigger 
-            value="centro-custo"
-            className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all"
-          >
-            <Target className="h-4 w-4 mr-2" />
-            Centro de Custo
-          </TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="relative">
+          <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg">
+            <TabsTrigger 
+              value="visao-geral" 
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Visão Geral
+            </TabsTrigger>
+            <TabsTrigger 
+              value="movimentacoes"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              Movimentações
+            </TabsTrigger>
+            <TabsTrigger 
+              value="contas"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+            >
+              <Building className="h-4 w-4 mr-2" />
+              Contas
+            </TabsTrigger>
+            <TabsTrigger 
+              value="centro-custo"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              Centro de Custo
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* Barra de progressão animada */}
+          <div className="absolute bottom-0 left-1 right-1 h-0.5 bg-transparent">
+            <div 
+              className={`h-full bg-blue-600 transition-all duration-500 ease-in-out rounded-full ${
+                activeTab === "visao-geral" ? "w-1/4 translate-x-0" :
+                activeTab === "movimentacoes" ? "w-1/4 translate-x-full" :
+                activeTab === "contas" ? "w-1/4 translate-x-[200%]" :
+                activeTab === "centro-custo" ? "w-1/4 translate-x-[300%]" : "w-0"
+              }`}
+              style={{
+                transformOrigin: "left center"
+              }}
+            />
+          </div>
+        </div>
 
         <TabsContent value="visao-geral" className="space-y-6">
           {/* Cards de resumo */}
