@@ -204,20 +204,20 @@ export function Login() {
             </span>
           </div>
           
-          {/* Barra progressiva na borda absoluta esquerda do card */}
+          {/* Barra progressiva na borda absoluta esquerda do card alinhada com ícones */}
           {activeSection === 'login' && (
-            <div className="absolute left-0 top-[155px] w-1 h-6 bg-blue-600 rounded-r">
-              <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+            <div className="absolute left-0 top-[172px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
             </div>
           )}
           {activeSection === 'signup' && (
-            <div className="absolute left-0 top-[227px] w-1 h-6 bg-blue-600 rounded-r">
-              <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+            <div className="absolute left-0 top-[244px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
             </div>
           )}
           {activeSection === 'about' && (
-            <div className="absolute left-0 top-[299px] w-1 h-6 bg-blue-600 rounded-r">
-              <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+            <div className="absolute left-0 top-[316px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
             </div>
           )}
 
@@ -277,9 +277,13 @@ export function Login() {
         
         {/* CSS para animação de preenchimento */}
         <style>{`
-          @keyframes fillUp {
-            from { height: 0%; }
-            to { height: 100%; }
+          @keyframes slideUp {
+            0% { 
+              transform: scaleY(0);
+            }
+            100% { 
+              transform: scaleY(1);
+            }
           }
         `}</style>
         
