@@ -195,22 +195,7 @@ export function Login() {
         
         {/* Card esquerdo */}
         <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
-          {/* Barra progressiva na borda esquerda alinhada com ícones */}
-          {activeSection === 'login' && (
-            <div className="absolute left-0 top-[158px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-            </div>
-          )}
-          {activeSection === 'signup' && (
-            <div className="absolute left-0 top-[230px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-            </div>
-          )}
-          {activeSection === 'about' && (
-            <div className="absolute left-0 top-[302px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-            </div>
-          )}
+
           
           {/* Logo */}
           <div className="flex flex-col items-center mb-12">
@@ -221,31 +206,49 @@ export function Login() {
           </div>
           
           {/* Ícones de navegação */}
-          <div className="flex flex-col space-y-8">
+          <div className="flex flex-col space-y-8 relative">
             <button
               onClick={() => setActiveSection('login')}
-              className={`p-3 rounded-lg transition-colors ${
+              className={`relative p-3 rounded-lg transition-colors ${
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
+              {/* Barra progressiva alinhada com este ícone */}
+              {activeSection === 'login' && (
+                <div className="absolute -left-16 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
+                </div>
+              )}
               <User className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('signup')}
-              className={`p-3 rounded-lg transition-colors ${
+              className={`relative p-3 rounded-lg transition-colors ${
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
+              {/* Barra progressiva alinhada com este ícone */}
+              {activeSection === 'signup' && (
+                <div className="absolute -left-16 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
+                </div>
+              )}
               <UserPlus className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('about')}
-              className={`p-3 rounded-lg transition-colors ${
+              className={`relative p-3 rounded-lg transition-colors ${
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
+              {/* Barra progressiva alinhada com este ícone */}
+              {activeSection === 'about' && (
+                <div className="absolute -left-16 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
+                </div>
+              )}
               <Info className="w-6 h-6" />
             </button>
           </div>
