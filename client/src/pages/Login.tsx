@@ -213,9 +213,9 @@ export function Login() {
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra progressiva alinhada com este ícone */}
+              {/* Barra progressiva na borda esquerda alinhada com este ícone */}
               {activeSection === 'login' && (
-                <div className="absolute -left-16 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                <div className="absolute -left-20 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
                   <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
                 </div>
               )}
@@ -228,9 +228,9 @@ export function Login() {
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra progressiva alinhada com este ícone */}
+              {/* Barra progressiva na borda esquerda alinhada com este ícone */}
               {activeSection === 'signup' && (
-                <div className="absolute -left-16 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                <div className="absolute -left-20 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
                   <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
                 </div>
               )}
@@ -243,9 +243,9 @@ export function Login() {
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra progressiva alinhada com este ícone */}
+              {/* Barra progressiva na borda esquerda alinhada com este ícone */}
               {activeSection === 'about' && (
-                <div className="absolute -left-16 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+                <div className="absolute -left-20 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
                   <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
                 </div>
               )}
