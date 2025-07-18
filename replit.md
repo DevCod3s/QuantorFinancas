@@ -151,3 +151,8 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 - **UX Aprimorada**: Foco automático entre campos, validação em tempo real e experiência sem mouse
 - **Sistema de Abas Finanças**: Menu "Transações" renomeado para "Finanças" com 4 abas profissionais: Visão Geral, Movimentações, Contas e Centro de Custo
 - **Centro de Custo**: Nova aba com categorização de gastos (Pessoal, Casa, Trabalho, Lazer, Educação), barras de progresso visuais e resumo consolidado
+- **Sistema de Sub-abas Inteligente**: Implementado sub-abas dentro das seções principais com barra de progressão animada
+  - **Visão Geral**: Sub-abas "Fluxo de Caixa" e "Lançamentos" (apenas para análise, sem funcionalidade de lançamento)
+  - **Movimentações**: Sub-abas "À Pagar" e "À Receber" com dados organizados por status
+  - **Barra de Progressão**: Animação de preenchimento progressivo da esquerda para direita em todas as sub-abas
+  - **Componente Reutilizável**: SubTabs.tsx criado para manter consistência e reutilização
