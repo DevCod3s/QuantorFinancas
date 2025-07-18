@@ -194,7 +194,23 @@ export function Login() {
       <div className="flex items-center relative">
         
         {/* Card esquerdo */}
-        <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
+        <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative overflow-visible">
+          {/* Barra progressiva na borda absoluta esquerda */}
+          {activeSection === 'login' && (
+            <div className="absolute left-0 top-[158px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'signup' && (
+            <div className="absolute left-0 top-[230px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'about' && (
+            <div className="absolute left-0 top-[302px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+              <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
 
           
           {/* Logo */}
@@ -213,12 +229,7 @@ export function Login() {
                 activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra progressiva na borda esquerda alinhada com este ícone */}
-              {activeSection === 'login' && (
-                <div className="absolute -left-24 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
+
               <User className="w-6 h-6" />
             </button>
             
@@ -228,12 +239,7 @@ export function Login() {
                 activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra progressiva na borda esquerda alinhada com este ícone */}
-              {activeSection === 'signup' && (
-                <div className="absolute -left-24 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
+
               <UserPlus className="w-6 h-6" />
             </button>
             
@@ -243,12 +249,7 @@ export function Login() {
                 activeSection === 'about' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              {/* Barra progressiva na borda esquerda alinhada com este ícone */}
-              {activeSection === 'about' && (
-                <div className="absolute -left-24 top-3 w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
+
               <Info className="w-6 h-6" />
             </button>
           </div>
