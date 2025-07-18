@@ -8,6 +8,7 @@ Quantor é um sistema web moderno de gestão financeira integrado com inteligên
 
 Preferred communication style: Simple, everyday language.
 Always communicate in Portuguese.
+Extremely detail-oriented with visual precision - requires exact alignment and positioning for UI elements.
 
 ## System Architecture
 
@@ -65,6 +66,7 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 - Animações suaves e transições
 - Theme system com CSS variables
 - Componentes reutilizáveis com Shadcn/ui
+- **Tela de Login Customizada**: Layout de 3 cards com card central suspenso, barra progressiva lateral alinhada com ícones, inputs com sombras em vez de bordas (Janeiro 2025)
 
 ## Data Flow
 
