@@ -133,9 +133,9 @@ export function Login() {
             <div className="space-y-4">
               <Input
                 type="text"
-                placeholder="Nome completo"
-                value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Nome de usuário"
+                value={formData.username}
+                onChange={(e) => handleInputChange('username', e.target.value)}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
               />
               
