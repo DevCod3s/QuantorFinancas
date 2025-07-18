@@ -162,9 +162,14 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Gráficos Rosca**: Distribuição percentual de despesas e receitas por categoria
   - **Layout Responsivo**: Grid 2x2 otimizado para desktop e mobile
   - **Dados Realistas**: Baseados em referência visual fornecida pelo usuário
-- **Sistema de Lançamentos Analíticos**: Sub-aba "Lançamentos" com 3 cards demonstrativos
-  - **Card Seletor**: Navegação temporal (junho 2025) com checkboxes de configuração
+- **Sistema de Lançamentos Analíticos**: Sub-aba "Lançamentos" com cards demonstrativos
   - **Card Demonstrativo**: Tabela detalhada com entradas, saídas, resultado e saldo diário
   - **Card Gráfico**: Resultado de caixa em barras coloridas (verde/vermelho) por período
   - **Design Elevado**: Cards suspensos com sombreamento e transições hover elegantes
   - **Dados Estruturados**: Layout tabular organizado baseado em referência visual específica
+- **Controles Temporais Avançados**: Sistema unificado de navegação temporal em ambas sub-abas
+  - **Navegação por Setas**: Botões esquerda/direita para navegar entre meses
+  - **Seletor de Calendário**: Popover com calendário completo para seleção de ano, mês e dia
+  - **Filtros de Período**: Dropdown com opções Semanal, Mensal, Trimestral, Semestral, Anual e Personalizar
+  - **Interface Consistente**: Controles padronizados nos headers dos cards "Fluxo de Caixa" e "Demonstrativo Diário"
+  - **Estado Sincronizado**: Mudanças de período refletem em todo o conteúdo da sub-aba
