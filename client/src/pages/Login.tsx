@@ -64,8 +64,8 @@ export function Login() {
         return (
           <div className="w-full max-w-sm">
             <div className="mb-6">
-              <h3 className="text-blue-600 font-semibold mb-2">Login</h3>
-              <p className="text-gray-500 text-sm">to your account to browse through projects and explore our tools.</p>
+              <h3 className="text-blue-600 font-semibold mb-2">Entrar</h3>
+              <p className="text-gray-500 text-sm">na sua conta para acessar o sistema e explorar as ferramentas.</p>
             </div>
             
             <div className="space-y-4">
@@ -111,12 +111,12 @@ export function Login() {
             </div>
             
             <div className="mt-6 text-center">
-              <span className="text-gray-500 text-sm">Don't have an account? </span>
+              <span className="text-gray-500 text-sm">Não tem uma conta? </span>
               <button 
                 onClick={() => setActiveSection('signup')}
                 className="text-blue-600 text-sm font-medium hover:underline"
               >
-                Sign up
+                Cadastrar-se
               </button>
             </div>
           </div>
@@ -126,8 +126,8 @@ export function Login() {
         return (
           <div className="w-full max-w-sm">
             <div className="mb-6">
-              <h3 className="text-blue-600 font-semibold mb-2">Sign up</h3>
-              <p className="text-gray-500 text-sm">Create your account to get started with financial management.</p>
+              <h3 className="text-blue-600 font-semibold mb-2">Cadastrar</h3>
+              <p className="text-gray-500 text-sm">Crie sua conta para começar a usar a gestão financeira.</p>
             </div>
             
             <div className="space-y-4">
@@ -149,7 +149,7 @@ export function Login() {
               
               <Input
                 type="password"
-                placeholder="SENHA"
+                placeholder="Senha"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
@@ -157,7 +157,7 @@ export function Login() {
               
               <Input
                 type="password"
-                placeholder="CONFIRMAR SENHA"
+                placeholder="Confirmar senha"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                 className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
@@ -182,12 +182,12 @@ export function Login() {
             </div>
             
             <div className="mt-6 text-center">
-              <span className="text-gray-500 text-sm">Already have an account? </span>
+              <span className="text-gray-500 text-sm">Já tem uma conta? </span>
               <button 
                 onClick={() => setActiveSection('login')}
                 className="text-blue-600 text-sm font-medium hover:underline"
               >
-                Login
+                Entrar
               </button>
             </div>
           </div>
@@ -197,8 +197,8 @@ export function Login() {
         return (
           <div className="w-full max-w-sm">
             <div className="mb-6">
-              <h3 className="text-blue-600 font-semibold mb-2">About</h3>
-              <p className="text-gray-500 text-sm">Learn more about our financial management system.</p>
+              <h3 className="text-blue-600 font-semibold mb-2">Sobre</h3>
+              <p className="text-gray-500 text-sm">Saiba mais sobre nosso sistema de gestão financeira.</p>
             </div>
             
             <div className="space-y-4 text-sm text-gray-600">
@@ -298,7 +298,7 @@ export function Login() {
         {/* Card central azul - SUSPENSO com sombreamento */}
         <div className="w-[500px] h-[520px] bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white shadow-2xl z-10 relative -mx-4">
           <div className="text-center mb-16">
-            <h1 className="text-4xl font-light mb-4">Welcome to Quantor.</h1>
+            <h1 className="text-4xl font-light mb-4">Bem-vindo ao Quantor.</h1>
             <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
             <p className="text-blue-200 text-lg">gestão financeira</p>
           </div>
