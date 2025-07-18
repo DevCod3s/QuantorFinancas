@@ -204,26 +204,25 @@ export function Login() {
             </span>
           </div>
           
-          {/* Container dos ícones com barra lateral */}
-          <div className="flex flex-col space-y-8 relative">
-            {/* Barra progressiva fixa na borda esquerda */}
-            <div className="absolute -left-8 top-0 w-1 h-full">
-              {activeSection === 'login' && (
-                <div className="absolute top-[15px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
-              {activeSection === 'signup' && (
-                <div className="absolute top-[87px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
-              {activeSection === 'about' && (
-                <div className="absolute top-[159px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-                  <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
-                </div>
-              )}
+          {/* Barra progressiva na borda absoluta esquerda do card */}
+          {activeSection === 'login' && (
+            <div className="absolute left-0 top-[155px] w-1 h-6 bg-blue-600 rounded-r">
+              <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
             </div>
+          )}
+          {activeSection === 'signup' && (
+            <div className="absolute left-0 top-[227px] w-1 h-6 bg-blue-600 rounded-r">
+              <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+          {activeSection === 'about' && (
+            <div className="absolute left-0 top-[299px] w-1 h-6 bg-blue-600 rounded-r">
+              <div className="w-full h-0 bg-blue-600 animate-[fillUp_0.8s_ease-out_forwards]"></div>
+            </div>
+          )}
+
+          {/* Container dos ícones */}
+          <div className="flex flex-col space-y-8 relative">
             
             <button
               onClick={() => setActiveSection('login')}
