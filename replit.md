@@ -156,3 +156,9 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Movimentações**: Sub-abas "À Pagar" e "À Receber" com dados organizados por status
   - **Barra de Progressão**: Animação de preenchimento progressivo da esquerda para direita em todas as sub-abas
   - **Componente Reutilizável**: SubTabs.tsx criado para manter consistência e reutilização
+- **Gráficos Avançados no Fluxo de Caixa**: Implementação completa de dashboards visuais com Chart.js
+  - **Gráfico de Linha**: Evolução temporal do fluxo de caixa com múltiplas séries de dados
+  - **Saldos de Caixa**: Interface com checkboxes e gráfico de barras do resultado mensal
+  - **Gráficos Rosca**: Distribuição percentual de despesas e receitas por categoria
+  - **Layout Responsivo**: Grid 2x2 otimizado para desktop e mobile
+  - **Dados Realistas**: Baseados em referência visual fornecida pelo usuário
