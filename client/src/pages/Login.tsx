@@ -197,17 +197,17 @@ export function Login() {
         <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
           {/* Barra progressiva na borda esquerda alinhada com ícones */}
           {activeSection === 'login' && (
-            <div className="absolute left-0 top-[152px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[158px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
               <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
             </div>
           )}
           {activeSection === 'signup' && (
-            <div className="absolute left-0 top-[224px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[230px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
               <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
             </div>
           )}
           {activeSection === 'about' && (
-            <div className="absolute left-0 top-[296px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[302px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
               <div className="w-full h-0 bg-blue-600 animate-[fillProgress_0.8s_ease-out_forwards]"></div>
             </div>
           )}
