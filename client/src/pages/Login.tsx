@@ -345,7 +345,7 @@ export function Login() {
           {/* Logo */}
           <div className="flex flex-col items-center mb-10">
             <img src={SLogo} alt="Quantor" className="w-14 h-14 mt-[-5px] mb-[-5px]" />
-            <span className="text-gray-700 text-sm font-bold tracking-wide">
+            <span className="text-gray-700 text-sm font-bold tracking-wide mt-[5px] mb-[5px]">
               QUANTOR
             </span>
           </div>
