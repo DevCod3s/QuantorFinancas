@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { 
   LayoutDashboard, 
   Receipt, 
-  FolderOpen, 
+  Building2, 
   Target, 
   BarChart3, 
   MessageSquare,
@@ -27,7 +27,7 @@ interface LayoutProps {
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Finanças", href: "/transactions", icon: Receipt },
-  { name: "Categorias", href: "/categories", icon: FolderOpen },
+  { name: "Negócios", href: "/categories", icon: Building2 },
   { name: "Orçamentos", href: "/budgets", icon: DollarSign },
   { name: "Relatórios", href: "/reports", icon: BarChart3 },
   { name: "Assistente IA", href: "/ai-chat", icon: MessageSquare },

@@ -18,14 +18,14 @@ export function Categories() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Categorias</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Negócios</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Organize suas transações por categoria
+            Gerencie as categorias de receitas e despesas do seu negócio
           </p>
         </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Nova Categoria
+          Nova Categoria de Negócio
         </Button>
       </div>
 
@@ -33,9 +33,9 @@ export function Categories() {
         {/* Income Categories */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-green-600">Receitas</CardTitle>
+            <CardTitle className="text-green-600">Receitas do Negócio</CardTitle>
             <CardDescription>
-              Categorias para suas fontes de renda
+              Categorias para as diferentes fontes de receita do seu negócio
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -49,7 +49,7 @@ export function Categories() {
               </div>
             ) : incomeCategories.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">Nenhuma categoria de receita encontrada</p>
+                <p className="text-gray-500">Nenhuma categoria de receita do negócio encontrada</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -86,9 +86,9 @@ export function Categories() {
         {/* Expense Categories */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-red-600">Despesas</CardTitle>
+            <CardTitle className="text-red-600">Despesas do Negócio</CardTitle>
             <CardDescription>
-              Categorias para seus gastos
+              Categorias para organizar os custos operacionais do seu negócio
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -102,7 +102,7 @@ export function Categories() {
               </div>
             ) : expenseCategories.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">Nenhuma categoria de despesa encontrada</p>
+                <p className="text-gray-500">Nenhuma categoria de despesa do negócio encontrada</p>
               </div>
             ) : (
               <div className="space-y-3">

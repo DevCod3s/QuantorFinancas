@@ -173,3 +173,8 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Filtros de Período**: Dropdown com opções Semanal, Mensal, Trimestral, Semestral, Anual e Personalizar
   - **Interface Consistente**: Controles padronizados nos headers dos cards "Fluxo de Caixa" e "Demonstrativo Diário"
   - **Estado Sincronizado**: Mudanças de período refletem em todo o conteúdo da sub-aba
+- **Menu Negócios**: Substituição do menu "Categorias" por "Negócios" com ícone Building2
+  - **Contexto Empresarial**: Ajustado todo o conteúdo da página para foco em gestão de categorias empresariais
+  - **Terminologia Atualizada**: "Receitas do Negócio" e "Despesas do Negócio" para melhor contexto empresarial
+  - **Interface Consistente**: Mantida funcionalidade existente com nova identidade visual e textual
+  - **Botão de Ação**: "Nova Categoria de Negócio" em vez de "Nova Categoria"
