@@ -124,7 +124,7 @@ export default function AddRelationshipTypeModal({
         <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-200">
           <button
             onClick={handleClose}
-            className="w-12 h-12 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
+            className="w-12 h-12 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
             title="Cancelar"
           >
             <X className="h-5 w-5" />
