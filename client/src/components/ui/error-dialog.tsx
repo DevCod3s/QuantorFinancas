@@ -12,14 +12,25 @@ interface ErrorDialogProps {
 }
 
 /**
- * Componente de Dialog de Erro
+ * @fileoverview Componente de Dialog de Erro para o sistema Quantor
  * 
- * Design baseado na imagem de referência fornecida pelo usuário:
- * - Header vermelho com ícone de alerta triangular
- * - Corpo branco com título e mensagem
- * - Botão "OK" vermelho na parte inferior
- * - Auto-close opcional com countdown de 3 segundos (padrão)
+ * Dialog de feedback negativo baseado na imagem de referência fornecida.
+ * Características do design:
+ * - Header vermelho gradiente com ícone de alerta triangular
+ * - Corpo branco limpo com tipografia hierárquica
+ * - Botão "OK" vermelho discreto na parte inferior
+ * - Auto-close inteligente com countdown visual de 3 segundos
  * - Animações suaves de entrada e saída
+ * - Proporções consistentes com o dialog de sucesso
+ * - Compatível com leitores de tela (DialogTitle/Description invisíveis)
+ * 
+ * Uso recomendado:
+ * - Notificação de erros de validação
+ * - Feedback de operações que falharam
+ * - Alertas de regras de negócio violadas
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
  */
 export function ErrorDialog({ 
   open, 

@@ -1,17 +1,45 @@
+/**
+ * @fileoverview Componente de Sub-abas para o sistema Quantor
+ * 
+ * Componente reutilizável que implementa sub-abas com barra de progressão animada.
+ * Usado nas páginas que precisam de navegação secundária dentro das abas principais.
+ * 
+ * Funcionalidades:
+ * - Barra de progressão que se move entre as sub-abas
+ * - Animação suave de preenchimento da esquerda para direita
+ * - Suporte a ícones opcionais nas abas
+ * - Classes CSS personalizáveis
+ * - Compatível com sistema de design Shadcn/ui
+ * - Auto-atualização da posição da barra com base na aba ativa
+ * 
+ * Uso atual:
+ * - Página Finanças: "Fluxo de Caixa" e "Lançamentos" na aba Visão Geral
+ * - Página Finanças: "À Pagar" e "À Receber" na aba Movimentações
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
 import { useState, useRef, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+/**
+ * Interface para definição de uma sub-aba
+ */
 interface SubTab {
-  value: string;
-  label: string;
-  icon?: React.ReactNode;
-  content: React.ReactNode;
+  value: string; // Valor único da aba
+  label: string; // Texto exibido na aba
+  icon?: React.ReactNode; // Ícone opcional
+  content: React.ReactNode; // Conteúdo da aba
 }
 
+/**
+ * Props do componente SubTabs
+ */
 interface SubTabsProps {
-  tabs: SubTab[];
-  defaultValue: string;
-  className?: string;
+  tabs: SubTab[]; // Array de sub-abas
+  defaultValue: string; // Valor da aba ativa por padrão
+  className?: string; // Classes CSS adicionais
 }
 
 export function SubTabs({ tabs, defaultValue, className = "" }: SubTabsProps) {

@@ -1,12 +1,45 @@
+/**
+ * @fileoverview Rotas da API do sistema Quantor
+ * 
+ * Define todas as rotas HTTP para:
+ * - Autenticação (Replit Auth + login local)
+ * - Dashboard e métricas financeiras
+ * - CRUD de categorias, transações e orçamentos
+ * - Integração com assistente IA
+ * 
+ * Todas as rotas (exceto autenticação) exigem usuário autenticado.
+ * Dados são isolados por usuário para segurança.
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações do Express para roteamento
 import { Router } from "express";
+
+// Camada de persistência de dados
 import { storage } from "./storage";
+
+// Schemas de validação
 import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema } from "@shared/schema";
 import { z } from "zod";
+
+// Sistema de autenticação
 import { getLoginUrl, handleCallback, logout, requireAuth as authMiddleware, loginWithCredentials } from "./auth";
 
+// Criação do roteador Express
 const router = Router();
 
-// Authentication middleware
+/**
+ * Middleware de autenticação personalizado
+ * 
+ * Verifica se o usuário está autenticado antes de permitir acesso às rotas.
+ * Retorna erro 401 se não autenticado.
+ * 
+ * @param req - Request do Express com propriedade user
+ * @param res - Response do Express
+ * @param next - Função next do Express
+ */
 const requireAuth = (req: any, res: any, next: any) => {
   if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -14,7 +47,18 @@ const requireAuth = (req: any, res: any, next: any) => {
   next();
 };
 
-// Auth routes
+/**
+ * =============================================================================
+ * ROTAS DE AUTENTICAÇÃO
+ * =============================================================================
+ */
+
+/**
+ * GET /api/login
+ * 
+ * Inicia processo de login via Replit Auth.
+ * Redireciona para URL de autenticação do Replit.
+ */
 router.get("/login", (req, res) => {
   try {
     const loginUrl = getLoginUrl();
@@ -25,10 +69,27 @@ router.get("/login", (req, res) => {
   }
 });
 
+/**
+ * GET /api/auth/callback
+ * 
+ * Callback do Replit Auth após autenticação.
+ * Processado pelo middleware de autenticação.
+ */
 router.get("/auth/callback", handleCallback);
 
+/**
+ * GET /api/logout
+ * 
+ * Realiza logout do usuário e limpa sessão.
+ */
 router.get("/logout", logout);
 
+/**
+ * GET /api/auth/user
+ * 
+ * Retorna dados do usuário autenticado.
+ * Utilizado pelo hook useAuth para verificar autenticação.
+ */
 router.get("/auth/user", (req: any, res) => {
   if (req.user) {
     res.json(req.user);
@@ -37,22 +98,31 @@ router.get("/auth/user", (req: any, res) => {
   }
 });
 
-// Login com credentials
+/**
+ * POST /api/auth/login
+ * 
+ * Login com credenciais locais (username/password).
+ * Alternativa ao Replit Auth para usuários master.
+ * 
+ * Body: { username: string, password: string }
+ */
 router.post("/auth/login", async (req: any, res) => {
   try {
     const { username, password } = req.body;
     
+    // Validação de campos obrigatórios
     if (!username || !password) {
       return res.status(400).json({ error: "Username e senha são obrigatórios" });
     }
     
+    // Tentativa de autenticação
     const user = await loginWithCredentials(username, password);
     
     if (!user) {
       return res.status(401).json({ error: "Credenciais inválidas" });
     }
     
-    // Salvar usuário na sessão
+    // Salva usuário na sessão
     req.session.user = user;
     
     res.json({ success: true, user });
@@ -62,7 +132,20 @@ router.post("/auth/login", async (req: any, res) => {
   }
 });
 
-// Dashboard
+/**
+ * =============================================================================
+ * ROTAS DE DADOS
+ * =============================================================================
+ */
+
+/**
+ * GET /api/dashboard
+ * 
+ * Retorna métricas consolidadas para o dashboard.
+ * Inclui: receitas totais, despesas totais, saldo, transações recentes.
+ * 
+ * Requer: Usuário autenticado
+ */
 router.get("/dashboard", requireAuth, async (req: any, res) => {
   try {
     const stats = await storage.getDashboardStats(req.user.id);

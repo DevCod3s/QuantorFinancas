@@ -1,9 +1,25 @@
+/**
+ * @fileoverview Página de Login do sistema Quantor
+ * 
+ * Interface de autenticação com design moderno de 3 cards:
+ * - Card central suspenso para login/cadastro
+ * - Barra progressiva lateral com ícones
+ * - Sistema híbrido: Replit Auth + login local (usuário master)
+ * - Navegação entre campos com tecla Enter
+ * - Inputs com sombras em vez de bordas
+ * - Interface em português brasileiro
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import quantorLogo from "@assets/Simbolo_New_1752793618491.png";
 
+// Tipos para controle das seções ativas
 type ActiveSection = 'login' | 'signup' | 'about';
 
 export function Login() {

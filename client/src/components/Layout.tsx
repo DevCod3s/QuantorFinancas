@@ -1,4 +1,22 @@
+/**
+ * @fileoverview Layout principal do sistema Quantor
+ * 
+ * Componente que define a estrutura base da aplicação:
+ * - Sidebar responsiva com gradiente azul
+ * - Navegação principal com 5 seções
+ * - Sistema de colapso/expansão da sidebar
+ * - Menu mobile com overlay
+ * - Botão de logout e informações do usuário
+ * - Design baseado na identidade visual Vizta
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações de roteamento
 import { Link, useLocation } from "wouter";
+
+// Importações de ícones Lucide
 import { 
   LayoutDashboard, 
   Receipt, 
@@ -13,14 +31,23 @@ import {
   FileText,
   Settings
 } from "lucide-react";
+
+// Hooks e componentes React
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
+/**
+ * Props do componente Layout
+ */
 interface LayoutProps {
   children: React.ReactNode;
 }
 
+/**
+ * Configuração da navegação principal
+ * Array de objetos com nome, rota e ícone para cada seção
+ */
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Relacionamentos", href: "/relationships", icon: Users },

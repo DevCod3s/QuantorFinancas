@@ -1,11 +1,36 @@
+/**
+ * @fileoverview Página de gestão financeira do sistema Quantor
+ * 
+ * Renomeada de "Transações" para "Finanças" com funcionalidades avançadas:
+ * - Sistema de 4 abas principais: Visão Geral, Movimentações, Contas, Centro de Custo
+ * - Sub-abas inteligentes com barra de progressão animada
+ * - Gráficos avançados com Chart.js (linha, rosca, barras)
+ * - Controles temporais completos (navegação, calendário, filtros de período)
+ * - Dashboard visual de fluxo de caixa
+ * - Demonstrativo diário com dados tabulares
+ * - Centro de custo com categorização e barras de progresso
+ * - Design responsivo e profissional
+ * - Dados demonstrativos baseados em referências visuais
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações React
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+
+// Importações de ícones Lucide
 import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+
+// Importações de componentes UI
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubTabs } from "@/components/SubTabs";
+
+// Importações de tipos
 import { Transaction } from "@shared/schema";
 import {
   DropdownMenu,

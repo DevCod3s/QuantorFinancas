@@ -1,6 +1,26 @@
+/**
+ * @fileoverview Camada de persistência de dados do sistema Quantor
+ * 
+ * Implementa a interface de armazenamento usando Drizzle ORM e PostgreSQL.
+ * Todas as operações incluem isolamento por usuário para segurança.
+ * 
+ * Funcionalidades:
+ * - CRUD completo para todas as entidades
+ * - Consultas otimizadas com índices
+ * - Validação de dados na camada de banco
+ * - Agregações para dashboard
+ * - Transações para operações complexas
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações do Drizzle ORM
 import { drizzle } from "drizzle-orm/neon-http";
 import { neon } from "@neondatabase/serverless";
 import { desc, eq, and, sql } from "drizzle-orm";
+
+// Schema e tipos do banco de dados
 import * as schema from "@shared/schema";
 import type { 
   User, 
@@ -15,6 +35,7 @@ import type {
   InsertAiInteraction
 } from "@shared/schema";
 
+// Configuração da conexão com PostgreSQL via Neon
 const sql_client = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql_client, { schema });
 

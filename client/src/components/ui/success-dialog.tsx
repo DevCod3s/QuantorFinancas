@@ -1,14 +1,39 @@
+/**
+ * @fileoverview Componente de Dialog de Sucesso para o sistema Quantor
+ * 
+ * Dialog de feedback positivo baseado na imagem de referência fornecida.
+ * Características do design:
+ * - Header verde gradiente com ícone de balão de mensagem + check
+ * - Corpo branco limpo com tipografia hierárquica
+ * - Botão "OK" azul discreto na parte inferior
+ * - Auto-close inteligente com countdown visual de 3 segundos
+ * - Animações suaves de entrada e saída
+ * - Proporções adequadas (nem muito grande, nem muito pequeno)
+ * - Compatível com leitores de tela (DialogTitle/Description invisíveis)
+ * 
+ * Uso recomendado:
+ * - Confirmação de operações bem-sucedidas
+ * - Feedback de salvamento de dados
+ * - Notificações de conclusão de processos
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MessageCircle, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
+/**
+ * Props do componente SuccessDialog
+ */
 interface SuccessDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  message: string;
-  autoClose?: boolean;
-  autoCloseDelay?: number;
+  isOpen: boolean; // Estado de abertura do dialog
+  onClose: () => void; // Callback para fechar o dialog
+  title: string; // Título principal do dialog
+  message: string; // Mensagem detalhada
+  autoClose?: boolean; // Se deve fechar automaticamente (padrão: true)
+  autoCloseDelay?: number; // Delay em ms para auto-close (padrão: 3000)
 }
 
 export function SuccessDialog({ 

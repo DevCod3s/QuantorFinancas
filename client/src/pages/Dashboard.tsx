@@ -1,18 +1,38 @@
+/**
+ * @fileoverview Dashboard principal do sistema Quantor
+ * 
+ * Exibe visão geral consolidada das finanças do usuário:
+ * - Cards de métricas (receitas, despesas, saldo, orçamento)
+ * - Lista de transações recentes
+ * - Indicadores visuais de tendências
+ * - Formatação automática de moeda brasileira
+ * - Loading states com skeleton
+ * 
+ * Dados obtidos via TanStack Query da API /api/dashboard
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, TrendingDown, Target } from "lucide-react";
 
+/**
+ * Interface para dados consolidados do dashboard
+ * Retornados pela API /api/dashboard
+ */
 interface DashboardStats {
-  totalIncome: number;
-  totalExpenses: number;
-  balance: number;
-  budgetUsage: number;
+  totalIncome: number; // Total de receitas no período
+  totalExpenses: number; // Total de despesas no período
+  balance: number; // Saldo atual (receitas - despesas)
+  budgetUsage: number; // Percentual do orçamento utilizado
   recentTransactions: Array<{
     id: number;
     description: string;
-    amount: string;
-    type: string;
-    date: string;
+    amount: string; // Já formatado como string
+    type: string; // 'income' | 'expense'
+    date: string; // Data formatada
   }>;
 }
 

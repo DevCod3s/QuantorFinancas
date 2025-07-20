@@ -1,15 +1,46 @@
+/**
+ * @fileoverview Servidor principal do sistema Quantor
+ * 
+ * Configura e inicia o servidor Express com todas as dependências necessárias:
+ * - Servidor HTTP com middleware de sessões PostgreSQL
+ * - Integração com Vite para desenvolvimento
+ * - Rotas de API com autenticação
+ * - Logging de requisições
+ * - Inicialização automática do sistema de auth
+ * - Servir arquivos estáticos em produção
+ * 
+ * Funcionalidades:
+ * - Express com JSON parsing
+ * - Sessions store com PostgreSQL via connect-pg-simple
+ * - Middleware de autenticação automático
+ * - Logging detalhado de APIs com duração e resposta
+ * - Setup dual: desenvolvimento (Vite) + produção (estático)
+ * - Inicialização de usuários padrão
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações do Express e HTTP
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
+
+// Importações para manipulação de paths
 import path from "path";
 import { fileURLToPath } from "url";
+
+// Importações para sessões e banco
 import session from "express-session";
 import ConnectPgSimple from "connect-pg-simple";
 import pkg from "pg";
 const { Pool } = pkg;
+
+// Importações internas do projeto
 import apiRoutes from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeAuth, addUser } from "./auth";
 
+// Configuração de paths para ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

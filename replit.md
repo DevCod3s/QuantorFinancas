@@ -154,6 +154,15 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Cenários Implementados**: Validação de exclusão (status ativo), formulários incompletos, operações bem-sucedidas
   - **Proporções Corretas**: Tamanho adequado baseado nas imagens de referência fornecidas
   - **Consistência Visual**: Ambos dialogs seguem mesmo padrão de design e animações
+- **Documentação Abrangente do Código**: Implementação completa de comentários detalhados em todo o sistema (Janeiro 2025)
+  - **Padrão JSDoc**: Todos os arquivos principais com cabeçalhos @fileoverview detalhados
+  - **Comentários Funcionais**: Explicação de cada função, interface e componente importante
+  - **Arquitetura Documentada**: Descrição clara da estrutura e responsabilidades de cada módulo
+  - **Tipos Comentados**: Interfaces TypeScript com comentários explicativos em cada propriedade
+  - **Fluxos de Dados**: Documentação dos fluxos de autenticação, dados e interações com IA
+  - **Boas Práticas**: Código preparado para colaboração em equipe com padrões profissionais
+  - **Histórico de Versão**: Sistema de versionamento e autoria implementado
+  - **Contexto de Negócio**: Explicação do propósito e uso de cada componente no sistema
 - **Sidebar Renovada**: Implementado design baseado na Vizta com gradiente azul, botão de colapsar/expandir, logo laranja e animações suaves
 - **Login com Enter**: Navegação fluida entre campos usando tecla Enter, com submit automático no último campo
 - **Interface em Português**: Toda interface traduzida para português brasileiro mantendo "Quantor" em inglês

@@ -1,10 +1,34 @@
+/**
+ * @fileoverview Página de gestão de negócios do sistema Quantor
+ * 
+ * Anteriormente "Categorias", foi reestruturada para focar em gestão empresarial.
+ * Funcionalidades implementadas:
+ * - Sistema de 2 abas com barra de progressão animada
+ * - Aba "Unidade de Negócios": Placeholder para futuras funcionalidades
+ * - Aba "Produtos & Serviços": Placeholder para catálogo de produtos
+ * - Botão de ação moderno circular com efeitos visuais
+ * - Design profissional com placeholders elegantes
+ * - Estrutura preparada para desenvolvimento futuro
+ * - Consistência visual com outras páginas do sistema
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações React
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+
+// Importações de ícones
 import { Plus, Edit, Trash2, Palette, Building2, Package, Users } from "lucide-react";
+
+// Importações de componentes UI
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Importações de tipos
 import { Category } from "@shared/schema";
 
 export function Categories() {

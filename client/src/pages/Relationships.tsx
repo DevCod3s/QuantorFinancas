@@ -1,8 +1,32 @@
+/**
+ * @fileoverview Página de gestão de relacionamentos do sistema Quantor
+ * 
+ * Gerencia clientes, fornecedores e outros relacionamentos comerciais.
+ * Funcionalidades implementadas:
+ * - Sistema de 3 abas com animação de progressão
+ * - Tabelas com paginação e ordenação funcional
+ * - Botões de ação (editar, visualizar, excluir)
+ * - Sistema de notificações (sucesso/erro)
+ * - Validação de regras de negócio
+ * - Design responsivo e profissional
+ * - Dados demonstrativos para apresentação
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
+// Importações React
 import { useState, useEffect, useRef } from "react";
+
+// Importações de ícones
 import { Plus, Users, Building, Phone, Mail, MapPin, User, CheckCircle, XCircle, AlertCircle, Ban, Edit, Eye, Trash2, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+
+// Importações de componentes UI
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Importações de dialogs personalizados
 import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 

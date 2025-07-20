@@ -1,8 +1,29 @@
+/**
+ * @fileoverview Sistema de autenticação híbrido do Quantor
+ * 
+ * Implementa autenticação dual:
+ * 1. Replit Auth - Para usuários da plataforma Replit
+ * 2. Login local - Para usuário master com credenciais fixas
+ * 
+ * Funcionalidades:
+ * - Inicialização automática de usuários padrão
+ * - Criptografia de senhas com bcrypt
+ * - Gerenciamento de sessões
+ * - Middleware de autenticação
+ * - Suporte a usuário master (Cod3s / Jr@C0d3$)
+ * 
+ * @author Equipe Quantor
+ * @version 1.0.0
+ */
+
 import { Request, Response } from "express";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 
-// Para desenvolvimento, vamos usar um usuário padrão
+/**
+ * Usuário padrão para desenvolvimento e demonstração
+ * Criado automaticamente na inicialização do sistema
+ */
 const DEFAULT_USER = {
   id: "test-user-1",
   email: "teste@exemplo.com",
@@ -10,12 +31,16 @@ const DEFAULT_USER = {
   avatar: "https://via.placeholder.com/150",
 };
 
-// Usuário mestre
+/**
+ * Usuário mestre do sistema
+ * Credenciais fixas para acesso administrativo
+ * Username e senha case-insensitive
+ */
 const MASTER_USER = {
   email: "master@quantor.com",
   name: "Cod3s",
-  username: "Cod3s",
-  password: "Jr@C0d3$",
+  username: "Cod3s", // Case-insensitive
+  password: "Jr@C0d3$", // Senha fixa
   avatar: "https://via.placeholder.com/150",
 };
 
