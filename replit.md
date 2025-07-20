@@ -178,3 +178,10 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Terminologia Atualizada**: "Receitas do Negócio" e "Despesas do Negócio" para melhor contexto empresarial
   - **Interface Consistente**: Mantida funcionalidade existente com nova identidade visual e textual
   - **Botão de Ação**: "Nova Categoria de Negócio" em vez de "Nova Categoria"
+- **Layout por Abas na Página Negócios**: Reestruturação completa seguindo padrão da página Finanças
+  - **Sistema de Abas Profissional**: 2 abas principais com barra de progressão animada
+  - **Aba Unidade de Negócios**: Placeholder clean com ícone Building2 e descrição informativa
+  - **Aba Produtos & Serviços**: Placeholder clean com ícone Package e descrição informativa
+  - **Consistência Visual**: Mesma estrutura de código, animações e estilos da página Finanças
+  - **Preparação Futura**: Interface estruturada para desenvolvimento posterior do conteúdo específico
+  - **UX Profissional**: Placeholders elegantes com bordas pontilhadas e tipografia hierárquica
