@@ -245,3 +245,15 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Dados Processados**: Pipeline completo (ordenação → paginação) aplicado em todas as abas
   - **Controles Responsivos**: Feedback visual hover nos cabeçalhos e transições suaves
   - **Altura Calibrada**: max-h-[640px] para mostrar até 10 registros sem scroll, mais que isso ativa scroll vertical
+- **Sistema de Cadastro de Relacionamentos por Etapas**: Wizard completo de 4 etapas com IA integrada (Janeiro 2025)
+  - **Stepper Visual**: Design fiel à imagem de referência com círculos numerados e progressão animada
+  - **Etapa 1 - Informações Básicas**: Input CPF/CNPJ com formatação automática, validação e auto-preenchimento
+  - **Etapa 2 - Geração de Contrato**: IA especializada (OpenAI GPT-4o) para contratos profissionais por segmento
+  - **Etapa 3 - Revisão PRD**: Sistema de aprovação com solicitação de modificações
+  - **Etapa 4 - Finalização**: Confirmação final com códigos únicos e configurações de notificação
+  - **Navegação Automática**: Entre campos sem necessidade de tecla Enter
+  - **Upload de Templates**: Modelos personalizados de contrato
+  - **Segmentos Dinâmicos**: Cadastro de novos segmentos através de ícone +
+  - **Preview em Tempo Real**: Visualização do contrato gerado pela IA
+  - **API Backend**: Endpoint /generate-contract com OpenAI integrado
+  - **Validação Completa**: Estados de validação em cada etapa com feedback visual

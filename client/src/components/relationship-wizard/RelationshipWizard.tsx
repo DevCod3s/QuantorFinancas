@@ -19,6 +19,8 @@ import React, { useState } from "react";
 import StepperWizard from "../StepperWizard";
 import Step1BasicInfo from "./Step1BasicInfo";
 import Step2ContractGeneration from "./Step2ContractGeneration";
+import Step3ReviewPRD from "./Step3ReviewPRD";
+import Step4FinalPRD from "./Step4FinalPRD";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 
@@ -140,21 +142,22 @@ export default function RelationshipWizard({ onClose, onSave }: RelationshipWiza
         );
       case 3:
         return (
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-            <div className="text-center text-gray-500">
-              <h3 className="text-lg font-medium mb-4">Etapa 3: Revisar PRD</h3>
-              <p>Conteúdo da etapa 3 será implementado conforme suas instruções.</p>
-            </div>
-          </div>
+          <Step3ReviewPRD
+            onDataChange={(data, isValid) => updateStepData(3, data, isValid)}
+            initialData={wizardData.step3}
+            relationshipData={wizardData.step1}
+            contractData={wizardData.step2}
+          />
         );
       case 4:
         return (
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-            <div className="text-center text-gray-500">
-              <h3 className="text-lg font-medium mb-4">Etapa 4: PRD Final</h3>
-              <p>Conteúdo da etapa 4 será implementado conforme suas instruções.</p>
-            </div>
-          </div>
+          <Step4FinalPRD
+            onDataChange={(data, isValid) => updateStepData(4, data, isValid)}
+            initialData={wizardData.step4}
+            relationshipData={wizardData.step1}
+            contractData={wizardData.step2}
+            reviewData={wizardData.step3}
+          />
         );
       default:
         return null;
