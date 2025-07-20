@@ -13,7 +13,6 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { TEInput } from "tw-elements-react";
 
 /**
  * Props do componente CpfCnpjInput
@@ -132,14 +131,14 @@ function validateCNPJ(cnpj: string): boolean {
 /**
  * Componente CpfCnpjInput
  */
-export default function CpfCnpjInput({ 
+const CpfCnpjInput = React.forwardRef<HTMLInputElement, CpfCnpjInputProps>(({ 
   value, 
   onChange, 
   onValidDocument,
   label = "CPF/CNPJ *",
   id = "cpf-cnpj-input",
   className = ""
-}: CpfCnpjInputProps) {
+}, ref) => {
   const [formattedValue, setFormattedValue] = useState(value);
   const [documentType, setDocumentType] = useState<'CPF' | 'CNPJ' | null>(null);
 
@@ -205,20 +204,28 @@ export default function CpfCnpjInput({
   };
 
   return (
-    <div className={className}>
-      <TEInput
+    <div className={`relative ${className}`}>
+      <input
+        ref={ref}
         type="text"
         id={id}
-        label={label}
-        size="base"
         value={formattedValue}
         onChange={handleInputChange}
-        placeholder={documentType === 'CNPJ' ? '00.000.000/0000-00' : '000.000.000-00'}
         className={`
-          ${documentType === 'CPF' && formattedValue.replace(/\D/g, '').length === 11 && validateCPF(formattedValue.replace(/\D/g, '')) ? 'border-green-500' : ''}
-          ${documentType === 'CNPJ' && formattedValue.replace(/\D/g, '').length === 14 && validateCNPJ(formattedValue.replace(/\D/g, '')) ? 'border-green-500' : ''}
+          w-full px-3 py-2 border border-gray-300 rounded-md 
+          focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 
+          peer placeholder-transparent
+          ${documentType === 'CPF' && formattedValue.replace(/\D/g, '').length === 11 && validateCPF(formattedValue.replace(/\D/g, '')) ? 'border-green-500 focus:border-green-500' : ''}
+          ${documentType === 'CNPJ' && formattedValue.replace(/\D/g, '').length === 14 && validateCNPJ(formattedValue.replace(/\D/g, '')) ? 'border-green-500 focus:border-green-500' : ''}
         `}
+        placeholder=" "
       />
+      <label 
+        htmlFor={id}
+        className="absolute left-3 -top-2.5 bg-white px-1 text-sm text-blue-600 transition-all peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-600"
+      >
+        {label}
+      </label>
       
       {/* Indicador do tipo de documento */}
       {documentType && (
@@ -228,4 +235,8 @@ export default function CpfCnpjInput({
       )}
     </div>
   );
-}
+});
+
+CpfCnpjInput.displayName = 'CpfCnpjInput';
+
+export default CpfCnpjInput;
