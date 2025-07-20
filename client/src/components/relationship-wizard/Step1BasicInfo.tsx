@@ -17,6 +17,7 @@
  */
 
 import React, { useState, useRef, useEffect } from "react";
+import { Plus } from "lucide-react";
 import CpfCnpjInput from "../CpfCnpjInput";
 import CustomInput, { CustomSelect } from "../CustomInput";
 
@@ -24,7 +25,8 @@ import CustomInput, { CustomSelect } from "../CustomInput";
  * Interface para dados do formulário da Etapa 1
  */
 interface Step1FormData {
-  relationshipType: 'cliente' | 'fornecedor' | 'outros' | ''; // Tipo de relacionamento
+  relationshipType: 'cliente' | 'fornecedor' | 'prestador_servicos' | 'custom' | ''; // Tipo de relacionamento
+  customRelationshipType: string; // Tipo personalizado se selecionou 'custom'
   document: string; // CPF ou CNPJ
   documentType: 'CPF' | 'CNPJ' | null; // Tipo do documento
   socialName: string; // Razão social (CNPJ) ou Nome (CPF)
@@ -90,6 +92,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   // Estado do formulário
   const [formData, setFormData] = useState<Step1FormData>({
     relationshipType: '',
+    customRelationshipType: '',
     document: '',
     documentType: null,
     socialName: '',
@@ -108,7 +111,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     ...initialData
   });
 
+  // Estado para controlar se está mostrando input customizado
+  const [showCustomInput, setShowCustomInput] = useState(false);
+
   // Referências para navegação automática entre campos
+  const customTypeRef = useRef<HTMLInputElement>(null);
   const socialNameRef = useRef<HTMLInputElement>(null);
   const fantasyNameRef = useRef<HTMLInputElement>(null);
   const stateRegistrationRef = useRef<HTMLInputElement>(null);
@@ -125,6 +132,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     // Validar se formulário está completo baseado no tipo de documento
     const isValid = !!(
       newData.relationshipType &&
+      (newData.relationshipType !== 'custom' || newData.customRelationshipType) &&
       newData.document &&
       newData.socialName &&
       newData.stateRegistration &&
@@ -287,23 +295,53 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     <div className="space-y-6">
       {/* Seção: Tipo de relacionamento */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Tipo de relacionamento
-        </h3>
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="text-lg font-medium text-gray-900">
+            Tipo de relacionamento
+          </h3>
+          <button
+            type="button"
+            onClick={() => setShowCustomInput(!showCustomInput)}
+            className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors"
+            title="Adicionar novo tipo"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
         
-        <div className="max-w-md">
+        <div className="max-w-md space-y-4">
           <CustomSelect
             id="relationship-type"
             label="Selecione o tipo de relacionamento *"
             value={formData.relationshipType}
-            onChange={(e) => updateFormData({ relationshipType: e.target.value as 'cliente' | 'fornecedor' | 'outros' })}
+            onChange={(e) => {
+              const value = e.target.value as 'cliente' | 'fornecedor' | 'prestador_servicos' | 'custom';
+              updateFormData({ relationshipType: value });
+              if (value === 'custom') {
+                setTimeout(() => customTypeRef.current?.focus(), 100);
+              }
+            }}
             options={[
               { value: '', text: 'Selecione...' },
               { value: 'cliente', text: 'Cliente' },
               { value: 'fornecedor', text: 'Fornecedor' },
-              { value: 'outros', text: 'Outros' }
+              { value: 'prestador_servicos', text: 'Prestador de Serviços' },
+              { value: 'custom', text: 'Outro tipo (especificar)' }
             ]}
           />
+          
+          {/* Input para tipo customizado */}
+          {(formData.relationshipType === 'custom' || showCustomInput) && (
+            <CustomInput
+              ref={customTypeRef}
+              type="text"
+              id="custom-relationship-type"
+              label="Especifique o tipo de relacionamento *"
+              value={formData.customRelationshipType}
+              onChange={(e) => updateFormData({ customRelationshipType: e.target.value })}
+              placeholder="Ex: Parceiro, Consultor, Contador..."
+            />
+          )}
         </div>
       </div>
 
