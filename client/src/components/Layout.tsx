@@ -3,17 +3,14 @@ import {
   LayoutDashboard, 
   Receipt, 
   Building2, 
-  Target, 
-  BarChart3, 
+  Users, 
   MessageSquare,
   LogOut,
   Menu,
   X,
   ChevronLeft,
   ChevronRight,
-  Users,
   FileText,
-  DollarSign,
   Settings
 } from "lucide-react";
 import { useState } from "react";
@@ -26,10 +23,9 @@ interface LayoutProps {
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
+  { name: "Relacionamentos", href: "/relationships", icon: Users },
   { name: "Finanças", href: "/transactions", icon: Receipt },
   { name: "Negócios", href: "/categories", icon: Building2 },
-  { name: "Orçamentos", href: "/budgets", icon: DollarSign },
-  { name: "Relatórios", href: "/reports", icon: BarChart3 },
   { name: "Assistente IA", href: "/ai-chat", icon: MessageSquare },
 ];
 

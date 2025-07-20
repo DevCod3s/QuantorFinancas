@@ -2,10 +2,9 @@ import { Router, Route, Switch } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Dashboard } from "@/pages/Dashboard";
+import { Relationships } from "@/pages/Relationships";
 import { Transactions } from "@/pages/Transactions";
 import { Categories } from "@/pages/Categories";
-import { Budgets } from "@/pages/Budgets";
-import { Reports } from "@/pages/Reports";
 import { Login } from "@/pages/Login";
 import { Layout } from "@/components/Layout";
 import { useAuth } from "@/hooks/useAuth.tsx";
@@ -29,10 +28,9 @@ function AppContent() {
       <Router>
         <Switch>
           <Route path="/" component={Dashboard} />
+          <Route path="/relationships" component={Relationships} />
           <Route path="/transactions" component={Transactions} />
           <Route path="/categories" component={Categories} />
-          <Route path="/budgets" component={Budgets} />
-          <Route path="/reports" component={Reports} />
           <Route>
             <div className="flex items-center justify-center h-96">
               <h1 className="text-2xl text-gray-600">Página não encontrada</h1>

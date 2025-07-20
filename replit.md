@@ -185,3 +185,10 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Consistência Visual**: Mesma estrutura de código, animações e estilos da página Finanças
   - **Preparação Futura**: Interface estruturada para desenvolvimento posterior do conteúdo específico
   - **UX Profissional**: Placeholders elegantes com bordas pontilhadas e tipografia hierárquica
+- **Reestruturação do Menu de Navegação**: Otimização e adição de nova seção
+  - **Remoção de Seções**: Eliminadas opções "Orçamentos" e "Relatórios" do menu principal
+  - **Nova Seção Relacionamentos**: Adicionada abaixo do Dashboard com ícone Users
+  - **Página Relacionamentos**: Criada com sistema de 3 abas (Clientes, Fornecedores, Outros)
+  - **Layout Consistente**: Seguindo mesmo padrão visual das outras páginas com barra de progressão
+  - **Menu Simplificado**: Dashboard → Relacionamentos → Finanças → Negócios → Assistente IA
+  - **Rotas Atualizadas**: Removidas rotas /budgets e /reports, adicionada rota /relationships
