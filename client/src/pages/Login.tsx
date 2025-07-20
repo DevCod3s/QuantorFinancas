@@ -381,9 +381,7 @@ export function Login() {
             
             <button
               onClick={() => setActiveSection('signup')}
-              className={`p-3 rounded-lg transition-colors ${
-                activeSection === 'signup' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
-              }`}
+              className="p-3 rounded-lg transition-colors text-blue-600 mt-[21px] mb-[21px] pt-[11px] pb-[11px]"
             >
               <UserPlus className="w-6 h-6" />
             </button>
