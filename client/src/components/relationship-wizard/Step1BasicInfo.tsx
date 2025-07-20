@@ -148,8 +148,12 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       fantasyName: type === 'CPF' ? '' : formData.fantasyName
     });
     
-    // Se válido, focar no próximo campo
-    if (isValid && socialNameRef.current) {
+    // Se CNPJ válido, buscar dados automaticamente
+    if (isValid && type === 'CNPJ') {
+      fetchCNPJData(value);
+    }
+    // Se CPF válido, focar no próximo campo
+    else if (isValid && socialNameRef.current) {
       setTimeout(() => {
         socialNameRef.current?.focus();
       }, 100);
@@ -167,11 +171,15 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
       if (response.ok) {
         const data = await response.json();
+        
+        // Processar endereço
+        const cep = data.cep?.replace(/\D/g, '');
+        const formattedCep = cep ? `${cep.slice(0, 5)}-${cep.slice(5)}` : '';
+        
         updateFormData({
-          socialName: data.razao_social || data.nome_fantasia || '',
+          socialName: data.razao_social || '',
           fantasyName: data.nome_fantasia || '',
-          stateRegistration: '',
-          zipCode: data.cep?.replace(/\D/g, '').replace(/(\d{5})(\d{3})/, '$1-$2') || '',
+          zipCode: formattedCep,
           street: data.logradouro || '',
           number: data.numero || '',
           complement: data.complemento || '',
@@ -181,10 +189,17 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           isLoading: false
         });
         
-        // Se temos CEP, buscar dados completos do endereço
-        if (data.cep) {
-          fetchCEPData(data.cep.replace(/\D/g, ''));
+        // Se temos CEP mas dados incompletos, buscar via ViaCEP
+        if (formattedCep && (!data.logradouro || !data.bairro || !data.municipio)) {
+          await fetchCEPData(formattedCep);
         }
+        
+        // Focar próximo campo após preenchimento
+        setTimeout(() => {
+          if (stateRegistrationRef.current) {
+            stateRegistrationRef.current.focus();
+          }
+        }, 200);
       } else {
         updateFormData({ isLoading: false });
       }
