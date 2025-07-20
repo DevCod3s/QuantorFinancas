@@ -362,9 +362,13 @@ export function Relationships() {
                   </tbody>
                 </table>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Paginação */}
-              <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          {/* Card de Paginação Separado */}
+          <Card className="shadow-lg">
+            <CardContent className="px-6 py-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">Mostrando</span>
                   <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
@@ -507,9 +511,13 @@ export function Relationships() {
                   </tbody>
                 </table>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Paginação */}
-              <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          {/* Card de Paginação Separado */}
+          <Card className="shadow-lg">
+            <CardContent className="px-6 py-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">Mostrando</span>
                   <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
@@ -646,9 +654,13 @@ export function Relationships() {
                   </tbody>
                 </table>
               </div>
+            </CardContent>
+          </Card>
 
-              {/* Paginação */}
-              <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+          {/* Card de Paginação Separado */}
+          <Card className="shadow-lg">
+            <CardContent className="px-6 py-4">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">Mostrando</span>
                   <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
