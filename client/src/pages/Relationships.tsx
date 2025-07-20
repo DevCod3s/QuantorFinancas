@@ -204,15 +204,6 @@ export function Relationships() {
   // Estado para controlar exibição do wizard
   const [showWizard, setShowWizard] = useState(false);
   
-  // Detecta o tipo baseado na aba ativa
-  const getRelationshipType = (): 'cliente' | 'fornecedor' | 'outros' => {
-    switch (activeTab) {
-      case 'fornecedores': return 'fornecedor';
-      case 'outros': return 'outros';
-      default: return 'cliente';
-    }
-  };
-  
   // Hooks para dialogs de feedback
   const { showSuccess, SuccessDialog } = useSuccessDialog();
   const { showError, ErrorDialog } = useErrorDialog();
@@ -1079,33 +1070,6 @@ export function Relationships() {
       </Tabs>
 
       {/* Dialogs de Feedback */}
-      <SuccessDialog />
-      <ErrorDialog />
-      
-      {/* Wizard de Cadastro de Relacionamento */}
-      {showWizard && (
-        <div className="fixed inset-0 z-50">
-          <RelationshipWizard
-            onClose={handleCloseWizard}
-            onSave={handleSaveRelationship}
-          />
-        </div>
-      )}
-      {/* Wizard de relacionamento */}
-      {showWizard && (
-        <RelationshipWizard
-          isOpen={showWizard}
-          onClose={() => setShowWizard(false)}
-          onSave={(data) => {
-            console.log('Dados salvos:', data);
-            setShowWizard(false);
-            showSuccess('Relacionamento cadastrado com sucesso!');
-          }}
-          relationshipType={getRelationshipType()}
-        />
-      )}
-
-      {/* Dialogs de feedback */}
       <SuccessDialog />
       <ErrorDialog />
     </div>
