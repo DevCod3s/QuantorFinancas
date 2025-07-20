@@ -18,6 +18,7 @@
 import React, { useState } from "react";
 import StepperWizard from "../StepperWizard";
 import Step1BasicInfo from "./Step1BasicInfo";
+import Step2ContractGeneration from "./Step2ContractGeneration";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Save } from "lucide-react";
 
@@ -131,12 +132,11 @@ export default function RelationshipWizard({ onClose, onSave }: RelationshipWiza
         );
       case 2:
         return (
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-            <div className="text-center text-gray-500">
-              <h3 className="text-lg font-medium mb-4">Etapa 2: Detalhes do Projeto</h3>
-              <p>Conteúdo da etapa 2 será implementado conforme suas instruções.</p>
-            </div>
-          </div>
+          <Step2ContractGeneration
+            onDataChange={(data, isValid) => updateStepData(2, data, isValid)}
+            initialData={wizardData.step2}
+            relationshipData={wizardData.step1}
+          />
         );
       case 3:
         return (

@@ -27,6 +27,9 @@ import { z } from "zod";
 // Sistema de autenticação
 import { getLoginUrl, handleCallback, logout, requireAuth as authMiddleware, loginWithCredentials } from "./auth";
 
+// OpenAI para geração de contratos
+import OpenAI from "openai";
+
 // Criação do roteador Express
 const router = Router();
 
@@ -332,6 +335,66 @@ router.get("/reports", requireAuth, async (req: any, res) => {
   } catch (error) {
     console.error("Reports error:", error);
     res.status(500).json({ error: "Failed to fetch reports" });
+  }
+});
+
+/**
+ * Rota para geração de contratos com IA
+ * 
+ * POST /api/generate-contract
+ * Gera contratos profissionais usando OpenAI GPT-4o
+ * 
+ * @param req.body.prompt - Prompt para geração do contrato
+ * @param req.body.contractData - Dados do contrato
+ * @returns JSON com contrato gerado em HTML
+ */
+router.post("/generate-contract", requireAuth, async (req, res) => {
+  try {
+    const { prompt, contractData } = req.body;
+    
+    if (!prompt) {
+      return res.status(400).json({ error: "Prompt é obrigatório" });
+    }
+
+    // Inicializar cliente OpenAI
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
+    // Gerar contrato usando OpenAI GPT-4o
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o", // Modelo mais recente da OpenAI
+      messages: [
+        {
+          role: "system",
+          content: "Você é um especialista em elaboração de contratos comerciais brasileiros. Sempre retorne contratos em HTML formatado com CSS inline para impressão."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      max_tokens: 4000,
+      temperature: 0.3, // Baixa criatividade para maior precisão jurídica
+    });
+
+    const generatedContract = completion.choices[0].message.content;
+
+    if (!generatedContract) {
+      return res.status(500).json({ error: "Falha na geração do contrato" });
+    }
+
+    res.json({
+      contract: generatedContract,
+      success: true
+    });
+
+  } catch (error) {
+    console.error("Erro na geração de contrato:", error);
+    res.status(500).json({ 
+      error: "Erro interno do servidor",
+      success: false
+    });
   }
 });
 
