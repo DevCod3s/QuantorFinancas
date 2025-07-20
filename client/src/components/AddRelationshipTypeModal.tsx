@@ -88,9 +88,9 @@ export default function AddRelationshipTypeModal({
           </h2>
           <button
             onClick={handleClose}
-            className="w-8 h-8 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
+            className="w-8 h-8 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
           >
-            <X className="h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
           </button>
         </div>
 
