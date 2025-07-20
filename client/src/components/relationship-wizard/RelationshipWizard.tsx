@@ -207,29 +207,21 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
 
   return (
     <div className="space-y-6">
-      {/* Card do Cabeçalho com título e fechar */}
+      {/* Card do Cabeçalho com título */}
       <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Novo Relacionamento
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Preencha as informações para cadastrar um novo relacionamento no sistema.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-          >
-            <X className="h-4 w-4 text-gray-600" />
-          </button>
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">
+            Novo Relacionamento
+          </h2>
+          <p className="text-sm text-gray-600 mt-1">
+            Preencha as informações para cadastrar um novo relacionamento no sistema.
+          </p>
         </div>
       </div>
 
-      {/* Stepper de navegação sem card */}
-      <div className="flex justify-center py-4">
-        <div className="max-w-xl w-full">
+      {/* Card das Etapas - mais fino */}
+      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 py-3 px-4 flex justify-center">
+        <div className="max-w-lg w-full">
           <StepperWizard
             steps={wizardSteps}
             currentStep={currentStep}

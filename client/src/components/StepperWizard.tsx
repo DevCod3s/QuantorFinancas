@@ -41,7 +41,7 @@ interface StepperWizardProps {
  */
 export default function StepperWizard({ steps, currentStep, className = "" }: StepperWizardProps) {
   return (
-    <div className={`flex items-center justify-between w-full max-w-2xl mx-auto py-6 ${className}`}>
+    <div className={`flex items-center justify-between w-full max-w-lg mx-auto py-4 ${className}`}>
       {steps.map((step, index) => (
         <React.Fragment key={step.id}>
           {/* Container da etapa */}
