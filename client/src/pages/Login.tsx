@@ -20,6 +20,8 @@ import CustomInput from "@/components/CustomInput";
 import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import quantorLogo from "@assets/Simbolo_New_1752793618491.png";
 
+import SLogo from "@assets/SLogo.png";
+
 // Tipos para controle das seções ativas
 type ActiveSection = 'login' | 'signup' | 'about';
 
@@ -342,7 +344,7 @@ export function Login() {
           
           {/* Logo */}
           <div className="flex flex-col items-center mb-10">
-            <img src={quantorLogo} alt="Quantor" className="w-14 h-14 mt-[-5px] mb-[-5px]" />
+            <img src={SLogo} alt="Quantor" className="w-14 h-14 mt-[-5px] mb-[-5px]" />
             <span className="text-gray-700 text-sm font-bold tracking-wide">
               QUANTOR
             </span>
