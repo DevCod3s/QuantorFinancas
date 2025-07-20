@@ -373,7 +373,7 @@ export function Login() {
             <button
               onClick={() => setActiveSection('login')}
               className={`p-3 rounded-lg transition-colors ${
-                activeSection === 'login' ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                activeSection === 'login' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
               }`}
             >
               <User className="w-6 h-6" />
@@ -381,14 +381,18 @@ export function Login() {
             
             <button
               onClick={() => setActiveSection('signup')}
-              className="p-3 rounded-lg transition-colors text-blue-600 pt-[10px] pb-[10px] mt-[23px] mb-[23px]"
+              className={`p-3 rounded-lg transition-colors pt-[10px] pb-[10px] mt-[23px] mb-[23px] ${
+                activeSection === 'signup' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
+              }`}
             >
               <UserPlus className="w-6 h-6" />
             </button>
             
             <button
               onClick={() => setActiveSection('about')}
-              className="p-3 rounded-lg transition-colors text-blue-600 pt-[12px] pb-[12px] pl-[10px] pr-[10px] mt-[8px] mb-[8px]"
+              className={`p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] mt-[8px] mb-[8px] ${
+                activeSection === 'about' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
+              }`}
             >
               <Info className="w-6 h-6" />
             </button>
