@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSuccessDialog } from "@/components/ui/success-dialog";
+import { useErrorDialog } from "@/components/ui/error-dialog";
 
 // Dados demonstrativos para clientes
 const clientesDemoData = [
@@ -173,8 +174,9 @@ export function Relationships() {
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
   
-  // Hook para dialogs de sucesso
+  // Hooks para dialogs de feedback
   const { showSuccess, SuccessDialog } = useSuccessDialog();
+  const { showError, ErrorDialog } = useErrorDialog();
   
   // Estados de paginação para cada aba
   const [clientesPage, setClientesPage] = useState(1);
@@ -274,9 +276,34 @@ export function Relationships() {
   };
 
   const handleDelete = (item: any, tipo: string) => {
+    // Simula validação - cliente com status "Ativo" não pode ser excluído
+    if (item.status === "Ativo") {
+      showError(
+        "Exclusão Negada!",
+        `Não é possível excluir ${item.razaoSocialCompleta || item.nomeFantasia} pois o status está ativo. Altere o status antes de excluir.`
+      );
+      return;
+    }
+
     showSuccess(
       "Exclusão Realizada!",
       `${item.razaoSocialCompleta || item.nomeFantasia} foi removido com sucesso dos ${tipo.toLowerCase()}.`
+    );
+  };
+
+  // Funções específicas para demonstrar cenários de erro
+  const handleAddNew = (tipo: string) => {
+    // Simula erro de validação
+    showError(
+      "Campos Obrigatórios!",
+      "Por favor, preencha todos os campos obrigatórios antes de continuar."
+    );
+  };
+
+  const handleInvalidOperation = () => {
+    showError(
+      "Operação Inválida!",
+      "Esta operação não pode ser realizada no momento. Tente novamente mais tarde."
     );
   };
 
@@ -331,6 +358,7 @@ export function Relationships() {
           <button
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
             title="Novo Relacionamento"
+            onClick={() => handleAddNew("Relacionamento")}
             style={{ 
               boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
@@ -1001,8 +1029,9 @@ export function Relationships() {
         </TabsContent>
       </Tabs>
 
-      {/* Dialog de Sucesso */}
+      {/* Dialogs de Feedback */}
       <SuccessDialog />
+      <ErrorDialog />
     </div>
   );
 }
