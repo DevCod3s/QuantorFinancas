@@ -20,13 +20,13 @@ import React, { useState, useRef, useEffect } from "react";
 import { Plus } from "lucide-react";
 import CpfCnpjInput from "../CpfCnpjInput";
 import CustomInput, { CustomSelect } from "../CustomInput";
+import AddRelationshipTypeModal from "../AddRelationshipTypeModal";
 
 /**
  * Interface para dados do formulário da Etapa 1
  */
 interface Step1FormData {
-  relationshipType: 'cliente' | 'fornecedor' | 'prestador_servicos' | 'custom' | ''; // Tipo de relacionamento
-  customRelationshipType: string; // Tipo personalizado se selecionou 'custom'
+  relationshipType: string; // Tipo de relacionamento
   document: string; // CPF ou CNPJ
   documentType: 'CPF' | 'CNPJ' | null; // Tipo do documento
   socialName: string; // Razão social (CNPJ) ou Nome (CPF)
@@ -92,7 +92,6 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   // Estado do formulário
   const [formData, setFormData] = useState<Step1FormData>({
     relationshipType: '',
-    customRelationshipType: '',
     document: '',
     documentType: null,
     socialName: '',
@@ -111,11 +110,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     ...initialData
   });
 
-  // Estado para controlar se está mostrando input customizado
-  const [showCustomInput, setShowCustomInput] = useState(false);
+  // Estado para controlar modal e tipos customizados
+  const [showModal, setShowModal] = useState(false);
+  const [customTypes, setCustomTypes] = useState<Array<{value: string, text: string}>>([]);
 
   // Referências para navegação automática entre campos
-  const customTypeRef = useRef<HTMLInputElement>(null);
   const socialNameRef = useRef<HTMLInputElement>(null);
   const fantasyNameRef = useRef<HTMLInputElement>(null);
   const stateRegistrationRef = useRef<HTMLInputElement>(null);
@@ -132,7 +131,6 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     // Validar se formulário está completo baseado no tipo de documento
     const isValid = !!(
       newData.relationshipType &&
-      (newData.relationshipType !== 'custom' || newData.customRelationshipType) &&
       newData.document &&
       newData.socialName &&
       newData.stateRegistration &&
@@ -291,6 +289,31 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     }
   };
 
+  /**
+   * Manipula adição de novo tipo de relacionamento
+   */
+  const handleAddNewType = (newType: { name: string; description: string }) => {
+    const typeValue = newType.name.toLowerCase().replace(/\s+/g, '_');
+    const newOption = { value: typeValue, text: newType.name };
+    
+    setCustomTypes(prev => [...prev, newOption]);
+    updateFormData({ relationshipType: typeValue });
+  };
+
+  /**
+   * Gera lista de opções incluindo tipos customizados
+   */
+  const getRelationshipOptions = () => {
+    const defaultOptions = [
+      { value: '', text: 'Selecione...' },
+      { value: 'cliente', text: 'Cliente' },
+      { value: 'fornecedor', text: 'Fornecedor' },
+      { value: 'prestador_servicos', text: 'Prestador de Serviços' }
+    ];
+    
+    return [...defaultOptions, ...customTypes];
+  };
+
   return (
     <div className="space-y-6">
       {/* Seção: Tipo de relacionamento */}
@@ -301,7 +324,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           </h3>
           <button
             type="button"
-            onClick={() => setShowCustomInput(!showCustomInput)}
+            onClick={() => setShowModal(true)}
             className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors"
             title="Adicionar novo tipo"
           >
@@ -309,39 +332,19 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           </button>
         </div>
         
-        <div className="max-w-md space-y-4">
+        <div className="max-w-md">
           <CustomSelect
             id="relationship-type"
             label="Selecione o tipo de relacionamento *"
             value={formData.relationshipType}
-            onChange={(e) => {
-              const value = e.target.value as 'cliente' | 'fornecedor' | 'prestador_servicos' | 'custom';
-              updateFormData({ relationshipType: value });
-              if (value === 'custom') {
-                setTimeout(() => customTypeRef.current?.focus(), 100);
-              }
-            }}
-            options={[
-              { value: '', text: 'Selecione...' },
-              { value: 'cliente', text: 'Cliente' },
-              { value: 'fornecedor', text: 'Fornecedor' },
-              { value: 'prestador_servicos', text: 'Prestador de Serviços' },
-              { value: 'custom', text: 'Outro tipo (especificar)' }
-            ]}
-          />
-          
-          {/* Input para tipo customizado */}
-          {(formData.relationshipType === 'custom' || showCustomInput) && (
-            <CustomInput
-              ref={customTypeRef}
-              type="text"
-              id="custom-relationship-type"
-              label="Especifique o tipo de relacionamento *"
-              value={formData.customRelationshipType}
-              onChange={(e) => updateFormData({ customRelationshipType: e.target.value })}
-              placeholder="Ex: Parceiro, Consultor, Contador..."
-            />
-          )}
+            onChange={(e) => updateFormData({ relationshipType: e.target.value })}
+          >
+            {getRelationshipOptions().map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.text}
+              </option>
+            ))}
+          </CustomSelect>
         </div>
       </div>
 
@@ -571,6 +574,13 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           </div>
         </div>
       </div>
+
+      {/* Modal para adicionar novo tipo */}
+      <AddRelationshipTypeModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSave={handleAddNewType}
+      />
     </div>
   );
 }
