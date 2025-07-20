@@ -192,3 +192,13 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Layout Consistente**: Seguindo mesmo padrão visual das outras páginas com barra de progressão
   - **Menu Simplificado**: Dashboard → Relacionamentos → Finanças → Negócios → Assistente IA
   - **Rotas Atualizadas**: Removidas rotas /budgets e /reports, adicionada rota /relationships
+- **Botões de Ação Modernos**: Redesign completo dos botões de adição com UX aprimorada
+  - **Design Circular Flutuante**: Botões FAB (Floating Action Button) de 56x56px
+  - **Gradiente Sofisticado**: From-blue-600 to-blue-700 com hover state aprimorado
+  - **Efeitos Interativos**: Hover scale(1.05), active scale(0.95) com efeito de afundar
+  - **Animações Suaves**: Rotação do ícone plus (90°) no hover com transition 300ms
+  - **Ripple Effect**: Efeito de ondulação no clique com escala e opacidade
+  - **Tooltip Inteligente**: Aparecem no hover com seta e posicionamento responsivo
+  - **Sombras Profissionais**: Box-shadow customizada com reflexo da cor primária
+  - **Brilho Interior**: Gradiente interno que aparece no hover para efeito premium
+  - **Consistência Global**: Aplicado em todas as páginas (Relacionamentos, Negócios, Finanças)
