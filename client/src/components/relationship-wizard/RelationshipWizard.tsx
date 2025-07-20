@@ -228,11 +228,13 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
       </div>
 
       {/* Card do Stepper de navegação */}
-      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-        <StepperWizard
-          steps={wizardSteps}
-          currentStep={currentStep}
-        />
+      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 flex justify-center">
+        <div className="max-w-2xl w-full">
+          <StepperWizard
+            steps={wizardSteps}
+            currentStep={currentStep}
+          />
+        </div>
       </div>
 
       {/* Card do Conteúdo da etapa atual */}

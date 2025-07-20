@@ -41,7 +41,7 @@ interface StepperWizardProps {
  */
 export default function StepperWizard({ steps, currentStep, className = "" }: StepperWizardProps) {
   return (
-    <div className={`flex items-center justify-between w-full max-w-4xl mx-auto py-8 ${className}`}>
+    <div className={`flex items-center justify-between w-full max-w-2xl mx-auto py-6 ${className}`}>
       {steps.map((step, index) => (
         <React.Fragment key={step.id}>
           {/* Container da etapa */}
@@ -70,8 +70,8 @@ export default function StepperWizard({ steps, currentStep, className = "" }: St
             </div>
             
             {/* Título e subtítulo */}
-            <div className="mt-3 min-w-0">
-              <h3 className={`text-sm font-medium ${index + 1 === currentStep ? 'text-blue-600' : index + 1 < currentStep ? 'text-green-600' : 'text-gray-500'}`}>
+            <div className="mt-3 min-w-0 max-w-[120px]">
+              <h3 className={`text-xs font-medium ${index + 1 === currentStep ? 'text-blue-600' : index + 1 < currentStep ? 'text-green-600' : 'text-gray-500'}`}>
                 {step.title}
               </h3>
               <p className={`text-xs mt-1 ${index + 1 === currentStep ? 'text-blue-500' : index + 1 < currentStep ? 'text-green-500' : 'text-gray-400'}`}>
@@ -82,7 +82,7 @@ export default function StepperWizard({ steps, currentStep, className = "" }: St
 
           {/* Linha conectora (não renderizar após a última etapa) */}
           {index < steps.length - 1 && (
-            <div className="flex-1 mx-4">
+            <div className="flex-1 mx-2">
               <div className={`h-px ${index + 1 < currentStep ? 'bg-green-500' : 'bg-gray-300'}`} />
             </div>
           )}
