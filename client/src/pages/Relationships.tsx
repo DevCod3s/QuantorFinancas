@@ -201,12 +201,24 @@ export function Relationships() {
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
   
-  // Estado para controlar exibição do wizard
-  const [showWizard, setShowWizard] = useState(false);
+  // Estado para controlar se está na página de cadastro
+  const [isAddingRelationship, setIsAddingRelationship] = useState(false);
   
   // Hooks para dialogs de feedback
   const { showSuccess, SuccessDialog } = useSuccessDialog();
   const { showError, ErrorDialog } = useErrorDialog();
+  
+  // Se está adicionando relacionamento, mostrar página de cadastro
+  if (isAddingRelationship) {
+    return (
+      <div className="space-y-6">
+        <RelationshipWizard
+          isOpen={true}
+          onClose={() => setIsAddingRelationship(false)}
+        />
+      </div>
+    );
+  }
   
   // Estados de paginação para cada aba
   const [clientesPage, setClientesPage] = useState(1);
@@ -398,7 +410,7 @@ export function Relationships() {
           <button
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
             title="Novo Relacionamento"
-            onClick={() => handleAddNew("Relacionamento")}
+            onClick={() => setIsAddingRelationship(true)}
             style={{ 
               boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
