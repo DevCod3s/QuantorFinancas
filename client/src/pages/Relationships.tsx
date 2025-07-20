@@ -208,18 +208,6 @@ export function Relationships() {
   const { showSuccess, SuccessDialog } = useSuccessDialog();
   const { showError, ErrorDialog } = useErrorDialog();
   
-  // Se está adicionando relacionamento, mostrar página de cadastro
-  if (isAddingRelationship) {
-    return (
-      <div className="space-y-6">
-        <RelationshipWizard
-          isOpen={true}
-          onClose={() => setIsAddingRelationship(false)}
-        />
-      </div>
-    );
-  }
-  
   // Estados de paginação para cada aba
   const [clientesPage, setClientesPage] = useState(1);
   const [clientesPerPage, setClientesPerPage] = useState(5);
@@ -396,6 +384,18 @@ export function Relationships() {
     const timer = setTimeout(updateProgressBar, 50);
     return () => clearTimeout(timer);
   }, [activeTab]);
+
+  // Se está adicionando relacionamento, mostrar página de cadastro
+  if (isAddingRelationship) {
+    return (
+      <div className="space-y-6">
+        <RelationshipWizard
+          isOpen={true}
+          onClose={() => setIsAddingRelationship(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
