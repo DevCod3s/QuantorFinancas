@@ -16,6 +16,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import CustomInput from "@/components/CustomInput";
 import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import quantorLogo from "@assets/Simbolo_New_1752793618491.png";
 
@@ -128,24 +129,34 @@ export function Login() {
             </div>
             
             <div className="space-y-4">
-              <Input
+              <CustomInput
                 ref={usernameLoginRef}
                 type="text"
-                placeholder="Usuário"
+                id="username-login"
+                label="Usuário *"
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
-                onKeyPress={(e) => handleLoginKeyPress(e, 'username')}
-                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    passwordLoginRef.current?.focus();
+                  }
+                }}
               />
               
-              <Input
+              <CustomInput
                 ref={passwordLoginRef}
                 type="password"
-                placeholder="Senha"
+                id="password-login"
+                label="Senha *"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                onKeyPress={(e) => handleLoginKeyPress(e, 'password')}
-                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleLogin();
+                  }
+                }}
               />
               
               {error && (
