@@ -59,6 +59,42 @@ const clientesDemoData = [
     tipo: "Pessoa Jurídica",
     dataCadastro: "01/07/2025",
     status: "Cancelado"
+  },
+  {
+    id: 9,
+    razaoSocial: "55.888.999/0001-22",
+    razaoSocialCompleta: "EMPRESA TESTE 1 LTDA",
+    nomeFantasia: "TESTE 1",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "02/07/2025",
+    status: "Ativo"
+  },
+  {
+    id: 10,
+    razaoSocial: "66.777.888/0001-33",
+    razaoSocialCompleta: "EMPRESA TESTE 2 LTDA",
+    nomeFantasia: "TESTE 2",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "03/07/2025",
+    status: "Ativo"
+  },
+  {
+    id: 11,
+    razaoSocial: "77.666.555/0001-44",
+    razaoSocialCompleta: "EMPRESA TESTE 3 LTDA",
+    nomeFantasia: "TESTE 3",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "04/07/2025",
+    status: "Ativo"
+  },
+  {
+    id: 12,
+    razaoSocial: "88.555.444/0001-55",
+    razaoSocialCompleta: "EMPRESA TESTE 4 LTDA",
+    nomeFantasia: "TESTE 4",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "05/07/2025",
+    status: "Ativo"
   }
 ];
 
@@ -304,7 +340,7 @@ export function Relationships() {
           {/* Card dos Dados com Scroll */}
           <Card className="shadow-lg">
             <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                 <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
                     {clientesDemoData.map((cliente, index) => {
@@ -463,7 +499,7 @@ export function Relationships() {
           {/* Card dos Dados com Scroll */}
           <Card className="shadow-lg">
             <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                 <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
                     {fornecedoresDemoData.map((fornecedor, index) => {
@@ -616,7 +652,7 @@ export function Relationships() {
           {/* Card dos Dados com Scroll */}
           <Card className="shadow-lg">
             <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+              <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                 <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
                     {outrosRelacionamentosDemoData.map((relacionamento, index) => {
