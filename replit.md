@@ -216,3 +216,14 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Hover Effects**: Linhas da tabela com hover:bg-gray-50 para feedback visual
   - **Responsive Design**: overflow-x-auto para adaptação mobile
   - **Aplicação Unificada**: Mesmo padrão implementado nas 3 abas (Clientes, Fornecedores, Outros)
+- **Sistema de Paginação e Ordenação Funcional**: Implementação completa de controles interativos (Janeiro 2025)
+  - **Paginação Dinâmica**: Controles funcionais com seletor de itens por página (5, 10, 20)
+  - **Navegação por Páginas**: Botões Anterior/Próxima com estados desabilitados apropriados
+  - **Numeração Automática**: Páginas renderizadas dinamicamente baseadas no total de registros
+  - **Página Atual Destacada**: Botão da página ativa com cor azul e hover effects
+  - **Cabeçalhos Clicáveis**: Ordenação por Razão Social, Tipo, Data Cadastro e Status
+  - **Ordenação Inteligente**: Tratamento diferenciado para datas (conversão DD/MM/YYYY) e texto (case-insensitive)
+  - **Estados de Ordenação**: Alternância ASC/DESC ao clicar no mesmo campo
+  - **Dados Processados**: Pipeline completo (ordenação → paginação) aplicado em todas as abas
+  - **Controles Responsivos**: Feedback visual hover nos cabeçalhos e transições suaves
+  - **Altura Calibrada**: max-h-[640px] para mostrar até 10 registros sem scroll, mais que isso ativa scroll vertical
