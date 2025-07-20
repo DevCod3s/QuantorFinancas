@@ -343,15 +343,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="relative w-8 h-8 hover:opacity-80 transition-opacity"
+            className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center rounded-md"
             title="Adicionar novo tipo"
           >
-            {/* Quadrado de fundo */}
-            <div className="absolute inset-0 bg-gray-200 rounded-md"></div>
-            {/* Quadrado superior com + */}
-            <div className="absolute inset-1 bg-blue-500 rounded-sm flex items-center justify-center">
-              <Plus className="h-3 w-3 text-white stroke-2" />
-            </div>
+            <Plus className="h-5 w-5" />
           </button>
         </div>
       </div>
