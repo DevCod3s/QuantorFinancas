@@ -17,8 +17,8 @@
  */
 
 import React, { useState, useRef, useEffect } from "react";
-import { TEInput, TESelect } from "tw-elements-react";
 import CpfCnpjInput from "../CpfCnpjInput";
+import CustomInput, { CustomSelect } from "../CustomInput";
 
 /**
  * Interface para dados do formulário da Etapa 1
@@ -204,12 +204,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
           {/* Razão Social */}
           <div>
-            <TEInput
+            <CustomInput
               ref={socialNameRef}
               type="text"
               id="social-name"
               label="Razão social *"
-              size="base"
               value={formData.socialName}
               onChange={(e) => updateFormData({ socialName: e.target.value })}
               onKeyDown={(e) => {
@@ -224,12 +223,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
           {/* Inscrição Estadual */}
           <div className="relative">
-            <TEInput
+            <CustomInput
               ref={stateRegistrationRef}
               type="text"
               id="state-registration"
               label="Inscrição estadual *"
-              size="base"
               value={formData.stateRegistration}
               onChange={(e) => updateFormData({ stateRegistration: e.target.value })}
               disabled={formData.isExempt}
@@ -261,12 +259,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
         {/* Nome Fantasia (apenas para CNPJ) */}
         {formData.documentType === 'CNPJ' && (
           <div className="mt-6">
-            <TEInput
+            <CustomInput
               ref={fantasyNameRef}
               type="text"
               id="fantasy-name"
               label="Nome fantasia"
-              size="base"
               value={formData.fantasyName}
               onChange={(e) => updateFormData({ fantasyName: e.target.value })}
               onKeyDown={(e) => {
@@ -288,12 +285,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* CEP */}
           <div>
-            <TEInput
+            <CustomInput
               ref={zipCodeRef}
               type="text"
               id="zip-code"
               label="CEP *"
-              size="base"
               value={formData.zipCode}
               onChange={handleZipCodeChange}
               placeholder="00000-000"
@@ -302,11 +298,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
           {/* Logradouro */}
           <div>
-            <TEInput
+            <CustomInput
               type="text"
               id="street"
               label="Logradouro *"
-              size="base"
               value={formData.street}
               onChange={(e) => updateFormData({ street: e.target.value })}
             />
@@ -314,11 +309,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
           {/* Número */}
           <div>
-            <TEInput
+            <CustomInput
               type="text"
               id="number"
               label="Número *"
-              size="base"
               value={formData.number}
               onChange={(e) => updateFormData({ number: e.target.value })}
             />
@@ -328,11 +322,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {/* Complemento */}
           <div>
-            <TEInput
+            <CustomInput
               type="text"
               id="complement"
               label="Complemento"
-              size="base"
               value={formData.complement}
               onChange={(e) => updateFormData({ complement: e.target.value })}
             />
@@ -340,11 +333,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
           {/* Bairro */}
           <div>
-            <TEInput
+            <CustomInput
               type="text"
               id="neighborhood"
               label="Bairro *"
-              size="base"
               value={formData.neighborhood}
               onChange={(e) => updateFormData({ neighborhood: e.target.value })}
             />
@@ -352,23 +344,29 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
           {/* Estado */}
           <div>
-            <TESelect
-              data={brazilianStates}
+            <CustomSelect
+              id="state"
               label="Estado *"
               value={formData.state}
-              onValueChange={(value) => updateFormData({ state: value as string })}
-            />
+              onChange={(e) => updateFormData({ state: e.target.value })}
+            >
+              <option value="">Selecione...</option>
+              {brazilianStates.map((state) => (
+                <option key={state.value} value={state.value}>
+                  {state.text}
+                </option>
+              ))}
+            </CustomSelect>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
           {/* Cidade */}
           <div>
-            <TEInput
+            <CustomInput
               type="text"
               id="city"
               label="Cidade *"
-              size="base"
               value={formData.city}
               onChange={(e) => updateFormData({ city: e.target.value })}
             />
