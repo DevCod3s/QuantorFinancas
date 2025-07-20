@@ -390,9 +390,7 @@ export function Login() {
             
             <button
               onClick={() => setActiveSection('about')}
-              className={`p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] mt-[8px] mb-[8px] ${
-                activeSection === 'about' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
-              }`}
+              className="p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] text-blue-600 mt-[22px] mb-[22px]"
             >
               <Info className="w-6 h-6" />
             </button>
