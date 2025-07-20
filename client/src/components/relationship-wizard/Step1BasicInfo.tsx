@@ -24,6 +24,7 @@ import CustomInput, { CustomSelect } from "../CustomInput";
  * Interface para dados do formulário da Etapa 1
  */
 interface Step1FormData {
+  relationshipType: 'cliente' | 'fornecedor' | 'outros' | ''; // Tipo de relacionamento
   document: string; // CPF ou CNPJ
   documentType: 'CPF' | 'CNPJ' | null; // Tipo do documento
   socialName: string; // Razão social (CNPJ) ou Nome (CPF)
@@ -88,6 +89,7 @@ const brazilianStates = [
 export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1BasicInfoProps) {
   // Estado do formulário
   const [formData, setFormData] = useState<Step1FormData>({
+    relationshipType: '',
     document: '',
     documentType: null,
     socialName: '',
@@ -122,6 +124,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     
     // Validar se formulário está completo baseado no tipo de documento
     const isValid = !!(
+      newData.relationshipType &&
       newData.document &&
       newData.socialName &&
       newData.stateRegistration &&
@@ -282,6 +285,28 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
   return (
     <div className="space-y-6">
+      {/* Seção: Tipo de relacionamento */}
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
+          Tipo de relacionamento
+        </h3>
+        
+        <div className="max-w-md">
+          <CustomSelect
+            id="relationship-type"
+            label="Selecione o tipo de relacionamento *"
+            value={formData.relationshipType}
+            onChange={(e) => updateFormData({ relationshipType: e.target.value as 'cliente' | 'fornecedor' | 'outros' })}
+            options={[
+              { value: '', text: 'Selecione...' },
+              { value: 'cliente', text: 'Cliente' },
+              { value: 'fornecedor', text: 'Fornecedor' },
+              { value: 'outros', text: 'Outros' }
+            ]}
+          />
+        </div>
+      </div>
+
       {/* Seção: Informação básica */}
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">
