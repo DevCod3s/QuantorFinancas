@@ -43,7 +43,7 @@ export default function StepperWizard({ steps, currentStep, className = "" }: St
   return (
     <div className={`flex items-center justify-between w-full max-w-4xl mx-auto py-8 ${className}`}>
       {steps.map((step, index) => (
-        <React.Fragment key={`step-${step.id}`}>
+        <React.Fragment key={step.id}>
           {/* Container da etapa */}
           <div className="flex flex-col items-center text-center">
             {/* Círculo numerado */}

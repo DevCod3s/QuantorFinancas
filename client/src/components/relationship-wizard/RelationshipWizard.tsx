@@ -206,97 +206,80 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
-        {/* Header com título */}
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">
-                Novo Relacionamento
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                Preencha as informações para cadastrar um novo relacionamento no sistema.
-              </p>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600"
+    <div className="space-y-6">
+      {/* Card do Cabeçalho com título e fechar */}
+      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              Novo Relacionamento
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Preencha as informações para cadastrar um novo relacionamento no sistema.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+          >
+            <X className="h-4 w-4 text-gray-600" />
+          </button>
+        </div>
+      </div>
+
+      {/* Card do Stepper de navegação */}
+      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
+        <StepperWizard
+          steps={wizardSteps}
+          currentStep={currentStep}
+        />
+      </div>
+
+      {/* Card do Conteúdo da etapa atual */}
+      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 max-h-[60vh] overflow-y-auto scrollbar-hide">
+        {renderStepContent()}
+      </div>
+
+      {/* Card dos Botões de navegação */}
+      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
+        <div className="flex justify-center items-center gap-4">
+          {currentStep > 1 && (
+            <button
+              onClick={handlePrevious}
+              className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
             >
-              <X className="h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Stepper de navegação */}
-        <div className="px-6 py-4 border-b border-gray-100">
-          <StepperWizard
-            steps={wizardSteps}
-            currentStep={currentStep}
-          />
-        </div>
-
-        {/* Conteúdo da etapa atual */}
-        <div className="px-6 py-4">
-          {renderStepContent()}
-        </div>
-
-        {/* Botões de navegação */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex justify-between items-center">
-            <div>
-              {currentStep > 1 && (
-                <Button
-                  variant="outline"
-                  onClick={handlePrevious}
-                  className="flex items-center gap-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Voltar
-                </Button>
-              )}
-            </div>
-            
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              
-              {currentStep < wizardSteps.length ? (
-                <Button
-                  onClick={handleNext}
-                  disabled={!currentStepValid}
-                  className="flex items-center gap-2"
-                >
-                  Próximo
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+              <ArrowLeft className="h-5 w-5 text-gray-600" />
+            </button>
+          )}
+          
+          <button
+            onClick={onClose}
+            className="px-6 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+          >
+            Cancelar
+          </button>
+          
+          {currentStep < wizardSteps.length ? (
+            <button
+              onClick={handleNext}
+              disabled={!currentStepValid}
+              className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+            >
+              <ArrowRight className="h-5 w-5 text-white" />
+            </button>
+          ) : (
+            <button
+              onClick={handleFinish}
+              disabled={!currentStepValid || isSaving}
+              className="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+            >
+              {isSaving ? (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
               ) : (
-                <Button
-                  onClick={handleFinish}
-                  disabled={!currentStepValid || isSaving}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                >
-                  {isSaving ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Finalizar
-                    </>
-                  )}
-                </Button>
+                <Save className="h-5 w-5 text-white" />
               )}
-            </div>
-          </div>
+            </button>
+          )}
         </div>
       </div>
       
