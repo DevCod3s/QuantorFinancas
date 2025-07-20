@@ -16,7 +16,8 @@
  */
 
 import React, { useState } from "react";
-import { TEInput, TETextarea } from "tw-elements-react";
+import { TETextarea } from "tw-elements-react";
+import CustomInput from "@/components/CustomInput";
 import { Button } from "@/components/ui/button";
 import { 
   CheckCircle2, 
@@ -254,12 +255,13 @@ export default function Step4FinalPRD({
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-3">Código do Relacionamento</h4>
             <div className="flex space-x-2">
-              <TEInput
+              <CustomInput
                 type="text"
+                id="relationship-code"
+                label="Código *"
                 value={formData.relationshipCode}
                 onChange={(e) => updateFormData({ relationshipCode: e.target.value })}
-                size="base"
-                readonly
+                readOnly
               />
               <Button
                 variant="outline"

@@ -205,44 +205,64 @@ export function Login() {
             </div>
             
             <div className="space-y-4">
-              <Input
+              <CustomInput
                 ref={usernameSignupRef}
                 type="text"
-                placeholder="Nome de usuário"
+                id="username-signup"
+                label="Nome de usuário *"
                 value={formData.username}
                 onChange={(e) => handleInputChange('username', e.target.value)}
-                onKeyPress={(e) => handleSignupKeyPress(e, 'username')}
-                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    emailSignupRef.current?.focus();
+                  }
+                }}
               />
               
-              <Input
+              <CustomInput
                 ref={emailSignupRef}
                 type="email"
-                placeholder="seu.email@gmail.com"
+                id="email-signup"
+                label="E-mail *"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                onKeyPress={(e) => handleSignupKeyPress(e, 'email')}
-                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    passwordSignupRef.current?.focus();
+                  }
+                }}
               />
               
-              <Input
+              <CustomInput
                 ref={passwordSignupRef}
                 type="password"
-                placeholder="Senha"
+                id="password-signup"
+                label="Senha *"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                onKeyPress={(e) => handleSignupKeyPress(e, 'password')}
-                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    confirmPasswordRef.current?.focus();
+                  }
+                }}
               />
               
-              <Input
+              <CustomInput
                 ref={confirmPasswordRef}
                 type="password"
-                placeholder="Confirmar senha"
+                id="confirm-password-signup"
+                label="Confirmar senha *"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                onKeyPress={(e) => handleSignupKeyPress(e, 'confirmPassword')}
-                className="border-0 rounded-md shadow-md focus:shadow-lg focus:ring-0 focus:border-0 bg-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleLogin();
+                  }
+                }}
               />
               
               <div className="flex justify-center mt-6">

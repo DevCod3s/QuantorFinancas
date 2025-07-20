@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import CustomInput from "@/components/CustomInput";
 
 export default function Landing() {
   const { isLoading } = useAuth();
@@ -35,28 +36,22 @@ export default function Landing() {
             {/* Form */}
             <div className="space-y-4">
               {/* Email Field */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Email Address:</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="abc@xyz.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-slate-500 text-sm"
-                />
-              </div>
+              <CustomInput
+                type="email"
+                id="email-landing"
+                label="Email *"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
 
               {/* Password Field */}
-              <div>
-                <label className="block text-sm text-gray-600 mb-1">Password:</label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••••"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-slate-500 text-sm"
-                />
-              </div>
+              <CustomInput
+                type="password"
+                id="password-landing"
+                label="Senha *"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
 
               {/* Remember me and Forgot password */}
               <div className="flex items-center justify-between text-sm">

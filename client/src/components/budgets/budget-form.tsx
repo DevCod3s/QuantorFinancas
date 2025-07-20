@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
-import { FloatingInput, FloatingSelect } from "@/components/ui/floating-input";
+import CustomInput, { CustomSelect } from "@/components/CustomInput";
 import { useCreateBudget, useUpdateBudget } from "@/hooks/use-budgets";
 import { useQuery } from "@tanstack/react-query";
 import { Budget, Category } from "@/types";
@@ -119,8 +119,9 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <FloatingSelect
-                      label="Categoria"
+                    <CustomSelect
+                      id="category-select"
+                      label="Categoria *"
                       {...field}
                       value={field.value?.toString() || ''}
                       onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
@@ -131,7 +132,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                           {category.name}
                         </option>
                       ))}
-                    </FloatingSelect>
+                    </CustomSelect>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,8 +145,9 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <FloatingInput
-                      label="Valor Orçado (R$)"
+                    <CustomInput
+                      id="budgeted-amount"
+                      label="Valor Orçado (R$) *"
                       type="number"
                       step="0.01"
                       {...field}
@@ -162,10 +164,11 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <FloatingSelect
-                      label="Período"
+                    <CustomSelect
+                      id="period-select"
+                      label="Período *"
                       {...field}
-                      onChange={(e) => {
+                      onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
                         field.onChange(e.target.value);
                         handlePeriodChange(e.target.value as 'mensal' | 'anual');
                       }}
@@ -173,7 +176,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                       <option value="">Selecionar período</option>
                       <option value="mensal">Mensal</option>
                       <option value="anual">Anual</option>
-                    </FloatingSelect>
+                    </CustomSelect>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -187,11 +190,12 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <FloatingInput
-                        label="Data de Início"
+                      <CustomInput
+                        id="start-date"
+                        label="Data de Início *"
                         type="date"
                         {...field}
-                        onChange={(e) => {
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
                           field.onChange(e.target.value);
                           const period = form.getValues('period');
                           if (period) {
@@ -211,8 +215,9 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <FloatingInput
-                        label="Data de Fim"
+                      <CustomInput
+                        id="end-date"
+                        label="Data de Fim *"
                         type="date"
                         {...field}
                       />
