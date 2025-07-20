@@ -11,6 +11,7 @@
 
 import React, { useState } from "react";
 import { X, Save } from "lucide-react";
+import CustomInput, { CustomTextarea } from "./CustomInput";
 
 /**
  * Interface para novo tipo de relacionamento
@@ -94,39 +95,29 @@ export default function AddRelationshipTypeModal({
         </div>
 
         {/* Conteúdo do modal */}
-        <div className="p-6 space-y-4">
+        <div className="p-6 space-y-6">
           {/* Campo Nome */}
-          <div>
-            <label htmlFor="type-name" className="block text-sm font-medium text-gray-700 mb-2">
-              Nome do Tipo *
-            </label>
-            <input
-              type="text"
-              id="type-name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              onKeyDown={handleKeyDown}
-              placeholder="Ex: Parceiro, Consultor, Contador..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              autoFocus
-            />
-          </div>
+          <CustomInput
+            type="text"
+            id="type-name"
+            label="Nome do Tipo *"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            onKeyDown={handleKeyDown}
+            placeholder="Ex: Parceiro, Consultor, Contador..."
+            autoFocus
+          />
 
           {/* Campo Descrição */}
-          <div>
-            <label htmlFor="type-description" className="block text-sm font-medium text-gray-700 mb-2">
-              Descrição (opcional)
-            </label>
-            <textarea
-              id="type-description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              onKeyDown={handleKeyDown}
-              placeholder="Descrição do tipo de relacionamento..."
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-            />
-          </div>
+          <CustomTextarea
+            id="type-description"
+            label="Descrição (opcional)"
+            value={formData.description}
+            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onKeyDown={handleKeyDown}
+            placeholder="Descrição do tipo de relacionamento..."
+            rows={3}
+          />
         </div>
 
         {/* Rodapé do modal */}
