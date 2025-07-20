@@ -171,6 +171,88 @@ export function Relationships() {
   const [activeTab, setActiveTab] = useState("clientes");
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
+  
+  // Estados de paginação para cada aba
+  const [clientesPage, setClientesPage] = useState(1);
+  const [clientesPerPage, setClientesPerPage] = useState(5);
+  const [fornecedoresPage, setFornecedoresPage] = useState(1);
+  const [fornecedoresPerPage, setFornecedoresPerPage] = useState(5);
+  const [outrosPage, setOutrosPage] = useState(1);
+  const [outrosPerPage, setOutrosPerPage] = useState(5);
+  
+  // Estados de ordenação
+  const [sortField, setSortField] = useState<string>("");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Função para ordenação
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDirection("asc");
+    }
+  };
+
+  // Função para ordenar dados
+  const sortData = (data: any[], field: string, direction: "asc" | "desc") => {
+    return [...data].sort((a, b) => {
+      let aValue = a[field];
+      let bValue = b[field];
+      
+      // Tratamento especial para diferentes tipos de campos
+      if (field === "dataCadastro") {
+        aValue = new Date(aValue.split("/").reverse().join("/"));
+        bValue = new Date(bValue.split("/").reverse().join("/"));
+      } else if (typeof aValue === "string") {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      
+      if (direction === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  };
+
+  // Função para paginar dados
+  const paginateData = (data: any[], page: number, perPage: number) => {
+    const startIndex = (page - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    return data.slice(startIndex, endIndex);
+  };
+
+  // Dados processados para cada aba
+  const processedClientesData = (() => {
+    let data = clientesDemoData;
+    if (sortField) {
+      data = sortData(data, sortField, sortDirection);
+    }
+    return paginateData(data, clientesPage, clientesPerPage);
+  })();
+
+  const processedFornecedoresData = (() => {
+    let data = fornecedoresDemoData;
+    if (sortField) {
+      data = sortData(data, sortField, sortDirection);
+    }
+    return paginateData(data, fornecedoresPage, fornecedoresPerPage);
+  })();
+
+  const processedOutrosData = (() => {
+    let data = outrosRelacionamentosDemoData;
+    if (sortField) {
+      data = sortData(data, sortField, sortDirection);
+    }
+    return paginateData(data, outrosPage, outrosPerPage);
+  })();
+
+  // Função para calcular número total de páginas
+  const getTotalPages = (totalItems: number, perPage: number) => {
+    return Math.ceil(totalItems / perPage);
+  };
 
   // Calcula a posição e largura da barra de progressão
   useEffect(() => {
@@ -300,7 +382,10 @@ export function Relationships() {
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("razaoSocialCompleta")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Razão Social | Nome</span>
                           <ArrowUpDown className="h-3 w-3" />
@@ -309,19 +394,28 @@ export function Relationships() {
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nome Fantasia
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("tipo")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Tipo</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("dataCadastro")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Data</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("status")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Status</span>
                           <ArrowUpDown className="h-3 w-3" />
@@ -343,7 +437,7 @@ export function Relationships() {
               <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                 <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {clientesDemoData.map((cliente, index) => {
+                    {processedClientesData.map((cliente, index) => {
                       const { icon: StatusIcon, color: statusColor } = getStatusIcon(cliente.status);
                       return (
                         <tr key={cliente.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -416,7 +510,14 @@ export function Relationships() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">Mostrando</span>
-                  <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
+                  <select 
+                    className="border border-gray-300 rounded px-2 py-1 text-sm" 
+                    value={clientesPerPage}
+                    onChange={(e) => {
+                      setClientesPerPage(Number(e.target.value));
+                      setClientesPage(1);
+                    }}
+                  >
                     <option value="5">5</option>
                     <option value="10">10</option>
                     <option value="20">20</option>
@@ -424,19 +525,42 @@ export function Relationships() {
                   <span className="text-sm text-gray-700">de {clientesDemoData.length} resultados</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  <button 
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      clientesPage === 1 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => setClientesPage(Math.max(1, clientesPage - 1))}
+                    disabled={clientesPage === 1}
+                  >
                     Anterior
                   </button>
-                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                    1
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                    2
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
-                    3
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  
+                  {/* Renderizar páginas dinamicamente */}
+                  {Array.from({ length: getTotalPages(clientesDemoData.length, clientesPerPage) }, (_, i) => i + 1).map(page => (
+                    <button 
+                      key={page}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        page === clientesPage 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setClientesPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button 
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      clientesPage === getTotalPages(clientesDemoData.length, clientesPerPage) 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => setClientesPage(Math.min(getTotalPages(clientesDemoData.length, clientesPerPage), clientesPage + 1))}
+                    disabled={clientesPage === getTotalPages(clientesDemoData.length, clientesPerPage)}
+                  >
                     Próxima
                   </button>
                 </div>
@@ -459,7 +583,10 @@ export function Relationships() {
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("razaoSocialCompleta")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Razão Social | Nome</span>
                           <ArrowUpDown className="h-3 w-3" />
@@ -468,19 +595,28 @@ export function Relationships() {
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nome Fantasia
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("tipo")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Tipo</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("dataCadastro")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Data</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("status")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Status</span>
                           <ArrowUpDown className="h-3 w-3" />
@@ -502,7 +638,7 @@ export function Relationships() {
               <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                 <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {fornecedoresDemoData.map((fornecedor, index) => {
+                    {processedFornecedoresData.map((fornecedor, index) => {
                       const { icon: StatusIcon, color: statusColor } = getStatusIcon(fornecedor.status);
                       return (
                         <tr key={fornecedor.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -575,7 +711,14 @@ export function Relationships() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">Mostrando</span>
-                  <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
+                  <select 
+                    className="border border-gray-300 rounded px-2 py-1 text-sm" 
+                    value={fornecedoresPerPage}
+                    onChange={(e) => {
+                      setFornecedoresPerPage(Number(e.target.value));
+                      setFornecedoresPage(1);
+                    }}
+                  >
                     <option value="5">5</option>
                     <option value="10">10</option>
                     <option value="20">20</option>
@@ -583,13 +726,42 @@ export function Relationships() {
                   <span className="text-sm text-gray-700">de {fornecedoresDemoData.length} resultados</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  <button 
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      fornecedoresPage === 1 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => setFornecedoresPage(Math.max(1, fornecedoresPage - 1))}
+                    disabled={fornecedoresPage === 1}
+                  >
                     Anterior
                   </button>
-                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                    1
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  
+                  {/* Renderizar páginas dinamicamente */}
+                  {Array.from({ length: getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage) }, (_, i) => i + 1).map(page => (
+                    <button 
+                      key={page}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        page === fornecedoresPage 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setFornecedoresPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button 
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      fornecedoresPage === getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage) 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => setFornecedoresPage(Math.min(getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage), fornecedoresPage + 1))}
+                    disabled={fornecedoresPage === getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage)}
+                  >
                     Próxima
                   </button>
                 </div>
@@ -612,7 +784,10 @@ export function Relationships() {
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("razaoSocialCompleta")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Razão Social | Nome</span>
                           <ArrowUpDown className="h-3 w-3" />
@@ -621,19 +796,28 @@ export function Relationships() {
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nome Fantasia
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("tipo")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Tipo</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("dataCadastro")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Data</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th 
+                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        onClick={() => handleSort("status")}
+                      >
                         <div className="flex items-center space-x-1">
                           <span>Status</span>
                           <ArrowUpDown className="h-3 w-3" />
@@ -655,7 +839,7 @@ export function Relationships() {
               <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                 <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {outrosRelacionamentosDemoData.map((relacionamento, index) => {
+                    {processedOutrosData.map((relacionamento, index) => {
                       const { icon: StatusIcon, color: statusColor } = getStatusIcon(relacionamento.status);
                       return (
                         <tr key={relacionamento.id} className="hover:bg-gray-50 transition-colors duration-150">
@@ -728,7 +912,14 @@ export function Relationships() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-700">Mostrando</span>
-                  <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
+                  <select 
+                    className="border border-gray-300 rounded px-2 py-1 text-sm" 
+                    value={outrosPerPage}
+                    onChange={(e) => {
+                      setOutrosPerPage(Number(e.target.value));
+                      setOutrosPage(1);
+                    }}
+                  >
                     <option value="5">5</option>
                     <option value="10">10</option>
                     <option value="20">20</option>
@@ -736,13 +927,42 @@ export function Relationships() {
                   <span className="text-sm text-gray-700">de {outrosRelacionamentosDemoData.length} resultados</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  <button 
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      outrosPage === 1 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => setOutrosPage(Math.max(1, outrosPage - 1))}
+                    disabled={outrosPage === 1}
+                  >
                     Anterior
                   </button>
-                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
-                    1
-                  </button>
-                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                  
+                  {/* Renderizar páginas dinamicamente */}
+                  {Array.from({ length: getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage) }, (_, i) => i + 1).map(page => (
+                    <button 
+                      key={page}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${
+                        page === outrosPage 
+                          ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                      onClick={() => setOutrosPage(page)}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  
+                  <button 
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      outrosPage === getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage) 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                    onClick={() => setOutrosPage(Math.min(getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage), outrosPage + 1))}
+                    disabled={outrosPage === getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage)}
+                  >
                     Próxima
                   </button>
                 </div>
