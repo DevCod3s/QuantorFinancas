@@ -27,9 +27,9 @@ const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(({
         ref={ref}
         {...props}
         className={`
-          w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
-          peer placeholder-transparent
+          w-full px-3 py-2 rounded-md bg-gray-50 shadow-sm
+          border-0 focus:outline-none focus:border-2 focus:border-blue-500 focus:bg-white
+          peer placeholder-transparent transition-all duration-200
           ${error ? 'focus:border-red-500' : 'focus:border-blue-500'}
           ${className}
         `}
@@ -75,9 +75,9 @@ export function CustomSelect({
       <select
         {...props}
         className={`
-          w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
-          peer bg-white
+          w-full px-3 py-2 rounded-md bg-gray-50 shadow-sm
+          border-0 focus:outline-none focus:border-2 focus:border-blue-500 focus:bg-white
+          peer transition-all duration-200
           ${error ? 'focus:border-red-500' : 'focus:border-blue-500'}
           ${className}
         `}
@@ -116,9 +116,9 @@ export function CustomTextarea({
       <textarea
         {...props}
         className={`
-          w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
-          peer placeholder-transparent resize-vertical
+          w-full px-3 py-2 rounded-md bg-gray-50 shadow-sm
+          border-0 focus:outline-none focus:border-2 focus:border-blue-500 focus:bg-white
+          peer placeholder-transparent resize-vertical transition-all duration-200
           ${error ? 'focus:border-red-500' : 'focus:border-blue-500'}
           ${className}
         `}

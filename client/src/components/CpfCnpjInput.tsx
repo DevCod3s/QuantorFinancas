@@ -212,9 +212,9 @@ const CpfCnpjInput = React.forwardRef<HTMLInputElement, CpfCnpjInputProps>(({
         value={formattedValue}
         onChange={handleInputChange}
         className={`
-          w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
-          peer placeholder-transparent
+          w-full px-3 py-2 rounded-md bg-gray-50 shadow-sm
+          border-0 focus:outline-none focus:border-2 focus:border-blue-500 focus:bg-white
+          peer placeholder-transparent transition-all duration-200
           ${documentType === 'CPF' && formattedValue.replace(/\D/g, '').length === 11 && validateCPF(formattedValue.replace(/\D/g, '')) ? 'focus:border-green-500' : ''}
           ${documentType === 'CNPJ' && formattedValue.replace(/\D/g, '').length === 14 && validateCNPJ(formattedValue.replace(/\D/g, '')) ? 'focus:border-green-500' : ''}
         `}
