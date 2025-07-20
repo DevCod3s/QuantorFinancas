@@ -207,16 +207,12 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
 
   return (
     <div className="space-y-6">
-      {/* Card do Cabeçalho com título */}
-      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">
-            Novo Relacionamento
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">
-            Preencha as informações para cadastrar um novo relacionamento no sistema.
-          </p>
-        </div>
+      {/* Cabeçalho simples */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Novo Relacionamento</h1>
+        <p className="mt-1 text-sm text-gray-600">
+          Preencha as informações para cadastrar um novo relacionamento no sistema.
+        </p>
       </div>
 
       {/* Card das Etapas - mais fino */}
