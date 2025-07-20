@@ -250,14 +250,13 @@ export function Relationships() {
           </div>
         </div>
 
-        <TabsContent value="clientes" className="space-y-6">
-          {/* Card com lista de clientes */}
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <TabsContent value="clientes" className="space-y-4">
+          {/* Card do Cabeçalho Fixo */}
+          <Card className="shadow-lg">
             <CardContent className="p-0">
-              {/* Cabeçalho da tabela */}
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <div className="flex items-center space-x-1">
@@ -297,6 +296,16 @@ export function Relationships() {
                       </th>
                     </tr>
                   </thead>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card dos Dados com Scroll */}
+          <Card className="shadow-lg">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
                     {clientesDemoData.map((cliente, index) => {
                       const { icon: StatusIcon, color: statusColor } = getStatusIcon(cliente.status);
@@ -400,13 +409,13 @@ export function Relationships() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="fornecedores" className="space-y-6">
-          {/* Card com lista de fornecedores */}
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <TabsContent value="fornecedores" className="space-y-4">
+          {/* Card do Cabeçalho Fixo */}
+          <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <div className="flex items-center space-x-1">
@@ -446,6 +455,16 @@ export function Relationships() {
                       </th>
                     </tr>
                   </thead>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card dos Dados com Scroll */}
+          <Card className="shadow-lg">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
                     {fornecedoresDemoData.map((fornecedor, index) => {
                       const { icon: StatusIcon, color: statusColor } = getStatusIcon(fornecedor.status);
@@ -543,13 +562,13 @@ export function Relationships() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="outros" className="space-y-6">
-          {/* Card com lista de outros relacionamentos */}
-          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <TabsContent value="outros" className="space-y-4">
+          {/* Card do Cabeçalho Fixo */}
+          <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <div className="flex items-center space-x-1">
@@ -589,6 +608,16 @@ export function Relationships() {
                       </th>
                     </tr>
                   </thead>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Card dos Dados com Scroll */}
+          <Card className="shadow-lg">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full">
                   <tbody className="bg-white divide-y divide-gray-200">
                     {outrosRelacionamentosDemoData.map((relacionamento, index) => {
                       const { icon: StatusIcon, color: statusColor } = getStatusIcon(relacionamento.status);
