@@ -257,3 +257,40 @@ export type InsertCategory = z.infer<typeof insertCategorySchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertBudget = z.infer<typeof insertBudgetSchema>;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;
+
+/**
+ * Tabela de relacionamentos (clientes, fornecedores, outros)
+ * 
+ * Armazena dados de pessoas físicas e jurídicas relacionadas ao negócio.
+ * Suporta diferentes tipos de relacionamento e documentos (CPF/CNPJ).
+ */
+export const relationships = pgTable("relationships", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  type: text("type").notNull(), // 'cliente' | 'fornecedor' | 'outros'
+  documentType: text("document_type").notNull(), // 'CPF' | 'CNPJ'
+  document: text("document").notNull(),
+  socialName: text("social_name").notNull(),
+  fantasyName: text("fantasy_name"),
+  stateRegistration: text("state_registration"),
+  birthDate: date("birth_date"),
+  zipCode: text("zip_code").notNull(),
+  street: text("street").notNull(),
+  number: text("number").notNull(),
+  complement: text("complement"),
+  neighborhood: text("neighborhood").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  status: text("status").notNull().default("ativo"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema de inserção para relacionamentos
+export const insertRelationshipSchema = createInsertSchema(relationships).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Tipos para relacionamentos
+export type Relationship = typeof relationships.$inferSelect;
+export type InsertRelationship = z.infer<typeof insertRelationshipSchema>;

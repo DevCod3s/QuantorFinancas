@@ -28,11 +28,13 @@ import type {
   Transaction, 
   Budget, 
   AiInteraction,
+  Relationship,
   InsertUser,
   InsertCategory,
   InsertTransaction,
   InsertBudget,
-  InsertAiInteraction
+  InsertAiInteraction,
+  InsertRelationship
 } from "@shared/schema";
 
 // Configuração da conexão com PostgreSQL via Neon
@@ -71,6 +73,14 @@ export interface IStorage {
   // AI Interactions
   getAiInteractionsByUserId(userId: string): Promise<AiInteraction[]>;
   createAiInteraction(interaction: InsertAiInteraction): Promise<AiInteraction>;
+
+  // Relationships
+  getRelationshipsByUserId(userId: string): Promise<Relationship[]>;
+  getRelationshipsByType(userId: string, type: string): Promise<Relationship[]>;
+  getRelationshipById(id: number): Promise<Relationship | null>;
+  createRelationship(relationship: InsertRelationship): Promise<Relationship>;
+  updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship>;
+  deleteRelationship(id: number): Promise<void>;
 
   // Dashboard
   getDashboardStats(userId: string): Promise<{
@@ -245,6 +255,44 @@ export class DatabaseStorage implements IStorage {
     return newInteraction;
   }
 
+  // Relationships methods
+  async getRelationshipsByUserId(userId: string): Promise<Relationship[]> {
+    return db.select().from(schema.relationships).where(eq(schema.relationships.userId, parseInt(userId)));
+  }
+
+  async getRelationshipsByType(userId: string, type: string): Promise<Relationship[]> {
+    return db.select()
+      .from(schema.relationships)
+      .where(
+        and(
+          eq(schema.relationships.userId, parseInt(userId)),
+          eq(schema.relationships.type, type)
+        )
+      );
+  }
+
+  async getRelationshipById(id: number): Promise<Relationship | null> {
+    const results = await db.select().from(schema.relationships).where(eq(schema.relationships.id, id));
+    return results[0] || null;
+  }
+
+  async createRelationship(relationship: InsertRelationship): Promise<Relationship> {
+    const newRelationship = await db.insert(schema.relationships).values(relationship).returning();
+    return newRelationship[0];
+  }
+
+  async updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship> {
+    const updated = await db.update(schema.relationships)
+      .set(relationship)
+      .where(eq(schema.relationships.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async deleteRelationship(id: number): Promise<void> {
+    await db.delete(schema.relationships).where(eq(schema.relationships.id, id));
+  }
+
   async getDashboardStats(userId: string) {
     // Get current month transactions
     const currentMonth = new Date();
@@ -257,7 +305,7 @@ export class DatabaseStorage implements IStorage {
       .from(schema.transactions)
       .where(
         and(
-          eq(schema.transactions.userId, userId),
+          eq(schema.transactions.userId, parseInt(userId)),
           sql`${schema.transactions.date} >= ${startOfMonth}`,
           sql`${schema.transactions.date} <= ${endOfMonth}`
         )
@@ -283,7 +331,7 @@ export class DatabaseStorage implements IStorage {
         date: schema.transactions.date,
       })
       .from(schema.transactions)
-      .where(eq(schema.transactions.userId, userId))
+      .where(eq(schema.transactions.userId, parseInt(userId)))
       .orderBy(desc(schema.transactions.date))
       .limit(5);
 

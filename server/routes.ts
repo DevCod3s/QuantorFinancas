@@ -21,7 +21,8 @@ import { Router } from "express";
 import { storage } from "./storage";
 
 // Schemas de validação
-import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema } from "@shared/schema";
+import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema } from "@shared/schema";
+import * as schema from "@shared/schema";
 import { z } from "zod";
 
 // Sistema de autenticação
@@ -395,6 +396,137 @@ router.post("/generate-contract", requireAuth, async (req, res) => {
       error: "Erro interno do servidor",
       success: false
     });
+  }
+});
+
+// ==========================================
+// RELATIONSHIPS ROUTES
+// ==========================================
+
+/**
+ * GET /api/relationships
+ * Retorna todos os relacionamentos do usuário
+ */
+router.get("/relationships", async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const relationships = await storage.getRelationshipsByUserId(userId);
+    res.json(relationships);
+  } catch (error) {
+    console.error("Erro ao buscar relacionamentos:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * GET /api/relationships/:type
+ * Retorna relacionamentos por tipo (cliente, fornecedor, outros)
+ */
+router.get("/relationships/:type", async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const { type } = req.params;
+    const relationships = await storage.getRelationshipsByType(userId, type);
+    res.json(relationships);
+  } catch (error) {
+    console.error("Erro ao buscar relacionamentos por tipo:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * POST /api/relationships
+ * Cria um novo relacionamento
+ */
+router.post("/relationships", async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    // Validar dados de entrada
+    const validatedData = insertRelationshipSchema.parse({
+      ...req.body,
+      userId: parseInt(userId),
+    });
+
+    const newRelationship = await storage.createRelationship(validatedData);
+    res.status(201).json(newRelationship);
+  } catch (error: any) {
+    if (error.name === "ZodError") {
+      return res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    }
+    console.error("Erro ao criar relacionamento:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * PUT /api/relationships/:id
+ * Atualiza um relacionamento existente
+ */
+router.put("/relationships/:id", async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // Verificar se o relacionamento existe e pertence ao usuário
+    const existing = await storage.getRelationshipById(id);
+    if (!existing || existing.userId !== parseInt(userId)) {
+      return res.status(404).json({ error: "Relacionamento não encontrado" });
+    }
+
+    const updatedRelationship = await storage.updateRelationship(id, req.body);
+    res.json(updatedRelationship);
+  } catch (error) {
+    console.error("Erro ao atualizar relacionamento:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * DELETE /api/relationships/:id
+ * Remove um relacionamento
+ */
+router.delete("/relationships/:id", async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // Verificar se o relacionamento existe e pertence ao usuário
+    const existing = await storage.getRelationshipById(id);
+    if (!existing || existing.userId !== parseInt(userId)) {
+      return res.status(404).json({ error: "Relacionamento não encontrado" });
+    }
+
+    await storage.deleteRelationship(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao deletar relacionamento:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
 

@@ -22,7 +22,9 @@ import Step2ContractGeneration from "./Step2ContractGeneration";
 import Step3ReviewPRD from "./Step3ReviewPRD";
 import Step4FinalPRD from "./Step4FinalPRD";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, CheckCircle } from "lucide-react";
+import { useRelationshipManager } from "@/hooks/useRelationshipManager";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /**
  * Interface para dados completos do relacionamento
@@ -38,8 +40,9 @@ interface RelationshipWizardData {
  * Props do componente RelationshipWizard
  */
 interface RelationshipWizardProps {
+  isOpen: boolean; // Estado de abertura do modal
   onClose: () => void; // Callback para fechar o wizard
-  onSave: (data: RelationshipWizardData) => void; // Callback para salvar dados
+  relationshipType?: 'cliente' | 'fornecedor' | 'outros'; // Tipo do relacionamento
 }
 
 /**
@@ -71,7 +74,7 @@ const wizardSteps = [
 /**
  * Componente RelationshipWizard
  */
-export default function RelationshipWizard({ onClose, onSave }: RelationshipWizardProps) {
+export default function RelationshipWizard({ isOpen, onClose, relationshipType = 'cliente' }: RelationshipWizardProps) {
   // Estado atual da etapa
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -112,12 +115,48 @@ export default function RelationshipWizard({ onClose, onSave }: RelationshipWiza
     }
   };
 
+  // Hook para gerenciamento de relacionamentos
+  const { saveRelationship, isLoading: isSaving, error, clearError } = useRelationshipManager();
+  
+  // Estado para controle de sucesso
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
   /**
-   * Finaliza o wizard
+   * Finaliza o wizard salvando o relacionamento
    */
-  const handleFinish = () => {
-    onSave(wizardData);
-    onClose();
+  const handleFinish = async () => {
+    if (!wizardData.step1) return;
+    
+    const step1Data = wizardData.step1;
+    
+    try {
+      const success = await saveRelationship({
+        document: step1Data.document,
+        documentType: step1Data.documentType,
+        socialName: step1Data.socialName,
+        fantasyName: step1Data.fantasyName,
+        stateRegistration: step1Data.stateRegistration,
+        birthDate: step1Data.birthDate,
+        zipCode: step1Data.zipCode,
+        street: step1Data.street,
+        number: step1Data.number,
+        complement: step1Data.complement,
+        neighborhood: step1Data.neighborhood,
+        city: step1Data.city,
+        state: step1Data.state
+      });
+      
+      if (success) {
+        setShowSuccessDialog(true);
+        // Fechar após 3 segundos ou quando usuário clicar
+        setTimeout(() => {
+          setShowSuccessDialog(false);
+          onClose();
+        }, 3000);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar relacionamento:', error);
+    }
   };
 
   /**
@@ -224,16 +263,68 @@ export default function RelationshipWizard({ onClose, onSave }: RelationshipWiza
             ) : (
               <Button
                 onClick={handleFinish}
-                disabled={!currentStepValid}
-                className="flex items-center gap-2"
+                disabled={!currentStepValid || isSaving}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
               >
-                <Save className="h-4 w-4" />
-                Finalizar
+                {isSaving ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Salvando...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Finalizar
+                  </>
+                )}
               </Button>
             )}
           </div>
         </div>
       </div>
+      
+      {/* Dialog de sucesso */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-green-600">
+              <CheckCircle className="h-5 w-5" />
+              <span>Relacionamento cadastrado com sucesso!</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="text-sm text-gray-600">
+              O relacionamento foi salvo e organizado automaticamente no tipo correto.
+              Esta janela será fechada automaticamente em 3 segundos.
+            </p>
+            <div className="mt-4 flex justify-end">
+              <Button 
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  onClose();
+                }}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Fechar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Exibir erro se houver */}
+      {error && (
+        <div className="fixed bottom-4 right-4 p-4 bg-red-50 border border-red-200 rounded-md shadow-lg max-w-md">
+          <p className="text-sm text-red-600 mb-2">{error}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={clearError}
+          >
+            Tentar novamente
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
