@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { MessageCircle, Check } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -46,6 +46,10 @@ export function SuccessDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md mx-auto p-0 overflow-hidden border-0 shadow-2xl">
+        {/* Elementos de acessibilidade (invisíveis) */}
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        <DialogDescription className="sr-only">{message}</DialogDescription>
+        
         {/* Header verde com ícone */}
         <div className="bg-gradient-to-br from-green-400 to-green-500 px-6 py-8 text-center relative">
           {/* Ícone de balão de mensagem com check */}

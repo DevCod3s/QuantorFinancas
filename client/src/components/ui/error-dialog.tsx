@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface ErrorDialogProps {
   open: boolean;
@@ -54,6 +54,10 @@ export function ErrorDialog({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md p-0 gap-0 rounded-xl border-0 shadow-2xl">
+        {/* Elementos de acessibilidade (invisíveis) */}
+        <DialogTitle className="sr-only">{title}</DialogTitle>
+        <DialogDescription className="sr-only">{message}</DialogDescription>
+        
         {/* Header Vermelho com Ícone de Alerta */}
         <div className="bg-red-500 px-6 py-4 rounded-t-xl flex items-center justify-center relative">
           <div className="bg-white rounded-full p-2">

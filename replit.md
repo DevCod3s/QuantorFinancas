@@ -145,6 +145,15 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 
 ## Recent Changes (Janeiro 2025)
 
+- **Sistema de Notificações Visuais**: Implementação completa de dialogs de feedback para operações do usuário (Janeiro 2025)
+  - **Dialog de Sucesso**: Design verde baseado em imagem de referência com ícone de balão de mensagem e check
+  - **Dialog de Erro**: Design vermelho com ícone de alerta triangular, seguindo mesmo padrão visual
+  - **Auto-close Inteligente**: Countdown de 3 segundos com possibilidade de fechamento manual
+  - **Acessibilidade**: DialogTitle e DialogDescription invisíveis para leitores de tela
+  - **Integração Funcional**: Hooks personalizados (useSuccessDialog, useErrorDialog) para facilitar uso
+  - **Cenários Implementados**: Validação de exclusão (status ativo), formulários incompletos, operações bem-sucedidas
+  - **Proporções Corretas**: Tamanho adequado baseado nas imagens de referência fornecidas
+  - **Consistência Visual**: Ambos dialogs seguem mesmo padrão de design e animações
 - **Sidebar Renovada**: Implementado design baseado na Vizta com gradiente azul, botão de colapsar/expandir, logo laranja e animações suaves
 - **Login com Enter**: Navegação fluida entre campos usando tecla Enter, com submit automático no último campo
 - **Interface em Português**: Toda interface traduzida para português brasileiro mantendo "Quantor" em inglês
