@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Esconder scrollbars mantendo funcionalidade de rolagem */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Safari and Chrome */
+  }
+}
+
 :root {
   --background: hsl(0, 0%, 98%);
   --foreground: hsl(240, 10%, 3.9%);

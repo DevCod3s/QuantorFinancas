@@ -22,7 +22,7 @@ import Step2ContractGeneration from "./Step2ContractGeneration";
 import Step3ReviewPRD from "./Step3ReviewPRD";
 import Step4FinalPRD from "./Step4FinalPRD";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Save, CheckCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, CheckCircle, X } from "lucide-react";
 import { useRelationshipManager } from "@/hooks/useRelationshipManager";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -203,82 +203,99 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
         {/* Header com título */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Novo Relacionamento
-          </h1>
-          <p className="text-gray-600">
-            Preencha as informações para cadastrar um novo relacionamento no sistema.
-          </p>
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">
+                Novo Relacionamento
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Preencha as informações para cadastrar um novo relacionamento no sistema.
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
         {/* Stepper de navegação */}
-        <StepperWizard
-          steps={wizardSteps}
-          currentStep={currentStep}
-          className="mb-8"
-        />
+        <div className="px-6 py-4 border-b border-gray-100">
+          <StepperWizard
+            steps={wizardSteps}
+            currentStep={currentStep}
+          />
+        </div>
 
         {/* Conteúdo da etapa atual */}
-        <div className="mb-8">
+        <div className="px-6 py-4">
           {renderStepContent()}
         </div>
 
         {/* Botões de navegação */}
-        <div className="flex justify-between items-center max-w-4xl mx-auto">
-          <div>
-            {currentStep > 1 && (
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex justify-between items-center">
+            <div>
+              {currentStep > 1 && (
+                <Button
+                  variant="outline"
+                  onClick={handlePrevious}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex gap-3">
               <Button
                 variant="outline"
-                onClick={handlePrevious}
-                className="flex items-center gap-2"
+                onClick={onClose}
               >
-                <ArrowLeft className="h-4 w-4" />
-                Voltar
+                Cancelar
               </Button>
-            )}
-          </div>
-          
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Cancelar
-            </Button>
-            
-            {currentStep < wizardSteps.length ? (
-              <Button
-                onClick={handleNext}
-                disabled={!currentStepValid}
-                className="flex items-center gap-2"
-              >
-                Próximo
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            ) : (
-              <Button
-                onClick={handleFinish}
-                disabled={!currentStepValid || isSaving}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-              >
-                {isSaving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Finalizar
-                  </>
-                )}
-              </Button>
-            )}
+              
+              {currentStep < wizardSteps.length ? (
+                <Button
+                  onClick={handleNext}
+                  disabled={!currentStepValid}
+                  className="flex items-center gap-2"
+                >
+                  Próximo
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  onClick={handleFinish}
+                  disabled={!currentStepValid || isSaving}
+                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4" />
+                      Finalizar
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -281,10 +281,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
+    <div className="space-y-6">
       {/* Seção: Informação básica */}
-      <div className="mb-8">
-        <h3 className="text-lg font-medium text-gray-900 mb-6 border-b border-gray-200 pb-2">
+      <div>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
           Informação básica
         </h3>
         
@@ -407,7 +407,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
       {/* Seção: Localização */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-6 border-b border-gray-200 pb-2">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">
           Localização
         </h3>
         
