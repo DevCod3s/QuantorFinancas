@@ -270,7 +270,7 @@ export function Login() {
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
-                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105"
+                  className="gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-primary-foreground px-4 py-2 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105 pt-[4px] pb-[4px] mt-[6px] mb-[6px]"
                 >
                   <svg 
                     className="w-5 h-5 text-white" 
@@ -390,7 +390,9 @@ export function Login() {
             
             <button
               onClick={() => setActiveSection('about')}
-              className="p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] text-blue-600 mt-[22px] mb-[22px] pt-[4px] pb-[4px] mt-[6px] mb-[6px]"
+              className={`p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] mt-[22px] mb-[22px] ${
+                activeSection === 'about' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
+              }`}
             >
               <Info className="w-6 h-6" />
             </button>
