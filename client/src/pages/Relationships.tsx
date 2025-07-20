@@ -1,8 +1,135 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, Users, Building, Phone, Mail, MapPin, User } from "lucide-react";
+import { Plus, Users, Building, Phone, Mail, MapPin, User, CheckCircle, XCircle, AlertCircle, Ban, Edit, Eye, Trash2, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Dados demonstrativos para clientes
+const clientesDemoData = [
+  {
+    id: 3,
+    razaoSocial: "46.761.162/0001-43",
+    razaoSocialCompleta: "COD3S TECNOLOGIA LTDA",
+    nomeFantasia: "Antonio Neptuno das Chagas Junior",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "26/05/2025",
+    status: "Ativo"
+  },
+  {
+    id: 4,
+    razaoSocial: "811.176.801-00",
+    razaoSocialCompleta: "Antonio Neptuno das Chagas Junior",
+    nomeFantasia: "-",
+    tipo: "Pessoa Física",
+    dataCadastro: "13/06/2025", 
+    status: "Ativo"
+  },
+  {
+    id: 5,
+    razaoSocial: "31.087.926/0001-90",
+    razaoSocialCompleta: "CM SOLUTI LTDA",
+    nomeFantasia: "-",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "15/06/2025",
+    status: "Ativo"
+  },
+  {
+    id: 6,
+    razaoSocial: "01.298.382/0001-44",
+    razaoSocialCompleta: "GUIMARAES BORGES COMERCIO DE DERIVADOS DE PETROLEO LTDA",
+    nomeFantasia: "-",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "01/07/2025",
+    status: "Inativo"
+  },
+  {
+    id: 7,
+    razaoSocial: "01.298.382/0003-06",
+    razaoSocialCompleta: "GUIMARAES BORGES COMERCIO DE DERIVADOS DE PETROLEO LTDA",
+    nomeFantasia: "-",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "01/07/2025",
+    status: "Bloqueado"
+  },
+  {
+    id: 8,
+    razaoSocial: "34.659.184/0001-18",
+    razaoSocialCompleta: "AUTO POSTO GREEN PARK LTDA",
+    nomeFantasia: "-",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "01/07/2025",
+    status: "Cancelado"
+  }
+];
+
+// Dados demonstrativos para fornecedores
+const fornecedoresDemoData = [
+  {
+    id: 1,
+    razaoSocial: "12.345.678/0001-90",
+    razaoSocialCompleta: "EMPRESA FORNECEDORA DE MATERIAIS LTDA",
+    nomeFantasia: "FORNECEDORA MATERIAIS",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "12/01/2025",
+    status: "Ativo"
+  },
+  {
+    id: 2,
+    razaoSocial: "98.765.432/0001-10",
+    razaoSocialCompleta: "DISTRIBUIDORA DE EQUIPAMENTOS SA",
+    nomeFantasia: "DISTRIBUIDORA TECH",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "15/01/2025",
+    status: "Ativo"
+  },
+  {
+    id: 3,
+    razaoSocial: "555.666.777-88",
+    razaoSocialCompleta: "João Silva Santos",
+    nomeFantasia: "Prestador Autônomo",
+    tipo: "Pessoa Física",
+    dataCadastro: "20/01/2025",
+    status: "Inativo"
+  }
+];
+
+// Dados demonstrativos para outros relacionamentos
+const outrosRelacionamentosDemoData = [
+  {
+    id: 1,
+    razaoSocial: "11.222.333/0001-44",
+    razaoSocialCompleta: "PARCEIROS COMERCIAIS LTDA",
+    nomeFantasia: "PARCEIROS COM",
+    tipo: "Pessoa Jurídica",
+    dataCadastro: "05/01/2025",
+    status: "Ativo"
+  },
+  {
+    id: 2,
+    razaoSocial: "444.555.666-77",
+    razaoSocialCompleta: "Maria Fernanda Costa",
+    nomeFantasia: "Consultora Freelancer",
+    tipo: "Pessoa Física",
+    dataCadastro: "10/01/2025",
+    status: "Bloqueado"
+  }
+];
+
+// Função para obter ícone e cor do status
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "Ativo":
+      return { icon: CheckCircle, color: "text-green-600" };
+    case "Inativo":
+      return { icon: XCircle, color: "text-gray-500" };
+    case "Bloqueado":
+      return { icon: Ban, color: "text-red-600" };
+    case "Cancelado":
+      return { icon: AlertCircle, color: "text-orange-600" };
+    default:
+      return { icon: CheckCircle, color: "text-green-600" };
+  }
+};
 
 export function Relationships() {
   const [activeTab, setActiveTab] = useState("clientes");
@@ -124,33 +251,427 @@ export function Relationships() {
         </div>
 
         <TabsContent value="clientes" className="space-y-6">
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <User className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Clientes</h3>
-            <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Esta seção será desenvolvida em breve. Aqui você poderá gerenciar todos os seus clientes com informações detalhadas de contato e histórico.
-            </p>
-          </div>
+          {/* Card com lista de clientes */}
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardContent className="p-0">
+              {/* Cabeçalho da tabela */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>#</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Razão Social | Nome</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nome Fantasia
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Tipo</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Data</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Status</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {clientesDemoData.map((cliente, index) => {
+                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(cliente.status);
+                      return (
+                        <tr key={cliente.id} className="hover:bg-gray-50 transition-colors duration-150">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {cliente.id}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">{cliente.razaoSocial}</div>
+                              <div className="text-gray-500 text-xs">{cliente.razaoSocialCompleta}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {cliente.nomeFantasia}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              cliente.tipo === 'Pessoa Física' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {cliente.tipo === 'Pessoa Física' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {cliente.dataCadastro}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-2">
+                              <StatusIcon className={`h-4 w-4 ${statusColor}`} />
+                              <span className={`text-sm font-medium ${statusColor}`}>
+                                {cliente.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex items-center space-x-2">
+                              <button 
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                title="Editar"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="text-green-600 hover:text-green-900 transition-colors"
+                                title="Visualizar"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="text-red-600 hover:text-red-900 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginação */}
+              <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-700">Mostrando</span>
+                  <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                  </select>
+                  <span className="text-sm text-gray-700">de {clientesDemoData.length} resultados</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Anterior
+                  </button>
+                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    1
+                  </button>
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    2
+                  </button>
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    3
+                  </button>
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="fornecedores" className="space-y-6">
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <Building className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Fornecedores</h3>
-            <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Esta seção será desenvolvida em breve. Aqui você poderá cadastrar e gerenciar todos os seus fornecedores e prestadores de serviços.
-            </p>
-          </div>
+          {/* Card com lista de fornecedores */}
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>#</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Razão Social | Nome</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nome Fantasia
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Tipo</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Data</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Status</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {fornecedoresDemoData.map((fornecedor, index) => {
+                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(fornecedor.status);
+                      return (
+                        <tr key={fornecedor.id} className="hover:bg-gray-50 transition-colors duration-150">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {fornecedor.id}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">{fornecedor.razaoSocial}</div>
+                              <div className="text-gray-500 text-xs">{fornecedor.razaoSocialCompleta}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {fornecedor.nomeFantasia}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              fornecedor.tipo === 'Pessoa Física' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {fornecedor.tipo === 'Pessoa Física' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {fornecedor.dataCadastro}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-2">
+                              <StatusIcon className={`h-4 w-4 ${statusColor}`} />
+                              <span className={`text-sm font-medium ${statusColor}`}>
+                                {fornecedor.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex items-center space-x-2">
+                              <button 
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                title="Editar"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="text-green-600 hover:text-green-900 transition-colors"
+                                title="Visualizar"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="text-red-600 hover:text-red-900 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginação */}
+              <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-700">Mostrando</span>
+                  <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                  </select>
+                  <span className="text-sm text-gray-700">de {fornecedoresDemoData.length} resultados</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Anterior
+                  </button>
+                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    1
+                  </button>
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="outros" className="space-y-6">
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Outros Relacionamentos</h3>
-            <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Esta seção será desenvolvida em breve. Aqui você poderá gerenciar parceiros, colaboradores e outros tipos de relacionamentos comerciais.
-            </p>
-          </div>
+          {/* Card com lista de outros relacionamentos */}
+          <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>#</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Razão Social | Nome</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Nome Fantasia
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Tipo</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Data</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center space-x-1">
+                          <span>Status</span>
+                          <ArrowUpDown className="h-3 w-3" />
+                        </div>
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Ações
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {outrosRelacionamentosDemoData.map((relacionamento, index) => {
+                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(relacionamento.status);
+                      return (
+                        <tr key={relacionamento.id} className="hover:bg-gray-50 transition-colors duration-150">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {relacionamento.id}
+                          </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">{relacionamento.razaoSocial}</div>
+                              <div className="text-gray-500 text-xs">{relacionamento.razaoSocialCompleta}</div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {relacionamento.nomeFantasia}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              relacionamento.tipo === 'Pessoa Física' 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {relacionamento.tipo === 'Pessoa Física' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {relacionamento.dataCadastro}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-2">
+                              <StatusIcon className={`h-4 w-4 ${statusColor}`} />
+                              <span className={`text-sm font-medium ${statusColor}`}>
+                                {relacionamento.status}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div className="flex items-center space-x-2">
+                              <button 
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                title="Editar"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="text-green-600 hover:text-green-900 transition-colors"
+                                title="Visualizar"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="text-red-600 hover:text-red-900 transition-colors"
+                                title="Excluir"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Paginação */}
+              <div className="bg-white px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-700">Mostrando</span>
+                  <select className="border border-gray-300 rounded px-2 py-1 text-sm" defaultValue="10">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                  </select>
+                  <span className="text-sm text-gray-700">de {outrosRelacionamentosDemoData.length} resultados</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Anterior
+                  </button>
+                  <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                    1
+                  </button>
+                  <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    Próxima
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
