@@ -244,9 +244,10 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
           
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+            className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
+            title="Voltar"
           >
-            Cancelar
+            <ArrowLeft className="h-5 w-5" />
           </button>
           
           {currentStep < wizardSteps.length ? (
