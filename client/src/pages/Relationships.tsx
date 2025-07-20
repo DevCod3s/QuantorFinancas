@@ -3,6 +3,7 @@ import { Plus, Users, Building, Phone, Mail, MapPin, User, CheckCircle, XCircle,
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useSuccessDialog } from "@/components/ui/success-dialog";
 
 // Dados demonstrativos para clientes
 const clientesDemoData = [
@@ -172,6 +173,9 @@ export function Relationships() {
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
   
+  // Hook para dialogs de sucesso
+  const { showSuccess, SuccessDialog } = useSuccessDialog();
+  
   // Estados de paginação para cada aba
   const [clientesPage, setClientesPage] = useState(1);
   const [clientesPerPage, setClientesPerPage] = useState(5);
@@ -252,6 +256,28 @@ export function Relationships() {
   // Função para calcular número total de páginas
   const getTotalPages = (totalItems: number, perPage: number) => {
     return Math.ceil(totalItems / perPage);
+  };
+
+  // Funções de ação para os botões
+  const handleEdit = (item: any, tipo: string) => {
+    showSuccess(
+      "Edição Iniciada!",
+      `Os dados de ${item.razaoSocialCompleta || item.nomeFantasia} foram carregados para edição.`
+    );
+  };
+
+  const handleView = (item: any, tipo: string) => {
+    showSuccess(
+      "Visualização Aberta!",
+      `Detalhes completos de ${item.razaoSocialCompleta || item.nomeFantasia} foram carregados.`
+    );
+  };
+
+  const handleDelete = (item: any, tipo: string) => {
+    showSuccess(
+      "Exclusão Realizada!",
+      `${item.razaoSocialCompleta || item.nomeFantasia} foi removido com sucesso dos ${tipo.toLowerCase()}.`
+    );
   };
 
   // Calcula a posição e largura da barra de progressão
@@ -478,18 +504,21 @@ export function Relationships() {
                               <button 
                                 className="text-blue-600 hover:text-blue-900 transition-colors"
                                 title="Editar"
+                                onClick={() => handleEdit(cliente, "Clientes")}
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                               <button 
                                 className="text-green-600 hover:text-green-900 transition-colors"
                                 title="Visualizar"
+                                onClick={() => handleView(cliente, "Clientes")}
                               >
                                 <Eye className="h-4 w-4" />
                               </button>
                               <button 
                                 className="text-red-600 hover:text-red-900 transition-colors"
                                 title="Excluir"
+                                onClick={() => handleDelete(cliente, "Clientes")}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -971,6 +1000,9 @@ export function Relationships() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog de Sucesso */}
+      <SuccessDialog />
     </div>
   );
 }
