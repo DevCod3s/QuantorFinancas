@@ -318,33 +318,36 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     <div className="space-y-6">
       {/* Seção: Tipo de relacionamento */}
       <div>
-        <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
+        <div className="mb-4">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
             Tipo de relacionamento
           </h3>
+        </div>
+        
+        <div className="max-w-md flex items-end gap-2">
+          <div className="flex-1">
+            <CustomSelect
+              id="relationship-type"
+              label="Selecione o tipo de relacionamento *"
+              value={formData.relationshipType}
+              onChange={(e) => updateFormData({ relationshipType: e.target.value })}
+            >
+              {getRelationshipOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.text}
+                </option>
+              ))}
+            </CustomSelect>
+          </div>
+          
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-colors"
+            className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center"
             title="Adicionar novo tipo"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-5 w-5" />
           </button>
-        </div>
-        
-        <div className="max-w-md">
-          <CustomSelect
-            id="relationship-type"
-            label="Selecione o tipo de relacionamento *"
-            value={formData.relationshipType}
-            onChange={(e) => updateFormData({ relationshipType: e.target.value })}
-          >
-            {getRelationshipOptions().map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.text}
-              </option>
-            ))}
-          </CustomSelect>
         </div>
       </div>
 
