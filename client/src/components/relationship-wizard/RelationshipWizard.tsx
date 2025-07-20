@@ -227,9 +227,9 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
         </div>
       </div>
 
-      {/* Card do Stepper de navegação */}
-      <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-4 flex justify-center">
-        <div className="max-w-2xl w-full">
+      {/* Stepper de navegação sem card */}
+      <div className="flex justify-center py-4">
+        <div className="max-w-xl w-full">
           <StepperWizard
             steps={wizardSteps}
             currentStep={currentStep}
