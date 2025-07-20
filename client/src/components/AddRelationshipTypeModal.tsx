@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from "react";
-import { X, Save } from "lucide-react";
+import { X, Save, ArrowLeft } from "lucide-react";
 import CustomInput, { CustomTextarea } from "./CustomInput";
 
 /**
@@ -125,9 +125,9 @@ export default function AddRelationshipTypeModal({
           <button
             onClick={handleClose}
             className="w-12 h-12 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
-            title="Cancelar"
+            title="Voltar"
           >
-            <X className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5" />
           </button>
           <button
             onClick={handleSave}
