@@ -18,6 +18,9 @@
 // Importações React
 import { useState, useEffect, useRef } from "react";
 
+// Importação do wizard de relacionamento
+import RelationshipWizard from "../components/relationship-wizard/RelationshipWizard";
+
 // Importações de ícones
 import { Plus, Users, Building, Phone, Mail, MapPin, User, CheckCircle, XCircle, AlertCircle, Ban, Edit, Eye, Trash2, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -198,6 +201,9 @@ export function Relationships() {
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
   
+  // Estado para controlar exibição do wizard
+  const [showWizard, setShowWizard] = useState(false);
+  
   // Hooks para dialogs de feedback
   const { showSuccess, SuccessDialog } = useSuccessDialog();
   const { showError, ErrorDialog } = useErrorDialog();
@@ -315,13 +321,23 @@ export function Relationships() {
     );
   };
 
-  // Funções específicas para demonstrar cenários de erro
+  // Função para abrir wizard de cadastro
   const handleAddNew = (tipo: string) => {
-    // Simula erro de validação
-    showError(
-      "Campos Obrigatórios!",
-      "Por favor, preencha todos os campos obrigatórios antes de continuar."
+    setShowWizard(true);
+  };
+
+  // Função para fechar wizard
+  const handleCloseWizard = () => {
+    setShowWizard(false);
+  };
+
+  // Função para salvar dados do wizard
+  const handleSaveRelationship = (data: any) => {
+    showSuccess(
+      "Relacionamento Cadastrado!",
+      `O novo relacionamento foi cadastrado com sucesso no sistema.`
     );
+    setShowWizard(false);
   };
 
   const handleInvalidOperation = () => {
@@ -1056,6 +1072,16 @@ export function Relationships() {
       {/* Dialogs de Feedback */}
       <SuccessDialog />
       <ErrorDialog />
+      
+      {/* Wizard de Cadastro de Relacionamento */}
+      {showWizard && (
+        <div className="fixed inset-0 z-50">
+          <RelationshipWizard
+            onClose={handleCloseWizard}
+            onSave={handleSaveRelationship}
+          />
+        </div>
+      )}
     </div>
   );
 }
