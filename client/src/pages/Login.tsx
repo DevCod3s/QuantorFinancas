@@ -20,7 +20,7 @@ import CustomInput from "@/components/CustomInput";
 import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import quantorLogo from "@assets/Simbolo_New_1752793618491.png";
 
-import SLogo from "@assets/SLogo.png";
+import SLogo from "@assets/SLogo_1753038928995.png";
 
 // Tipos para controle das seções ativas
 type ActiveSection = 'login' | 'signup' | 'about';
