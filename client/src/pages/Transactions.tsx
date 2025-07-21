@@ -397,11 +397,14 @@ export function Transactions() {
           <button
             onClick={() => {
               if (activeTab === "centro-custo") {
-                setChartAccountModalOpen(true);
+                openCreateModal();
+              } else {
+                // Funcionalidade para outras abas pode ser implementada aqui
+                console.log(`Botão clicado na aba: ${activeTab}`);
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
-            title={activeTab === "centro-custo" ? "Adicionar ao Plano de Contas" : "Nova Transação"}
+            title={activeTab === "centro-custo" ? "Nova Conta - Plano de Contas" : "Adicionar Novo"}
             style={{ 
               boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
@@ -420,7 +423,7 @@ export function Transactions() {
           
           {/* Tooltip */}
           <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-            Nova Transação
+            {activeTab === "centro-custo" ? "Nova Conta - Plano de Contas" : "Adicionar Novo"}
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
           </div>
         </div>
@@ -1943,18 +1946,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
         </CardContent>
       </Card>
 
-      {/* Botão flutuante para adicionar nova conta */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button
-          onClick={openCreateModal}
-          className="w-11 h-11 bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all duration-300 flex items-center justify-center group overflow-hidden relative"
-          title="Nova Conta"
-        >
-          <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-          <Plus className="h-5 w-5 transition-transform duration-300 group-hover:rotate-90 relative z-10" />
-          <div className="absolute inset-0 rounded-full bg-blue-400/30 scale-0 group-active:scale-150 transition-transform duration-200"></div>
-        </button>
-      </div>
+
 
       {/* Modal de cadastro */}
       {chartAccountModalOpen && (
