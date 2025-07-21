@@ -29,12 +29,14 @@ import type {
   Budget, 
   AiInteraction,
   Relationship,
+  ChartOfAccount,
   InsertUser,
   InsertCategory,
   InsertTransaction,
   InsertBudget,
   InsertAiInteraction,
-  InsertRelationship
+  InsertRelationship,
+  InsertChartOfAccount
 } from "@shared/schema";
 
 // Configuração da conexão com PostgreSQL via Neon
@@ -81,6 +83,13 @@ export interface IStorage {
   createRelationship(relationship: InsertRelationship): Promise<Relationship>;
   updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship>;
   deleteRelationship(id: number): Promise<void>;
+
+  // Chart of Accounts
+  getChartOfAccounts(userId: number): Promise<ChartOfAccount[]>;
+  getChartOfAccountById(id: number): Promise<ChartOfAccount | null>;
+  createChartOfAccount(account: InsertChartOfAccount): Promise<ChartOfAccount>;
+  updateChartOfAccount(id: number, account: Partial<InsertChartOfAccount>): Promise<ChartOfAccount>;
+  deleteChartOfAccount(id: number): Promise<void>;
 
   // Dashboard
   getDashboardStats(userId: string): Promise<{
@@ -291,6 +300,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRelationship(id: number): Promise<void> {
     await db.delete(schema.relationships).where(eq(schema.relationships.id, id));
+  }
+
+  // Chart of Accounts methods
+  async getChartOfAccounts(userId: number): Promise<ChartOfAccount[]> {
+    return db.select()
+      .from(schema.chartOfAccounts)
+      .where(eq(schema.chartOfAccounts.userId, userId))
+      .orderBy(schema.chartOfAccounts.code);
+  }
+
+  async getChartOfAccountById(id: number): Promise<ChartOfAccount | null> {
+    const result = await db.select()
+      .from(schema.chartOfAccounts)
+      .where(eq(schema.chartOfAccounts.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async createChartOfAccount(account: InsertChartOfAccount): Promise<ChartOfAccount> {
+    const newAccount = await db.insert(schema.chartOfAccounts)
+      .values(account)
+      .returning();
+    return newAccount[0];
+  }
+
+  async updateChartOfAccount(id: number, account: Partial<InsertChartOfAccount>): Promise<ChartOfAccount> {
+    const updated = await db.update(schema.chartOfAccounts)
+      .set(account)
+      .where(eq(schema.chartOfAccounts.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async deleteChartOfAccount(id: number): Promise<void> {
+    await db.delete(schema.chartOfAccounts).where(eq(schema.chartOfAccounts.id, id));
   }
 
   async getDashboardStats(userId: string) {

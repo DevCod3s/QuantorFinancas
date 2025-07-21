@@ -21,7 +21,7 @@ import { Router } from "express";
 import { storage } from "./storage";
 
 // Schemas de validação
-import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema } from "@shared/schema";
+import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema, insertChartOfAccountsSchema } from "@shared/schema";
 import * as schema from "@shared/schema";
 import { z } from "zod";
 
@@ -526,6 +526,162 @@ router.delete("/relationships/:id", async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error("Erro ao deletar relacionamento:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * =============================================================================
+ * ROTAS DE PLANO DE CONTAS
+ * =============================================================================
+ */
+
+/**
+ * GET /api/chart-accounts
+ * Lista todas as contas do plano de contas do usuário
+ */
+router.get("/chart-accounts", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const accounts = await storage.getChartOfAccounts(parseInt(userId));
+    res.json(accounts);
+  } catch (error) {
+    console.error("Erro ao buscar plano de contas:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * GET /api/chart-accounts/:id
+ * Obtém uma conta específica do plano de contas
+ */
+router.get("/chart-accounts/:id", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const account = await storage.getChartOfAccountById(id);
+    if (!account || account.userId !== parseInt(userId)) {
+      return res.status(404).json({ error: "Conta não encontrada" });
+    }
+
+    res.json(account);
+  } catch (error) {
+    console.error("Erro ao buscar conta:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * POST /api/chart-accounts
+ * Cria uma nova conta no plano de contas
+ */
+router.post("/chart-accounts", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    // Validar dados de entrada
+    const validatedData = insertChartOfAccountsSchema.parse({
+      ...req.body,
+      userId: parseInt(userId)
+    });
+
+    const newAccount = await storage.createChartOfAccount(validatedData);
+    res.status(201).json(newAccount);
+  } catch (error) {
+    console.error("Erro ao criar conta:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: "Dados inválidos", 
+        details: error.errors 
+      });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * PUT /api/chart-accounts/:id
+ * Atualiza uma conta existente no plano de contas
+ */
+router.put("/chart-accounts/:id", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // Verificar se a conta existe e pertence ao usuário
+    const existing = await storage.getChartOfAccountById(id);
+    if (!existing || existing.userId !== parseInt(userId)) {
+      return res.status(404).json({ error: "Conta não encontrada" });
+    }
+
+    // Validar dados de entrada
+    const validatedData = insertChartOfAccountsSchema.parse({
+      ...req.body,
+      userId: parseInt(userId)
+    });
+
+    const updatedAccount = await storage.updateChartOfAccount(id, validatedData);
+    res.json(updatedAccount);
+  } catch (error) {
+    console.error("Erro ao atualizar conta:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: "Dados inválidos", 
+        details: error.errors 
+      });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * DELETE /api/chart-accounts/:id
+ * Remove uma conta do plano de contas
+ */
+router.delete("/chart-accounts/:id", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // Verificar se a conta existe e pertence ao usuário
+    const existing = await storage.getChartOfAccountById(id);
+    if (!existing || existing.userId !== parseInt(userId)) {
+      return res.status(404).json({ error: "Conta não encontrada" });
+    }
+
+    await storage.deleteChartOfAccount(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao deletar conta:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
