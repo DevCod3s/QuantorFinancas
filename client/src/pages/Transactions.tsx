@@ -1377,80 +1377,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     setExpandedNodes(newExpanded);
   };
 
-  // Função para renderizar um nó da árvore
-  const renderTreeNode = (node: ChartOfAccountNode) => {
-    const hasChildren = node.children.length > 0;
-    const isExpanded = expandedNodes.has(node.id);
-    const indentLevel = chartTree.getIndentationLevel(node);
 
-    return (
-      <div key={node.id} className="w-full">
-        {/* Card do nó */}
-        <Card className="mb-2 hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div 
-                className="flex items-center gap-3 flex-1 cursor-pointer"
-                style={{ paddingLeft: `${indentLevel}px` }}
-                onClick={() => hasChildren && toggleNode(node.id)}
-              >
-                {/* Ícone de expansão/colapso */}
-                {hasChildren ? (
-                  isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-gray-500" />
-                  ) : (
-                    <ChevronRightIcon className="h-4 w-4 text-gray-500" />
-                  )
-                ) : (
-                  <div className="w-4 h-4" /> // Espaço vazio para alinhamento
-                )}
-
-                {/* Informações do nó */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      {node.code}
-                    </span>
-                    <span className="font-medium text-gray-900">{node.name}</span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      node.type === 'receita' ? 'bg-green-100 text-green-800' :
-                      node.type === 'despesa' ? 'bg-red-100 text-red-800' :
-                      'bg-blue-100 text-blue-800'
-                    }`}>
-                      {node.type.charAt(0).toUpperCase() + node.type.slice(1)}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Nível {node.level}
-                    </span>
-                  </div>
-                  {node.description && (
-                    <p className="text-sm text-gray-600 mt-1">{node.description}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Botões de ação */}
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <Edit className="h-4 w-4 text-gray-500" />
-                </Button>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Renderiza filhos se expandido */}
-        {hasChildren && isExpanded && (
-          <div className="ml-4">
-            {node.children.map(child => renderTreeNode(child))}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   // Função para salvar conta
   const handleSave = (continueAdding = false) => {
@@ -1541,8 +1468,8 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
         </Card>
       </div>
 
-      {/* Lista de contas em árvore */}
-      <Card>
+      {/* Lista de contas em tabela */}
+      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -1552,9 +1479,100 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
             Visualização hierárquica das contas organizadas por categoria
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {chartTree.getRootNodes().map(node => renderTreeNode(node))}
+        <CardContent className="p-0">
+          <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b sticky top-0">
+                <tr>
+                  <th className="text-left p-4 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2">
+                      Código
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="text-left p-4 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2">
+                      Nome da Conta
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="text-left p-4 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-2">
+                      Tipo
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="text-left p-4 font-medium text-gray-700">
+                    Nível
+                  </th>
+                  <th className="text-left p-4 font-medium text-gray-700">
+                    Hierarquia
+                  </th>
+                  <th className="text-left p-4 font-medium text-gray-700">
+                    Ações
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {chartTree.getFlattenedNodes().map((node, index) => (
+                  <tr key={node.id} className="border-b hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <span className="font-mono text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                        {node.code}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div style={{ paddingLeft: `${node.level * 20}px` }} className="flex items-center gap-2">
+                        {node.level > 1 && (
+                          <div className="text-gray-400">
+                            {'└─ '.repeat(1)}
+                          </div>
+                        )}
+                        <span className="font-medium text-gray-900">{node.name}</span>
+                      </div>
+                      {node.description && (
+                        <p className="text-sm text-gray-500 mt-1" style={{ paddingLeft: `${node.level * 20}px` }}>
+                          {node.description}
+                        </p>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        node.type === 'receita' ? 'bg-green-100 text-green-800' :
+                        node.type === 'despesa' ? 'bg-red-100 text-red-800' :
+                        node.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {node.type.charAt(0).toUpperCase() + node.type.slice(1)}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm text-gray-600">
+                        Nível {node.level}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm text-gray-500">
+                        {node.parentId ? `Filha de: ${chartTree.findNodeById(node.parentId)?.name || 'N/A'}` : 'Conta raiz'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <button className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors">
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors">
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
@@ -1586,17 +1604,17 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Tipo */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none peer"
                   value={formData.tipo}
                   onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                 >
-                  <option value="">Despesa</option>
+                  <option value="">&nbsp;</option>
                   <option value="receita">Receita</option>
                   <option value="despesa">Despesa</option>
                   <option value="ativo">Ativo</option>
                   <option value="passivo">Passivo</option>
                 </select>
-                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                <label className="absolute left-3 text-xs text-gray-600 bg-white px-1 font-medium transition-all duration-200 peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600 top-1">
                   Tipo
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1613,7 +1631,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 />
-                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:text-xs peer-focus:text-gray-600 peer-focus:top-1 transition-all">
+                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.nome ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
                   Nome <span className="text-red-500">*</span>
                 </label>
               </div>
@@ -1621,16 +1639,16 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Categoria */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none peer"
                   value={formData.categoria}
                   onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
                 >
-                  <option value="">Selecione a categoria</option>
+                  <option value="">&nbsp;</option>
                   {categoriasPrincipais.map(cat => (
                     <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
-                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.categoria ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
                   Categoria <span className="text-red-500">*</span>
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1641,17 +1659,17 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Subcategoria */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:bg-gray-100 disabled:text-gray-400"
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:bg-gray-100 disabled:text-gray-400 peer"
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
                   disabled={!formData.categoria}
                 >
-                  <option value="">Selecione a subcategoria</option>
+                  <option value="">&nbsp;</option>
                   {getSubcategorias().map(subcat => (
                     <option key={subcat.id} value={subcat.name}>{subcat.name}</option>
                   ))}
                 </select>
-                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.subcategoria ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
                   Subcategoria de
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1662,11 +1680,11 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Incluir como filha de */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none peer"
                   value={formData.incluirComo}
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
-                  <option value="">Conta independente</option>
+                  <option value="">&nbsp;</option>
                   {chartTree.getFlattenedNodes()
                     .filter(node => chartTree.canHaveChildren(node))
                     .map(node => (
@@ -1676,7 +1694,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     ))
                   }
                 </select>
-                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.incluirComo ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
                   Incluir como filha de
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
