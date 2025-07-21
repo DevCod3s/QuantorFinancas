@@ -294,3 +294,34 @@ export const insertRelationshipSchema = createInsertSchema(relationships).omit({
 // Tipos para relacionamentos
 export type Relationship = typeof relationships.$inferSelect;
 export type InsertRelationship = z.infer<typeof insertRelationshipSchema>;
+
+/**
+ * Tabela do plano de contas
+ * 
+ * Estrutura hierárquica para organização contábil com até 3 níveis.
+ * Permite organização flexível de contas de receitas e despesas.
+ */
+export const chartOfAccounts = pgTable("chart_of_accounts", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  parentId: integer("parent_id"), // Auto-referência para hierarquia será definida após a declaração
+  code: text("code").notNull(), // Código da conta (ex: 1.1.001)
+  name: text("name").notNull(), // Nome da conta
+  type: text("type").notNull(), // 'receita' | 'despesa' | 'ativo' | 'passivo'
+  category: text("category"), // Categoria pai (nível 1)
+  subcategory: text("subcategory"), // Subcategoria (nível 2)
+  level: integer("level").notNull().default(1), // Nível na hierarquia (1, 2 ou 3)
+  isActive: boolean("is_active").notNull().default(true),
+  description: text("description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema de inserção para plano de contas
+export const insertChartOfAccountsSchema = createInsertSchema(chartOfAccounts).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Tipos para plano de contas
+export type ChartOfAccount = typeof chartOfAccounts.$inferSelect;
+export type InsertChartOfAccount = z.infer<typeof insertChartOfAccountsSchema>;

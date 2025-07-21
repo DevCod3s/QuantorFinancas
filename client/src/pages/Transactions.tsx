@@ -21,7 +21,7 @@ import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon } from "lucide-react";
 
 // Importações de componentes UI
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ import { SubTabs } from "@/components/SubTabs";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
+import { ChartOfAccountsTree, ChartOfAccountNode, SAMPLE_CHART_OF_ACCOUNTS } from "@/types/ChartOfAccountsTree";
+import { FloatingInput, FloatingSelect } from "@/components/ui/floating-input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -1302,20 +1304,7 @@ export function Transactions() {
                 value: "plano-contas",
                 label: "Plano de Contas",
                 icon: <FileText className="h-4 w-4" />,
-                content: (
-                  <div className="space-y-6">
-                    {/* Conteúdo da aba Plano de Contas será desenvolvido posteriormente */}
-                    <Card>
-                      <CardContent className="flex flex-col items-center justify-center py-12">
-                        <FileText className="h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-600 mb-2">Plano de Contas</h3>
-                        <p className="text-sm text-gray-500 text-center">
-                          Conteúdo em desenvolvimento
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )
+                content: <ChartOfAccountsContent />
               },
               {
                 value: "demonstrativo-resultados",
@@ -1340,6 +1329,353 @@ export function Transactions() {
           />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/**
+ * Componente para gerenciamento do Plano de Contas
+ * Inclui modal de cadastro, lista hierárquica e funcionalidades completas
+ */
+function ChartOfAccountsContent() {
+  // Estados para controle do modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
+  const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
+  
+  // Estados do formulário
+  const [formData, setFormData] = useState({
+    tipo: '',
+    nome: '',
+    categoria: '',
+    subcategoria: '',
+    incluirComo: ''
+  });
+
+  // Lista de categorias principais para os selects
+  const categoriasPrincipais = chartTree.getCategories();
+
+  // Função para obter subcategorias com base na categoria selecionada
+  const getSubcategorias = () => {
+    if (!formData.categoria) return [];
+    const categoria = categoriasPrincipais.find(cat => cat.name === formData.categoria);
+    return categoria ? chartTree.getSubcategories(categoria.id) : [];
+  };
+
+  // Função para alternar expansão de nós
+  const toggleNode = (nodeId: number) => {
+    const newExpanded = new Set(expandedNodes);
+    if (expandedNodes.has(nodeId)) {
+      newExpanded.delete(nodeId);
+    } else {
+      newExpanded.add(nodeId);
+    }
+    setExpandedNodes(newExpanded);
+  };
+
+  // Função para renderizar um nó da árvore
+  const renderTreeNode = (node: ChartOfAccountNode) => {
+    const hasChildren = node.children.length > 0;
+    const isExpanded = expandedNodes.has(node.id);
+    const indentLevel = chartTree.getIndentationLevel(node);
+
+    return (
+      <div key={node.id} className="w-full">
+        {/* Card do nó */}
+        <Card className="mb-2 hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div 
+                className="flex items-center gap-3 flex-1 cursor-pointer"
+                style={{ paddingLeft: `${indentLevel}px` }}
+                onClick={() => hasChildren && toggleNode(node.id)}
+              >
+                {/* Ícone de expansão/colapso */}
+                {hasChildren ? (
+                  isExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-gray-500" />
+                  ) : (
+                    <ChevronRightIcon className="h-4 w-4 text-gray-500" />
+                  )
+                ) : (
+                  <div className="w-4 h-4" /> // Espaço vazio para alinhamento
+                )}
+
+                {/* Informações do nó */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      {node.code}
+                    </span>
+                    <span className="font-medium text-gray-900">{node.name}</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      node.type === 'receita' ? 'bg-green-100 text-green-800' :
+                      node.type === 'despesa' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }`}>
+                      {node.type.charAt(0).toUpperCase() + node.type.slice(1)}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Nível {node.level}
+                    </span>
+                  </div>
+                  {node.description && (
+                    <p className="text-sm text-gray-600 mt-1">{node.description}</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Botões de ação */}
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Edit className="h-4 w-4 text-gray-500" />
+                </Button>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Renderiza filhos se expandido */}
+        {hasChildren && isExpanded && (
+          <div className="ml-4">
+            {node.children.map(child => renderTreeNode(child))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // Função para salvar conta
+  const handleSave = (continueAdding = false) => {
+    // Aqui seria implementada a lógica de salvamento
+    console.log('Salvando conta:', formData);
+    
+    if (!continueAdding) {
+      setIsModalOpen(false);
+    }
+    
+    // Limpa o formulário
+    setFormData({
+      tipo: '',
+      nome: '',
+      categoria: '',
+      subcategoria: '',
+      incluirComo: ''
+    });
+  };
+
+  // Função para fechar modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setFormData({
+      tipo: '',
+      nome: '',
+      categoria: '',
+      subcategoria: '',
+      incluirComo: ''
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Cabeçalho com botão de adicionar */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Plano de Contas</h3>
+          <p className="text-sm text-gray-600">
+            Organize suas contas em estrutura hierárquica
+          </p>
+        </div>
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Adicionar Conta
+        </Button>
+      </div>
+
+      {/* Resumo das categorias */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              <div>
+                <p className="text-sm font-medium">Receitas</p>
+                <p className="text-xs text-gray-500">6 contas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+              <div>
+                <p className="text-sm font-medium">Despesas</p>
+                <p className="text-xs text-gray-500">6 contas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+              <div>
+                <p className="text-sm font-medium">Total de Contas</p>
+                <p className="text-xs text-gray-500">12 ativas</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+              <div>
+                <p className="text-sm font-medium">Níveis</p>
+                <p className="text-xs text-gray-500">3 níveis máx.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Lista de contas em árvore */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="h-5 w-5" />
+            Estrutura do Plano de Contas
+          </CardTitle>
+          <CardDescription>
+            Visualização hierárquica das contas organizadas por categoria
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {chartTree.getRootNodes().map(node => renderTreeNode(node))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Modal de cadastro */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div 
+            className="bg-white rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" 
+            style={{
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+            }}
+          >
+            {/* Cabeçalho do modal */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Nova Categoria
+              </h2>
+              <button
+                onClick={handleCloseModal}
+                className="w-8 h-8 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Conteúdo do modal */}
+            <div className="p-6 space-y-6">
+              {/* Campo Tipo */}
+              <FloatingSelect
+                label="Tipo *"
+                value={formData.tipo}
+                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+              >
+                <option value="">Selecione o tipo</option>
+                <option value="receita">Receita</option>
+                <option value="despesa">Despesa</option>
+                <option value="ativo">Ativo</option>
+                <option value="passivo">Passivo</option>
+              </FloatingSelect>
+
+              {/* Campo Nome */}
+              <FloatingInput
+                type="text"
+                label="Nome *"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder=" "
+              />
+
+              {/* Campo Categoria */}
+              <FloatingSelect
+                label="Categoria"
+                value={formData.categoria}
+                onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
+              >
+                <option value="">Selecione a categoria</option>
+                {categoriasPrincipais.map(cat => (
+                  <option key={cat.id} value={cat.name}>{cat.name}</option>
+                ))}
+              </FloatingSelect>
+
+              {/* Campo Subcategoria */}
+              <FloatingSelect
+                label="Subcategoria de"
+                value={formData.subcategoria}
+                onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
+                disabled={!formData.categoria}
+              >
+                <option value="">Selecione a subcategoria</option>
+                {getSubcategorias().map(subcat => (
+                  <option key={subcat.id} value={subcat.name}>{subcat.name}</option>
+                ))}
+              </FloatingSelect>
+
+              {/* Campo Incluir como filha de */}
+              <FloatingSelect
+                label="Incluir como filha de"
+                value={formData.incluirComo}
+                onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
+              >
+                <option value="">Conta independente</option>
+                {chartTree.getFlattenedNodes()
+                  .filter(node => chartTree.canHaveChildren(node))
+                  .map(node => (
+                    <option key={node.id} value={node.id}>
+                      {node.code} - {node.name}
+                    </option>
+                  ))
+                }
+              </FloatingSelect>
+            </div>
+
+            {/* Rodapé do modal */}
+            <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-200">
+              <Button
+                onClick={() => handleSave(false)}
+                disabled={!formData.tipo || !formData.nome}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Salvar
+              </Button>
+              <Button
+                onClick={() => handleSave(true)}
+                disabled={!formData.tipo || !formData.nome}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Salvar e Continuar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
