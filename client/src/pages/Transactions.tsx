@@ -1604,7 +1604,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Tipo */}
               <div className="relative">
                 <select
-                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none peer"
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
+                    formData.tipo ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
+                  } focus:ring-2 focus:ring-blue-500`}
                   value={formData.tipo}
                   onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                 >
@@ -1628,7 +1630,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               <div className="relative">
                 <input
                   type="text"
-                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-transparent peer"
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none placeholder-transparent peer transition-all duration-200 ${
+                    formData.nome ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
+                  } focus:ring-2 focus:ring-blue-500`}
                   placeholder=" "
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
@@ -1643,7 +1647,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Categoria */}
               <div className="relative">
                 <select
-                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none peer"
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
+                    formData.categoria ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
+                  } focus:ring-2 focus:ring-blue-500`}
                   value={formData.categoria}
                   onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
                 >
@@ -1665,7 +1671,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Subcategoria */}
               <div className="relative">
                 <select
-                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 peer"
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
+                    formData.subcategoria ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
+                  } focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-sm`}
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
                   disabled={!formData.categoria}
@@ -1688,7 +1696,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Incluir como filha de */}
               <div className="relative">
                 <select
-                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none peer"
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
+                    formData.incluirComo ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
+                  } focus:ring-2 focus:ring-blue-500`}
                   value={formData.incluirComo}
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
