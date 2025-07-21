@@ -1571,10 +1571,13 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   });
 
   // Query para buscar contas
-  const { data: chartAccounts = [], isLoading: isLoadingAccounts, refetch } = useQuery({
+  const { data: chartAccountsData, isLoading: isLoadingAccounts, refetch } = useQuery({
     queryKey: ['/api/chart-accounts'],
     enabled: true
   });
+
+  // Garantir que chartAccounts seja sempre um array
+  const chartAccounts = Array.isArray(chartAccountsData) ? chartAccountsData : [];
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({

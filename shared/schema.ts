@@ -303,7 +303,7 @@ export type InsertRelationship = z.infer<typeof insertRelationshipSchema>;
  */
 export const chartOfAccounts = pgTable("chart_of_accounts", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().references(() => users.id),
+  userId: text("user_id").notNull().references(() => users.id),
   parentId: integer("parent_id"), // Auto-referência para hierarquia será definida após a declaração
   code: text("code").notNull(), // Código da conta (ex: 1.1.001)
   name: text("name").notNull(), // Nome da conta
