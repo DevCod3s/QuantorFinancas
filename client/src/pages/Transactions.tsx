@@ -176,11 +176,9 @@ export function Transactions() {
   };
 
   const openCreateModal = () => {
-    console.log('openCreateModal chamada - estado atual:', chartAccountModalOpen);
     resetForm();
     setModalMode('create');
     setChartAccountModalOpen(true);
-    console.log('openCreateModal - tentando abrir modal');
   };
 
   const openEditModal = (account: any) => {
@@ -398,12 +396,8 @@ export function Transactions() {
         <div className="relative">
           <button
             onClick={() => {
-              console.log(`Botão clicado na aba: ${activeTab}`);
               if (activeTab === "centro-custo") {
-                console.log('Abrindo modal do Centro de Custo');
                 openCreateModal();
-              } else {
-                console.log('Aba não é centro-custo, modal não será aberto');
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
@@ -1550,6 +1544,109 @@ export function Transactions() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* Modal de cadastro - Movido para o componente principal */}
+      {chartAccountModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div 
+            className="bg-gray-100 rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" 
+            style={{
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}
+          >
+            {/* Cabeçalho do modal */}
+            <div className="flex items-center justify-between p-6 pb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {modalMode === 'create' ? 'Nova Conta' : 
+                 modalMode === 'edit' ? 'Editar Conta' : 
+                 'Visualizar Conta'}
+              </h2>
+              <button
+                onClick={() => setChartAccountModalOpen(false)}
+                className="w-6 h-6 text-white bg-black rounded transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Conteúdo do modal */}
+            <div className="px-6 pb-6 space-y-4">
+              {/* Campo Tipo */}
+              <div className="relative">
+                <select
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
+                    formData.tipo ? 'shadow-md border border-blue-500' : 'shadow-md border-0 focus:shadow-md focus:border focus:border-blue-500'
+                  } ${modalMode === 'view' ? 'pointer-events-none bg-gray-50' : ''}`}
+                  value={formData.tipo}
+                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                  disabled={modalMode === 'view'}
+                >
+                  <option value="">&nbsp;</option>
+                  <option value="receita">Receita</option>
+                  <option value="despesa">Despesa</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="passivo">Passivo</option>
+                </select>
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs transition-all duration-200 pointer-events-none text-gray-500 peer-focus:text-blue-600">
+                  Tipo
+                </label>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+
+              {/* Campo Nome */}
+              <div className="relative">
+                <input
+                  type="text"
+                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none placeholder-transparent peer transition-all duration-200 ${
+                    formData.nome ? 'shadow-md border border-blue-500' : 'shadow-md border-0 focus:shadow-md focus:border focus:border-blue-500'
+                  } ${modalMode === 'view' ? 'bg-gray-50' : ''}`}
+                  placeholder=" "
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  readOnly={modalMode === 'view'}
+                />
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs transition-all duration-200 pointer-events-none text-gray-500 peer-focus:text-blue-600">
+                  Nome <span className="text-red-500">*</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Rodapé do modal */}
+            <div className="flex items-center justify-end gap-3 px-6 pb-6">
+              {modalMode === 'view' ? (
+                <button
+                  onClick={() => setChartAccountModalOpen(false)}
+                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
+                >
+                  Fechar
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={handleSaveAccount}
+                    disabled={!formData.nome || createAccountMutation.isPending || updateAccountMutation.isPending}
+                    className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white rounded text-sm transition-colors"
+                  >
+                    {createAccountMutation.isPending || updateAccountMutation.isPending ? 'Salvando...' : 'Salvar'}
+                  </button>
+                  {modalMode === 'create' && (
+                    <button
+                      onClick={handleSaveAndContinue}
+                      disabled={!formData.nome || createAccountMutation.isPending}
+                      className="px-3 py-2 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white rounded text-sm transition-colors flex items-center justify-center"
+                      title="Salvar e continuar"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1952,7 +2049,6 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
 
       {/* Modal de cadastro */}
-      {console.log('Renderizando modal? chartAccountModalOpen =', chartAccountModalOpen)}
       {chartAccountModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div 
