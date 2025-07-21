@@ -1604,7 +1604,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Tipo */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none peer"
+                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none peer"
                   value={formData.tipo}
                   onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                 >
@@ -1614,7 +1614,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   <option value="ativo">Ativo</option>
                   <option value="passivo">Passivo</option>
                 </select>
-                <label className="absolute left-3 text-xs text-gray-600 bg-white px-1 font-medium transition-all duration-200 peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600 top-1">
+                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
+                  formData.tipo ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
+                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
                   Tipo
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1626,12 +1628,14 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               <div className="relative">
                 <input
                   type="text"
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent peer"
+                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder-transparent peer"
                   placeholder=" "
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                 />
-                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.nome ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
+                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
+                  formData.nome ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
+                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
                   Nome <span className="text-red-500">*</span>
                 </label>
               </div>
@@ -1639,7 +1643,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Categoria */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none peer"
+                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none peer"
                   value={formData.categoria}
                   onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
                 >
@@ -1648,7 +1652,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     <option key={cat.id} value={cat.name}>{cat.name}</option>
                   ))}
                 </select>
-                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.categoria ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
+                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
+                  formData.categoria ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
+                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
                   Categoria <span className="text-red-500">*</span>
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1659,7 +1665,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Subcategoria */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:bg-gray-100 disabled:text-gray-400 peer"
+                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 peer"
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
                   disabled={!formData.categoria}
@@ -1669,7 +1675,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     <option key={subcat.id} value={subcat.name}>{subcat.name}</option>
                   ))}
                 </select>
-                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.subcategoria ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
+                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
+                  formData.subcategoria ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
+                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
                   Subcategoria de
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -1680,7 +1688,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               {/* Campo Incluir como filha de */}
               <div className="relative">
                 <select
-                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none peer"
+                  className="w-full pt-6 pb-2 px-3 bg-white border border-gray-300 rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none peer"
                   value={formData.incluirComo}
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
@@ -1694,7 +1702,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     ))
                   }
                 </select>
-                <label className={`absolute left-3 bg-white px-1 font-medium transition-all duration-200 pointer-events-none ${formData.incluirComo ? 'top-1 text-xs text-gray-600' : 'top-3 text-base text-gray-400'} peer-focus:top-1 peer-focus:text-xs peer-focus:text-gray-600`}>
+                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
+                  formData.incluirComo ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
+                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
                   Incluir como filha de
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
