@@ -176,9 +176,11 @@ export function Transactions() {
   };
 
   const openCreateModal = () => {
+    console.log('openCreateModal chamada - estado atual:', chartAccountModalOpen);
     resetForm();
     setModalMode('create');
     setChartAccountModalOpen(true);
+    console.log('openCreateModal - tentando abrir modal');
   };
 
   const openEditModal = (account: any) => {
@@ -1950,6 +1952,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
 
       {/* Modal de cadastro */}
+      {console.log('Renderizando modal? chartAccountModalOpen =', chartAccountModalOpen)}
       {chartAccountModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div 
