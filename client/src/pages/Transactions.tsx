@@ -1556,6 +1556,11 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
   
+  // Estados do modal
+  const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  
   // Estados do formulário
   const [formData, setFormData] = useState({
     tipo: '',
@@ -1563,6 +1568,58 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     categoria: '',
     subcategoria: '',
     incluirComo: ''
+  });
+
+  // Query para buscar contas
+  const { data: chartAccounts = [], isLoading: isLoadingAccounts, refetch } = useQuery({
+    queryKey: ['/api/chart-accounts'],
+    enabled: true
+  });
+
+  // Mutation para criar conta
+  const createAccountMutation = useMutation({
+    mutationFn: async (accountData: any) => {
+      const response = await fetch('/api/chart-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(accountData),
+      });
+      if (!response.ok) throw new Error('Falha ao criar conta');
+      return response.json();
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  // Mutation para atualizar conta
+  const updateAccountMutation = useMutation({
+    mutationFn: async ({ id, ...accountData }: any) => {
+      const response = await fetch(`/api/chart-accounts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(accountData),
+      });
+      if (!response.ok) throw new Error('Falha ao atualizar conta');
+      return response.json();
+    },
+    onSuccess: () => {
+      refetch();
+    },
+  });
+
+  // Mutation para excluir conta
+  const deleteAccountMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/chart-accounts/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Falha ao excluir conta');
+      return response.json();
+    },
+    onSuccess: () => {
+      refetch();
+    },
   });
 
   // Lista de categorias principais para os selects
@@ -1586,30 +1643,101 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     setExpandedNodes(newExpanded);
   };
 
-
-
-  // Função para salvar conta
-  const handleSave = (continueAdding = false) => {
-    // Aqui seria implementada a lógica de salvamento
-    console.log('Salvando conta:', formData);
-    
-    if (!continueAdding) {
-      setIsModalOpen(false);
-    }
-    
-    // Limpa o formulário
+  // Funções do modal
+  const openCreateModal = () => {
+    setModalMode('create');
+    setSelectedAccount(null);
     setFormData({
-      tipo: '',
       nome: '',
+      tipo: '',
+      categoria: '',
+      subcategoria: '',
+      incluirComo: ''
+    });
+    setChartAccountModalOpen(true);
+  };
+
+  const openEditModal = (account: any) => {
+    setModalMode('edit');
+    setSelectedAccount(account);
+    setFormData({
+      nome: account.name || '',
+      tipo: account.type || '',
+      categoria: account.category || '',
+      subcategoria: account.subcategory || '',
+      incluirComo: account.parentId || ''
+    });
+    setChartAccountModalOpen(true);
+  };
+
+  const openViewModal = (account: any) => {
+    setModalMode('view');
+    setSelectedAccount(account);
+    setFormData({
+      nome: account.name || '',
+      tipo: account.type || '',
+      categoria: account.category || '',
+      subcategoria: account.subcategory || '',
+      incluirComo: account.parentId || ''
+    });
+    setChartAccountModalOpen(true);
+  };
+
+  const handleSaveAccount = async () => {
+    const accountData = {
+      name: formData.nome,
+      type: formData.tipo,
+      category: formData.categoria,
+      subcategory: formData.subcategoria,
+      parentId: formData.incluirComo || null,
+    };
+
+    try {
+      if (modalMode === 'create') {
+        await createAccountMutation.mutateAsync(accountData);
+      } else if (modalMode === 'edit' && selectedAccount) {
+        await updateAccountMutation.mutateAsync({ id: selectedAccount.id, ...accountData });
+      }
+      setChartAccountModalOpen(false);
+    } catch (error) {
+      console.error('Erro ao salvar conta:', error);
+    }
+  };
+
+  const handleSaveAndContinue = async () => {
+    await handleSaveAccount();
+    // Limpar formulário mas manter modal aberto
+    setFormData({
+      nome: '',
+      tipo: '',
       categoria: '',
       subcategoria: '',
       incluirComo: ''
     });
   };
 
-  // Função para fechar modal
+  const handleDeleteAccount = async (accountId: string) => {
+    if (confirm('Tem certeza que deseja excluir esta conta?')) {
+      try {
+        await deleteAccountMutation.mutateAsync(accountId);
+      } catch (error) {
+        console.error('Erro ao excluir conta:', error);
+      }
+    }
+  };
+
+  // Função para salvar conta (compatibilidade)
+  const handleSave = (continueAdding = false) => {
+    if (continueAdding) {
+      handleSaveAndContinue();
+    } else {
+      handleSaveAccount();
+    }
+  };
+
+  // Função para fechar modal (compatibilidade)
   const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setChartAccountModalOpen(false);
     setFormData({
       tipo: '',
       nome: '',
