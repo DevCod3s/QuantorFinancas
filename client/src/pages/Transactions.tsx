@@ -84,6 +84,7 @@ export function Transactions() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterPeriod, setFilterPeriod] = useState("Mensal");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
 
   // Calcula a posição e largura da barra de progressão
   useEffect(() => {
@@ -185,8 +186,13 @@ export function Transactions() {
         </div>
         <div className="relative">
           <button
+            onClick={() => {
+              if (activeTab === "centro-custo") {
+                setChartAccountModalOpen(true);
+              }
+            }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
-            title="Nova Transação"
+            title={activeTab === "centro-custo" ? "Adicionar ao Plano de Contas" : "Nova Transação"}
             style={{ 
               boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
@@ -1304,7 +1310,7 @@ export function Transactions() {
                 value: "plano-contas",
                 label: "Plano de Contas",
                 icon: <FileText className="h-4 w-4" />,
-                content: <ChartOfAccountsContent />
+                content: <ChartOfAccountsContent isModalOpen={chartAccountModalOpen} setIsModalOpen={setChartAccountModalOpen} />
               },
               {
                 value: "demonstrativo-resultados",
@@ -1337,9 +1343,7 @@ export function Transactions() {
  * Componente para gerenciamento do Plano de Contas
  * Inclui modal de cadastro, lista hierárquica e funcionalidades completas
  */
-function ChartOfAccountsContent() {
-  // Estados para controle do modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
+function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: boolean, setIsModalOpen: (open: boolean) => void }) {
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
   
@@ -1481,21 +1485,12 @@ function ChartOfAccountsContent() {
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho com botão de adicionar */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900">Plano de Contas</h3>
-          <p className="text-sm text-gray-600">
-            Organize suas contas em estrutura hierárquica
-          </p>
-        </div>
-        <Button
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Adicionar Conta
-        </Button>
+      {/* Cabeçalho sem botão duplicado */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900">Plano de Contas</h3>
+        <p className="text-sm text-gray-600">
+          Organize suas contas em estrutura hierárquica
+        </p>
       </div>
 
       {/* Resumo das categorias */}
@@ -1568,110 +1563,144 @@ function ChartOfAccountsContent() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div 
-            className="bg-white rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" 
+            className="bg-gray-100 rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" 
             style={{
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
             }}
           >
             {/* Cabeçalho do modal */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between p-6 pb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                Nova Categoria
+                Nova categoria
               </h2>
               <button
                 onClick={handleCloseModal}
-                className="w-8 h-8 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
+                className="w-6 h-6 text-white bg-black rounded transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
             {/* Conteúdo do modal */}
-            <div className="p-6 space-y-6">
+            <div className="px-6 pb-6 space-y-4">
               {/* Campo Tipo */}
-              <FloatingSelect
-                label="Tipo *"
-                value={formData.tipo}
-                onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-              >
-                <option value="">Selecione o tipo</option>
-                <option value="receita">Receita</option>
-                <option value="despesa">Despesa</option>
-                <option value="ativo">Ativo</option>
-                <option value="passivo">Passivo</option>
-              </FloatingSelect>
+              <div className="relative">
+                <select
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  value={formData.tipo}
+                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                >
+                  <option value="">Despesa</option>
+                  <option value="receita">Receita</option>
+                  <option value="despesa">Despesa</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="passivo">Passivo</option>
+                </select>
+                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                  Tipo
+                </label>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
 
               {/* Campo Nome */}
-              <FloatingInput
-                type="text"
-                label="Nome *"
-                value={formData.nome}
-                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                placeholder=" "
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 placeholder-transparent peer"
+                  placeholder=" "
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                />
+                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-3 peer-focus:text-xs peer-focus:text-gray-600 peer-focus:top-1 transition-all">
+                  Nome <span className="text-red-500">*</span>
+                </label>
+              </div>
 
               {/* Campo Categoria */}
-              <FloatingSelect
-                label="Categoria"
-                value={formData.categoria}
-                onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
-              >
-                <option value="">Selecione a categoria</option>
-                {categoriasPrincipais.map(cat => (
-                  <option key={cat.id} value={cat.name}>{cat.name}</option>
-                ))}
-              </FloatingSelect>
+              <div className="relative">
+                <select
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  value={formData.categoria}
+                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
+                >
+                  <option value="">Selecione a categoria</option>
+                  {categoriasPrincipais.map(cat => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                  Categoria <span className="text-red-500">*</span>
+                </label>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
 
               {/* Campo Subcategoria */}
-              <FloatingSelect
-                label="Subcategoria de"
-                value={formData.subcategoria}
-                onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
-                disabled={!formData.categoria}
-              >
-                <option value="">Selecione a subcategoria</option>
-                {getSubcategorias().map(subcat => (
-                  <option key={subcat.id} value={subcat.name}>{subcat.name}</option>
-                ))}
-              </FloatingSelect>
+              <div className="relative">
+                <select
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none disabled:bg-gray-100 disabled:text-gray-400"
+                  value={formData.subcategoria}
+                  onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
+                  disabled={!formData.categoria}
+                >
+                  <option value="">Selecione a subcategoria</option>
+                  {getSubcategorias().map(subcat => (
+                    <option key={subcat.id} value={subcat.name}>{subcat.name}</option>
+                  ))}
+                </select>
+                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                  Subcategoria de
+                </label>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
 
               {/* Campo Incluir como filha de */}
-              <FloatingSelect
-                label="Incluir como filha de"
-                value={formData.incluirComo}
-                onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
-              >
-                <option value="">Conta independente</option>
-                {chartTree.getFlattenedNodes()
-                  .filter(node => chartTree.canHaveChildren(node))
-                  .map(node => (
-                    <option key={node.id} value={node.id}>
-                      {node.code} - {node.name}
-                    </option>
-                  ))
-                }
-              </FloatingSelect>
+              <div className="relative">
+                <select
+                  className="w-full pt-4 pb-2 px-3 bg-white border-0 shadow-md rounded-md text-base outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                  value={formData.incluirComo}
+                  onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
+                >
+                  <option value="">Conta independente</option>
+                  {chartTree.getFlattenedNodes()
+                    .filter(node => chartTree.canHaveChildren(node))
+                    .map(node => (
+                      <option key={node.id} value={node.id}>
+                        {node.code} - {node.name}
+                      </option>
+                    ))
+                  }
+                </select>
+                <label className="absolute left-3 top-1 text-xs text-gray-600 bg-white px-1 font-medium">
+                  Incluir como filha de
+                </label>
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
             </div>
 
             {/* Rodapé do modal */}
-            <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-200">
-              <Button
+            <div className="flex items-center justify-end gap-3 px-6 pb-6">
+              <button
                 onClick={() => handleSave(false)}
-                disabled={!formData.tipo || !formData.nome}
-                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300"
+                disabled={!formData.nome}
+                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white rounded text-sm transition-colors"
               >
-                <Save className="h-4 w-4 mr-2" />
                 Salvar
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={() => handleSave(true)}
-                disabled={!formData.tipo || !formData.nome}
-                variant="outline"
-                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+                disabled={!formData.nome}
+                className="px-3 py-2 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white rounded text-sm transition-colors flex items-center justify-center"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                Salvar e Continuar
-              </Button>
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
