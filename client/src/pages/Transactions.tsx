@@ -396,11 +396,12 @@ export function Transactions() {
         <div className="relative">
           <button
             onClick={() => {
+              console.log(`Botão clicado na aba: ${activeTab}`);
               if (activeTab === "centro-custo") {
+                console.log('Abrindo modal do Centro de Custo');
                 openCreateModal();
               } else {
-                // Funcionalidade para outras abas pode ser implementada aqui
-                console.log(`Botão clicado na aba: ${activeTab}`);
+                console.log('Aba não é centro-custo, modal não será aberto');
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
@@ -1978,8 +1979,8 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
               <div className="relative">
                 <select
                   className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
-                    formData.tipo ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500 ${modalMode === 'view' ? 'pointer-events-none bg-gray-50' : ''}`}
+                    formData.tipo ? 'shadow-md border border-blue-500' : 'shadow-md border-0 focus:shadow-md focus:border focus:border-blue-500'
+                  } ${modalMode === 'view' ? 'pointer-events-none bg-gray-50' : ''}`}
                   value={formData.tipo}
                   onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                   disabled={modalMode === 'view'}
@@ -1990,9 +1991,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   <option value="ativo">Ativo</option>
                   <option value="passivo">Passivo</option>
                 </select>
-                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
-                  formData.tipo ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
-                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs transition-all duration-200 pointer-events-none text-gray-500 peer-focus:text-blue-600">
                   Tipo
                 </label>
                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
@@ -2005,16 +2004,14 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                 <input
                   type="text"
                   className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none placeholder-transparent peer transition-all duration-200 ${
-                    formData.nome ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500 ${modalMode === 'view' ? 'bg-gray-50' : ''}`}
+                    formData.nome ? 'shadow-md border border-blue-500' : 'shadow-md border-0 focus:shadow-md focus:border focus:border-blue-500'
+                  } ${modalMode === 'view' ? 'bg-gray-50' : ''}`}
                   placeholder=" "
                   value={formData.nome}
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                   readOnly={modalMode === 'view'}
                 />
-                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
-                  formData.nome ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
-                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
+                <label className="absolute -top-2 left-3 bg-white px-1 text-xs transition-all duration-200 pointer-events-none text-gray-500 peer-focus:text-blue-600">
                   Nome <span className="text-red-500">*</span>
                 </label>
               </div>
