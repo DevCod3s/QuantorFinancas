@@ -1734,42 +1734,52 @@ function ChartOfAccountsContent({
       return;
     }
 
-    // Gerar código hierárquico correto baseado na estrutura
+    // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRETO
     const generateHierarchicalCode = () => {
-      if (!formData.categoria) {
-        // Nível 1: Novo tipo principal (1, 2, 3, 4...)
+      if (level === 1) {
+        // Nível 1: Códigos 1, 2, 3, 4...
         const level1Codes = chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
       
-      // Buscar o tipo pai para determinar o prefixo
-      const parentType = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
-      const typePrefix = parentType ? parentType.code : '1';
-      
-      if (!formData.subcategoria) {
-        // Nível 2: Categoria principal (1.1, 1.2, 2.1, 2.2...)
-        const categoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.categoria && acc.level === 2
-        ).length || 0;
-        return `${typePrefix}.${categoryCount + 1}`;
-      } else {
-        // Nível 3: Subcategoria (1.1.1, 1.1.2...)
-        const parentCategory = chartAccountsData?.find(acc => 
-          acc.type === formData.categoria && 
-          acc.name === formData.subcategoria && 
-          acc.level === 1
-        );
-        const parentCode = parentCategory ? parentCategory.code : typePrefix;
+      if (level === 2) {
+        // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
+        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
+        const parentCode = parentAccount ? parentAccount.code : '1';
         
-        const subcategoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.categoria && 
-          acc.level === 3 &&
-          acc.code?.startsWith(`${parentCode}.`)
+        const sameParentCount = chartAccountsData?.filter(acc => 
+          acc.parentId === parentAccount?.id && acc.level === 2
         ).length || 0;
         
-        return `${parentCode}.1.${subcategoryCount + 1}`;
+        return `${parentCode}.${sameParentCount + 1}`;
       }
+      
+      if (level === 3) {
+        // Nível 3: Códigos 1.2.1, 1.2.2, 2.1.1...
+        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
+        const parentCode = parentAccount ? parentAccount.code : '1.1';
+        
+        const sameParentCount = chartAccountsData?.filter(acc => 
+          acc.parentId === parentAccount?.id && acc.level === 3
+        ).length || 0;
+        
+        return `${parentCode}.${sameParentCount + 1}`;
+      }
+      
+      if (level === 4) {
+        // Nível 4: Códigos 1.2.3.1, 1.2.3.2...
+        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
+        const parentCode = parentAccount ? parentAccount.code : '1.1.1';
+        
+        const sameParentCount = chartAccountsData?.filter(acc => 
+          acc.parentId === parentAccount?.id && acc.level === 4
+        ).length || 0;
+        
+        return `${parentCode}.${sameParentCount + 1}`;
+      }
+      
+      return '1';
     };
 
     // LÓGICA HIERÁRQUICA CORRETA DO PLANO DE CONTAS
@@ -1860,41 +1870,52 @@ function ChartOfAccountsContent({
     }
 
     // Mesma lógica do handleSaveAccount mas sem fechar modal
+    // MESMA LÓGICA DE GERAÇÃO DE CÓDIGO HIERÁRQUICO 
     const generateHierarchicalCode = () => {
-      if (!formData.categoria) {
-        // Nível 1: Novo tipo principal (1, 2, 3, 4...)
+      if (level === 1) {
+        // Nível 1: Códigos 1, 2, 3, 4...
         const level1Codes = chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
       
-      // Buscar o tipo pai para determinar o prefixo
-      const parentType = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
-      const typePrefix = parentType ? parentType.code : '1';
-      
-      if (!formData.subcategoria) {
-        // Nível 2: Categoria principal (1.1, 1.2, 2.1, 2.2...)
-        const categoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.categoria && acc.level === 2
-        ).length || 0;
-        return `${typePrefix}.${categoryCount + 1}`;
-      } else {
-        // Nível 3: Subcategoria (1.1.1, 1.1.2...)
-        const parentCategory = chartAccountsData?.find(acc => 
-          acc.type === formData.categoria && 
-          acc.name === formData.subcategoria && 
-          acc.level === 1
-        );
-        const parentCode = parentCategory ? parentCategory.code : typePrefix;
+      if (level === 2) {
+        // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
+        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
+        const parentCode = parentAccount ? parentAccount.code : '1';
         
-        const subcategoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.categoria && 
-          acc.level === 3 &&
-          acc.code?.startsWith(`${parentCode}.`)
+        const sameParentCount = chartAccountsData?.filter(acc => 
+          acc.parentId === parentAccount?.id && acc.level === 2
         ).length || 0;
         
-        return `${parentCode}.1.${subcategoryCount + 1}`;
+        return `${parentCode}.${sameParentCount + 1}`;
       }
+      
+      if (level === 3) {
+        // Nível 3: Códigos 1.2.1, 1.2.2, 2.1.1...
+        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
+        const parentCode = parentAccount ? parentAccount.code : '1.1';
+        
+        const sameParentCount = chartAccountsData?.filter(acc => 
+          acc.parentId === parentAccount?.id && acc.level === 3
+        ).length || 0;
+        
+        return `${parentCode}.${sameParentCount + 1}`;
+      }
+      
+      if (level === 4) {
+        // Nível 4: Códigos 1.2.3.1, 1.2.3.2...
+        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
+        const parentCode = parentAccount ? parentAccount.code : '1.1.1';
+        
+        const sameParentCount = chartAccountsData?.filter(acc => 
+          acc.parentId === parentAccount?.id && acc.level === 4
+        ).length || 0;
+        
+        return `${parentCode}.${sameParentCount + 1}`;
+      }
+      
+      return '1';
     };
 
     // Determinar nível e parentId para Salvar e Continuar - MESMA LÓGICA DO SALVAR
