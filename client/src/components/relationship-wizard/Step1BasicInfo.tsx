@@ -181,26 +181,30 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       if (response.ok) {
         const data = await response.json();
         
-        // Processar endereço
-        const cep = data.cep?.replace(/\D/g, '');
-        const formattedCep = cep ? `${cep.slice(0, 5)}-${cep.slice(5)}` : '';
+        // Processar endereço - CORRIGIDO para pegar CEP do campo correto
+        const cep = data.endereco?.cep || data.cep || '';
+        const cleanCep = cep.replace(/\D/g, '');
+        const formattedCep = cleanCep ? formatZipCode(cleanCep) : '';
         
         updateFormData({
           socialName: data.razao_social || '',
-          fantasyName: data.nome_fantasia || '',
+          fantasyName: data.nome_fantasia || data.razao_social || '',
           zipCode: formattedCep,
-          street: data.logradouro || '',
-          number: data.numero || '',
-          complement: data.complemento || '',
-          neighborhood: data.bairro || '',
-          city: data.municipio || '',
-          state: data.uf || '',
+          street: data.endereco?.logradouro || data.logradouro || '',
+          number: data.endereco?.numero || data.numero || '',
+          complement: data.endereco?.complemento || data.complemento || '',
+          neighborhood: data.endereco?.bairro || data.bairro || '',
+          city: data.endereco?.municipio || data.municipio || '',
+          state: data.endereco?.uf || data.uf || '',
           isLoading: false
         });
         
         // Se temos CEP mas dados incompletos, buscar via ViaCEP
-        if (formattedCep && (!data.logradouro || !data.bairro || !data.municipio)) {
-          await fetchCEPData(formattedCep);
+        const hasCompleteAddress = (data.endereco?.logradouro || data.logradouro) && 
+                                  (data.endereco?.bairro || data.bairro) && 
+                                  (data.endereco?.municipio || data.municipio);
+        if (formattedCep && !hasCompleteAddress) {
+          await fetchCEPData(cleanCep);
         }
         
         // Focar próximo campo após preenchimento
@@ -268,11 +272,14 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   };
 
   /**
-   * Formata CEP
+   * Formata CEP - CORRIGIDO para não cortar último dígito
    */
   const formatZipCode = (value: string) => {
     const numbers = value.replace(/\D/g, '');
-    return numbers.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+    if (numbers.length <= 5) {
+      return numbers;
+    }
+    return numbers.replace(/(\d{5})(\d{0,3})/, '$1-$2');
   };
 
   /**
