@@ -284,3 +284,9 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • Campo "Incluir como filha de" preenchido = SEMPRE nível 4
     • Geração automática baseada em contagem de filhos por pai
     • Lógica implementada em handleSaveAccount e handleSaveAndContinue
+- **Problemas Técnicos Identificados**: Questões pendentes no wizard de relacionamentos (Janeiro 2025)
+    • Campo CEP: Formatação cortando último dígito (75901-13 em vez de 75901-130)
+    • API CNPJ: Erro de fetch na Brasil API (timeout/conexão)
+    • Warning React.Fragment: Props inválidas no StepperWizard
+    • Múltiplas tentativas de correção realizadas sem sucesso
+    • Necessária revisão completa da formatação de CEP e integração de APIs

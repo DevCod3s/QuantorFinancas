@@ -185,7 +185,8 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
         // Processar CEP de todos os campos possíveis
         const cep = data.cep || '';
         const cleanCep = cep.replace(/\D/g, '');
-        const formattedCep = cleanCep.length === 8 ? formatZipCode(cleanCep) : '';
+        const formattedCep = cleanCep.length === 8 ? 
+          `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
         
         // Mapear todos os possíveis campos da API Brasil API
         updateFormData({
@@ -273,36 +274,26 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   };
 
   /**
-   * Formata CEP padrão nacional brasileiro (XXXXX-XXX)
-   * DEFINITIVO: Mostra TODOS os dígitos após o hífen
-   */
-  const formatZipCode = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    if (numbers.length <= 5) {
-      return numbers;
-    }
-    // CORRIGIDO: substring(5) sem limite para pegar TODOS os dígitos restantes
-    return `${numbers.substring(0, 5)}-${numbers.substring(5)}`;
-  };
-
-  /**
-   * Manipula mudança no CEP - FORMATO NACIONAL CORRETO XXXXX-XXX
+   * Manipula mudança no CEP - REFORMULADO COMPLETO
    */
   const handleZipCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    const numbers = rawValue.replace(/\D/g, '');
+    // Extrair apenas números, máximo 8 dígitos
+    const numbers = rawValue.replace(/\D/g, '').slice(0, 8);
     
-    // Limitar a 8 dígitos máximo
-    const limitedNumbers = numbers.substring(0, 8);
+    // Formatação manual simples para XXXXX-XXX
+    let formatted = numbers;
+    if (numbers.length > 5) {
+      formatted = `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    }
     
-    // Aplicar formatação usando a função correta
-    const formatted = formatZipCode(limitedNumbers);
+    console.log('CEP Debug:', { raw: rawValue, numbers, formatted });
     
     updateFormData({ zipCode: formatted });
     
     // Se CEP completo (8 dígitos), buscar endereço
-    if (limitedNumbers.length === 8) {
-      fetchCEPData(limitedNumbers);
+    if (numbers.length === 8) {
+      fetchCEPData(numbers);
     }
   };
 
