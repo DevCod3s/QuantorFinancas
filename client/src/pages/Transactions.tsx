@@ -1719,18 +1719,12 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     };
 
     // Determinar nível e parentId baseado nos campos preenchidos
-    let level = 1;
+    let level = 2; // Padrão: sempre criar categoria (nível 2)
     let parentId = null;
     let category = null;
     let subcategory = null;
 
-    if (formData.categoria && !formData.subcategoria) {
-      // Nível 2: categoria (ex: "RECEITA OPERACIONAL BRUTA")
-      level = 2;
-      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.categoria;
-    } else if (formData.categoria && formData.subcategoria) {
+    if (formData.subcategoria) {
       // Nível 3: subcategoria (ex: "Pães", "Pães Especiais")
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
@@ -1740,9 +1734,11 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       category = formData.categoria;
       subcategory = formData.subcategoria;
     } else {
-      // Nível 1: só tipo (já existem Receita e Despesa)
-      level = 1;
-      category = formData.tipo === 'receita' ? 'Receita' : 'Despesa';
+      // Nível 2: categoria (ex: "RECEITA OPERACIONAL BRUTA")
+      level = 2;
+      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.categoria;
     }
 
     const accountData = {
