@@ -1659,8 +1659,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
   
-  // Estados do modal
-  const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
+  // Estados do modal - usando props do componente pai
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   
@@ -1760,7 +1759,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       subcategoria: '',
       incluirComo: ''
     });
-    setChartAccountModalOpen(true);
+    setIsModalOpen(true);
   };
 
   const openEditModal = (account: any) => {
@@ -1773,7 +1772,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       subcategoria: account.subcategory || '',
       incluirComo: account.parentId || ''
     });
-    setChartAccountModalOpen(true);
+    setIsModalOpen(true);
   };
 
   const openViewModal = (account: any) => {
@@ -1786,7 +1785,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       subcategoria: account.subcategory || '',
       incluirComo: account.parentId || ''
     });
-    setChartAccountModalOpen(true);
+    setIsModalOpen(true);
   };
 
   const handleSaveAccount = async () => {
@@ -1804,7 +1803,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       } else if (modalMode === 'edit' && selectedAccount) {
         await updateAccountMutation.mutateAsync({ id: selectedAccount.id, ...accountData });
       }
-      setChartAccountModalOpen(false);
+      setIsModalOpen(false);
     } catch (error) {
       console.error('Erro ao salvar conta:', error);
     }
@@ -1843,7 +1842,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
   // Função para fechar modal (compatibilidade)
   const handleCloseModal = () => {
-    setChartAccountModalOpen(false);
+    setIsModalOpen(false);
     setFormData({
       tipo: '',
       nome: '',
@@ -2036,7 +2035,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
 
       {/* Modal Nova categoria - Baseado na imagem exata */}
-      {chartAccountModalOpen && (
+      {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-200 rounded-lg w-full max-w-lg mx-4 shadow-xl">
             {/* Cabeçalho */}
