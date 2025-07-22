@@ -49,7 +49,9 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-// import { useSuccessDialog, useErrorDialog } from '../components/ui/dialog-hooks';
+import { useSuccessDialog } from "@/components/ui/success-dialog";
+import { useErrorDialog } from "@/components/ui/error-dialog";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -97,12 +99,11 @@ export function Transactions() {
   });
   
   const queryClient = useQueryClient();
-  // const { showSuccess } = useSuccessDialog();
-  // const { showError } = useErrorDialog();
   
-  // Funções temporárias para success/error
-  const showSuccess = (message: string) => alert(`Sucesso: ${message}`);
-  const showError = (message: string) => alert(`Erro: ${message}`);
+  // Importar dialogs personalizados
+  const { showSuccess, SuccessDialog } = useSuccessDialog();
+  const { showError, ErrorDialog } = useErrorDialog();
+  const { showConfirm, ConfirmDialog } = useConfirmDialog();
 
   // Query para buscar contas do plano de contas
   const { data: chartAccounts = [], isLoading: isLoadingAccounts, refetch: refetchAccounts } = useQuery({
@@ -1787,12 +1788,22 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     try {
       if (modalMode === 'create') {
         await createAccountMutation.mutateAsync(accountData);
+        showSuccess("Conta criada", "A conta foi criada com sucesso.");
       } else if (modalMode === 'edit' && selectedAccount) {
         await updateAccountMutation.mutateAsync({ id: selectedAccount.id, ...accountData });
+        showSuccess("Conta atualizada", "A conta foi atualizada com sucesso.");
       }
       setIsModalOpen(false);
+      // Resetar formulário
+      setFormData({
+        nome: '',
+        categoria: '',
+        subcategoria: '',
+        incluirComo: ''
+      });
     } catch (error) {
       console.error('Erro ao salvar conta:', error);
+      showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
     }
   };
 
@@ -1932,6 +1943,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
     try {
       await createAccountMutation.mutateAsync(accountData);
+      showSuccess("Conta criada", "Conta criada com sucesso. Você pode adicionar outra.");
       // Limpar formulário mas manter modal aberto
       setFormData({
         nome: '',
@@ -1941,17 +1953,24 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       });
     } catch (error) {
       console.error('Erro ao salvar e continuar:', error);
+      showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
     }
   };
 
   const handleDeleteAccount = async (accountId: string) => {
-    if (confirm('Tem certeza que deseja excluir esta conta?')) {
-      try {
-        await deleteAccountMutation.mutateAsync(accountId);
-      } catch (error) {
-        console.error('Erro ao excluir conta:', error);
+    showConfirm(
+      "Uma página inserida em 1d408a1f-ada7-45a8-b2e1-bfa4895fa777-00-8u2fz1lduy0n.riker.replit.dev diz:",
+      "Tem certeza que deseja excluir esta conta?",
+      async () => {
+        try {
+          await deleteAccountMutation.mutateAsync(accountId);
+          showSuccess("Conta excluída", "A conta foi excluída com sucesso.");
+        } catch (error) {
+          console.error('Erro ao excluir conta:', error);
+          showError("Erro ao excluir", "Não foi possível excluir a conta. Tente novamente.");
+        }
       }
-    }
+    );
   };
 
   // Função para salvar conta (compatibilidade)
@@ -1967,7 +1986,6 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFormData({
-      tipo: '',
       nome: '',
       categoria: '',
       subcategoria: '',
@@ -2291,6 +2309,11 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
           </div>
         </div>
       )}
+
+      {/* Dialogs personalizados */}
+      <SuccessDialog />
+      <ErrorDialog />
+      <ConfirmDialog />
     </div>
   );
 }
