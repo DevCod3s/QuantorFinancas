@@ -1936,7 +1936,10 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       {/* Modal Nova categoria - Baseado na imagem exata */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-200 rounded-lg w-full max-w-lg mx-4 shadow-xl">
+          <div className="bg-gray-200 rounded-lg w-full max-w-lg mx-4 transform transition-all duration-300 scale-100" 
+               style={{
+                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+               }}>
             {/* Cabeçalho */}
             <div className="p-6 pb-4">
               <h2 className="text-lg font-semibold text-gray-800">Nova categoria</h2>
@@ -2004,23 +2007,24 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
               {/* Campo Subcategoria de - linha completa */}
               <div className="relative">
-                <select
-                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
+                <input
+                  type="text"
+                  list="subcategorias-list"
+                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 placeholder-transparent"
+                  placeholder=" "
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
-                >
-                  <option value=""></option>
-                  <option value="pessoal">Pessoal</option>
-                  <option value="vendas">Vendas</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="tecnologia">Tecnologia</option>
-                </select>
+                />
+                <datalist id="subcategorias-list">
+                  <option value="Pessoal" />
+                  <option value="Vendas" />
+                  <option value="Marketing" />
+                  <option value="Tecnologia" />
+                  <option value="Recursos Humanos" />
+                </datalist>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Subcategoria de
                 </label>
-                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
-                </div>
               </div>
 
               {/* Campo Incluir como filha de - linha completa */}
@@ -2031,9 +2035,11 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
                   <option value=""></option>
-                  <option value="nivel1">Nível 1</option>
-                  <option value="nivel2">Nível 2</option>
-                  <option value="nivel3">Nível 3</option>
+                  <option value="Pessoal">Pessoal</option>
+                  <option value="Vendas">Vendas</option>
+                  <option value="Marketing">Marketing</option>
+                  <option value="Tecnologia">Tecnologia</option>
+                  <option value="Recursos Humanos">Recursos Humanos</option>
                 </select>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Incluir como filha de
