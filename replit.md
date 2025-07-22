@@ -9,6 +9,7 @@ Quantor é um sistema web moderno de gestão financeira integrado com inteligên
 Preferred communication style: Simple, everyday language.
 Always communicate in Portuguese.
 Extremely detail-oriented with visual precision - requires exact alignment and positioning for UI elements.
+**CRITÉRIO OBRIGATÓRIO**: Ser extremamente atento nas criações - verificar sempre se a implementação está exatamente conforme solicitado, sem conflitos, modais duplicados ou elementos indesejados. Revisar cuidadosamente antes de apresentar qualquer resultado.
 
 ## System Architecture
 
