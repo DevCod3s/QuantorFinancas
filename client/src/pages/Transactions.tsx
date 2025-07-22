@@ -1739,25 +1739,34 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     let subcategory = null;
     let type = formData.nome.toLowerCase(); // Usar nome como tipo se não especificado
 
-    if (formData.tipo && formData.subcategoria) {
-      // Nível 3: subcategoria
+    if (formData.tipo && formData.subcategoria && formData.incluirComo) {
+      // Nível 3: quando tem Tipo + Subcategoria + Incluir como filha
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
-        acc.name === formData.subcategoria && acc.type === formData.tipo && acc.level === 1
+        acc.name === formData.incluirComo && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
       type = formData.tipo;
+    } else if (formData.tipo && formData.subcategoria) {
+      // Nível 2: quando tem Tipo + Subcategoria (subcategoria vira categoria nível 2)
+      level = 2;
+      const parentAccount = chartAccountsData?.find(acc => 
+        acc.name === formData.subcategoria && acc.level === 1
+      );
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.nome;
+      type = formData.tipo;
     } else if (formData.tipo) {
-      // Nível 2: categoria principal
+      // Nível 2: quando tem só Tipo selecionado  
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       type = formData.tipo;
     } else {
-      // Nível 1: novo tipo principal
+      // Nível 1: novo tipo principal (só Nome)
       level = 1;
       category = formData.nome;
       type = formData.nome.toLowerCase();
@@ -1839,25 +1848,34 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     let subcategory = null;
     let type = formData.nome.toLowerCase();
 
-    if (formData.tipo && formData.subcategoria) {
-      // Nível 3: subcategoria
+    if (formData.tipo && formData.subcategoria && formData.incluirComo) {
+      // Nível 3: quando tem Tipo + Subcategoria + Incluir como filha
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
-        acc.name === formData.subcategoria && acc.type === formData.tipo && acc.level === 1
+        acc.name === formData.incluirComo && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
       type = formData.tipo;
+    } else if (formData.tipo && formData.subcategoria) {
+      // Nível 2: quando tem Tipo + Subcategoria (subcategoria vira categoria nível 2)
+      level = 2;
+      const parentAccount = chartAccountsData?.find(acc => 
+        acc.name === formData.subcategoria && acc.level === 1
+      );
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.nome;
+      type = formData.tipo;
     } else if (formData.tipo) {
-      // Nível 2: categoria principal
+      // Nível 2: quando tem só Tipo selecionado
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       type = formData.tipo;
     } else {
-      // Nível 1: novo tipo principal
+      // Nível 1: novo tipo principal (só Nome)
       level = 1;
       category = formData.nome;
       type = formData.nome.toLowerCase();
