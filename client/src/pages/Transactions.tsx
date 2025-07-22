@@ -1655,7 +1655,6 @@ function ChartOfAccountsContent({
     },
     onSuccess: () => {
       refetch();
-      showSuccess('Conta excluída', 'A conta foi excluída com sucesso!');
     },
     onError: (error: any) => {
       showError('Erro ao excluir', error.message || 'Não foi possível excluir a conta. Tente novamente.');
@@ -1825,10 +1824,8 @@ function ChartOfAccountsContent({
     try {
       if (modalMode === 'create') {
         await createAccountMutation.mutateAsync(accountData);
-        showSuccess("Conta criada", "A conta foi criada com sucesso.");
       } else if (modalMode === 'edit' && selectedAccount) {
         await updateAccountMutation.mutateAsync({ id: selectedAccount.id, ...accountData });
-        showSuccess("Conta atualizada", "A conta foi atualizada com sucesso.");
       }
       setIsModalOpen(false);
       // Resetar formulário
@@ -1950,7 +1947,6 @@ function ChartOfAccountsContent({
 
     try {
       await createAccountMutation.mutateAsync(accountData);
-      showSuccess("Conta criada", "Conta criada com sucesso. Você pode adicionar outra.");
       // Limpar formulário mas manter modal aberto
       setFormData({
         nome: '',
