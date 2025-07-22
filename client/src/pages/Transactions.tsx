@@ -2232,9 +2232,10 @@ function ChartOfAccountsContent({
               {/* Primeira linha: Categoria e Nome */}
               <div className="grid grid-cols-2 gap-4">
                 {/* Campo Categoria com Material-UI */}
-                <FormControl variant="outlined" size="small" fullWidth>
-                  <InputLabel>Categoria</InputLabel>
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel id="categoria-label">Categoria</InputLabel>
                   <Select
+                    labelId="categoria-label"
                     value={formData.categoria}
                     onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                     label="Categoria"
@@ -2266,9 +2267,10 @@ function ChartOfAccountsContent({
 
 
               {/* Campo Subcategoria de - linha completa com Material-UI */}
-              <FormControl variant="outlined" size="small" fullWidth>
-                <InputLabel>Subcategoria de</InputLabel>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel id="subcategoria-label">Subcategoria de</InputLabel>
                 <Select
+                  labelId="subcategoria-label"
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
                   label="Subcategoria de"
@@ -2287,9 +2289,10 @@ function ChartOfAccountsContent({
               </FormControl>
 
               {/* Campo Incluir como filha de - linha completa com Material-UI */}
-              <FormControl variant="outlined" size="small" fullWidth>
-                <InputLabel>Incluir como filha de</InputLabel>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel id="incluir-como-label">Incluir como filha de</InputLabel>
                 <Select
+                  labelId="incluir-como-label"
                   value={formData.incluirComo}
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                   label="Incluir como filha de"
