@@ -180,30 +180,30 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
       if (response.ok) {
         const data = await response.json();
+        console.log('Dados CNPJ recebidos:', data); // Debug para ver estrutura
         
-        // Processar endereço - CORRIGIDO para pegar CEP do campo correto
-        const cep = data.endereco?.cep || data.cep || '';
+        // Processar CEP de todos os campos possíveis
+        const cep = data.cep || '';
         const cleanCep = cep.replace(/\D/g, '');
-        const formattedCep = cleanCep ? formatZipCode(cleanCep) : '';
+        const formattedCep = cleanCep.length === 8 ? formatZipCode(cleanCep) : '';
         
+        // Mapear todos os possíveis campos da API Brasil API
         updateFormData({
-          socialName: data.razao_social || '',
-          fantasyName: data.nome_fantasia || data.razao_social || '',
+          socialName: data.razao_social || data.nome || '',
+          fantasyName: data.nome_fantasia || data.fantasia || data.razao_social || '',
           zipCode: formattedCep,
-          street: data.endereco?.logradouro || data.logradouro || '',
-          number: data.endereco?.numero || data.numero || '',
-          complement: data.endereco?.complemento || data.complemento || '',
-          neighborhood: data.endereco?.bairro || data.bairro || '',
-          city: data.endereco?.municipio || data.municipio || '',
-          state: data.endereco?.uf || data.uf || '',
+          street: data.logradouro || '',
+          number: data.numero || '',
+          complement: data.complemento || '',
+          neighborhood: data.bairro || '',
+          city: data.municipio || data.cidade || '',
+          state: data.uf || data.estado || '',
           isLoading: false
         });
         
-        // Se temos CEP mas dados incompletos, buscar via ViaCEP
-        const hasCompleteAddress = (data.endereco?.logradouro || data.logradouro) && 
-                                  (data.endereco?.bairro || data.bairro) && 
-                                  (data.endereco?.municipio || data.municipio);
-        if (formattedCep && !hasCompleteAddress) {
+        // Se CEP válido mas dados incompletos, buscar via ViaCEP
+        const hasCompleteAddress = data.logradouro && data.bairro && data.municipio;
+        if (cleanCep.length === 8 && !hasCompleteAddress) {
           await fetchCEPData(cleanCep);
         }
         
@@ -214,6 +214,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           }
         }, 200);
       } else {
+        console.error('Resposta não OK da API CNPJ:', response.status);
         updateFormData({ isLoading: false });
       }
     } catch (error) {
@@ -272,27 +273,34 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   };
 
   /**
-   * Formata CEP - CORRIGIDO para não cortar último dígito
+   * Formata CEP padrão nacional brasileiro (XXXXX-XXX)
    */
   const formatZipCode = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
+    const numbers = value.replace(/\D/g, '').slice(0, 8); // Máximo 8 dígitos
     if (numbers.length <= 5) {
       return numbers;
     }
-    return numbers.replace(/(\d{5})(\d{0,3})/, '$1-$2');
+    return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
   };
 
   /**
-   * Manipula mudança no CEP
+   * Manipula mudança no CEP - CORRIGIDO para formato completo XXXXX-XXX
    */
   const handleZipCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatZipCode(event.target.value);
+    const rawValue = event.target.value;
+    const numbers = rawValue.replace(/\D/g, '').slice(0, 8); // Máximo 8 dígitos
+    
+    // Formatação: até 5 dígitos sem hífen, depois XXXXX-XXX
+    let formatted = numbers;
+    if (numbers.length > 5) {
+      formatted = `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    }
+    
     updateFormData({ zipCode: formatted });
     
-    // Se CEP completo, buscar endereço
-    const cleanCep = formatted.replace(/\D/g, '');
-    if (cleanCep.length === 8) {
-      fetchCEPData(cleanCep);
+    // Se CEP completo (8 dígitos), buscar endereço
+    if (numbers.length === 8) {
+      fetchCEPData(numbers);
     }
   };
 
