@@ -1863,53 +1863,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
         </p>
       </div>
 
-      {/* Resumo das categorias */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Receitas</p>
-                <p className="text-xs text-gray-500">6 contas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Despesas</p>
-                <p className="text-xs text-gray-500">6 contas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Total de Contas</p>
-                <p className="text-xs text-gray-500">12 ativas</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Níveis</p>
-                <p className="text-xs text-gray-500">3 níveis máx.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+
 
       {/* Lista de contas em tabela */}
       <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
