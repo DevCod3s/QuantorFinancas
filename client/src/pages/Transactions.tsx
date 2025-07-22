@@ -2267,8 +2267,8 @@ function ChartOfAccountsContent({
                   <MenuItem value="">
                     <em>Selecione...</em>
                   </MenuItem>
-                  {/* Incluir como filha de: mostrar itens nível 2 */}
-                  {chartAccountsData?.filter(acc => acc.level === 2)
+                  {/* Incluir como filha de: mostrar itens nível 3 */}
+                  {chartAccountsData?.filter(acc => acc.level === 3)
                     .map(acc => (
                       <MenuItem key={acc.id} value={acc.name}>
                         {acc.name}
