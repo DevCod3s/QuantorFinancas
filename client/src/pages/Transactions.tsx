@@ -24,6 +24,13 @@ import { apiRequest } from '../lib/queryClient';
 // Importações de ícones Lucide
 import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown } from "lucide-react";
 
+// Importações Material-UI
+import TextField from '@mui/material/TextField';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+
 // Importações de componentes UI
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -2222,96 +2229,83 @@ function ChartOfAccountsContent({
 
             {/* Campos do formulário */}
             <div className="px-6 space-y-6">
-              {/* Primeira linha: Tipo e Nome */}
+              {/* Primeira linha: Categoria e Nome */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Campo Categoria */}
-                <div className="relative">
-                  <select
-                    className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
+                {/* Campo Categoria com Material-UI */}
+                <FormControl variant="outlined" size="small" fullWidth>
+                  <InputLabel>Categoria</InputLabel>
+                  <Select
                     value={formData.categoria}
                     onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                    label="Categoria"
                   >
-                    <option value=""></option>
+                    <MenuItem value="">
+                      <em>Selecione...</em>
+                    </MenuItem>
                     {/* Categorias dinâmicas baseadas nos itens salvos nível 1 */}
                     {chartAccountsData?.filter(acc => acc.level === 1)
                       .map(acc => (
-                        <option key={acc.id} value={acc.type}>
+                        <MenuItem key={acc.id} value={acc.type}>
                           {acc.name}
-                        </option>
+                        </MenuItem>
                       ))}
-                  </select>
-                  <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                    Categoria
-                  </label>
-                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                    <ChevronDown className="h-4 w-4 text-gray-600" />
-                  </div>
-                </div>
+                  </Select>
+                </FormControl>
 
-                {/* Campo Nome */}
-                <div className="relative">
-                  <input
-                    type="text"
-                    className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 placeholder-transparent"
-                    placeholder=" "
-                    value={formData.nome}
-                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  />
-                  <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                    Nome <span className="text-red-500">*</span>
-                  </label>
-                </div>
+                {/* Campo Nome com Material-UI */}
+                <TextField
+                  label="Nome *"
+                  variant="standard"
+                  value={formData.nome}
+                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  fullWidth
+                  required
+                />
               </div>
 
 
 
-              {/* Campo Subcategoria de - linha completa */}
-              <div className="relative">
-                <select
-                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
+              {/* Campo Subcategoria de - linha completa com Material-UI */}
+              <FormControl variant="outlined" size="small" fullWidth>
+                <InputLabel>Subcategoria de</InputLabel>
+                <Select
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
+                  label="Subcategoria de"
                 >
-                  <option value=""></option>
+                  <MenuItem value="">
+                    <em>Selecione...</em>
+                  </MenuItem>
                   {/* Subcategorias: mostrar itens nível 2 */}
                   {chartAccountsData?.filter(acc => acc.level === 2)
                     .map(acc => (
-                      <option key={acc.id} value={acc.name}>
+                      <MenuItem key={acc.id} value={acc.name}>
                         {acc.name}
-                      </option>
+                      </MenuItem>
                     ))}
-                </select>
-                <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                  Subcategoria de
-                </label>
-                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
-                </div>
-              </div>
+                </Select>
+              </FormControl>
 
-              {/* Campo Incluir como filha de - linha completa */}
-              <div className="relative">
-                <select
-                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
+              {/* Campo Incluir como filha de - linha completa com Material-UI */}
+              <FormControl variant="outlined" size="small" fullWidth>
+                <InputLabel>Incluir como filha de</InputLabel>
+                <Select
                   value={formData.incluirComo}
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
+                  label="Incluir como filha de"
                 >
-                  <option value=""></option>
+                  <MenuItem value="">
+                    <em>Selecione...</em>
+                  </MenuItem>
                   {/* Incluir como filha de: mostrar itens nível 2 */}
                   {chartAccountsData?.filter(acc => acc.level === 2)
                     .map(acc => (
-                      <option key={acc.id} value={acc.name}>
+                      <MenuItem key={acc.id} value={acc.name}>
                         {acc.name}
-                      </option>
+                      </MenuItem>
                     ))}
-                </select>
-                <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                  Incluir como filha de
-                </label>
-                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-600" />
-                </div>
-              </div>
+                </Select>
+              </FormControl>
             </div>
 
             {/* Botões - posicionados conforme a imagem */}
