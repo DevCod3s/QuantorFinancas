@@ -1639,12 +1639,20 @@ function ChartOfAccountsContent({
       const response = await fetch(`/api/chart-accounts/${id}`, {
         method: 'DELETE',
       });
-      if (!response.ok) throw new Error('Falha ao excluir conta');
-      return response.json();
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
+        throw new Error(errorData.error || 'Falha ao excluir conta');
+      }
+      // Para DELETE 204, não há JSON para parsear
+      return response.status === 204 ? { success: true } : response.json();
     },
     onSuccess: () => {
       refetch();
+      showSuccess('Conta excluída', 'A conta foi excluída com sucesso!');
     },
+    onError: (error: any) => {
+      showError('Erro ao excluir', error.message || 'Não foi possível excluir a conta. Tente novamente.');
+    }
   });
 
   // Lista de categorias principais para os selects
@@ -1980,19 +1988,17 @@ function ChartOfAccountsContent({
 
   const handleDeleteAccount = async (accountId: string) => {
     showConfirm(
-      "Uma página inserida em 1d408a1f-ada7-45a8-b2e1-bfa4895fa777-00-8u2fz1lduy0n.riker.replit.dev diz:",
+      "Confirmar Exclusão",
       "Tem certeza que deseja excluir esta conta?",
       async () => {
         try {
           await deleteAccountMutation.mutateAsync(accountId);
-          showSuccess("Conta excluída", "A conta foi excluída com sucesso.");
         } catch (error) {
           console.error('Erro ao excluir conta:', error);
-          showError("Erro ao excluir", "Não foi possível excluir a conta. Tente novamente.");
         }
       }
     );
-  };
+  };;
 
   // Função para salvar conta (compatibilidade)
   const handleSave = (continueAdding = false) => {
