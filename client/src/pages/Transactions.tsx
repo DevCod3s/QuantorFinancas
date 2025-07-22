@@ -1688,22 +1688,71 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   };
 
   const handleSaveAccount = async () => {
-    // Gerar código automaticamente baseado no tipo e sequência
-    const generateCode = () => {
+    // Gerar código hierárquico correto baseado na estrutura
+    const generateHierarchicalCode = () => {
       const typePrefix = formData.tipo === 'receita' ? '1' : '2';
-      const timestamp = Date.now().toString().slice(-4); // Últimos 4 dígitos do timestamp
-      return `${typePrefix}.${timestamp}`;
+      
+      if (!formData.categoria) {
+        // Nível 1: Só tipo (1. ou 2.)
+        return typePrefix;
+      } else if (!formData.subcategoria) {
+        // Nível 2: Tipo + categoria (1.1, 1.2, 2.1, 2.2...)
+        const categoryCount = chartAccountsData?.filter(acc => 
+          acc.type === formData.tipo && acc.level === 2
+        ).length || 0;
+        return `${typePrefix}.${categoryCount + 1}`;
+      } else {
+        // Nível 3: Tipo + categoria + subcategoria (1.1.1, 1.1.2...)
+        const subcategoryCount = chartAccountsData?.filter(acc => 
+          acc.type === formData.tipo && 
+          acc.category === formData.categoria && 
+          acc.level === 3
+        ).length || 0;
+        const parentCategory = chartAccountsData?.find(acc => 
+          acc.type === formData.tipo && 
+          acc.name === formData.categoria && 
+          acc.level === 2
+        );
+        const parentCode = parentCategory ? parentCategory.code : `${typePrefix}.1`;
+        return `${parentCode}.${subcategoryCount + 1}`;
+      }
     };
 
+    // Determinar nível e parentId baseado nos campos preenchidos
+    let level = 1;
+    let parentId = null;
+    let category = null;
+    let subcategory = null;
+
+    if (formData.categoria && !formData.subcategoria) {
+      // Nível 2: categoria
+      level = 2;
+      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.categoria;
+    } else if (formData.categoria && formData.subcategoria) {
+      // Nível 3: subcategoria
+      level = 3;
+      const parentAccount = chartAccountsData?.find(acc => 
+        acc.name === formData.categoria && acc.type === formData.tipo && acc.level === 2
+      );
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.categoria;
+      subcategory = formData.subcategoria;
+    } else {
+      // Nível 1: só tipo (já existem Receita e Despesa)
+      category = formData.tipo === 'receita' ? 'Receita' : 'Despesa';
+    }
+
     const accountData = {
-      userId: "2", // String conforme schema
-      parentId: formData.incluirComo ? parseInt(formData.incluirComo) : null,
-      code: generateCode(),
+      userId: "2",
+      parentId: parentId,
+      code: generateHierarchicalCode(),
       name: formData.nome,
       type: formData.tipo,
-      category: formData.categoria || null,
-      subcategory: formData.subcategoria || null,
-      level: 1, // Por enquanto sempre nível 1, pode ser expandido depois
+      category: category,
+      subcategory: subcategory,
+      level: level,
       isActive: true,
       description: null
     };

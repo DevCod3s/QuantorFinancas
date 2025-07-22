@@ -572,7 +572,7 @@ router.get("/chart-accounts/:id", requireAuth, async (req, res) => {
     }
 
     const account = await storage.getChartOfAccountById(id);
-    if (!account || account.userId !== parseInt(userId)) {
+    if (!account || account.userId !== userId) {
       return res.status(404).json({ error: "Conta não encontrada" });
     }
 
@@ -632,14 +632,14 @@ router.put("/chart-accounts/:id", requireAuth, async (req, res) => {
 
     // Verificar se a conta existe e pertence ao usuário
     const existing = await storage.getChartOfAccountById(id);
-    if (!existing || existing.userId !== parseInt(userId)) {
+    if (!existing || existing.userId !== userId) {
       return res.status(404).json({ error: "Conta não encontrada" });
     }
 
     // Validar dados de entrada
     const validatedData = insertChartOfAccountsSchema.parse({
       ...req.body,
-      userId: parseInt(userId)
+      userId: userId
     });
 
     const updatedAccount = await storage.updateChartOfAccount(id, validatedData);
@@ -674,7 +674,7 @@ router.delete("/chart-accounts/:id", requireAuth, async (req, res) => {
 
     // Verificar se a conta existe e pertence ao usuário
     const existing = await storage.getChartOfAccountById(id);
-    if (!existing || existing.userId !== parseInt(userId)) {
+    if (!existing || existing.userId !== userId) {
       return res.status(404).json({ error: "Conta não encontrada" });
     }
 
