@@ -101,9 +101,9 @@ export function Transactions() {
   const queryClient = useQueryClient();
   
   // Importar dialogs personalizados
-  const { showSuccess, SuccessDialog } = useSuccessDialog();
-  const { showError, ErrorDialog } = useErrorDialog();
-  const { showConfirm, ConfirmDialog } = useConfirmDialog();
+  const { showSuccess, SuccessDialog: SuccessDialogComponent } = useSuccessDialog();
+  const { showError, ErrorDialog: ErrorDialogComponent } = useErrorDialog();
+  const { showConfirm, ConfirmDialog: ConfirmDialogComponent } = useConfirmDialog();
 
   // Query para buscar contas do plano de contas
   const { data: chartAccounts = [], isLoading: isLoadingAccounts, refetch: refetchAccounts } = useQuery({
@@ -2311,9 +2311,9 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       )}
 
       {/* Dialogs personalizados */}
-      <SuccessDialog />
-      <ErrorDialog />
-      <ConfirmDialog />
+      <SuccessDialogComponent />
+      <ErrorDialogComponent />
+      <ConfirmDialogComponent />
     </div>
   );
 }
