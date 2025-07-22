@@ -272,3 +272,7 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Listas Inteligentes**: "Subcategoria de" mostra nível 2, "Incluir como filha de" mostra nível 2
   - **Lógica Hierárquica Correta**: Implementação definitiva com filtros precisos nos dropdowns
   - **CRUD Completo**: Criar, editar, visualizar e excluir contas com persistência PostgreSQL
+  - **Campos Material-UI**: Modal com componentes padronizados (Janeiro 2025)
+    • Campo "Nome": TextField variant="standard"
+    • Campos dropdown: FormControl/Select/MenuItem variant="standard" com labelId
+    • Categoria, Subcategoria de, Incluir como filha de seguem padrão Material-UI oficial
