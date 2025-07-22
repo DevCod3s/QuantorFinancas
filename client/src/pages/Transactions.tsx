@@ -1764,15 +1764,15 @@ function ChartOfAccountsContent({
       }
     };
 
-    // Determinar nível e parentId baseado nos campos preenchidos CORRETAMENTE
-    let level = 1; // Padrão: criar nível 1 se só Nome preenchido
+    // LÓGICA HIERÁRQUICA CORRETA DO PLANO DE CONTAS
+    let level = 1;
     let parentId = null;
     let category = null;
     let subcategory = null;
-    let type = formData.nome.toLowerCase(); // Usar nome como tipo se não especificado
+    let type = formData.nome.toLowerCase();
 
     if (formData.categoria && formData.subcategoria && formData.incluirComo) {
-      // Nível 4: quando tem Categoria + Subcategoria de + Incluir como filha de
+      // Nível 4: quando tem TODOS os campos preenchidos
       level = 4;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.incluirComo && acc.level === 3
@@ -1780,9 +1780,9 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = formData.categoria;
-    } else if (formData.subcategoria) {
-      // Nível 3: quando tem Subcategoria de (independente da Categoria)
+      type = parentAccount ? parentAccount.type : formData.categoria;
+    } else if (formData.categoria && formData.subcategoria) {
+      // Nível 3: quando tem Categoria + Subcategoria de
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1790,20 +1790,20 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      // Se tem categoria selecionada, usar ela como tipo, senão usar o tipo do pai
-      type = formData.categoria || (parentAccount ? parentAccount.type : formData.nome.toLowerCase());
+      type = parentAccount ? parentAccount.type : formData.categoria;
     } else if (formData.categoria) {
-      // Nível 2: quando tem só Categoria selecionada  
+      // Nível 2: quando tem só Categoria selecionada (pai deve ser nível 1)
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.level === 1
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
-      type = formData.categoria;
+      type = parentAccount ? parentAccount.type : formData.categoria;
     } else {
-      // Nível 1: novo tipo principal (só Nome)
+      // Nível 1: novo tipo principal (só Nome) - sem pai
       level = 1;
+      parentId = null;
       category = formData.nome;
       type = formData.nome.toLowerCase();
     }
