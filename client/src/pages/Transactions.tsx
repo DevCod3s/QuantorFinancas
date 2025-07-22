@@ -2002,8 +2002,14 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                  boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
                }}>
             {/* Cabeçalho */}
-            <div className="p-6 pb-4">
+            <div className="flex items-center justify-between p-6 pb-4">
               <h2 className="text-lg font-semibold text-gray-800">Nova categoria</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
 
             {/* Campos do formulário */}
@@ -2055,11 +2061,10 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                 />
                 <datalist id="categorias-list">
-                  <option value="Administrativa" />
-                  <option value="Comercial" />
-                  <option value="Financeira" />
-                  <option value="Operacional" />
-                  <option value="Pessoal" />
+                  {chartAccountsData?.filter(acc => acc.level === 2 && acc.type === formData.tipo)
+                    .map(acc => (
+                      <option key={acc.id} value={acc.name} />
+                    ))}
                 </datalist>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Categoria <span className="text-red-500">*</span>
@@ -2077,11 +2082,13 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
                 />
                 <datalist id="subcategorias-list">
-                  <option value="Pessoal" />
-                  <option value="Vendas" />
-                  <option value="Marketing" />
-                  <option value="Tecnologia" />
-                  <option value="Recursos Humanos" />
+                  {chartAccountsData?.filter(acc => 
+                    acc.level === 3 && 
+                    acc.type === formData.tipo &&
+                    acc.category === formData.categoria
+                  ).map(acc => (
+                    <option key={acc.id} value={acc.subcategory} />
+                  ))}
                 </datalist>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Subcategoria de
@@ -2096,11 +2103,14 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
                   <option value=""></option>
-                  <option value="Pessoal">Pessoal</option>
-                  <option value="Vendas">Vendas</option>
-                  <option value="Marketing">Marketing</option>
-                  <option value="Tecnologia">Tecnologia</option>
-                  <option value="Recursos Humanos">Recursos Humanos</option>
+                  {chartAccountsData?.filter(acc => 
+                    acc.level === 3 && 
+                    acc.type === formData.tipo
+                  ).map(acc => (
+                    <option key={acc.id} value={acc.subcategory}>
+                      {acc.subcategory}
+                    </option>
+                  ))}
                 </select>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Incluir como filha de
