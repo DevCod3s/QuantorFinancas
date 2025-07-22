@@ -1953,7 +1953,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     value={formData.tipo}
                     onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                   >
-                    <option value="">Despesa</option>
+                    <option value=""></option>
                     <option value="receita">Receita</option>
                     <option value="despesa">Despesa</option>
                   </select>
