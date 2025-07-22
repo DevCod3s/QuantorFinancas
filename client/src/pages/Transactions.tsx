@@ -1688,21 +1688,30 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   };
 
   const handleSaveAccount = async () => {
+    // Validação - apenas Nome é obrigatório
+    if (!formData.nome) {
+      alert('Nome é obrigatório');
+      return;
+    }
+
     // Gerar código hierárquico correto baseado na estrutura
     const generateHierarchicalCode = () => {
+      if (!formData.tipo) {
+        // Nível 1: Novo tipo (3, 4, 5...)
+        const maxCode = Math.max(...(chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [0]));
+        return (maxCode + 1).toString();
+      }
+      
       const typePrefix = formData.tipo === 'receita' ? '1' : '2';
       
       if (!formData.categoria) {
-        // Nível 1: Só tipo (1. ou 2.)
-        return typePrefix;
-      } else if (!formData.subcategoria) {
-        // Nível 2: Tipo + categoria (1.1, 1.2, 2.1, 2.2...)
+        // Nível 2: Categoria principal (1.1, 1.2, 2.1, 2.2...)
         const categoryCount = chartAccountsData?.filter(acc => 
           acc.type === formData.tipo && acc.level === 2
         ).length || 0;
         return `${typePrefix}.${categoryCount + 1}`;
       } else {
-        // Nível 3: Tipo + categoria + subcategoria (1.1.1, 1.1.2...)
+        // Nível 3: Subcategoria (1.1.1, 1.1.2...)
         const subcategoryCount = chartAccountsData?.filter(acc => 
           acc.type === formData.tipo && 
           acc.category === formData.categoria && 
@@ -1719,26 +1728,33 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     };
 
     // Determinar nível e parentId baseado nos campos preenchidos
-    let level = 2; // Padrão: sempre criar categoria (nível 2)
+    let level = 1; // Padrão: criar nível 1 se só Nome preenchido
     let parentId = null;
     let category = null;
     let subcategory = null;
+    let type = formData.nome.toLowerCase(); // Usar nome como tipo se não especificado
 
-    if (formData.subcategoria) {
-      // Nível 3: subcategoria (ex: "Pães", "Pães Especiais")
+    if (formData.tipo && formData.categoria) {
+      // Nível 3: subcategoria
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.type === formData.tipo && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.categoria;
-      subcategory = formData.subcategoria;
-    } else {
-      // Nível 2: categoria (ex: "RECEITA OPERACIONAL BRUTA")
+      subcategory = formData.nome;
+      type = formData.tipo;
+    } else if (formData.tipo) {
+      // Nível 2: categoria
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
       parentId = parentAccount ? parentAccount.id : null;
-      category = formData.categoria;
+      category = formData.nome;
+      type = formData.tipo;
+    } else {
+      // Nível 1: novo tipo
+      level = 1;
+      category = formData.nome;
     }
 
     const accountData = {
@@ -1746,7 +1762,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       parentId: parentId,
       code: generateHierarchicalCode(),
       name: formData.nome,
-      type: formData.tipo,
+      type: type,
       category: category,
       subcategory: subcategory,
       level: level,
@@ -1767,15 +1783,94 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   };
 
   const handleSaveAndContinue = async () => {
-    await handleSaveAccount();
-    // Limpar formulário mas manter modal aberto
-    setFormData({
-      nome: '',
-      tipo: '',
-      categoria: '',
-      subcategoria: '',
-      incluirComo: ''
-    });
+    // Validação - apenas Nome é obrigatório
+    if (!formData.nome) {
+      alert('Nome é obrigatório');
+      return;
+    }
+
+    // Mesma lógica do handleSaveAccount mas sem fechar modal
+    const generateHierarchicalCode = () => {
+      if (!formData.tipo) {
+        const maxCode = Math.max(...(chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [0]));
+        return (maxCode + 1).toString();
+      }
+      
+      const typePrefix = formData.tipo === 'receita' ? '1' : '2';
+      
+      if (!formData.categoria) {
+        const categoryCount = chartAccountsData?.filter(acc => 
+          acc.type === formData.tipo && acc.level === 2
+        ).length || 0;
+        return `${typePrefix}.${categoryCount + 1}`;
+      } else {
+        const subcategoryCount = chartAccountsData?.filter(acc => 
+          acc.type === formData.tipo && 
+          acc.category === formData.categoria && 
+          acc.level === 3
+        ).length || 0;
+        const parentCategory = chartAccountsData?.find(acc => 
+          acc.type === formData.tipo && 
+          acc.name === formData.categoria && 
+          acc.level === 2
+        );
+        const parentCode = parentCategory ? parentCategory.code : `${typePrefix}.1`;
+        return `${parentCode}.${subcategoryCount + 1}`;
+      }
+    };
+
+    let level = 1;
+    let parentId = null;
+    let category = null;
+    let subcategory = null;
+    let type = formData.nome.toLowerCase();
+
+    if (formData.tipo && formData.categoria) {
+      level = 3;
+      const parentAccount = chartAccountsData?.find(acc => 
+        acc.name === formData.categoria && acc.type === formData.tipo && acc.level === 2
+      );
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.categoria;
+      subcategory = formData.nome;
+      type = formData.tipo;
+    } else if (formData.tipo) {
+      level = 2;
+      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      parentId = parentAccount ? parentAccount.id : null;
+      category = formData.nome;
+      type = formData.tipo;
+    } else {
+      level = 1;
+      category = formData.nome;
+    }
+
+    const accountData = {
+      userId: "2",
+      parentId: parentId,
+      code: generateHierarchicalCode(),
+      name: formData.nome,
+      type: type,
+      category: category,
+      subcategory: subcategory,
+      level: level,
+      isActive: true,
+      description: null
+    };
+
+    try {
+      await createAccountMutation.mutateAsync(accountData);
+      // Limpar formulário mas manter modal aberto
+      setFormData({
+        nome: '',
+        tipo: '',
+        categoria: '',
+        subcategoria: '',
+        incluirComo: ''
+      });
+    } catch (error) {
+      console.error('Erro ao salvar e continuar:', error);
+    }
   };
 
   const handleDeleteAccount = async (accountId: string) => {
@@ -2021,8 +2116,13 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
                   >
                     <option value=""></option>
-                    <option value="receita">Receita</option>
-                    <option value="despesa">Despesa</option>
+                    {/* Tipos dinâmicos baseados nos itens salvos nível 1 */}
+                    {chartAccountsData?.filter(acc => acc.level === 1)
+                      .map(acc => (
+                        <option key={acc.id} value={acc.type}>
+                          {acc.name}
+                        </option>
+                      ))}
                   </select>
                   <label className="absolute left-0 -top-3 text-xs text-gray-600">
                     Tipo
@@ -2064,32 +2164,32 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                     ))}
                 </datalist>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                  Categoria <span className="text-red-500">*</span>
+                  Categoria
                 </label>
               </div>
 
               {/* Campo Subcategoria de - linha completa */}
               <div className="relative">
-                <input
-                  type="text"
-                  list="subcategorias-list"
-                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 placeholder-transparent"
-                  placeholder=" "
+                <select
+                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
-                />
-                <datalist id="subcategorias-list">
-                  {chartAccountsData?.filter(acc => 
-                    acc.level === 3 && 
-                    acc.type === formData.tipo &&
-                    acc.category === formData.categoria
-                  ).map(acc => (
-                    <option key={acc.id} value={acc.subcategory} />
-                  ))}
-                </datalist>
+                >
+                  <option value=""></option>
+                  {/* Subcategorias: mostrar itens nível 1 */}
+                  {chartAccountsData?.filter(acc => acc.level === 1)
+                    .map(acc => (
+                      <option key={acc.id} value={acc.name}>
+                        {acc.name}
+                      </option>
+                    ))}
+                </select>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Subcategoria de
                 </label>
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-600" />
+                </div>
               </div>
 
               {/* Campo Incluir como filha de - linha completa */}
@@ -2100,14 +2200,13 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
                   <option value=""></option>
-                  {chartAccountsData?.filter(acc => 
-                    acc.level === 3 && 
-                    acc.type === formData.tipo
-                  ).map(acc => (
-                    <option key={acc.id} value={acc.subcategory}>
-                      {acc.subcategory}
-                    </option>
-                  ))}
+                  {/* Incluir como filha de: mostrar itens nível 2 */}
+                  {chartAccountsData?.filter(acc => acc.level === 2)
+                    .map(acc => (
+                      <option key={acc.id} value={acc.name}>
+                        {acc.name}
+                      </option>
+                    ))}
                 </select>
                 <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Incluir como filha de
