@@ -1519,7 +1519,13 @@ export function Transactions() {
                 value: "plano-contas",
                 label: "Plano de Contas",
                 icon: <FileText className="h-4 w-4" />,
-                content: <ChartOfAccountsContent isModalOpen={chartAccountModalOpen} setIsModalOpen={setChartAccountModalOpen} />
+                content: <ChartOfAccountsContent 
+                  isModalOpen={chartAccountModalOpen} 
+                  setIsModalOpen={setChartAccountModalOpen}
+                  showSuccess={showSuccess}
+                  showError={showError}
+                  showConfirm={showConfirm}
+                />
               },
               {
                 value: "demonstrativo-resultados",
@@ -1545,7 +1551,10 @@ export function Transactions() {
         </TabsContent>
       </Tabs>
 
-
+      {/* Dialogs personalizados no componente principal */}
+      <SuccessDialogComponent />
+      <ErrorDialogComponent />
+      <ConfirmDialogComponent />
     </div>
   );
 }
@@ -1554,7 +1563,19 @@ export function Transactions() {
  * Componente para gerenciamento do Plano de Contas
  * Inclui modal de cadastro, lista hierárquica e funcionalidades completas
  */
-function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: boolean, setIsModalOpen: (open: boolean) => void }) {
+function ChartOfAccountsContent({ 
+  isModalOpen, 
+  setIsModalOpen,
+  showSuccess,
+  showError,
+  showConfirm 
+}: { 
+  isModalOpen: boolean, 
+  setIsModalOpen: (open: boolean) => void,
+  showSuccess: (title: string, message: string) => void,
+  showError: (title: string, message: string) => void,
+  showConfirm: (title: string, message: string, onConfirm: () => void) => void
+}) {
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
   
@@ -2310,10 +2331,6 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
         </div>
       )}
 
-      {/* Dialogs personalizados */}
-      <SuccessDialogComponent />
-      <ErrorDialogComponent />
-      <ConfirmDialogComponent />
     </div>
   );
 }
