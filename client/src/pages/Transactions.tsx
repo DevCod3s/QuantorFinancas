@@ -90,7 +90,6 @@ export function Transactions() {
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [formData, setFormData] = useState({
-    tipo: '',
     nome: '',
     categoria: '',
     subcategoria: '',
@@ -2189,8 +2188,8 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
                 >
                   <option value=""></option>
-                  {/* Subcategorias: mostrar itens nível 1 */}
-                  {chartAccountsData?.filter(acc => acc.level === 1)
+                  {/* Subcategorias: mostrar itens nível 2 */}
+                  {chartAccountsData?.filter(acc => acc.level === 2)
                     .map(acc => (
                       <option key={acc.id} value={acc.name}>
                         {acc.name}
@@ -2213,8 +2212,8 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
                   <option value=""></option>
-                  {/* Incluir como filha de: mostrar itens nível 2 */}
-                  {chartAccountsData?.filter(acc => acc.level === 2)
+                  {/* Incluir como filha de: mostrar itens nível 3 */}
+                  {chartAccountsData?.filter(acc => acc.level === 3)
                     .map(acc => (
                       <option key={acc.id} value={acc.name}>
                         {acc.name}
