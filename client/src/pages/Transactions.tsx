@@ -1781,8 +1781,8 @@ function ChartOfAccountsContent({
       category = formData.nome;
       subcategory = formData.nome;
       type = parentAccount ? parentAccount.type : formData.categoria;
-    } else if (formData.categoria && formData.subcategoria) {
-      // Nível 3: quando tem Categoria + Subcategoria de
+    } else if (formData.subcategoria) {
+      // Nível 3: quando tem Subcategoria de (sem Incluir como filha de)
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1790,7 +1790,7 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : formData.categoria;
+      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
     } else if (formData.categoria) {
       // Nível 2: quando tem só Categoria selecionada (pai deve ser nível 1)
       level = 2;
@@ -1904,7 +1904,7 @@ function ChartOfAccountsContent({
       subcategory = formData.nome;
       type = formData.categoria;
     } else if (formData.subcategoria) {
-      // Nível 3: quando tem Subcategoria de (independente da Categoria)
+      // Nível 3: quando tem Subcategoria de (sem Incluir como filha de)
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1912,8 +1912,7 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      // Se tem categoria selecionada, usar ela como tipo, senão usar o tipo do pai
-      type = formData.categoria || (parentAccount ? parentAccount.type : formData.nome.toLowerCase());
+      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
     } else if (formData.categoria) {
       // Nível 2: quando tem só Categoria selecionada  
       level = 2;
