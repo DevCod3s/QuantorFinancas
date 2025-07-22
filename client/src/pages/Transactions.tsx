@@ -1688,12 +1688,24 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
   };
 
   const handleSaveAccount = async () => {
+    // Gerar código automaticamente baseado no tipo e sequência
+    const generateCode = () => {
+      const typePrefix = formData.tipo === 'receita' ? '1' : '2';
+      const timestamp = Date.now().toString().slice(-4); // Últimos 4 dígitos do timestamp
+      return `${typePrefix}.${timestamp}`;
+    };
+
     const accountData = {
+      userId: "2", // String conforme schema
+      parentId: formData.incluirComo ? parseInt(formData.incluirComo) : null,
+      code: generateCode(),
       name: formData.nome,
       type: formData.tipo,
-      category: formData.categoria,
-      subcategory: formData.subcategoria,
-      parentId: formData.incluirComo || null,
+      category: formData.categoria || null,
+      subcategory: formData.subcategoria || null,
+      level: 1, // Por enquanto sempre nível 1, pode ser expandido depois
+      isActive: true,
+      description: null
     };
 
     try {

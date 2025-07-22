@@ -597,7 +597,7 @@ router.post("/chart-accounts", requireAuth, async (req, res) => {
     // Validar dados de entrada
     const validatedData = insertChartOfAccountsSchema.parse({
       ...req.body,
-      userId: parseInt(userId)
+      userId: userId
     });
 
     const newAccount = await storage.createChartOfAccount(validatedData);
