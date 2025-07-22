@@ -1725,13 +1725,13 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     let subcategory = null;
 
     if (formData.categoria && !formData.subcategoria) {
-      // Nível 2: categoria
+      // Nível 2: categoria (ex: "RECEITA OPERACIONAL BRUTA")
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.categoria;
     } else if (formData.categoria && formData.subcategoria) {
-      // Nível 3: subcategoria
+      // Nível 3: subcategoria (ex: "Pães", "Pães Especiais")
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.type === formData.tipo && acc.level === 2
@@ -1741,6 +1741,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       subcategory = formData.subcategoria;
     } else {
       // Nível 1: só tipo (já existem Receita e Despesa)
+      level = 1;
       category = formData.tipo === 'receita' ? 'Receita' : 'Despesa';
     }
 
