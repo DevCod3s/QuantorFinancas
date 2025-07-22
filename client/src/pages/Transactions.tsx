@@ -1863,67 +1863,164 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
         </p>
       </div>
 
-      {/* Resumo das categorias */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Receitas</p>
-                <p className="text-xs text-gray-500">6 contas</p>
-              </div>
+      {/* Cards de métricas baseado na imagem */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Receitas */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-2 h-2 bg-green-500 rounded-full mt-1"></div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Receitas</h4>
+              <p className="text-xs text-gray-500">
+                {chartAccounts.filter(acc => acc.type === 'receita').length} contas
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Despesas</p>
-                <p className="text-xs text-gray-500">6 contas</p>
-              </div>
+          </div>
+        </div>
+        
+        {/* Despesas */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-2 h-2 bg-red-500 rounded-full mt-1"></div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Despesas</h4>
+              <p className="text-xs text-gray-500">
+                {chartAccounts.filter(acc => acc.type === 'despesa').length} contas
+              </p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Total de Contas</p>
-                <p className="text-xs text-gray-500">12 ativas</p>
-              </div>
+          </div>
+        </div>
+        
+        {/* Total de Contas */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Total de Contas</h4>
+              <p className="text-xs text-gray-500">{chartAccounts.length} ativas</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-              <div>
-                <p className="text-sm font-medium">Níveis</p>
-                <p className="text-xs text-gray-500">3 níveis máx.</p>
-              </div>
+          </div>
+        </div>
+        
+        {/* Níveis */}
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-start gap-3">
+            <div className="w-2 h-2 bg-purple-500 rounded-full mt-1"></div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-900 mb-1">Níveis</h4>
+              <p className="text-xs text-gray-500">
+                {Math.max(...chartAccounts.map(acc => acc.level || 1), 0)} níveis máx.
+              </p>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Lista de contas em tabela */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Estrutura do Plano de Contas
-          </CardTitle>
-          <CardDescription>
-            Visualização hierárquica das contas organizadas por categoria
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
+      {/* Lista simples de contas */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="p-4 border-b border-gray-200">
+          <h4 className="text-sm font-medium text-gray-900">Lista de Contas</h4>
+          <p className="text-xs text-gray-500 mt-1">
+            {chartAccounts.length === 0 ? 'Nenhuma conta cadastrada' : `${chartAccounts.length} contas cadastradas`}
+          </p>
+        </div>
+        <div className="p-4">
+          {chartAccounts.length === 0 ? (
+            <div className="text-center py-8">
+              <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-sm text-gray-500 mb-2">Nenhuma conta cadastrada</p>
+              <p className="text-xs text-gray-400">
+                Clique no botão "+" para criar sua primeira conta
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {chartAccounts.map((account: any, index: number) => (
+                <div key={account.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-2 h-2 rounded-full ${
+                      account.type === 'receita' ? 'bg-green-500' :
+                      account.type === 'despesa' ? 'bg-red-500' :
+                      account.type === 'ativo' ? 'bg-blue-500' : 'bg-purple-500'
+                    }`}></div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">{account.name}</p>
+                      <p className="text-xs text-gray-500">
+                        {account.type.charAt(0).toUpperCase() + account.type.slice(1)} • 
+                        Nível {account.level || 1}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={() => openEditModal(account)}
+                      className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors"
+                      title="Editar"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => openViewModal(account)}
+                      className="p-1 text-gray-400 hover:text-green-600 rounded transition-colors"
+                      title="Visualizar"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteAccount(account.id)}
+                      className="p-1 text-gray-400 hover:text-red-600 rounded transition-colors"
+                      title="Excluir"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// SAMPLE DATA - será removido quando o backend estiver completo
+const SAMPLE_CHART_OF_ACCOUNTS = [
+  // Receitas
+  {
+    id: 1,
+    code: "REC-001",
+    name: "Receitas de Vendas",
+    type: "receita" as const,
+    level: 1,
+    parentId: null
+  },
+  {
+    id: 2,
+    code: "REC-002", 
+    name: "Receitas Financeiras",
+    type: "receita" as const,
+    level: 1,
+    parentId: null
+  },
+  // Despesas
+  {
+    id: 3,
+    code: "DES-001",
+    name: "Custos de Vendas",
+    type: "despesa" as const,
+    level: 1,
+    parentId: null
+  },
+  {
+    id: 4,
+    code: "DES-002",
+    name: "Despesas Administrativas", 
+    type: "despesa" as const,
+    level: 1,
+    parentId: null
+  }
+];
             <table className="w-full">
               <thead className="bg-gray-50 border-b sticky top-0">
                 <tr>
