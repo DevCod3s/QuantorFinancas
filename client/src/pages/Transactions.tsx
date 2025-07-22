@@ -1942,7 +1942,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                           <Eye className="h-4 w-4" />
                         </button>
                         <button 
-                          onClick={() => handleDeleteAccount(account)}
+                          onClick={() => handleDeleteAccount(account.id.toString())}
                           className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-100 rounded transition-colors"
                           title="Excluir conta"
                         >
