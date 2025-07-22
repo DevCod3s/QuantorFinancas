@@ -274,15 +274,15 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
   /**
    * Formata CEP padrão nacional brasileiro (XXXXX-XXX)
-   * CORRIGIDO: Não limita o slice, permite todos os 8 dígitos
+   * DEFINITIVO: Mostra TODOS os dígitos após o hífen
    */
   const formatZipCode = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 5) {
       return numbers;
     }
-    // Garantir que todos os dígitos após o hífen apareçam
-    return `${numbers.substring(0, 5)}-${numbers.substring(5, 8)}`;
+    // CORRIGIDO: substring(5) sem limite para pegar TODOS os dígitos restantes
+    return `${numbers.substring(0, 5)}-${numbers.substring(5)}`;
   };
 
   /**
