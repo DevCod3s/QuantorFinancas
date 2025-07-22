@@ -274,33 +274,35 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
 
   /**
    * Formata CEP padrão nacional brasileiro (XXXXX-XXX)
+   * CORRIGIDO: Não limita o slice, permite todos os 8 dígitos
    */
   const formatZipCode = (value: string) => {
-    const numbers = value.replace(/\D/g, '').slice(0, 8); // Máximo 8 dígitos
+    const numbers = value.replace(/\D/g, '');
     if (numbers.length <= 5) {
       return numbers;
     }
-    return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    // Garantir que todos os dígitos após o hífen apareçam
+    return `${numbers.substring(0, 5)}-${numbers.substring(5, 8)}`;
   };
 
   /**
-   * Manipula mudança no CEP - CORRIGIDO para formato completo XXXXX-XXX
+   * Manipula mudança no CEP - FORMATO NACIONAL CORRETO XXXXX-XXX
    */
   const handleZipCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    const numbers = rawValue.replace(/\D/g, '').slice(0, 8); // Máximo 8 dígitos
+    const numbers = rawValue.replace(/\D/g, '');
     
-    // Formatação: até 5 dígitos sem hífen, depois XXXXX-XXX
-    let formatted = numbers;
-    if (numbers.length > 5) {
-      formatted = `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
-    }
+    // Limitar a 8 dígitos máximo
+    const limitedNumbers = numbers.substring(0, 8);
+    
+    // Aplicar formatação usando a função correta
+    const formatted = formatZipCode(limitedNumbers);
     
     updateFormData({ zipCode: formatted });
     
     // Se CEP completo (8 dígitos), buscar endereço
-    if (numbers.length === 8) {
-      fetchCEPData(numbers);
+    if (limitedNumbers.length === 8) {
+      fetchCEPData(limitedNumbers);
     }
   };
 
