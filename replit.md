@@ -258,3 +258,12 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **Preview em Tempo Real**: Visualização do contrato gerado pela IA
   - **API Backend**: Endpoint /generate-contract com OpenAI integrado
   - **Validação Completa**: Estados de validação em cada etapa com feedback visual
+- **Plano de Contas Hierárquico Simplificado**: Sistema de categorização empresarial com 3 níveis funcionais (Janeiro 2025)
+  - **Modal "Nova categoria"**: Design baseado em imagem de referência com botão X para cancelar
+  - **Campo Nome Único Obrigatório**: Simplificação onde apenas Nome é requerido para criar categoria nível 1
+  - **Hierarquia Automática**: Códigos gerados automaticamente (1.Receita, 2.Despesa, 3.4.5.Novos tipos)
+  - **Dropdowns Dinâmicos**: Listas baseadas apenas em dados salvos no banco PostgreSQL
+  - **Botão "Salvar e Continuar"**: Funcionalidade que limpa campos mas mantém modal aberto
+  - **Estrutura 3 Níveis**: Tipo (1.) → Categoria (1.1) → Subcategoria (1.1.1)
+  - **Listas Inteligentes**: Subcategoria mostra nível 1, "Incluir como filha" mostra nível 2
+  - **CRUD Completo**: Criar, editar, visualizar e excluir contas com persistência PostgreSQL

@@ -2147,26 +2147,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                 </div>
               </div>
 
-              {/* Campo Categoria - linha completa */}
-              <div className="relative">
-                <input
-                  type="text"
-                  list="categorias-list"
-                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 placeholder-transparent"
-                  placeholder=" "
-                  value={formData.categoria}
-                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-                />
-                <datalist id="categorias-list">
-                  {chartAccountsData?.filter(acc => acc.level === 2 && acc.type === formData.tipo)
-                    .map(acc => (
-                      <option key={acc.id} value={acc.name} />
-                    ))}
-                </datalist>
-                <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                  Categoria
-                </label>
-              </div>
+
 
               {/* Campo Subcategoria de - linha completa */}
               <div className="relative">
