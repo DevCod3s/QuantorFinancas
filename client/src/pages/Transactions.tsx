@@ -22,7 +22,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown } from "lucide-react";
 
 // Importações de componentes UI
 import { Button } from "@/components/ui/button";
@@ -1865,140 +1865,173 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
 
 
-      {/* Lista de contas em tabela */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+      {/* Lista de contas em tabela - Modelo baseado na imagem */}
+      <div className="bg-white rounded-lg border border-gray-200">
+        {/* Cabeçalho da tabela */}
+        <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
+          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <FileText className="h-5 w-5" />
             Estrutura do Plano de Contas
-          </CardTitle>
-          <CardDescription>
-            Visualização hierárquica das contas organizadas por categoria
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b sticky top-0">
-                <tr>
-                  <th className="text-left p-4 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center gap-2">
-                      Código
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center gap-2">
-                      Nome da Conta
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700 cursor-pointer hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center gap-2">
-                      Tipo
-                      <ChevronDown className="h-4 w-4 text-gray-400" />
-                    </div>
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700">
+          </h3>
+        </div>
+        
+        {/* Tabela */}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-white border-b border-gray-200">
+              <tr>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-1">
+                    # 
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-1">
+                    Código
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-1">
+                    Nome da Conta
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-1">
+                    Tipo
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center gap-1">
                     Nível
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700">
-                    Hierarquia
-                  </th>
-                  <th className="text-left p-4 font-medium text-gray-700">
-                    Ações
-                  </th>
+                    <ArrowUpDown className="h-3 w-3" />
+                  </div>
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {isLoadingAccounts ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    Carregando contas...
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {isLoadingAccounts ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">
-                      Carregando contas...
+              ) : chartAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                    Nenhuma conta cadastrada. Clique no botão "+" para criar a primeira conta.
+                  </td>
+                </tr>
+              ) : (
+                chartAccounts.map((account: any, index: number) => (
+                  <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {index + 1}
                     </td>
-                  </tr>
-                ) : chartAccounts.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center text-gray-500">
-                      Nenhuma conta cadastrada. Clique no botão "+" para criar a primeira conta.
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {account.code || `${account.type.toUpperCase()}-${String(index + 1).padStart(3, '0')}`}
+                      </span>
                     </td>
-                  </tr>
-                ) : (
-                  chartAccounts.map((account: any, index: number) => (
-                    <tr key={account.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="p-4">
-                        <span className="font-mono text-sm text-gray-600 bg-gray-100 px-2 py-1 rounded">
-                          {account.code || `${account.type.toUpperCase()}-${String(index + 1).padStart(3, '0')}`}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div style={{ paddingLeft: `${(account.level || 1) * 20}px` }} className="flex items-center gap-2">
-                          {(account.level || 1) > 1 && (
-                            <div className="text-gray-400">
-                              {'└─ '.repeat(1)}
-                            </div>
-                          )}
-                          <span className="font-medium text-gray-900">{account.name}</span>
-                        </div>
-                        {account.description && (
-                          <p className="text-sm text-gray-500 mt-1" style={{ paddingLeft: `${(account.level || 1) * 20}px` }}>
-                            {account.description}
-                          </p>
+                    <td className="px-6 py-4">
+                      <div style={{ paddingLeft: `${(account.level || 1) * 20}px` }} className="flex items-center gap-2">
+                        {(account.level || 1) > 1 && (
+                          <div className="text-gray-400 text-sm">
+                            {'└─ '.repeat(1)}
+                          </div>
                         )}
-                      </td>
-                      <td className="p-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          account.type === 'receita' ? 'bg-green-100 text-green-800' :
-                          account.type === 'despesa' ? 'bg-red-100 text-red-800' :
-                          account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
-                          'bg-purple-100 text-purple-800'
-                        }`}>
-                          {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="text-sm text-gray-600">
-                          Nível {account.level || 1}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className="text-sm text-gray-500">
-                          {account.parentId ? `Filha de: ${chartAccounts.find((c: any) => c.id === account.parentId)?.name || 'N/A'}` : 'Conta raiz'}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <button 
-                            onClick={() => openEditModal(account)}
-                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
-                            title="Editar conta"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => openViewModal(account)}
-                            className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded transition-colors"
-                            title="Visualizar conta"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteAccount(account)}
-                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors"
-                            title="Excluir conta"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">{account.name}</div>
+                          {account.description && (
+                            <div className="text-sm text-gray-500">{account.description}</div>
+                          )}
                         </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        account.type === 'receita' ? 'bg-green-100 text-green-800' :
+                        account.type === 'despesa' ? 'bg-red-100 text-red-800' :
+                        account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
+                        'bg-purple-100 text-purple-800'
+                      }`}>
+                        {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        Nível {account.level || 1}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => openEditModal(account)}
+                          className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-100 rounded transition-colors"
+                          title="Editar conta"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => openViewModal(account)}
+                          className="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-100 rounded transition-colors"
+                          title="Visualizar conta"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAccount(account)}
+                          className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-100 rounded transition-colors"
+                          title="Excluir conta"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Rodapé com paginação similar à imagem */}
+        {chartAccounts.length > 0 && (
+          <div className="bg-white px-6 py-3 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <select className="border border-gray-300 rounded px-2 py-1 text-sm">
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+              
+              <div className="text-sm text-gray-700">
+                Mostrando 1 a {Math.min(10, chartAccounts.length)} de {chartAccounts.length} resultados
+              </div>
+              
+              <div className="flex items-center gap-1">
+                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50" disabled>
+                  Anterior
+                </button>
+                <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded">
+                  1
+                </button>
+                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
+                  Próxima
+                </button>
+              </div>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
 
 
