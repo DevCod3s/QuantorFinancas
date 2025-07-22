@@ -220,14 +220,14 @@ export function Transactions() {
       showError('Nome da conta é obrigatório');
       return;
     }
-    if (!formData.tipo) {
+    if (!formData.categoria) {
       showError('Tipo da conta é obrigatório');
       return;
     }
 
     const accountData = {
       name: formData.nome,
-      type: formData.tipo,
+      type: formData.categoria,
       category: formData.categoria || null,
       subcategory: formData.subcategoria || null,
       parentId: formData.incluirComo ? parseInt(formData.incluirComo) : null,
@@ -252,14 +252,14 @@ export function Transactions() {
       showError('Nome da conta é obrigatório');
       return;
     }
-    if (!formData.tipo) {
+    if (!formData.categoria) {
       showError('Tipo da conta é obrigatório');
       return;
     }
 
     const accountData = {
       name: formData.nome,
-      type: formData.tipo,
+      type: formData.categoria,
       category: formData.categoria || null,
       subcategory: formData.subcategoria || null,
       parentId: formData.incluirComo ? parseInt(formData.incluirComo) : null,
@@ -1653,7 +1653,6 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     setSelectedAccount(null);
     setFormData({
       nome: '',
-      tipo: '',
       categoria: '',
       subcategoria: '',
       incluirComo: ''
@@ -1666,8 +1665,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     setSelectedAccount(account);
     setFormData({
       nome: account.name || '',
-      tipo: account.type || '',
-      categoria: account.category || '',
+      categoria: account.type || '',
       subcategoria: account.subcategory || '',
       incluirComo: account.parentId || ''
     });
@@ -1679,8 +1677,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     setSelectedAccount(account);
     setFormData({
       nome: account.name || '',
-      tipo: account.type || '',
-      categoria: account.category || '',
+      categoria: account.type || '',
       subcategoria: account.subcategory || '',
       incluirComo: account.parentId || ''
     });
@@ -1696,7 +1693,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
     // Gerar código hierárquico correto baseado na estrutura
     const generateHierarchicalCode = () => {
-      if (!formData.tipo) {
+      if (!formData.categoria) {
         // Nível 1: Novo tipo principal (1, 2, 3, 4...)
         const level1Codes = chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
@@ -1704,26 +1701,26 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       }
       
       // Buscar o tipo pai para determinar o prefixo
-      const parentType = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      const parentType = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
       const typePrefix = parentType ? parentType.code : '1';
       
       if (!formData.subcategoria) {
         // Nível 2: Categoria principal (1.1, 1.2, 2.1, 2.2...)
         const categoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.tipo && acc.level === 2
+          acc.type === formData.categoria && acc.level === 2
         ).length || 0;
         return `${typePrefix}.${categoryCount + 1}`;
       } else {
         // Nível 3: Subcategoria (1.1.1, 1.1.2...)
         const parentCategory = chartAccountsData?.find(acc => 
-          acc.type === formData.tipo && 
+          acc.type === formData.categoria && 
           acc.name === formData.subcategoria && 
           acc.level === 1
         );
         const parentCode = parentCategory ? parentCategory.code : typePrefix;
         
         const subcategoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.tipo && 
+          acc.type === formData.categoria && 
           acc.level === 3 &&
           acc.code?.startsWith(`${parentCode}.`)
         ).length || 0;
@@ -1739,7 +1736,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     let subcategory = null;
     let type = formData.nome.toLowerCase(); // Usar nome como tipo se não especificado
 
-    if (formData.tipo && formData.subcategoria && formData.incluirComo) {
+    if (formData.categoria && formData.subcategoria && formData.incluirComo) {
       // Nível 3: quando tem Tipo + Subcategoria + Incluir como filha
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
@@ -1748,8 +1745,8 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = formData.tipo;
-    } else if (formData.tipo && formData.subcategoria) {
+      type = formData.categoria;
+    } else if (formData.categoria && formData.subcategoria) {
       // Nível 2: quando tem Tipo + Subcategoria (subcategoria vira categoria nível 2)
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => 
@@ -1757,14 +1754,14 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
-      type = formData.tipo;
-    } else if (formData.tipo) {
+      type = formData.categoria;
+    } else if (formData.categoria) {
       // Nível 2: quando tem só Tipo selecionado  
       level = 2;
-      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
-      type = formData.tipo;
+      type = formData.categoria;
     } else {
       // Nível 1: novo tipo principal (só Nome)
       level = 1;
@@ -1806,7 +1803,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
     // Mesma lógica do handleSaveAccount mas sem fechar modal
     const generateHierarchicalCode = () => {
-      if (!formData.tipo) {
+      if (!formData.categoria) {
         // Nível 1: Novo tipo principal (1, 2, 3, 4...)
         const level1Codes = chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
@@ -1814,26 +1811,26 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       }
       
       // Buscar o tipo pai para determinar o prefixo
-      const parentType = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      const parentType = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
       const typePrefix = parentType ? parentType.code : '1';
       
       if (!formData.subcategoria) {
         // Nível 2: Categoria principal (1.1, 1.2, 2.1, 2.2...)
         const categoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.tipo && acc.level === 2
+          acc.type === formData.categoria && acc.level === 2
         ).length || 0;
         return `${typePrefix}.${categoryCount + 1}`;
       } else {
         // Nível 3: Subcategoria (1.1.1, 1.1.2...)
         const parentCategory = chartAccountsData?.find(acc => 
-          acc.type === formData.tipo && 
+          acc.type === formData.categoria && 
           acc.name === formData.subcategoria && 
           acc.level === 1
         );
         const parentCode = parentCategory ? parentCategory.code : typePrefix;
         
         const subcategoryCount = chartAccountsData?.filter(acc => 
-          acc.type === formData.tipo && 
+          acc.type === formData.categoria && 
           acc.level === 3 &&
           acc.code?.startsWith(`${parentCode}.`)
         ).length || 0;
@@ -1848,7 +1845,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
     let subcategory = null;
     let type = formData.nome.toLowerCase();
 
-    if (formData.tipo && formData.subcategoria && formData.incluirComo) {
+    if (formData.categoria && formData.subcategoria && formData.incluirComo) {
       // Nível 3: quando tem Tipo + Subcategoria + Incluir como filha
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
@@ -1857,8 +1854,8 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = formData.tipo;
-    } else if (formData.tipo && formData.subcategoria) {
+      type = formData.categoria;
+    } else if (formData.categoria && formData.subcategoria) {
       // Nível 2: quando tem Tipo + Subcategoria (subcategoria vira categoria nível 2)
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => 
@@ -1866,14 +1863,14 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
-      type = formData.tipo;
-    } else if (formData.tipo) {
+      type = formData.categoria;
+    } else if (formData.categoria) {
       // Nível 2: quando tem só Tipo selecionado
       level = 2;
-      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.tipo && acc.level === 1);
+      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
-      type = formData.tipo;
+      type = formData.categoria;
     } else {
       // Nível 1: novo tipo principal (só Nome)
       level = 1;
@@ -1899,7 +1896,6 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
       // Limpar formulário mas manter modal aberto
       setFormData({
         nome: '',
-        tipo: '',
         categoria: '',
         subcategoria: '',
         incluirComo: ''
@@ -2144,15 +2140,15 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
             <div className="px-6 space-y-6">
               {/* Primeira linha: Tipo e Nome */}
               <div className="grid grid-cols-2 gap-4">
-                {/* Campo Tipo */}
+                {/* Campo Categoria */}
                 <div className="relative">
                   <select
                     className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
-                    value={formData.tipo}
-                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                    value={formData.categoria}
+                    onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                   >
                     <option value=""></option>
-                    {/* Tipos dinâmicos baseados nos itens salvos nível 1 */}
+                    {/* Categorias dinâmicas baseadas nos itens salvos nível 1 */}
                     {chartAccountsData?.filter(acc => acc.level === 1)
                       .map(acc => (
                         <option key={acc.id} value={acc.type}>
@@ -2161,7 +2157,7 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
                       ))}
                   </select>
                   <label className="absolute left-0 -top-3 text-xs text-gray-600">
-                    Tipo
+                    Categoria
                   </label>
                   <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
                     <ChevronDown className="h-4 w-4 text-gray-600" />
