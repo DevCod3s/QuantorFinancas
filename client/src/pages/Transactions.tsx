@@ -2035,182 +2035,137 @@ function ChartOfAccountsContent({ isModalOpen, setIsModalOpen }: { isModalOpen: 
 
 
 
-      {/* Modal de cadastro */}
+      {/* Modal Nova categoria - Baseado na imagem exata */}
       {chartAccountModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div 
-            className="bg-gray-100 rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" 
-            style={{
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-            }}
-          >
-            {/* Cabeçalho do modal */}
-            <div className="flex items-center justify-between p-6 pb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
-                {modalMode === 'create' ? 'Nova Conta' : 
-                 modalMode === 'edit' ? 'Editar Conta' : 
-                 'Visualizar Conta'}
-              </h2>
-              <button
-                onClick={() => setChartAccountModalOpen(false)}
-                className="w-6 h-6 text-white bg-black rounded transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          <div className="bg-gray-200 rounded-lg w-full max-w-lg mx-4 shadow-xl">
+            {/* Cabeçalho */}
+            <div className="p-6 pb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Nova categoria</h2>
             </div>
 
-            {/* Conteúdo do modal */}
-            <div className="px-6 pb-6 space-y-4">
-              {/* Campo Tipo */}
-              <div className="relative">
-                <select
-                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
-                    formData.tipo ? 'shadow-md border border-blue-500' : 'shadow-md border-0 focus:shadow-md focus:border focus:border-blue-500'
-                  } ${modalMode === 'view' ? 'pointer-events-none bg-gray-50' : ''}`}
-                  value={formData.tipo}
-                  onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
-                  disabled={modalMode === 'view'}
-                >
-                  <option value="">&nbsp;</option>
-                  <option value="receita">Receita</option>
-                  <option value="despesa">Despesa</option>
-                  <option value="ativo">Ativo</option>
-                  <option value="passivo">Passivo</option>
-                </select>
-                <label className="absolute -top-2 left-3 bg-white px-1 text-xs transition-all duration-200 pointer-events-none text-gray-500 peer-focus:text-blue-600">
-                  Tipo
-                </label>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+            {/* Campos do formulário */}
+            <div className="px-6 space-y-6">
+              {/* Primeira linha: Tipo e Nome */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* Campo Tipo */}
+                <div className="relative">
+                  <select
+                    className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
+                    value={formData.tipo}
+                    onChange={(e) => setFormData({ ...formData, tipo: e.target.value })}
+                  >
+                    <option value="">Despesa</option>
+                    <option value="receita">Receita</option>
+                    <option value="despesa">Despesa</option>
+                  </select>
+                  <label className="absolute left-0 -top-3 text-xs text-gray-600">
+                    Tipo
+                  </label>
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                  </div>
+                </div>
+
+                {/* Campo Nome */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 placeholder-transparent"
+                    placeholder=" "
+                    value={formData.nome}
+                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                  />
+                  <label className="absolute left-0 -top-3 text-xs text-gray-600">
+                    Nome <span className="text-red-500">*</span>
+                  </label>
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                    <ChevronDown className="h-4 w-4 text-gray-600" />
+                  </div>
                 </div>
               </div>
 
-              {/* Campo Nome */}
-              <div className="relative">
-                <input
-                  type="text"
-                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none placeholder-transparent peer transition-all duration-200 ${
-                    formData.nome ? 'shadow-md border border-blue-500' : 'shadow-md border-0 focus:shadow-md focus:border focus:border-blue-500'
-                  } ${modalMode === 'view' ? 'bg-gray-50' : ''}`}
-                  placeholder=" "
-                  value={formData.nome}
-                  onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                  readOnly={modalMode === 'view'}
-                />
-                <label className="absolute -top-2 left-3 bg-white px-1 text-xs transition-all duration-200 pointer-events-none text-gray-500 peer-focus:text-blue-600">
-                  Nome <span className="text-red-500">*</span>
-                </label>
-              </div>
-
-              {/* Campo Categoria */}
+              {/* Campo Categoria - linha completa */}
               <div className="relative">
                 <select
-                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
-                    formData.categoria ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500`}
+                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
                   value={formData.categoria}
-                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value, subcategoria: '' })}
+                  onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
                 >
-                  <option value="">&nbsp;</option>
-                  {categoriasPrincipais.map(cat => (
-                    <option key={cat.id} value={cat.name}>{cat.name}</option>
-                  ))}
+                  <option value=""></option>
+                  <option value="administrativa">Administrativa</option>
+                  <option value="comercial">Comercial</option>
+                  <option value="financeira">Financeira</option>
+                  <option value="operacional">Operacional</option>
                 </select>
-                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
-                  formData.categoria ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
-                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
+                <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Categoria <span className="text-red-500">*</span>
                 </label>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-600" />
                 </div>
               </div>
 
-              {/* Campo Subcategoria */}
+              {/* Campo Subcategoria de - linha completa */}
               <div className="relative">
                 <select
-                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
-                    formData.subcategoria ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-sm`}
+                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
                   value={formData.subcategoria}
                   onChange={(e) => setFormData({ ...formData, subcategoria: e.target.value })}
-                  disabled={!formData.categoria}
                 >
-                  <option value="">&nbsp;</option>
-                  {getSubcategorias().map(subcat => (
-                    <option key={subcat.id} value={subcat.name}>{subcat.name}</option>
-                  ))}
+                  <option value=""></option>
+                  <option value="pessoal">Pessoal</option>
+                  <option value="vendas">Vendas</option>
+                  <option value="marketing">Marketing</option>
+                  <option value="tecnologia">Tecnologia</option>
                 </select>
-                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
-                  formData.subcategoria ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
-                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
+                <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Subcategoria de
                 </label>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-600" />
                 </div>
               </div>
 
-              {/* Campo Incluir como filha de */}
+              {/* Campo Incluir como filha de - linha completa */}
               <div className="relative">
                 <select
-                  className={`w-full pt-6 pb-2 px-3 bg-white rounded-md text-base outline-none appearance-none peer transition-all duration-200 ${
-                    formData.incluirComo ? 'border border-blue-500 shadow-md' : 'border-0 shadow-md focus:border focus:border-blue-500'
-                  } focus:ring-2 focus:ring-blue-500`}
+                  className="w-full bg-transparent border-0 border-b border-gray-600 px-0 py-2 text-gray-700 focus:outline-none focus:border-gray-800 appearance-none"
                   value={formData.incluirComo}
                   onChange={(e) => setFormData({ ...formData, incluirComo: e.target.value })}
                 >
-                  <option value="">&nbsp;</option>
-                  {chartTree.getFlattenedNodes()
-                    .filter(node => chartTree.canHaveChildren(node))
-                    .map(node => (
-                      <option key={node.id} value={node.id}>
-                        {node.code} - {node.name}
-                      </option>
-                    ))
-                  }
+                  <option value=""></option>
+                  <option value="nivel1">Nível 1</option>
+                  <option value="nivel2">Nível 2</option>
+                  <option value="nivel3">Nível 3</option>
                 </select>
-                <label className={`absolute left-3 bg-white px-1 text-sm transition-all duration-200 pointer-events-none ${
-                  formData.incluirComo ? '-top-2 text-xs text-blue-600' : 'top-3 text-gray-500'
-                } peer-focus:-top-2 peer-focus:text-xs peer-focus:text-blue-600`}>
+                <label className="absolute left-0 -top-3 text-xs text-gray-600">
                   Incluir como filha de
                 </label>
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-4 w-4 text-gray-600" />
                 </div>
               </div>
             </div>
 
-            {/* Rodapé do modal */}
-            <div className="flex items-center justify-end gap-3 px-6 pb-6">
-              {modalMode === 'view' ? (
-                <button
-                  onClick={() => setChartAccountModalOpen(false)}
-                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors"
-                >
-                  Fechar
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={handleSaveAccount}
-                    disabled={!formData.nome || createAccountMutation.isPending || updateAccountMutation.isPending}
-                    className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-300 text-white rounded text-sm transition-colors"
-                  >
-                    {createAccountMutation.isPending || updateAccountMutation.isPending ? 'Salvando...' : 'Salvar'}
-                  </button>
-                  {modalMode === 'create' && (
-                    <button
-                      onClick={handleSaveAndContinue}
-                      disabled={!formData.nome || createAccountMutation.isPending}
-                      className="px-3 py-2 bg-gray-800 hover:bg-gray-900 disabled:bg-gray-300 text-white rounded text-sm transition-colors flex items-center justify-center"
-                      title="Salvar e continuar"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  )}
-                </>
-              )}
+            {/* Botões - posicionados conforme a imagem */}
+            <div className="flex justify-end items-center gap-2 p-6 pt-8">
+              <button
+                onClick={() => handleSave(false)}
+                disabled={!formData.nome || createAccountMutation.isPending}
+                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                Salvar
+              </button>
+              <button
+                onClick={() => handleSave(true)}
+                disabled={!formData.nome || createAccountMutation.isPending}
+                className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors flex items-center justify-center"
+                title="Salvar e continuar adicionando"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </div>
