@@ -1782,8 +1782,8 @@ function ChartOfAccountsContent({
       category = formData.nome;
       subcategory = formData.nome;
       type = formData.categoria;
-    } else if (formData.categoria && formData.subcategoria) {
-      // Nível 3: quando tem Categoria + Subcategoria de
+    } else if (formData.subcategoria) {
+      // Nível 3: quando tem Subcategoria de (independente da Categoria)
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1791,7 +1791,8 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = formData.categoria;
+      // Se tem categoria selecionada, usar ela como tipo, senão usar o tipo do pai
+      type = formData.categoria || (parentAccount ? parentAccount.type : formData.nome.toLowerCase());
     } else if (formData.categoria) {
       // Nível 2: quando tem só Categoria selecionada  
       level = 2;
@@ -1888,7 +1889,7 @@ function ChartOfAccountsContent({
       }
     };
 
-    // Determinar nível e parentId para Salvar e Continuar
+    // Determinar nível e parentId para Salvar e Continuar - MESMA LÓGICA DO SALVAR
     let level = 1;
     let parentId = null;
     let category = null;
@@ -1905,8 +1906,8 @@ function ChartOfAccountsContent({
       category = formData.nome;
       subcategory = formData.nome;
       type = formData.categoria;
-    } else if (formData.categoria && formData.subcategoria) {
-      // Nível 3: quando tem Categoria + Subcategoria de
+    } else if (formData.subcategoria) {
+      // Nível 3: quando tem Subcategoria de (independente da Categoria)
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1914,7 +1915,8 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = formData.categoria;
+      // Se tem categoria selecionada, usar ela como tipo, senão usar o tipo do pai
+      type = formData.categoria || (parentAccount ? parentAccount.type : formData.nome.toLowerCase());
     } else if (formData.categoria) {
       // Nível 2: quando tem só Categoria selecionada  
       level = 2;
@@ -1931,38 +1933,7 @@ function ChartOfAccountsContent({
       type = formData.nome.toLowerCase();
     }
 
-    if (formData.categoria && formData.subcategoria && formData.incluirComo) {
-      // Nível 3: quando tem Tipo + Subcategoria + Incluir como filha
-      level = 3;
-      const parentAccount = chartAccountsData?.find(acc => 
-        acc.name === formData.incluirComo && acc.level === 2
-      );
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      subcategory = formData.nome;
-      type = formData.categoria;
-    } else if (formData.categoria && formData.subcategoria) {
-      // Nível 2: quando tem Tipo + Subcategoria (subcategoria vira categoria nível 2)
-      level = 2;
-      const parentAccount = chartAccountsData?.find(acc => 
-        acc.name === formData.subcategoria && acc.level === 1
-      );
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      type = formData.categoria;
-    } else if (formData.categoria) {
-      // Nível 2: quando tem só Tipo selecionado
-      level = 2;
-      const parentAccount = chartAccountsData?.find(acc => acc.type === formData.categoria && acc.level === 1);
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      type = formData.categoria;
-    } else {
-      // Nível 1: novo tipo principal (só Nome)
-      level = 1;
-      category = formData.nome;
-      type = formData.nome.toLowerCase();
-    }
+
 
     const accountData = {
       userId: "2",
