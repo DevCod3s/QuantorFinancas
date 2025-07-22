@@ -1779,8 +1779,9 @@ function ChartOfAccountsContent({
     let subcategory = null;
     let type = formData.nome.toLowerCase();
 
-    if (formData.categoria && formData.subcategoria && formData.incluirComo) {
-      // Nível 4: quando tem TODOS os campos preenchidos
+    // LÓGICA HIERÁRQUICA DEFINITIVA - BASEADA NOS CAMPOS PREENCHIDOS
+    if (formData.incluirComo) {
+      // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.incluirComo && acc.level === 3
@@ -1788,9 +1789,9 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : formData.categoria;
+      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
     } else if (formData.subcategoria) {
-      // Nível 3: quando tem Subcategoria de (sem Incluir como filha de)
+      // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1800,7 +1801,7 @@ function ChartOfAccountsContent({
       subcategory = formData.nome;
       type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
     } else if (formData.categoria) {
-      // Nível 2: quando tem só Categoria selecionada (pai deve ser nível 1)
+      // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.level === 1
@@ -1809,7 +1810,7 @@ function ChartOfAccountsContent({
       category = formData.nome;
       type = parentAccount ? parentAccount.type : formData.categoria;
     } else {
-      // Nível 1: novo tipo principal (só Nome) - sem pai
+      // NÍVEL 1: Só "Nome" preenchido
       level = 1;
       parentId = null;
       category = formData.nome;
@@ -1903,8 +1904,9 @@ function ChartOfAccountsContent({
     let subcategory = null;
     let type = formData.nome.toLowerCase();
 
-    if (formData.categoria && formData.subcategoria && formData.incluirComo) {
-      // Nível 4: quando tem Categoria + Subcategoria de + Incluir como filha de
+    // MESMA LÓGICA DEFINITIVA - BASEADA NOS CAMPOS PREENCHIDOS
+    if (formData.incluirComo) {
+      // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.incluirComo && acc.level === 3
@@ -1912,9 +1914,9 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = formData.categoria;
+      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
     } else if (formData.subcategoria) {
-      // Nível 3: quando tem Subcategoria de (sem Incluir como filha de)
+      // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
@@ -1924,17 +1926,18 @@ function ChartOfAccountsContent({
       subcategory = formData.nome;
       type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
     } else if (formData.categoria) {
-      // Nível 2: quando tem só Categoria selecionada  
+      // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
       const parentAccount = chartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.level === 1
       );
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
-      type = formData.categoria;
+      type = parentAccount ? parentAccount.type : formData.categoria;
     } else {
-      // Nível 1: novo tipo principal (só Nome)
+      // NÍVEL 1: Só "Nome" preenchido
       level = 1;
+      parentId = null;
       category = formData.nome;
       type = formData.nome.toLowerCase();
     }
