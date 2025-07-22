@@ -1696,6 +1696,14 @@ function ChartOfAccountsContent({
   };
 
   const openEditModal = (account: any) => {
+    // Verificar se a conta ainda existe antes de abrir modal de edição
+    const existingAccount = chartAccountsData?.find(acc => acc.id === account.id);
+    if (!existingAccount) {
+      showError("Conta não encontrada", "Esta conta pode ter sido excluída. Atualizando a lista...");
+      refetch();
+      return;
+    }
+    
     setModalMode('edit');
     setSelectedAccount(account);
     setFormData({
@@ -1828,13 +1836,15 @@ function ChartOfAccountsContent({
         await updateAccountMutation.mutateAsync({ id: selectedAccount.id, ...accountData });
       }
       setIsModalOpen(false);
-      // Resetar formulário
+      // Resetar formulário e estados
       setFormData({
         nome: '',
         categoria: '',
         subcategoria: '',
         incluirComo: ''
       });
+      setSelectedAccount(null);
+      setModalMode('create');
     } catch (error) {
       console.error('Erro ao salvar conta:', error);
       showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
@@ -1946,13 +1956,16 @@ function ChartOfAccountsContent({
 
     try {
       await createAccountMutation.mutateAsync(accountData);
-      // Limpar formulário mas manter modal aberto
+      // Limpar formulário mas manter modal aberto (apenas para Salvar e Continuar)
       setFormData({
         nome: '',
         categoria: '',
         subcategoria: '',
         incluirComo: ''
       });
+      // Garantir que continua no modo create
+      setModalMode('create');
+      setSelectedAccount(null);
     } catch (error) {
       console.error('Erro ao salvar e continuar:', error);
       showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
