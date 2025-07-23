@@ -300,7 +300,8 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       totalLength: formatted.length
     });
     
-    // Atualizar estado
+    // Atualizar estado com log de confirmação
+    console.log('Atualizando zipCode para:', formatted);
     updateFormData({ zipCode: formatted });
     
     // Se CEP completo (8 dígitos), buscar endereço
@@ -511,7 +512,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               value={formData.zipCode}
               onChange={handleZipCodeChange}
               placeholder="00000-000"
-              maxLength={10}
+              maxLength={15}
             />
             {formData.isLoading && formData.zipCode.replace(/\D/g, '').length === 8 && (
               <div className="mt-1 text-xs text-blue-600 flex items-center">
