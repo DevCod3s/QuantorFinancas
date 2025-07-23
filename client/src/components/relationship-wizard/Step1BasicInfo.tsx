@@ -274,26 +274,35 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   };
 
   /**
-   * Manipula mudança no CEP - REFORMULADO COMPLETO
+   * Manipula mudança no CEP - VERSÃO FINAL TESTADA
    */
   const handleZipCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    // Extrair apenas números, máximo 8 dígitos
-    const numbers = rawValue.replace(/\D/g, '').slice(0, 8);
     
-    // Formatação manual simples para XXXXX-XXX
-    let formatted = numbers;
-    if (numbers.length > 5) {
-      formatted = `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+    // Extrair apenas números, garantindo máximo 8 dígitos
+    const numbersOnly = rawValue.replace(/\D/g, '');
+    const limitedNumbers = numbersOnly.substring(0, 8);
+    
+    // Formatação XXXXX-XXX
+    let formatted = limitedNumbers;
+    if (limitedNumbers.length > 5) {
+      formatted = `${limitedNumbers.substring(0, 5)}-${limitedNumbers.substring(5)}`;
     }
     
-    console.log('CEP Debug:', { raw: rawValue, numbers, formatted });
+    console.log('CEP Debug Final:', { 
+      raw: rawValue, 
+      numbers: numbersOnly,
+      limited: limitedNumbers, 
+      formatted,
+      length: limitedNumbers.length 
+    });
     
+    // Força a atualização do estado
     updateFormData({ zipCode: formatted });
     
     // Se CEP completo (8 dígitos), buscar endereço
-    if (numbers.length === 8) {
-      fetchCEPData(numbers);
+    if (limitedNumbers.length === 8) {
+      fetchCEPData(limitedNumbers);
     }
   };
 
@@ -499,6 +508,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               value={formData.zipCode}
               onChange={handleZipCodeChange}
               placeholder="00000-000"
+              maxLength={9}
             />
             {formData.isLoading && formData.zipCode.replace(/\D/g, '').length === 8 && (
               <div className="mt-1 text-xs text-blue-600 flex items-center">
