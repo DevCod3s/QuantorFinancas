@@ -304,9 +304,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     console.log('Atualizando zipCode para:', formatted);
     updateFormData({ zipCode: formatted });
     
-    // Se CEP completo (8 dígitos), buscar endereço
+    // Se CEP completo (8 dígitos), buscar endereço mas NÃO focar próximo campo
     if (limitedNumbers.length === 8) {
       fetchCEPData(limitedNumbers);
+      // Removido foco automático para permitir edição completa
     }
   };
 
@@ -513,6 +514,12 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               onChange={handleZipCodeChange}
               placeholder="00000-000"
               maxLength={15}
+              onKeyDown={(e) => {
+                // Permitir navegação manual com Enter, mas não automática
+                if (e.key === 'Enter') {
+                  e.preventDefault(); // Impedir submit acidental
+                }
+              }}
             />
             {formData.isLoading && formData.zipCode.replace(/\D/g, '').length === 8 && (
               <div className="mt-1 text-xs text-blue-600 flex items-center">
