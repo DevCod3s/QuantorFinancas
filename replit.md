@@ -295,6 +295,12 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
   - **CNPJ nas Razões Sociais**: Campo adicional abaixo de cada razão social com documento da empresa
   - **UX Completa**: Hover effects, cursor pointer nos cabeçalhos, estados disabled apropriados
   - **Layout Compacto**: Espaçamento reduzido (py-2 px-3) e ícones menores (h-3 w-3) para densidade visual otimizada
+  - **Lógica Unificada Implementada**: Ambas abas seguem mesmo padrão visual com contextos específicos
+    • À Pagar: "Total a pagar" com valores negativos em vermelho (-2.805,23)
+    • À Receber: "Total a receber" com valores positivos em verde (4.430,00)
+    • Cards idênticos com alinhamento perfeito e linhas separadoras
+    • 74 erros TypeScript corrigidos para funcionamento sem falhas
+    • Nota: Ícones de ações funcionam mas implementação específica pendente para depois
 - **Problemas Técnicos Não Resolvidos**: Questões pendentes no wizard de relacionamentos (Janeiro 2025)
     • Campo CEP: Formatação funciona internamente (console mostra 9 caracteres) mas interface limita visualmente
     • API CNPJ: Funcionando com Brasil API, preenchimento automático operacional
