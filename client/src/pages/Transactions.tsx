@@ -22,7 +22,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2 } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -1187,123 +1187,245 @@ export function Transactions() {
                 label: "À Pagar",
                 icon: <Clock className="h-4 w-4" />,
                 content: (
-                  <div className="space-y-6">
-                    {/* Resumo À Pagar */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card className="border-l-4 border-l-orange-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Total À Pagar
-                          </CardTitle>
-                          <Clock className="h-4 w-4 text-orange-600" />
+                  <div className="flex gap-6">
+                    {/* Coluna esquerda - Cards pequenos */}
+                    <div className="w-80 flex-shrink-0 space-y-6">
+                      {/* Card 1 - Resultado no período */}
+                      <Card className="shadow-lg">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-orange-600">R$ 2.850,00</div>
-                          <p className="text-xs text-gray-500">
-                            8 contas pendentes
-                          </p>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-left gap-2">
+                              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                              <span className="text-sm text-gray-700">À pagar</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xl font-bold text-red-600">-2.850,23</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-left gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-sm text-gray-700">À receber</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xl font-bold text-green-600">4.830,00</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-left gap-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-sm text-gray-700 font-medium">Resultado</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xl font-bold text-blue-600">1.979,77</span>
+                              </div>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="border-l-4 border-l-red-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Vencidas
-                          </CardTitle>
-                          <TrendingDown className="h-4 w-4 text-red-600" />
+                      {/* Card 2 - Bancos e saldos */}
+                      <Card className="shadow-lg">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-xs text-gray-500">Banco Inter</span>
+                            </div>
+                          </div>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-red-600">R$ 340,00</div>
-                          <p className="text-xs text-gray-500">
-                            2 contas em atraso
-                          </p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-l-4 border-l-yellow-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Próximos 7 Dias
-                          </CardTitle>
-                          <Target className="h-4 w-4 text-yellow-600" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-yellow-600">R$ 1.200,00</div>
-                          <p className="text-xs text-gray-500">
-                            3 contas vencem em breve
-                          </p>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-blue-500" readOnly />
+                                <span className="text-sm text-gray-700">Banco Inter</span>
+                              </div>
+                              <span className="text-sm font-medium">2.264,77</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-green-600 font-bold">860,92</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-orange-500" readOnly />
+                                <span className="text-sm text-gray-700">Bancos | Pessoa Física</span>
+                              </div>
+                              <span className="text-sm font-medium">59,88</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-green-600 font-bold">2.779,92</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-700 font-medium">Total</span>
+                              <span className="text-sm font-bold">2.324,65</span>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
 
-                    {/* Lista de contas à pagar */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Contas À Pagar</CardTitle>
-                        <CardDescription>
-                          Suas obrigações financeiras pendentes
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Cartão de Crédito</p>
-                                <p className="text-xs text-red-600 font-medium">Vencido em 10/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-red-600 font-bold">R$ 280,00</span>
-                              <p className="text-xs text-gray-500">Parcela 3/12</p>
-                            </div>
+                    {/* Coluna direita - Card principal com tabela */}
+                    <div className="flex-1">
+                      <Card className="shadow-lg">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
+                          <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b">
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Razão Social</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Vencimento</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Produto</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Tipo</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                                  <th className="text-right py-3 px-4 font-medium text-gray-600">Valor</th>
+                                  <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Banco Santander</td>
+                                  <td className="py-3 px-4">10/01/2025</td>
+                                  <td className="py-3 px-4">Cartão de Crédito</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Vencida</span></td>
+                                  <td className="py-3 px-4 text-right font-medium text-red-600">R$ 280,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Imobiliária Santos</td>
+                                  <td className="py-3 px-4">05/02/2025</td>
+                                  <td className="py-3 px-4">Aluguel Comercial</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pendente</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 1.200,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Caixa Econômica Federal</td>
+                                  <td className="py-3 px-4">15/02/2025</td>
+                                  <td className="py-3 px-4">Financiamento Imóvel</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>  
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Em dia</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 485,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Companhia Energética de GO</td>
+                                  <td className="py-3 px-4">20/02/2025</td>
+                                  <td className="py-3 px-4">Energia Elétrica</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Em dia</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 125,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Telefonia Ltda</td>
+                                  <td className="py-3 px-4">22/02/2025</td>
+                                  <td className="py-3 px-4">Telefone Comercial</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Em dia</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 75,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                           </div>
-                          
-                          <div className="flex items-center justify-between p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Aluguel</p>
-                                <p className="text-xs text-yellow-600 font-medium">Vence em 20/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-yellow-600 font-bold">R$ 1.200,00</span>
-                              <p className="text-xs text-gray-500">Mensal</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Conta de Luz</p>
-                                <p className="text-xs text-orange-600 font-medium">Vence em 25/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-orange-600 font-bold">R$ 185,50</span>
-                              <p className="text-xs text-gray-500">Janeiro/2025</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Internet</p>
-                                <p className="text-xs text-gray-500">Vence em 28/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-gray-600 font-bold">R$ 89,90</span>
-                              <p className="text-xs text-gray-500">Mensal</p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 )
               },
@@ -1312,123 +1434,221 @@ export function Transactions() {
                 label: "À Receber",
                 icon: <CheckCircle className="h-4 w-4" />,
                 content: (
-                  <div className="space-y-6">
-                    {/* Resumo À Receber */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      <Card className="border-l-4 border-l-green-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Total À Receber
-                          </CardTitle>
-                          <CheckCircle className="h-4 w-4 text-green-600" />
+                  <div className="flex gap-6">
+                    {/* Coluna esquerda - Cards pequenos */}
+                    <div className="w-80 flex-shrink-0 space-y-6">
+                      {/* Card 1 - Resultado no período */}
+                      <Card className="shadow-lg">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-green-600">R$ 4.200,00</div>
-                          <p className="text-xs text-gray-500">
-                            5 recebimentos programados
-                          </p>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-left gap-2">
+                              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                              <span className="text-sm text-gray-700">À pagar</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xl font-bold text-red-600">-2.850,23</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-left gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-sm text-gray-700">À receber</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-xl font-bold text-green-600">4.830,00</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-left gap-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-sm text-gray-700 font-medium">Resultado</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-xl font-bold text-blue-600">1.979,77</span>
+                              </div>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
 
-                      <Card className="border-l-4 border-l-blue-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Este Mês
-                          </CardTitle>
-                          <DollarSign className="h-4 w-4 text-blue-600" />
+                      {/* Card 2 - Bancos e saldos */}
+                      <Card className="shadow-lg">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-xs text-gray-500">Banco Inter</span>
+                            </div>
+                          </div>
                         </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-blue-600">R$ 3.500,00</div>
-                          <p className="text-xs text-gray-500">
-                            Salário + freelances
-                          </p>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-l-4 border-l-purple-500">
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                          <CardTitle className="text-sm font-medium text-gray-600">
-                            Próximos 30 Dias
-                          </CardTitle>
-                          <TrendingUp className="h-4 w-4 text-purple-600" />
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-2xl font-bold text-purple-600">R$ 700,00</div>
-                          <p className="text-xs text-gray-500">
-                            Receitas programadas
-                          </p>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-blue-500" readOnly />
+                                <span className="text-sm text-gray-700">Banco Inter</span>
+                              </div>
+                              <span className="text-sm font-medium">2.264,77</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-green-600 font-bold">860,92</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-orange-500" readOnly />
+                                <span className="text-sm text-gray-700">Bancos | Pessoa Física</span>
+                              </div>
+                              <span className="text-sm font-medium">59,88</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-green-600 font-bold">2.779,92</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-700 font-medium">Total</span>
+                              <span className="text-sm font-bold">2.324,65</span>
+                            </div>
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
 
-                    {/* Lista de valores à receber */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Valores À Receber</CardTitle>
-                        <CardDescription>
-                          Receitas e entradas programadas
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Salário</p>
-                                <p className="text-xs text-green-600 font-medium">Receber em 15/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">R$ 3.500,00</span>
-                              <p className="text-xs text-gray-500">Mensal</p>
-                            </div>
+                    {/* Coluna direita - Card principal com tabela */}
+                    <div className="flex-1">
+                      <Card className="shadow-lg">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
+                          <CardDescription>Receitas e entradas programadas</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <table className="w-full">
+                              <thead>
+                                <tr className="border-b">
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Razão Social</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Vencimento</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Produto</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Tipo</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
+                                  <th className="text-right py-3 px-4 font-medium text-gray-600">Valor</th>
+                                  <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Empresa ABC Ltda</td>
+                                  <td className="py-3 px-4">15/01/2025</td>
+                                  <td className="py-3 px-4">Salário</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Confirmado</span></td>
+                                  <td className="py-3 px-4 text-right font-medium text-green-600">R$ 3.500,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Cliente XYZ Ltda</td>
+                                  <td className="py-3 px-4">22/01/2025</td>
+                                  <td className="py-3 px-4">Projeto Freelance</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pendente</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 450,00</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Banco do Brasil</td>
+                                  <td className="py-3 px-4">30/01/2025</td>
+                                  <td className="py-3 px-4">Rendimento Poupança</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Rendimento</span></td>  
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Automático</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 25,30</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr className="border-b hover:bg-gray-50">
+                                  <td className="py-3 px-4">Nubank</td>
+                                  <td className="py-3 px-4">05/02/2025</td>
+                                  <td className="py-3 px-4">Cashback Cartão</td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Cashback</span></td>
+                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Automático</span></td>
+                                  <td className="py-3 px-4 text-right font-medium">R$ 28,40</td>
+                                  <td className="py-3 px-4">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
+                                        <Eye className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
+                                        <Download className="h-4 w-4" />
+                                      </button>
+                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                           </div>
-                          
-                          <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border border-blue-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Projeto Freelance</p>
-                                <p className="text-xs text-blue-600 font-medium">Receber em 22/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-blue-600 font-bold">R$ 450,00</span>
-                              <p className="text-xs text-gray-500">Parcela 2/3</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Rendimento Poupança</p>
-                                <p className="text-xs text-purple-600 font-medium">Receber em 30/01/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-purple-600 font-bold">R$ 25,30</span>
-                              <p className="text-xs text-gray-500">0,65% a.m.</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                            <div className="flex items-center gap-3">
-                              <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                              <div>
-                                <p className="font-medium text-sm">Cashback Cartão</p>
-                                <p className="text-xs text-orange-600 font-medium">Receber em 05/02/2025</p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-orange-600 font-bold">R$ 28,40</span>
-                              <p className="text-xs text-gray-500">1,5% compras</p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </div>
                   </div>
                 )
               }
