@@ -1277,7 +1277,67 @@ export function Transactions() {
                       {/* Card 1 - Resultado no período */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
+                                const [month, year] = prevMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex--;
+                                if (currentMonthIndex < 0) {
+                                  currentMonthIndex = 11;
+                                  currentYear--;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
+                              
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                                    {currentMonth}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={(date) => {
+                                      setSelectedDate(date);
+                                      if (date) {
+                                        const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                        setCurrentMonth(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
+                                      }
+                                    }}
+                                    locale={ptBR}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
+                                const [month, year] = nextMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex++;
+                                if (currentMonthIndex > 11) {
+                                  currentMonthIndex = 0;
+                                  currentYear++;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+                              
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Settings className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
                         </CardHeader>
                         <CardContent className="space-y-4">
                           <div className="space-y-3">
