@@ -284,13 +284,17 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • Campo "Incluir como filha de" preenchido = SEMPRE nível 4
     • Geração automática baseada em contagem de filhos por pai
     • Lógica implementada em handleSaveAccount e handleSaveAndContinue
-- **Interface Aprimorada das Abas À Pagar/À Receber**: Layout profissional baseado em imagem de referência (Janeiro 2025)
-  - **Controles de Ordenação**: Ícones ArrowUpDown em todos os cabeçalhos de colunas com hover states
+- **Interface Completa e Funcional das Abas À Pagar/À Receber**: Sistema profissional totalmente implementado (Janeiro 2025)
+  - **Fonte Reduzida**: text-xs conforme imagem de referência para melhor densidade de informação
+  - **Ordenação Funcional**: Sistema completo de sorting por todos os campos (Razão Social, Vencimento, Produto, Tipo, Status, Valor)
+  - **Paginação Funcional**: Controles completamente operacionais com navegação Anterior/Próxima e numeração de páginas
+  - **Dados Dinâmicos**: Sistema mockado com dados reais renderizados via map() com estados controlados
+  - **Botões de Ação Funcionais**: Todos os ícones (Edit, Eye, Download, Trash2) com onClick handlers implementados
+  - **Card de Paginação Separado**: Completamente independente da tabela principal conforme layout de referência
+  - **Estados Sincronizados**: Ordenação e paginação funcionando em conjunto com cálculos corretos
   - **CNPJ nas Razões Sociais**: Campo adicional abaixo de cada razão social com documento da empresa
-  - **Card de Paginação**: Card separado abaixo da tabela principal com controles de navegação
-  - **Estrutura Consistente**: Mesmo layout aplicado em ambas as abas (À Pagar e À Receber)
-  - **Dados Realistas**: CNPJs válidos de empresas brasileiras conhecidas
-  - **UX Profissional**: Hover effects, cursor pointer nos cabeçalhos ordenáveis
+  - **UX Completa**: Hover effects, cursor pointer nos cabeçalhos, estados disabled apropriados
+  - **Layout Compacto**: Espaçamento reduzido (py-2 px-3) e ícones menores (h-3 w-3) para densidade visual otimizada
 - **Problemas Técnicos Não Resolvidos**: Questões pendentes no wizard de relacionamentos (Janeiro 2025)
     • Campo CEP: Formatação funciona internamente (console mostra 9 caracteres) mas interface limita visualmente
     • API CNPJ: Funcionando com Brasil API, preenchimento automático operacional

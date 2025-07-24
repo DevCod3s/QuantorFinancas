@@ -111,6 +111,90 @@ export function Transactions() {
   const { showSuccess, SuccessDialog: SuccessDialogComponent } = useSuccessDialog();
   const { showError, ErrorDialog: ErrorDialogComponent } = useErrorDialog();
   const { showConfirm, ConfirmDialog: ConfirmDialogComponent } = useConfirmDialog();
+  
+  // Estados para controle de ordenação e paginação
+  const [payablesSortField, setPayablesSortField] = useState<string>('');
+  const [payablesSortDirection, setPayablesSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [payablesCurrentPage, setPayablesCurrentPage] = useState(1);
+  const [payablesItemsPerPage] = useState(10);
+  
+  const [receivablesSortField, setReceivablesSortField] = useState<string>('');
+  const [receivablesSortDirection, setReceivablesSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [receivablesCurrentPage, setReceivablesCurrentPage] = useState(1);
+  const [receivablesItemsPerPage] = useState(10);
+  
+  // Dados mockados para À Pagar
+  const payablesData = [
+    { id: 1, company: 'Banco Santander', cnpj: '90.400.888/0001-42', dueDate: '10/01/2025', product: 'Cartão de Crédito', type: 'Parcela', status: 'Vencida', value: 280.00 },
+    { id: 2, company: 'Imobiliária Santos', cnpj: '12.345.678/0001-90', dueDate: '05/02/2025', product: 'Aluguel Comercial', type: 'Mensal', status: 'Pendente', value: 1200.00 },
+    { id: 3, company: 'Caixa Econômica Federal', cnpj: '00.360.305/0001-04', dueDate: '15/02/2025', product: 'Financiamento Imóvel', type: 'Parcela', status: 'Em dia', value: 485.00 },
+    { id: 4, company: 'Companhia Energética de GO', cnpj: '01.628.539/0001-73', dueDate: '20/02/2025', product: 'Energia Elétrica', type: 'Mensal', status: 'Em dia', value: 125.00 },
+    { id: 5, company: 'Telefonia Ltda', cnpj: '98.765.432/0001-10', dueDate: '22/02/2025', product: 'Telefone Comercial', type: 'Mensal', status: 'Em dia', value: 75.00 }
+  ];
+  
+  // Dados mockados para À Receber
+  const receivablesData = [
+    { id: 1, company: 'Empresa ABC Ltda', cnpj: '33.222.111/0001-55', dueDate: '15/01/2025', product: 'Salário', type: 'Mensal', status: 'Confirmado', value: 3500.00 },
+    { id: 2, company: 'Cliente XYZ Ltda', cnpj: '44.555.666/0001-77', dueDate: '22/01/2025', product: 'Projeto Freelance', type: 'Parcela', status: 'Pendente', value: 450.00 },
+    { id: 3, company: 'Banco do Brasil', cnpj: '00.000.000/0001-91', dueDate: '30/01/2025', product: 'Rendimento Poupança', type: 'Rendimento', status: 'Automático', value: 25.30 },
+    { id: 4, company: 'Nubank', cnpj: '18.236.120/0001-58', dueDate: '05/02/2025', product: 'Cashback Cartão', type: 'Cashback', status: 'Automático', value: 28.40 }
+  ];
+  
+  // Funções de ordenação
+  const handlePayablesSort = (field: string) => {
+    const direction = payablesSortField === field && payablesSortDirection === 'asc' ? 'desc' : 'asc';
+    setPayablesSortField(field);
+    setPayablesSortDirection(direction);
+  };
+  
+  const handleReceivablesSort = (field: string) => {
+    const direction = receivablesSortField === field && receivablesSortDirection === 'asc' ? 'desc' : 'asc';
+    setReceivablesSortField(field);
+    setReceivablesSortDirection(direction);
+  };
+  
+  // Função para ordenar dados
+  const sortData = (data: any[], sortField: string, sortDirection: 'asc' | 'desc') => {
+    if (!sortField) return data;
+    
+    return [...data].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      
+      // Tratamento especial para datas
+      if (sortField === 'dueDate') {
+        aVal = new Date(aVal.split('/').reverse().join('-'));
+        bVal = new Date(bVal.split('/').reverse().join('-'));
+      }
+      
+      // Tratamento especial para valores
+      if (sortField === 'value') {
+        aVal = parseFloat(aVal);
+        bVal = parseFloat(bVal);
+      }
+      
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+  
+  // Dados ordenados e paginados
+  const sortedPayables = sortData(payablesData, payablesSortField, payablesSortDirection);
+  const paginatedPayables = sortedPayables.slice(
+    (payablesCurrentPage - 1) * payablesItemsPerPage,
+    payablesCurrentPage * payablesItemsPerPage
+  );
+  
+  const sortedReceivables = sortData(receivablesData, receivablesSortField, receivablesSortDirection);
+  const paginatedReceivables = sortedReceivables.slice(
+    (receivablesCurrentPage - 1) * receivablesItemsPerPage,
+    receivablesCurrentPage * receivablesItemsPerPage
+  );
+  
+  // Cálculos de paginação
+  const payablesTotalPages = Math.ceil(sortedPayables.length / payablesItemsPerPage);
+  const receivablesTotalPages = Math.ceil(sortedReceivables.length / receivablesItemsPerPage);
 
   // Query para buscar contas do plano de contas
   const { data: chartAccounts = [], isLoading: isLoadingAccounts, refetch: refetchAccounts } = useQuery({
@@ -1287,194 +1371,101 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent>
                           <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b">
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('company')}>
+                                    <div className="flex items-center gap-1">
                                       Razão Social
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('dueDate')}>
+                                    <div className="flex items-center gap-1">
                                       Vencimento
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('product')}>
+                                    <div className="flex items-center gap-1">
                                       Produto
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('type')}>
+                                    <div className="flex items-center gap-1">
                                       Tipo
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('status')}>
+                                    <div className="flex items-center gap-1">
                                       Status
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-right py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center justify-end gap-2">
+                                  <th className="text-right py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('value')}>
+                                    <div className="flex items-center justify-end gap-1">
                                       Valor
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
+                                  <th className="text-center py-2 px-3 font-medium text-gray-600 text-xs">Ações</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Banco Santander</div>
-                                      <div className="text-sm text-gray-500">90.400.888/0001-42</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">10/01/2025</td>
-                                  <td className="py-3 px-4">Cartão de Crédito</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs">Vencida</span></td>
-                                  <td className="py-3 px-4 text-right font-medium text-red-600">R$ 280,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Imobiliária Santos</div>
-                                      <div className="text-sm text-gray-500">12.345.678/0001-90</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">05/02/2025</td>
-                                  <td className="py-3 px-4">Aluguel Comercial</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pendente</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 1.200,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Caixa Econômica Federal</div>
-                                      <div className="text-sm text-gray-500">00.360.305/0001-04</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">15/02/2025</td>
-                                  <td className="py-3 px-4">Financiamento Imóvel</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>  
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Em dia</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 485,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Companhia Energética de GO</div>
-                                      <div className="text-sm text-gray-500">01.628.539/0001-73</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">20/02/2025</td>
-                                  <td className="py-3 px-4">Energia Elétrica</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Em dia</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 125,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Telefonia Ltda</div>
-                                      <div className="text-sm text-gray-500">98.765.432/0001-10</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">22/02/2025</td>
-                                  <td className="py-3 px-4">Telefone Comercial</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Em dia</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 75,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
+                                {paginatedPayables.map((item) => (
+                                  <tr key={item.id} className="border-b hover:bg-gray-50">
+                                    <td className="py-2 px-3">
+                                      <div>
+                                        <div className="font-medium text-xs">{item.company}</div>
+                                        <div className="text-xs text-gray-500">{item.cnpj}</div>
+                                      </div>
+                                    </td>
+                                    <td className="py-2 px-3 text-xs">{item.dueDate}</td>
+                                    <td className="py-2 px-3 text-xs">{item.product}</td>
+                                    <td className="py-2 px-3">
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' : 
+                                        item.type === 'Mensal' ? 'bg-green-100 text-green-800' : 
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {item.type}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        item.status === 'Vencida' ? 'bg-red-100 text-red-800' : 
+                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
+                                        item.status === 'Em dia' ? 'bg-green-100 text-green-800' : 
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {item.status}
+                                      </span>
+                                    </td>
+                                    <td className={`py-2 px-3 text-right font-medium text-xs ${
+                                      item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
+                                    }`}>
+                                      R$ {item.value.toFixed(2).replace('.', ',')}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <div className="flex items-center justify-center gap-1">
+                                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar" onClick={() => console.log('Edit', item.id)}>
+                                          <Edit className="h-3 w-3" />
+                                        </button>
+                                        <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar" onClick={() => console.log('View', item.id)}>
+                                          <Eye className="h-3 w-3" />
+                                        </button>
+                                        <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento" onClick={() => console.log('Download', item.id)}>
+                                          <Download className="h-3 w-3" />
+                                        </button>
+                                        <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir" onClick={() => console.log('Delete', item.id)}>
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
                               </tbody>
                             </table>
                           </div>
@@ -1483,25 +1474,41 @@ export function Transactions() {
                       
                       {/* Card de paginação separado */}
                       <Card className="shadow-lg mt-6">
-                        <CardContent className="py-3">
+                        <CardContent className="py-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <span className="text-sm text-gray-600">Mostrando 1 a 10 de 35 resultados</span>
+                              <span className="text-xs text-gray-600">
+                                Mostrando {((payablesCurrentPage - 1) * payablesItemsPerPage) + 1} a {Math.min(payablesCurrentPage * payablesItemsPerPage, sortedPayables.length)} de {sortedPayables.length} resultados
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" disabled>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs h-7"
+                                disabled={payablesCurrentPage === 1}
+                                onClick={() => setPayablesCurrentPage(prev => Math.max(1, prev - 1))}
+                              >
                                 Anterior
                               </Button>
-                              <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                1
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                2
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                3
-                              </Button>
-                              <Button variant="outline" size="sm">
+                              {Array.from({ length: payablesTotalPages }, (_, i) => i + 1).map((page) => (
+                                <Button 
+                                  key={page}
+                                  variant={page === payablesCurrentPage ? "default" : "outline"} 
+                                  size="sm" 
+                                  className={`text-xs h-7 w-7 ${page === payablesCurrentPage ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                                  onClick={() => setPayablesCurrentPage(page)}
+                                >
+                                  {page}
+                                </Button>
+                              ))}
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs h-7"
+                                disabled={payablesCurrentPage === payablesTotalPages}
+                                onClick={() => setPayablesCurrentPage(prev => Math.min(payablesTotalPages, prev + 1))}
+                              >
                                 Próxima
                               </Button>
                             </div>
@@ -1617,165 +1624,103 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent>
                           <div className="overflow-x-auto">
-                            <table className="w-full">
+                            <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b">
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('company')}>
+                                    <div className="flex items-center gap-1">
                                       Razão Social
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('dueDate')}>
+                                    <div className="flex items-center gap-1">
                                       Vencimento
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('product')}>
+                                    <div className="flex items-center gap-1">
                                       Produto
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('type')}>
+                                    <div className="flex items-center gap-1">
                                       Tipo
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center gap-2">
+                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('status')}>
+                                    <div className="flex items-center gap-1">
                                       Status
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-right py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
-                                    <div className="flex items-center justify-end gap-2">
+                                  <th className="text-right py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('value')}>
+                                    <div className="flex items-center justify-end gap-1">
                                       Valor
-                                      <ArrowUpDown className="h-4 w-4" />
+                                      <ArrowUpDown className="h-3 w-3" />
                                     </div>
                                   </th>
-                                  <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
+                                  <th className="text-center py-2 px-3 font-medium text-gray-600 text-xs">Ações</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Empresa ABC Ltda</div>
-                                      <div className="text-sm text-gray-500">33.222.111/0001-55</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">15/01/2025</td>
-                                  <td className="py-3 px-4">Salário</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Confirmado</span></td>
-                                  <td className="py-3 px-4 text-right font-medium text-green-600">R$ 3.500,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Cliente XYZ Ltda</div>
-                                      <div className="text-sm text-gray-500">44.555.666/0001-77</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">22/01/2025</td>
-                                  <td className="py-3 px-4">Projeto Freelance</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">Pendente</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 450,00</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Banco do Brasil</div>
-                                      <div className="text-sm text-gray-500">00.000.000/0001-91</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">30/01/2025</td>
-                                  <td className="py-3 px-4">Rendimento Poupança</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Rendimento</span></td>  
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Automático</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 25,30</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
-                                <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">
-                                    <div>
-                                      <div className="font-medium">Nubank</div>
-                                      <div className="text-sm text-gray-500">18.236.120/0001-58</div>
-                                    </div>
-                                  </td>
-                                  <td className="py-3 px-4">05/02/2025</td>
-                                  <td className="py-3 px-4">Cashback Cartão</td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Cashback</span></td>
-                                  <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Automático</span></td>
-                                  <td className="py-3 px-4 text-right font-medium">R$ 28,40</td>
-                                  <td className="py-3 px-4">
-                                    <div className="flex items-center justify-center gap-2">
-                                      <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar">
-                                        <Edit className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar">
-                                        <Eye className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento">
-                                        <Download className="h-4 w-4" />
-                                      </button>
-                                      <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir">
-                                        <Trash2 className="h-4 w-4" />
-                                      </button>
-                                    </div>
-                                  </td>
-                                </tr>
+                                {paginatedReceivables.map((item) => (
+                                  <tr key={item.id} className="border-b hover:bg-gray-50">
+                                    <td className="py-2 px-3">
+                                      <div>
+                                        <div className="font-medium text-xs">{item.company}</div>
+                                        <div className="text-xs text-gray-500">{item.cnpj}</div>
+                                      </div>
+                                    </td>
+                                    <td className="py-2 px-3 text-xs">{item.dueDate}</td>
+                                    <td className="py-2 px-3 text-xs">{item.product}</td>
+                                    <td className="py-2 px-3">
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        item.type === 'Mensal' ? 'bg-green-100 text-green-800' : 
+                                        item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' : 
+                                        item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' : 
+                                        item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {item.type}
+                                      </span>
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <span className={`px-2 py-1 rounded-full text-xs ${
+                                        item.status === 'Confirmado' ? 'bg-green-100 text-green-800' : 
+                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
+                                        item.status === 'Automático' ? 'bg-green-100 text-green-800' : 
+                                        'bg-gray-100 text-gray-800'
+                                      }`}>
+                                        {item.status}
+                                      </span>
+                                    </td>
+                                    <td className={`py-2 px-3 text-right font-medium text-xs ${
+                                      item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
+                                    }`}>
+                                      R$ {item.value.toFixed(2).replace('.', ',')}
+                                    </td>
+                                    <td className="py-2 px-3">
+                                      <div className="flex items-center justify-center gap-1">
+                                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar" onClick={() => console.log('Edit', item.id)}>
+                                          <Edit className="h-3 w-3" />
+                                        </button>
+                                        <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar" onClick={() => console.log('View', item.id)}>
+                                          <Eye className="h-3 w-3" />
+                                        </button>
+                                        <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento" onClick={() => console.log('Download', item.id)}>
+                                          <Download className="h-3 w-3" />
+                                        </button>
+                                        <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir" onClick={() => console.log('Delete', item.id)}>
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
                               </tbody>
                             </table>
                           </div>
@@ -1784,25 +1729,41 @@ export function Transactions() {
                       
                       {/* Card de paginação separado */}
                       <Card className="shadow-lg mt-6">
-                        <CardContent className="py-3">
+                        <CardContent className="py-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                              <span className="text-sm text-gray-600">Mostrando 1 a 10 de 24 resultados</span>
+                              <span className="text-xs text-gray-600">
+                                Mostrando {((receivablesCurrentPage - 1) * receivablesItemsPerPage) + 1} a {Math.min(receivablesCurrentPage * receivablesItemsPerPage, sortedReceivables.length)} de {sortedReceivables.length} resultados
+                              </span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <Button variant="outline" size="sm" disabled>
+                            <div className="flex items-center gap-1">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs h-7"
+                                disabled={receivablesCurrentPage === 1}
+                                onClick={() => setReceivablesCurrentPage(prev => Math.max(1, prev - 1))}
+                              >
                                 Anterior
                               </Button>
-                              <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                1
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                2
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                3
-                              </Button>
-                              <Button variant="outline" size="sm">
+                              {Array.from({ length: receivablesTotalPages }, (_, i) => i + 1).map((page) => (
+                                <Button 
+                                  key={page}
+                                  variant={page === receivablesCurrentPage ? "default" : "outline"} 
+                                  size="sm" 
+                                  className={`text-xs h-7 w-7 ${page === receivablesCurrentPage ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                                  onClick={() => setReceivablesCurrentPage(page)}
+                                >
+                                  {page}
+                                </Button>
+                              ))}
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="text-xs h-7"
+                                disabled={receivablesCurrentPage === receivablesTotalPages}
+                                onClick={() => setReceivablesCurrentPage(prev => Math.min(receivablesTotalPages, prev + 1))}
+                              >
                                 Próxima
                               </Button>
                             </div>
