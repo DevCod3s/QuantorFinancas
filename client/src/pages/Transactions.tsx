@@ -1274,42 +1274,25 @@ export function Transactions() {
                   <div className="flex gap-6">
                     {/* Coluna esquerda - Cards pequenos */}
                     <div className="w-80 flex-shrink-0 space-y-6">
-                      {/* Card 1 - Resultado no período */}
+                      {/* Card 1 - Resultado do período */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
+                          <CardTitle className="text-base font-semibold">Resultado do período</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-left gap-2">
-                              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                              <span className="text-xs text-gray-700">À pagar</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-sm font-bold text-red-600">-2.850,23</span>
-                            </div>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-700">À pagar</span>
+                            <span className="text-sm font-bold text-red-600">-2.805,23</span>
                           </div>
                           
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-left gap-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-xs text-gray-700">À receber</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-sm font-bold text-green-600">4.830,00</span>
-                            </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-700">À receber</span>
+                            <span className="text-sm font-bold text-green-600">4.430,00</span>
                           </div>
                           
-                          <div className="border-t pt-3 mt-4">
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-left gap-2">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-xs text-gray-700 font-medium">Resultado</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-sm font-bold text-blue-600">1.979,77</span>
-                              </div>
-                            </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-700 font-medium">Resultado</span>
+                            <span className="text-sm font-bold text-green-600">1.624,77</span>
                           </div>
                         </CardContent>
                       </Card>
@@ -1320,43 +1303,23 @@ export function Transactions() {
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Contas</CardTitle>
                             <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <span className="text-xs text-gray-500">Banco Inter</span>
+                              
+                              <span className="text-xs text-gray-500">Total a pagar</span>
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-blue-500" readOnly />
-                                <span className="text-xs text-gray-700">Banco Inter</span>
-                              </div>
-                              <span className="text-xs font-medium">2.264,77</span>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <input type="checkbox" checked className="text-blue-500" readOnly />
+                              <span className="text-xs text-gray-700">Banco Inter</span>
                             </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">860,92</span>
-                            </div>
+                            <span className="text-xs font-bold text-red-600">-2.805,23</span>
                           </div>
                           
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-orange-500" readOnly />
-                                <span className="text-xs text-gray-700">Bancos | Pessoa Física</span>
-                              </div>
-                              <span className="text-xs font-medium">59,88</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">2.779,92</span>
-                            </div>
-                          </div>
-                          
-                          <div className="border-t pt-3 mt-4">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-700 font-medium">Total</span>
-                              <span className="text-xs font-bold">2.324,65</span>
-                            </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-700 font-medium">Total</span>
+                            <span className="text-xs font-bold text-red-600">-2.805,23</span>
                           </div>
                         </CardContent>
                       </Card>
