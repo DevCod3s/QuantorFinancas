@@ -1590,43 +1590,22 @@ export function Transactions() {
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Contas</CardTitle>
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <span className="text-xs text-gray-500">Banco Inter</span>
-                            </div>
+                            <span className="text-xs text-gray-500">Total a receber</span>
                           </div>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-blue-500" readOnly />
-                                <span className="text-xs text-gray-700">Banco Inter</span>
-                              </div>
-                              <span className="text-xs font-medium">2.264,77</span>
+                        <CardContent className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <input type="checkbox" checked className="text-blue-500" readOnly />
+                              <span className="text-xs text-gray-700">Banco Inter</span>
                             </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">860,92</span>
-                            </div>
+                            <span className="text-xs font-bold text-green-600">4.430,00</span>
                           </div>
                           
-                          <div className="space-y-3">
+                          <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-orange-500" readOnly />
-                                <span className="text-xs text-gray-700">Bancos | Pessoa Física</span>
-                              </div>
-                              <span className="text-xs font-medium">59,88</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">2.779,92</span>
-                            </div>
-                          </div>
-                          
-                          <div className="border-t pt-3 mt-4">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-700 font-medium">Total</span>
-                              <span className="text-xs font-bold">2.324,65</span>
+                              <span className="text-xs text-gray-700 font-medium">Total</span>
+                              <span className="text-xs font-bold text-green-600">4.430,00</span>
                             </div>
                           </div>
                         </CardContent>
