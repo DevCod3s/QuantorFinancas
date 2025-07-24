@@ -99,6 +99,7 @@ export function Transactions() {
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [formData, setFormData] = useState({
+    tipo: '',
     nome: '',
     categoria: '',
     subcategoria: '',
@@ -202,6 +203,9 @@ export function Transactions() {
     queryFn: () => fetch('/api/chart-accounts').then(res => res.json()),
   });
 
+  // Garantir que chartAccounts seja sempre um array
+  const safeChartAccountsData = Array.isArray(chartAccounts) ? chartAccounts : [];
+
   // Mutation para criar conta
   const createAccountMutation = useMutation({
     mutationFn: (accountData: any) => 
@@ -210,13 +214,13 @@ export function Transactions() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(accountData)
       }).then(res => res.json()),
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       showSuccess('Conta criada com sucesso!');
       setChartAccountModalOpen(false);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
       showError(error.message || 'Erro ao criar conta');
     }
   });
@@ -229,13 +233,13 @@ export function Transactions() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }).then(res => res.json()),
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       showSuccess('Conta atualizada com sucesso!');
       setChartAccountModalOpen(false);
       resetForm();
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
       showError(error.message || 'Erro ao atualizar conta');
     }
   });
@@ -244,11 +248,11 @@ export function Transactions() {
   const deleteAccountMutation = useMutation({
     mutationFn: (id: number) => 
       fetch(`/api/chart-accounts/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       showSuccess('Conta excluída com sucesso!');
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
       showError(error.message || 'Erro ao excluir conta');
     }
   });
@@ -2005,13 +2009,13 @@ function ChartOfAccountsContent({
   });
 
   // Query para buscar contas
-  const { data: chartAccountsData, isLoading: isLoadingAccounts, refetch } = useQuery({
+  const { data: safeChartAccountsData, isLoading: isLoadingAccounts, refetch } = useQuery({
     queryKey: ['/api/chart-accounts'],
     enabled: true
   });
 
   // Garantir que chartAccounts seja sempre um array
-  const chartAccounts = Array.isArray(chartAccountsData) ? chartAccountsData : [];
+  const chartAccounts = Array.isArray(safeChartAccountsData) ? safeChartAccountsData : [];
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({
@@ -2102,10 +2106,10 @@ function ChartOfAccountsContent({
 
   const openEditModal = (account: any) => {
     // Verificar se a conta ainda existe antes de abrir modal de edição
-    const existingAccount = chartAccountsData?.find(acc => acc.id === account.id);
+    const existingAccount = safeChartAccountsData.find(acc => acc.id === account.id);
     if (!existingAccount) {
       showError("Conta não encontrada", "Esta conta pode ter sido excluída. Atualizando a lista...");
-      refetch();
+      refetchAccounts();
       return;
     }
     
@@ -2143,17 +2147,17 @@ function ChartOfAccountsContent({
     const generateHierarchicalCode = () => {
       if (level === 1) {
         // Nível 1: Códigos 1, 2, 3, 4...
-        const level1Codes = chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
       
       if (level === 2) {
         // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
-        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
+        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
         const parentCode = parentAccount ? parentAccount.code : '1';
         
-        const sameParentCount = chartAccountsData?.filter(acc => 
+        const sameParentCount = safeChartAccountsData?.filter(acc => 
           acc.parentId === parentAccount?.id && acc.level === 2
         ).length || 0;
         
@@ -2162,10 +2166,10 @@ function ChartOfAccountsContent({
       
       if (level === 3) {
         // Nível 3: Códigos 1.2.1, 1.2.2, 2.1.1...
-        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
+        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
         const parentCode = parentAccount ? parentAccount.code : '1.1';
         
-        const sameParentCount = chartAccountsData?.filter(acc => 
+        const sameParentCount = safeChartAccountsData?.filter(acc => 
           acc.parentId === parentAccount?.id && acc.level === 3
         ).length || 0;
         
@@ -2174,10 +2178,10 @@ function ChartOfAccountsContent({
       
       if (level === 4) {
         // Nível 4: Códigos 1.2.3.1, 1.2.3.2...
-        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
+        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
         const parentCode = parentAccount ? parentAccount.code : '1.1.1';
         
-        const sameParentCount = chartAccountsData?.filter(acc => 
+        const sameParentCount = safeChartAccountsData?.filter(acc => 
           acc.parentId === parentAccount?.id && acc.level === 4
         ).length || 0;
         
@@ -2198,7 +2202,7 @@ function ChartOfAccountsContent({
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
-      const parentAccount = chartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc => 
         acc.name === formData.incluirComo && acc.level === 3
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2208,7 +2212,7 @@ function ChartOfAccountsContent({
     } else if (formData.subcategoria) {
       // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
-      const parentAccount = chartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2218,7 +2222,7 @@ function ChartOfAccountsContent({
     } else if (formData.categoria) {
       // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
-      const parentAccount = chartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.level === 1
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2279,17 +2283,17 @@ function ChartOfAccountsContent({
     const generateHierarchicalCode = () => {
       if (level === 1) {
         // Nível 1: Códigos 1, 2, 3, 4...
-        const level1Codes = chartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
       
       if (level === 2) {
         // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
-        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
+        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
         const parentCode = parentAccount ? parentAccount.code : '1';
         
-        const sameParentCount = chartAccountsData?.filter(acc => 
+        const sameParentCount = safeChartAccountsData?.filter(acc => 
           acc.parentId === parentAccount?.id && acc.level === 2
         ).length || 0;
         
@@ -2298,10 +2302,10 @@ function ChartOfAccountsContent({
       
       if (level === 3) {
         // Nível 3: Códigos 1.2.1, 1.2.2, 2.1.1...
-        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
+        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
         const parentCode = parentAccount ? parentAccount.code : '1.1';
         
-        const sameParentCount = chartAccountsData?.filter(acc => 
+        const sameParentCount = safeChartAccountsData?.filter(acc => 
           acc.parentId === parentAccount?.id && acc.level === 3
         ).length || 0;
         
@@ -2310,10 +2314,10 @@ function ChartOfAccountsContent({
       
       if (level === 4) {
         // Nível 4: Códigos 1.2.3.1, 1.2.3.2...
-        const parentAccount = chartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
+        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
         const parentCode = parentAccount ? parentAccount.code : '1.1.1';
         
-        const sameParentCount = chartAccountsData?.filter(acc => 
+        const sameParentCount = safeChartAccountsData?.filter(acc => 
           acc.parentId === parentAccount?.id && acc.level === 4
         ).length || 0;
         
@@ -2334,7 +2338,7 @@ function ChartOfAccountsContent({
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
-      const parentAccount = chartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc => 
         acc.name === formData.incluirComo && acc.level === 3
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2344,7 +2348,7 @@ function ChartOfAccountsContent({
     } else if (formData.subcategoria) {
       // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
-      const parentAccount = chartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc => 
         acc.name === formData.subcategoria && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2354,7 +2358,7 @@ function ChartOfAccountsContent({
     } else if (formData.categoria) {
       // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
-      const parentAccount = chartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc => 
         acc.name === formData.categoria && acc.level === 1
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2652,7 +2656,7 @@ function ChartOfAccountsContent({
                       <em>Selecione...</em>
                     </MenuItem>
                     {/* Categorias dinâmicas baseadas nos itens salvos nível 1 */}
-                    {chartAccountsData?.filter(acc => acc.level === 1)
+                    {safeChartAccountsData?.filter(acc => acc.level === 1)
                       .map(acc => (
                         <MenuItem key={acc.id} value={acc.type}>
                           {acc.name}
@@ -2687,7 +2691,7 @@ function ChartOfAccountsContent({
                     <em>Selecione...</em>
                   </MenuItem>
                   {/* Subcategorias: mostrar itens nível 2 */}
-                  {chartAccountsData?.filter(acc => acc.level === 2)
+                  {safeChartAccountsData?.filter(acc => acc.level === 2)
                     .map(acc => (
                       <MenuItem key={acc.id} value={acc.name}>
                         {acc.name}
@@ -2709,7 +2713,7 @@ function ChartOfAccountsContent({
                     <em>Selecione...</em>
                   </MenuItem>
                   {/* Incluir como filha de: mostrar itens nível 3 */}
-                  {chartAccountsData?.filter(acc => acc.level === 3)
+                  {safeChartAccountsData?.filter(acc => acc.level === 3)
                     .map(acc => (
                       <MenuItem key={acc.id} value={acc.name}>
                         {acc.name}
