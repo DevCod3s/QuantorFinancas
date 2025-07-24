@@ -1277,8 +1277,100 @@ export function Transactions() {
                       {/* Card 1 - Resultado no período */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
+                          <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-left gap-2">
+                              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                              <span className="text-xs text-gray-700">À pagar</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-bold text-red-600">-2.850,23</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-left gap-2">
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                              <span className="text-xs text-gray-700">À receber</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-bold text-green-600">4.830,00</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-4">
+                            <div className="space-y-3">
+                              <div className="flex items-center justify-left gap-2">
+                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                <span className="text-xs text-gray-700 font-medium">Resultado</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-bold text-blue-600">1.979,77</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Card 2 - Bancos e saldos */}
+                      <Card className="shadow-lg">
+                        <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Resultado no período</CardTitle>
+                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                              <span className="text-xs text-gray-500">Banco Inter</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-blue-500" readOnly />
+                                <span className="text-xs text-gray-700">Banco Inter</span>
+                              </div>
+                              <span className="text-xs font-medium">2.264,77</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-green-600 font-bold">860,92</span>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" checked className="text-orange-500" readOnly />
+                                <span className="text-xs text-gray-700">Bancos | Pessoa Física</span>
+                              </div>
+                              <span className="text-xs font-medium">59,88</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-green-600 font-bold">2.779,92</span>
+                            </div>
+                          </div>
+                          
+                          <div className="border-t pt-3 mt-4">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-700 font-medium">Total</span>
+                              <span className="text-xs font-bold">2.324,65</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Coluna direita - Card principal com tabela */}
+                    <div className="flex-1">
+                      <Card className="shadow-lg">
+                        <CardHeader>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
+                              <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
+                            </div>
                             <div className="flex items-center gap-1">
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
                                 const [month, year] = prevMonth.split(' ');
@@ -1334,100 +1426,14 @@ export function Transactions() {
                               </Button>
                               
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Calendar className="h-3 w-3" />
+                              </Button>
+                              
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                 <Settings className="h-3 w-3" />
                               </Button>
                             </div>
                           </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-left gap-2">
-                              <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                              <span className="text-sm text-gray-700">À pagar</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xl font-bold text-red-600">-2.850,23</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-left gap-2">
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-sm text-gray-700">À receber</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xl font-bold text-green-600">4.830,00</span>
-                            </div>
-                          </div>
-                          
-                          <div className="border-t pt-3 mt-4">
-                            <div className="space-y-3">
-                              <div className="flex items-center justify-left gap-2">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-sm text-gray-700 font-medium">Resultado</span>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-xl font-bold text-blue-600">1.979,77</span>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Card 2 - Bancos e saldos */}
-                      <Card className="shadow-lg">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
-                            <div className="flex items-center gap-2">
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                              <span className="text-xs text-gray-500">Banco Inter</span>
-                            </div>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-blue-500" readOnly />
-                                <span className="text-sm text-gray-700">Banco Inter</span>
-                              </div>
-                              <span className="text-sm font-medium">2.264,77</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">860,92</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-orange-500" readOnly />
-                                <span className="text-sm text-gray-700">Bancos | Pessoa Física</span>
-                              </div>
-                              <span className="text-sm font-medium">59,88</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-green-600 font-bold">2.779,92</span>
-                            </div>
-                          </div>
-                          
-                          <div className="border-t pt-3 mt-4">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-700 font-medium">Total</span>
-                              <span className="text-sm font-bold">2.324,65</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-
-                    {/* Coluna direita - Card principal com tabela */}
-                    <div className="flex-1">
-                      <Card className="shadow-lg">
-                        <CardHeader>
-                          <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
-                          <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div className="overflow-x-auto">
@@ -1596,20 +1602,20 @@ export function Transactions() {
                           <div className="space-y-3">
                             <div className="flex items-center justify-left gap-2">
                               <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                              <span className="text-sm text-gray-700">À pagar</span>
+                              <span className="text-xs text-gray-700">À pagar</span>
                             </div>
                             <div className="text-right">
-                              <span className="text-xl font-bold text-red-600">-2.850,23</span>
+                              <span className="text-sm font-bold text-red-600">-2.850,23</span>
                             </div>
                           </div>
                           
                           <div className="space-y-3">
                             <div className="flex items-center justify-left gap-2">
                               <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                              <span className="text-sm text-gray-700">À receber</span>
+                              <span className="text-xs text-gray-700">À receber</span>
                             </div>
                             <div className="text-right">
-                              <span className="text-xl font-bold text-green-600">4.830,00</span>
+                              <span className="text-sm font-bold text-green-600">4.830,00</span>
                             </div>
                           </div>
                           
@@ -1617,10 +1623,10 @@ export function Transactions() {
                             <div className="space-y-3">
                               <div className="flex items-center justify-left gap-2">
                                 <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span className="text-sm text-gray-700 font-medium">Resultado</span>
+                                <span className="text-xs text-gray-700 font-medium">Resultado</span>
                               </div>
                               <div className="text-right">
-                                <span className="text-xl font-bold text-blue-600">1.979,77</span>
+                                <span className="text-sm font-bold text-blue-600">1.979,77</span>
                               </div>
                             </div>
                           </div>
@@ -1643,9 +1649,9 @@ export function Transactions() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked className="text-blue-500" readOnly />
-                                <span className="text-sm text-gray-700">Banco Inter</span>
+                                <span className="text-xs text-gray-700">Banco Inter</span>
                               </div>
-                              <span className="text-sm font-medium">2.264,77</span>
+                              <span className="text-xs font-medium">2.264,77</span>
                             </div>
                             <div className="text-right">
                               <span className="text-green-600 font-bold">860,92</span>
@@ -1656,9 +1662,9 @@ export function Transactions() {
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
                                 <input type="checkbox" checked className="text-orange-500" readOnly />
-                                <span className="text-sm text-gray-700">Bancos | Pessoa Física</span>
+                                <span className="text-xs text-gray-700">Bancos | Pessoa Física</span>
                               </div>
-                              <span className="text-sm font-medium">59,88</span>
+                              <span className="text-xs font-medium">59,88</span>
                             </div>
                             <div className="text-right">
                               <span className="text-green-600 font-bold">2.779,92</span>
@@ -1668,7 +1674,7 @@ export function Transactions() {
                           <div className="border-t pt-3 mt-4">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-gray-700 font-medium">Total</span>
-                              <span className="text-sm font-bold">2.324,65</span>
+                              <span className="text-xs font-bold">2.324,65</span>
                             </div>
                           </div>
                         </CardContent>
@@ -1679,8 +1685,74 @@ export function Transactions() {
                     <div className="flex-1">
                       <Card className="shadow-lg">
                         <CardHeader>
-                          <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
-                          <CardDescription>Receitas e entradas programadas</CardDescription>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
+                              <CardDescription>Receitas e entradas programadas</CardDescription>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
+                                const [month, year] = prevMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex--;
+                                if (currentMonthIndex < 0) {
+                                  currentMonthIndex = 11;
+                                  currentYear--;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
+                              
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                                    {currentMonth}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={(date) => {
+                                      setSelectedDate(date);
+                                      if (date) {
+                                        const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                        setCurrentMonth(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
+                                      }
+                                    }}
+                                    locale={ptBR}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
+                                const [month, year] = nextMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex++;
+                                if (currentMonthIndex > 11) {
+                                  currentMonthIndex = 0;
+                                  currentYear++;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+                              
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Calendar className="h-3 w-3" />
+                              </Button>
+                              
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Settings className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
                         </CardHeader>
                         <CardContent>
                           <div className="overflow-x-auto">
