@@ -284,6 +284,13 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • Campo "Incluir como filha de" preenchido = SEMPRE nível 4
     • Geração automática baseada em contagem de filhos por pai
     • Lógica implementada em handleSaveAccount e handleSaveAndContinue
+- **Interface Aprimorada das Abas À Pagar/À Receber**: Layout profissional baseado em imagem de referência (Janeiro 2025)
+  - **Controles de Ordenação**: Ícones ArrowUpDown em todos os cabeçalhos de colunas com hover states
+  - **CNPJ nas Razões Sociais**: Campo adicional abaixo de cada razão social com documento da empresa
+  - **Card de Paginação**: Card separado abaixo da tabela principal com controles de navegação
+  - **Estrutura Consistente**: Mesmo layout aplicado em ambas as abas (À Pagar e À Receber)
+  - **Dados Realistas**: CNPJs válidos de empresas brasileiras conhecidas
+  - **UX Profissional**: Hover effects, cursor pointer nos cabeçalhos ordenáveis
 - **Problemas Técnicos Não Resolvidos**: Questões pendentes no wizard de relacionamentos (Janeiro 2025)
     • Campo CEP: Formatação funciona internamente (console mostra 9 caracteres) mas interface limita visualmente
     • API CNPJ: Funcionando com Brasil API, preenchimento automático operacional

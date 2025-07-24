@@ -1290,18 +1290,53 @@ export function Transactions() {
                             <table className="w-full">
                               <thead>
                                 <tr className="border-b">
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Razão Social</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Vencimento</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Produto</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Tipo</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                                  <th className="text-right py-3 px-4 font-medium text-gray-600">Valor</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Razão Social
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Vencimento
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Produto
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Tipo
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Status
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-right py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center justify-end gap-2">
+                                      Valor
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
                                   <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Banco Santander</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Banco Santander</div>
+                                      <div className="text-sm text-gray-500">90.400.888/0001-42</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">10/01/2025</td>
                                   <td className="py-3 px-4">Cartão de Crédito</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>
@@ -1325,7 +1360,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Imobiliária Santos</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Imobiliária Santos</div>
+                                      <div className="text-sm text-gray-500">12.345.678/0001-90</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">05/02/2025</td>
                                   <td className="py-3 px-4">Aluguel Comercial</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
@@ -1349,7 +1389,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Caixa Econômica Federal</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Caixa Econômica Federal</div>
+                                      <div className="text-sm text-gray-500">00.360.305/0001-04</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">15/02/2025</td>
                                   <td className="py-3 px-4">Financiamento Imóvel</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>  
@@ -1373,7 +1418,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Companhia Energética de GO</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Companhia Energética de GO</div>
+                                      <div className="text-sm text-gray-500">01.628.539/0001-73</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">20/02/2025</td>
                                   <td className="py-3 px-4">Energia Elétrica</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
@@ -1397,7 +1447,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Telefonia Ltda</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Telefonia Ltda</div>
+                                      <div className="text-sm text-gray-500">98.765.432/0001-10</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">22/02/2025</td>
                                   <td className="py-3 px-4">Telefone Comercial</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
@@ -1424,6 +1479,36 @@ export function Transactions() {
                             </table>
                           </div>
                         </CardContent>
+                        
+                        {/* Card de paginação */}
+                        <div className="mt-4">
+                          <Card className="shadow-sm">
+                            <CardContent className="py-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <span className="text-sm text-gray-600">Mostrando 1 a 10 de 35 resultados</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button variant="outline" size="sm" disabled>
+                                    Anterior
+                                  </Button>
+                                  <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                    1
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    2
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    3
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    Próxima
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </Card>
                     </div>
                   </div>
@@ -1537,18 +1622,53 @@ export function Transactions() {
                             <table className="w-full">
                               <thead>
                                 <tr className="border-b">
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Razão Social</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Vencimento</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Produto</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Tipo</th>
-                                  <th className="text-left py-3 px-4 font-medium text-gray-600">Status</th>
-                                  <th className="text-right py-3 px-4 font-medium text-gray-600">Valor</th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Razão Social
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Vencimento
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Produto
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Tipo
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-left py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center gap-2">
+                                      Status
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
+                                  <th className="text-right py-3 px-4 font-medium text-gray-600 cursor-pointer hover:bg-gray-50">
+                                    <div className="flex items-center justify-end gap-2">
+                                      Valor
+                                      <ArrowUpDown className="h-4 w-4" />
+                                    </div>
+                                  </th>
                                   <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Empresa ABC Ltda</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Empresa ABC Ltda</div>
+                                      <div className="text-sm text-gray-500">33.222.111/0001-55</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">15/01/2025</td>
                                   <td className="py-3 px-4">Salário</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">Mensal</span></td>
@@ -1572,7 +1692,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Cliente XYZ Ltda</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Cliente XYZ Ltda</div>
+                                      <div className="text-sm text-gray-500">44.555.666/0001-77</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">22/01/2025</td>
                                   <td className="py-3 px-4">Projeto Freelance</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">Parcela</span></td>
@@ -1596,7 +1721,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Banco do Brasil</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Banco do Brasil</div>
+                                      <div className="text-sm text-gray-500">00.000.000/0001-91</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">30/01/2025</td>
                                   <td className="py-3 px-4">Rendimento Poupança</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs">Rendimento</span></td>  
@@ -1620,7 +1750,12 @@ export function Transactions() {
                                   </td>
                                 </tr>
                                 <tr className="border-b hover:bg-gray-50">
-                                  <td className="py-3 px-4">Nubank</td>
+                                  <td className="py-3 px-4">
+                                    <div>
+                                      <div className="font-medium">Nubank</div>
+                                      <div className="text-sm text-gray-500">18.236.120/0001-58</div>
+                                    </div>
+                                  </td>
                                   <td className="py-3 px-4">05/02/2025</td>
                                   <td className="py-3 px-4">Cashback Cartão</td>
                                   <td className="py-3 px-4"><span className="px-2 py-1 bg-orange-100 text-orange-800 rounded-full text-xs">Cashback</span></td>
@@ -1647,6 +1782,36 @@ export function Transactions() {
                             </table>
                           </div>
                         </CardContent>
+                        
+                        {/* Card de paginação */}
+                        <div className="mt-4">
+                          <Card className="shadow-sm">
+                            <CardContent className="py-3">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <span className="text-sm text-gray-600">Mostrando 1 a 10 de 24 resultados</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Button variant="outline" size="sm" disabled>
+                                    Anterior
+                                  </Button>
+                                  <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                    1
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    2
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    3
+                                  </Button>
+                                  <Button variant="outline" size="sm">
+                                    Próxima
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </Card>
                     </div>
                   </div>
