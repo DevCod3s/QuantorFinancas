@@ -1479,36 +1479,34 @@ export function Transactions() {
                             </table>
                           </div>
                         </CardContent>
-                        
-                        {/* Card de paginação */}
-                        <div className="mt-4">
-                          <Card className="shadow-sm">
-                            <CardContent className="py-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <span className="text-sm text-gray-600">Mostrando 1 a 10 de 35 resultados</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button variant="outline" size="sm" disabled>
-                                    Anterior
-                                  </Button>
-                                  <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                    1
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    2
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    3
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    Próxima
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
+                      </Card>
+                      
+                      {/* Card de paginação separado */}
+                      <Card className="shadow-lg mt-6">
+                        <CardContent className="py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <span className="text-sm text-gray-600">Mostrando 1 a 10 de 35 resultados</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="outline" size="sm" disabled>
+                                Anterior
+                              </Button>
+                              <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                1
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                2
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                3
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Próxima
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
                       </Card>
                     </div>
                   </div>
@@ -1782,36 +1780,34 @@ export function Transactions() {
                             </table>
                           </div>
                         </CardContent>
-                        
-                        {/* Card de paginação */}
-                        <div className="mt-4">
-                          <Card className="shadow-sm">
-                            <CardContent className="py-3">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                  <span className="text-sm text-gray-600">Mostrando 1 a 10 de 24 resultados</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <Button variant="outline" size="sm" disabled>
-                                    Anterior
-                                  </Button>
-                                  <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
-                                    1
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    2
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    3
-                                  </Button>
-                                  <Button variant="outline" size="sm">
-                                    Próxima
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        </div>
+                      </Card>
+                      
+                      {/* Card de paginação separado */}
+                      <Card className="shadow-lg mt-6">
+                        <CardContent className="py-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                              <span className="text-sm text-gray-600">Mostrando 1 a 10 de 24 resultados</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="outline" size="sm" disabled>
+                                Anterior
+                              </Button>
+                              <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                1
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                2
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                3
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                Próxima
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
                       </Card>
                     </div>
                   </div>
