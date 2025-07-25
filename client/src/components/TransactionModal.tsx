@@ -70,6 +70,49 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
     setConta('');
   };
 
+  // Debug log
+  console.log('TransactionModal render - open:', open);
+
+  // Force render test
+  if (open) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{
+          backgroundColor: 'white',
+          padding: '20px',
+          borderRadius: '8px',
+          minWidth: '500px',
+          maxHeight: '80vh',
+          overflow: 'auto'
+        }}>
+          <h2>Novo Lançamento (Teste)</h2>
+          <p>Se você está vendo isso, o estado está funcionando!</p>
+          <button onClick={onClose} style={{
+            padding: '10px 20px',
+            backgroundColor: '#f44336',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}>
+            Fechar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Dialog
       open={open}
