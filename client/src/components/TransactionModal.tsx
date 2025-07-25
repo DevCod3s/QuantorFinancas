@@ -1,6 +1,6 @@
 /**
  * @fileoverview Modal para criação de novos lançamentos financeiros
- * Componente baseado no layout de referência com Material UI
+ * Componente funcional baseado no layout de referência 
  * Suporta criação de receitas (À Receber) e despesas (À Pagar)
  */
 
@@ -16,12 +16,9 @@ import {
   MenuItem,
   Button,
   IconButton,
-  Box,
-  Typography,
-  InputAdornment
+  Box
 } from '@mui/material';
-import { X, Calendar, Check, Plus } from 'lucide-react';
-import { format } from 'date-fns';
+import { X, Check } from 'lucide-react';
 
 interface TransactionModalProps {
   open: boolean;
@@ -30,87 +27,48 @@ interface TransactionModalProps {
 }
 
 export function TransactionModal({ open, onClose, onSave }: TransactionModalProps) {
-  const [formData, setFormData] = useState({
-    tipo: '', // 'Receita' ou 'Despesa'
-    valor: '',
-    data: new Date().toLocaleDateString('pt-BR'),
-    repeticao: 'Única',
-    descricao: '',
-    conta: '',
-    categoria: '',
-    contato: '',
-    numeroDocumento: '',
-    observacoes: '',
-    tags: ''
-  });
+  const [tipo, setTipo] = useState('');
+  const [valor, setValor] = useState('');
+  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [repeticao, setRepeticao] = useState('Única');
+  const [descricao, setDescricao] = useState('');
+  const [conta, setConta] = useState('');
 
-  // Mock de contas bancárias - depois será integrado com dados reais
   const contasBancarias = [
     'Banco Inter',
-    'Banco do Brasil',
+    'Banco do Brasil', 
     'Caixa Econômica',
     'Nubank',
     'Santander'
   ];
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const formatCurrency = (value: string) => {
-    // Remove tudo que não é número
-    const numbers = value.replace(/\D/g, '');
-    
-    // Converte para formato de moeda brasileira
-    const formatted = (parseFloat(numbers) / 100).toLocaleString('pt-BR', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-    
-    return numbers ? formatted : '0,00';
-  };
-
-  const handleValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    const formattedValue = formatCurrency(value);
-    handleInputChange('valor', formattedValue);
-  };
-
   const handleSave = () => {
-    if (!formData.tipo || !formData.valor || !formData.conta) {
+    if (!tipo || !valor || !conta) {
       alert('Preencha os campos obrigatórios: Tipo, Valor e Conta');
       return;
     }
 
     const transactionData = {
-      ...formData,
-      // Converter valor formatado para número
-      valorNumerico: parseFloat(formData.valor.replace(/\./g, '').replace(',', '.'))
+      tipo,
+      valor: parseFloat(valor.replace(',', '.')),
+      data,
+      repeticao,
+      descricao,
+      conta,
+      valorNumerico: parseFloat(valor.replace(',', '.'))
     };
 
     onSave(transactionData);
     onClose();
     
     // Reset form
-    setFormData({
-      tipo: '',
-      valor: '',
-      data: new Date().toLocaleDateString('pt-BR'),
-      repeticao: 'Única',
-      descricao: '',
-      conta: '',
-      categoria: '',
-      contato: '',
-      numeroDocumento: '',
-      observacoes: '',
-      tags: ''
-    });
+    setTipo('');
+    setValor('');
+    setData(new Date().toISOString().split('T')[0]);
+    setRepeticao('Única');
+    setDescricao('');
+    setConta('');
   };
-
-  console.log('TransactionModal render - open:', open);
 
   return (
     <Dialog
@@ -118,10 +76,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      sx={{ zIndex: 9999 }}
       PaperProps={{
         sx: {
           borderRadius: 2,
-          minHeight: '600px'
+          minHeight: '500px'
         }
       }}
     >
@@ -134,8 +93,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
         <FormControl variant="standard" sx={{ minWidth: 200 }}>
           <InputLabel>Novo lançamento</InputLabel>
           <Select
-            value={formData.tipo}
-            onChange={(e) => handleInputChange('tipo', e.target.value)}
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
             label="Novo lançamento"
           >
             <MenuItem value="Receita">Receita</MenuItem>
@@ -157,12 +116,10 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 fullWidth
                 variant="standard"
                 label="Valor (R$)"
-                value={formData.valor}
-                onChange={handleValueChange}
+                value={valor}
+                onChange={(e) => setValor(e.target.value)}
                 required
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">R$</InputAdornment>,
-                }}
+                placeholder="0,00"
               />
             </Box>
             
@@ -171,16 +128,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 fullWidth
                 variant="standard"
                 label="Data"
-                value={formData.data}
-                onChange={(e) => handleInputChange('data', e.target.value)}
+                type="date"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
                 required
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Calendar size={18} />
-                    </InputAdornment>
-                  ),
-                }}
+                InputLabelProps={{ shrink: true }}
               />
             </Box>
             
@@ -188,8 +140,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
               <FormControl fullWidth variant="standard">
                 <InputLabel>Repetição</InputLabel>
                 <Select
-                  value={formData.repeticao}
-                  onChange={(e) => handleInputChange('repeticao', e.target.value)}
+                  value={repeticao}
+                  onChange={(e) => setRepeticao(e.target.value)}
                   label="Repetição"
                 >
                   <MenuItem value="Única">Única</MenuItem>
@@ -200,104 +152,35 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             </Box>
           </Box>
 
-          {/* Segunda linha: Descrição, Conta */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <Box sx={{ flex: 1, minWidth: '250px' }}>
-              <TextField
-                fullWidth
-                variant="standard"
-                label="Descrição"
-                value={formData.descricao}
-                onChange={(e) => handleInputChange('descricao', e.target.value.slice(0, 30))}
-                inputProps={{ maxLength: 30 }}
-                helperText={`${formData.descricao.length}/30`}
-              />
-            </Box>
-            
-            <Box sx={{ flex: 1, minWidth: '250px' }}>
-              <FormControl fullWidth variant="standard" required>
-                <InputLabel>Conta</InputLabel>
-                <Select
-                  value={formData.conta}
-                  onChange={(e) => handleInputChange('conta', e.target.value)}
-                  label="Conta"
-                >
-                  {contasBancarias.map((conta) => (
-                    <MenuItem key={conta} value={conta}>
-                      {conta}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Box>
-          </Box>
-
-          {/* Terceira linha: Categoria, Contato */}
-          <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-            <Box sx={{ flex: 1, minWidth: '250px' }}>
-              <TextField
-                fullWidth
-                variant="standard"
-                label="Categoria"
-                value={formData.categoria}
-                onChange={(e) => handleInputChange('categoria', e.target.value)}
-                disabled
-                helperText="Campo será implementado posteriormente"
-              />
-            </Box>
-            
-            <Box sx={{ flex: 1, minWidth: '250px' }}>
-              <TextField
-                fullWidth
-                variant="standard"
-                label="Contato"
-                value={formData.contato}
-                onChange={(e) => handleInputChange('contato', e.target.value)}
-                disabled
-                helperText="Campo será implementado posteriormente"
-              />
-            </Box>
-          </Box>
-
-          {/* Quarta linha: Número de documento */}
+          {/* Segunda linha: Descrição */}
           <Box>
             <TextField
               fullWidth
               variant="standard"
-              label="Número de documento"
-              value={formData.numeroDocumento}
-              onChange={(e) => handleInputChange('numeroDocumento', e.target.value)}
-              disabled
-              helperText="0 / 60 - Campo será implementado posteriormente"
+              label="Descrição"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value.slice(0, 30))}
+              helperText={`${descricao.length}/30 caracteres`}
+              placeholder="Descrição do lançamento..."
             />
           </Box>
 
-          {/* Quinta linha: Observações */}
+          {/* Terceira linha: Conta */}
           <Box>
-            <TextField
-              fullWidth
-              variant="standard"
-              label="Observações"
-              value={formData.observacoes}
-              onChange={(e) => handleInputChange('observacoes', e.target.value)}
-              multiline
-              rows={2}
-              disabled
-              helperText="0 / 400 - Campo será implementado posteriormente"
-            />
-          </Box>
-
-          {/* Sexta linha: Tags */}
-          <Box>
-            <TextField
-              fullWidth
-              variant="standard"
-              label="Tags"
-              value={formData.tags}
-              onChange={(e) => handleInputChange('tags', e.target.value)}
-              disabled
-              helperText="Campo será implementado posteriormente"
-            />
+            <FormControl fullWidth variant="standard" required>
+              <InputLabel>Conta</InputLabel>
+              <Select
+                value={conta}
+                onChange={(e) => setConta(e.target.value)}
+                label="Conta"
+              >
+                {contasBancarias.map((banco) => (
+                  <MenuItem key={banco} value={banco}>
+                    {banco}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </Box>
         </Box>
 
@@ -327,23 +210,19 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           
           <Button
             variant="outlined"
-            startIcon={<Plus size={16} />}
-            onClick={() => {
-              handleSave();
-              // Manter modal aberto para novo lançamento
-            }}
+            onClick={onClose}
             sx={{
-              borderColor: '#2196f3',
-              color: '#2196f3',
+              borderColor: '#666',
+              color: '#666',
               '&:hover': {
-                borderColor: '#1976d2',
-                backgroundColor: 'rgba(33, 150, 243, 0.04)'
+                borderColor: '#333',
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
               },
               borderRadius: '50px',
               px: 3
             }}
           >
-            Salvar e Continuar
+            Cancelar
           </Button>
         </Box>
       </DialogContent>
