@@ -34,7 +34,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState('25/07/2025');
-  const [repeticao, setRepeticao] = useState('Parcelado');
+  const [repeticao, setRepeticao] = useState('');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -174,7 +174,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           
           <div className="flex items-end gap-2">
             <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }}>Repetição</InputLabel>
+              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
               <Select
                 value={repeticao}
                 onChange={(e) => setRepeticao(e.target.value)}
@@ -194,6 +194,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                   }
                 }}
               >
+                <MenuItem value="Única">Única</MenuItem>
                 <MenuItem value="Parcelado">Parcelado</MenuItem>
                 <MenuItem value="Recorrente">Recorrente</MenuItem>
               </Select>
