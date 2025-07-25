@@ -2805,11 +2805,11 @@ function ChartOfAccountsContent({
       />
       
       {/* Debug: mostrar estado do modal */}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ position: 'fixed', top: 10, right: 10, background: 'yellow', padding: '5px', zIndex: 9999 }}>
-          Modal Open: {transactionModalOpen.toString()}
-        </div>
-      )}
+      <div style={{ position: 'fixed', top: 10, right: 10, background: 'yellow', padding: '5px', zIndex: 9999 }}>
+        Modal Open: {transactionModalOpen.toString()}
+        <br/>
+        Debug: Modal deve aparecer quando true
+      </div>
 
       {/* Dialogs de Feedback */}
       <SuccessDialogComponent />

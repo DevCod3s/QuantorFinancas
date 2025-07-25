@@ -72,9 +72,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
 
   // Debug log
   console.log('TransactionModal render - open:', open);
+  console.log('TransactionModal props:', { open, onClose, onSave });
 
-  // Force render test
+  // Force render test - sempre mostrar quando open=true
   if (open) {
+    console.log('Modal deveria aparecer agora!');
     return (
       <div style={{
         position: 'fixed',
@@ -82,36 +84,44 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        zIndex: 9999,
+        backgroundColor: 'rgba(0,0,0,0.8)',
+        zIndex: 99999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
       }}>
         <div style={{
           backgroundColor: 'white',
-          padding: '20px',
+          padding: '30px',
           borderRadius: '8px',
-          minWidth: '500px',
+          minWidth: '600px',
           maxHeight: '80vh',
-          overflow: 'auto'
+          overflow: 'auto',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
         }}>
-          <h2>Novo Lançamento (Teste)</h2>
-          <p>Se você está vendo isso, o estado está funcionando!</p>
+          <h2 style={{ margin: '0 0 20px 0', color: '#333' }}>🎯 MODAL FUNCIONANDO!</h2>
+          <p style={{ margin: '10px 0', fontSize: '16px' }}>✅ O estado está correto: open = {open.toString()}</p>
+          <p style={{ margin: '10px 0', fontSize: '14px', color: '#666' }}>
+            Agora vou implementar o modal real do Material-UI
+          </p>
           <button onClick={onClose} style={{
-            padding: '10px 20px',
-            backgroundColor: '#f44336',
+            padding: '12px 24px',
+            backgroundColor: '#4caf50',
             color: 'white',
             border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            marginTop: '20px'
           }}>
-            Fechar
+            Fechar e implementar modal real
           </button>
         </div>
       </div>
     );
   }
+
+  console.log('Modal não renderizado - open é false');
 
   return (
     <Dialog
