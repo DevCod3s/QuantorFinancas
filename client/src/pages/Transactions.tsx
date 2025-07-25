@@ -59,6 +59,7 @@ import { ptBR } from "date-fns/locale";
 import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import { TransactionModal } from "@/components/TransactionModal";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -123,6 +124,10 @@ export function Transactions() {
   const [receivablesSortDirection, setReceivablesSortDirection] = useState<'asc' | 'desc'>('asc');
   const [receivablesCurrentPage, setReceivablesCurrentPage] = useState(1);
   const [receivablesItemsPerPage] = useState(10);
+  
+  // Estado para modal de transação
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [newTransactions, setNewTransactions] = useState<any[]>([]);
   
   // Dados mockados para À Pagar
   const payablesData = [
@@ -205,6 +210,33 @@ export function Transactions() {
 
   // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData = Array.isArray(chartAccounts) ? chartAccounts : [];
+
+  // Função para salvar nova transação
+  const handleSaveTransaction = (transactionData: any) => {
+    const newTransaction = {
+      id: Date.now(), // ID temporário
+      company: transactionData.conta,
+      cnpj: '00.000.000/0001-00', // Placeholder
+      dueDate: transactionData.data,
+      product: transactionData.descricao || 'Lançamento',
+      type: transactionData.repeticao,
+      status: 'Pendente',
+      value: transactionData.valorNumerico
+    };
+
+    // Adicionar à lista correta baseado no tipo
+    if (transactionData.tipo === 'Receita') {
+      // Adicionar aos recebíveis
+      receivablesData.push(newTransaction);
+      showSuccess('Receita adicionada com sucesso!');
+    } else if (transactionData.tipo === 'Despesa') {
+      // Adicionar aos pagáveis
+      payablesData.push(newTransaction);
+      showSuccess('Despesa adicionada com sucesso!');
+    }
+
+    setNewTransactions(prev => [...prev, newTransaction]);
+  };
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({
@@ -493,10 +525,18 @@ export function Transactions() {
             onClick={() => {
               if (activeTab === "centro-custo") {
                 openCreateModal();
+              } else if (activeTab === "movimentacoes") {
+                setTransactionModalOpen(true);
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
-            title={activeTab === "centro-custo" ? "Nova Conta - Plano de Contas" : "Adicionar Novo"}
+            title={
+              activeTab === "centro-custo" 
+                ? "Nova Conta - Plano de Contas" 
+                : activeTab === "movimentacoes"
+                ? "Novo Lançamento Financeiro"
+                : "Adicionar Novo"
+            }
             style={{ 
               boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
@@ -515,7 +555,13 @@ export function Transactions() {
           
           {/* Tooltip */}
           <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-            {activeTab === "centro-custo" ? "Nova Conta - Plano de Contas" : "Adicionar Novo"}
+            {
+              activeTab === "centro-custo" 
+                ? "Nova Conta - Plano de Contas" 
+                : activeTab === "movimentacoes"
+                ? "Novo Lançamento Financeiro"
+                : "Adicionar Novo"
+            }
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
           </div>
         </div>
@@ -2745,6 +2791,18 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
+
+      {/* Modal de Nova Transação */}
+      <TransactionModal
+        open={transactionModalOpen}
+        onClose={() => setTransactionModalOpen(false)}
+        onSave={handleSaveTransaction}
+      />
+
+      {/* Dialogs de Feedback */}
+      <SuccessDialogComponent />
+      <ErrorDialogComponent />
+      <ConfirmDialogComponent />
 
     </div>
   );
