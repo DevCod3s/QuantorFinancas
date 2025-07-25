@@ -110,6 +110,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
     });
   };
 
+  console.log('TransactionModal render - open:', open);
+
   return (
     <Dialog
       open={open}

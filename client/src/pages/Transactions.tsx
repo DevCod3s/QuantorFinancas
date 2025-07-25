@@ -59,7 +59,7 @@ import { ptBR } from "date-fns/locale";
 import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { WorkingTransactionModal } from "@/components/WorkingTransactionModal";
+import { TransactionModal } from "@/components/TransactionModal";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -2795,7 +2795,7 @@ function ChartOfAccountsContent({
       )}
 
       {/* Modal de Nova Transação */}
-      <WorkingTransactionModal
+      <TransactionModal
         open={transactionModalOpen}
         onClose={() => {
           console.log("Closing transaction modal");
