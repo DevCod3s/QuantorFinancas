@@ -22,7 +22,6 @@ import {
 } from '@mui/material';
 import { X, Calendar, Check, Plus } from 'lucide-react';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 
 interface TransactionModalProps {
   open: boolean;
@@ -34,7 +33,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [formData, setFormData] = useState({
     tipo: '', // 'Receita' ou 'Despesa'
     valor: '',
-    data: format(new Date(), 'dd/MM/yyyy'),
+    data: new Date().toLocaleDateString('pt-BR'),
     repeticao: 'Única',
     descricao: '',
     conta: '',
@@ -99,7 +98,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
     setFormData({
       tipo: '',
       valor: '',
-      data: format(new Date(), 'dd/MM/yyyy'),
+      data: new Date().toLocaleDateString('pt-BR'),
       repeticao: 'Única',
       descricao: '',
       conta: '',

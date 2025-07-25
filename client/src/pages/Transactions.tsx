@@ -523,9 +523,11 @@ export function Transactions() {
         <div className="relative">
           <button
             onClick={() => {
+              console.log("Active tab:", activeTab);
               if (activeTab === "centro-custo") {
                 openCreateModal();
               } else if (activeTab === "movimentacoes") {
+                console.log("Opening transaction modal");
                 setTransactionModalOpen(true);
               }
             }}
@@ -2795,9 +2797,19 @@ function ChartOfAccountsContent({
       {/* Modal de Nova Transação */}
       <TransactionModal
         open={transactionModalOpen}
-        onClose={() => setTransactionModalOpen(false)}
+        onClose={() => {
+          console.log("Closing transaction modal");
+          setTransactionModalOpen(false);
+        }}
         onSave={handleSaveTransaction}
       />
+      
+      {/* Debug: mostrar estado do modal */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ position: 'fixed', top: 10, right: 10, background: 'yellow', padding: '5px', zIndex: 9999 }}>
+          Modal Open: {transactionModalOpen.toString()}
+        </div>
+      )}
 
       {/* Dialogs de Feedback */}
       <SuccessDialogComponent />
