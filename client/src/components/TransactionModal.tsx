@@ -89,24 +89,29 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
     >
       {/* Cabeçalho */}
       <div className="flex items-center justify-between p-4 border-b">
-        <TextField
-          variant="standard"
-          value={tipo}
-          onChange={(e) => setTipo(e.target.value)}
-          sx={{ 
-            fontSize: '16px',
-            fontWeight: 500,
-            minWidth: 150,
-            '& .MuiInput-root:before': { borderBottom: 'none' },
-            '& .MuiInput-root:after': { borderBottom: 'none' },
-            '& .MuiInput-root:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
-            '& .MuiInputBase-input': { 
-              fontSize: '16px', 
+        <FormControl variant="standard" sx={{ minWidth: 150 }}>
+          <Select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            sx={{ 
+              fontSize: '16px',
               fontWeight: 500,
-              cursor: 'text'
-            }
-          }}
-        />
+              '&:before': { borderBottom: 'none' },
+              '&:after': { borderBottom: 'none' },
+              '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
+            }}
+            MenuProps={{
+              PaperProps: {
+                sx: {
+                  zIndex: 100000
+                }
+              }
+            }}
+          >
+            <MenuItem value="Nova receita">Nova receita</MenuItem>
+            <MenuItem value="Nova despesa">Nova despesa</MenuItem>
+          </Select>
+        </FormControl>
         
         <IconButton onClick={onClose} size="small">
           <X className="h-5 w-5 text-gray-400" />
@@ -144,14 +149,25 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           </div>
           
           <div className="flex items-end gap-2">
-            <TextField
-              variant="standard"
-              label="Repetição"
-              value={repeticao}
-              onChange={(e) => setRepeticao(e.target.value)}
-              fullWidth
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-            />
+            <FormControl variant="standard" fullWidth>
+              <InputLabel sx={{ color: '#666' }}>Repetição</InputLabel>
+              <Select
+                value={repeticao}
+                onChange={(e) => setRepeticao(e.target.value)}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      zIndex: 100000
+                    }
+                  }
+                }}
+              >
+                <MenuItem value="Única">Única</MenuItem>
+                <MenuItem value="Mensal">Mensal</MenuItem>
+                <MenuItem value="Semanal">Semanal</MenuItem>
+                <MenuItem value="Anual">Anual</MenuItem>
+              </Select>
+            </FormControl>
             <IconButton size="small" sx={{ mb: 0.5 }}>
               <HelpCircle className="h-4 w-4 text-gray-400" />
             </IconButton>
