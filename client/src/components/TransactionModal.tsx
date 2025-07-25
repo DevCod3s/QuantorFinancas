@@ -34,7 +34,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState('25/07/2025');
-  const [repeticao, setRepeticao] = useState('Única');
+  const [repeticao, setRepeticao] = useState('Parcelado');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -42,6 +42,26 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [numeroDocumento, setNumeroDocumento] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [tags, setTags] = useState('');
+
+  // Função para formatação de moeda brasileira
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    // Remove tudo exceto números
+    value = value.replace(/\D/g, '');
+    // Converte para número e divide por 100 para casas decimais
+    const number = parseInt(value) / 100;
+    // Formata como moeda brasileira
+    if (value === '') {
+      setValor('');
+    } else {
+      const formatted = new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2
+      }).format(number);
+      setValor(formatted);
+    }
+  };
 
   const handleSave = () => {
     const transaction = {
@@ -131,7 +151,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
               variant="standard"
               label="Valor (R$)"
               value={valor}
-              onChange={(e) => setValor(e.target.value)}
+              onChange={handleValorChange}
               fullWidth
               required
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
@@ -174,10 +194,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                   }
                 }}
               >
-                <MenuItem value="Única">Única</MenuItem>
-                <MenuItem value="Mensal">Mensal</MenuItem>
-                <MenuItem value="Semanal">Semanal</MenuItem>
-                <MenuItem value="Anual">Anual</MenuItem>
+                <MenuItem value="Parcelado">Parcelado</MenuItem>
+                <MenuItem value="Recorrente">Recorrente</MenuItem>
               </Select>
             </FormControl>
             <IconButton size="small" sx={{ mb: 0.5 }}>
