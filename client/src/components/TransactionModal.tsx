@@ -1,7 +1,7 @@
 /**
  * @fileoverview Modal de transações para lançamentos financeiros
  * Componente responsável por criar e editar transações (receitas/despesas)
- * com formulário completo e integração com Material-UI
+ * com formulário completo seguindo layout da imagem de referência
  * 
  * @author Sistema Quantor
  * @version 1.0.0
@@ -15,9 +15,10 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  IconButton
 } from '@mui/material';
-import { X } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle } from 'lucide-react';
 
 interface TransactionModalProps {
   open: boolean;
@@ -27,38 +28,38 @@ interface TransactionModalProps {
 
 /**
  * Modal para criação de novas transações financeiras
- * Permite registro de receitas e despesas com campos completos
+ * Layout baseado na imagem de referência com campos organizados em grid
  */
 export function TransactionModal({ open, onClose, onSave }: TransactionModalProps) {
-  const [tipo, setTipo] = useState('');
-  const [valor, setValor] = useState('');
-  const [data, setData] = useState('');
-  const [repeticao, setRepeticao] = useState('');
+  const [tipo, setTipo] = useState('Nova receita');
+  const [valor, setValor] = useState('0,00');
+  const [data, setData] = useState('25/07/2025');
+  const [repeticao, setRepeticao] = useState('Única');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
+  const [categoria, setCategoria] = useState('');
+  const [contato, setContato] = useState('');
+  const [numeroDocumento, setNumeroDocumento] = useState('');
+  const [observacoes, setObservacoes] = useState('');
+  const [tags, setTags] = useState('');
 
   const handleSave = () => {
     const transaction = {
       tipo,
-      valor: parseFloat(valor),
+      valor: parseFloat(valor.replace(',', '.')),
       data,
       repeticao,
       descricao,
-      conta
+      conta,
+      categoria,
+      contato,
+      numeroDocumento,
+      observacoes,
+      tags
     };
     
     onSave(transaction);
-    resetForm();
     onClose();
-  };
-
-  const resetForm = () => {
-    setTipo('');
-    setValor('');
-    setData('');
-    setRepeticao('');
-    setDescricao('');
-    setConta('');
   };
 
   return (
@@ -70,128 +71,243 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       sx={{ 
         zIndex: 9999,
         '& .MuiBackdrop-root': {
-          backgroundColor: 'rgba(0, 0, 0, 0.7)'
+          backgroundColor: 'rgba(0, 0, 0, 0.5)'
         }
       }}
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          borderRadius: 2,
           minHeight: '600px',
           maxHeight: '90vh',
           overflow: 'visible'
         }
       }}
     >
-      {/* Cabeçalho com X para fechar */}
-      <div className="flex items-center justify-between p-6 border-b">
-        <h2 className="text-xl font-semibold text-gray-800">
-          Novo Lançamento
-        </h2>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
+      {/* Cabeçalho */}
+      <div className="flex items-center justify-between p-4 border-b">
+        <FormControl variant="standard" sx={{ minWidth: 150 }}>
+          <Select
+            value={tipo}
+            onChange={(e) => setTipo(e.target.value)}
+            sx={{ 
+              fontSize: '16px',
+              fontWeight: 500,
+              '&:before': { borderBottom: 'none' },
+              '&:after': { borderBottom: 'none' },
+              '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
+            }}
+          >
+            <MenuItem value="Nova receita">Nova receita</MenuItem>
+            <MenuItem value="Nova despesa">Nova despesa</MenuItem>
+          </Select>
+        </FormControl>
+        
+        <IconButton onClick={onClose} size="small">
+          <X className="h-5 w-5 text-gray-400" />
+        </IconButton>
       </div>
 
       {/* Conteúdo do modal */}
       <div className="p-6 space-y-6">
-        {/* Tipo */}
-        <FormControl variant="standard" fullWidth>
-          <InputLabel id="tipo-label">Tipo</InputLabel>
-          <Select
-            labelId="tipo-label"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-          >
-            <MenuItem value="receita">Receita</MenuItem>
-            <MenuItem value="despesa">Despesa</MenuItem>
-          </Select>
-        </FormControl>
+        {/* Primeira linha: Valor, Data, Repetição */}
+        <div className="grid grid-cols-3 gap-4">
+          <div>
+            <TextField
+              variant="standard"
+              label="Valor (R$)"
+              value={valor}
+              onChange={(e) => setValor(e.target.value)}
+              fullWidth
+              required
+              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            />
+          </div>
+          
+          <div>
+            <TextField
+              variant="standard"
+              label="Data"
+              type="date"
+              value="2025-07-25"
+              onChange={(e) => setData(e.target.value)}
+              fullWidth
+              required
+              InputLabelProps={{ shrink: true }}
+              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            />
+          </div>
+          
+          <div className="flex items-end gap-2">
+            <FormControl variant="standard" fullWidth>
+              <InputLabel sx={{ color: '#666' }}>Repetição</InputLabel>
+              <Select
+                value={repeticao}
+                onChange={(e) => setRepeticao(e.target.value)}
+              >
+                <MenuItem value="Única">Única</MenuItem>
+                <MenuItem value="Mensal">Mensal</MenuItem>
+                <MenuItem value="Semanal">Semanal</MenuItem>
+                <MenuItem value="Anual">Anual</MenuItem>
+              </Select>
+            </FormControl>
+            <IconButton size="small" sx={{ mb: 0.5 }}>
+              <HelpCircle className="h-4 w-4 text-gray-400" />
+            </IconButton>
+          </div>
+        </div>
 
-        {/* Valor */}
-        <TextField
-          variant="standard"
-          label="Valor"
-          type="number"
-          value={valor}
-          onChange={(e) => setValor(e.target.value)}
-          fullWidth
-          InputProps={{
-            startAdornment: <span style={{ marginRight: 8, color: '#666' }}>R$</span>
-          }}
-        />
-
-        {/* Data */}
-        <TextField
-          variant="standard"
-          label="Data"
-          type="date"
-          value={data}
-          onChange={(e) => setData(e.target.value)}
-          fullWidth
-          InputLabelProps={{
-            shrink: true,
-          }}
-        />
-
-        {/* Repetição */}
-        <FormControl variant="standard" fullWidth>
-          <InputLabel id="repeticao-label">Repetição</InputLabel>
-          <Select
-            labelId="repeticao-label"
-            value={repeticao}
-            onChange={(e) => setRepeticao(e.target.value)}
-          >
-            <MenuItem value="unica">Única</MenuItem>
-            <MenuItem value="mensal">Mensal</MenuItem>
-            <MenuItem value="semanal">Semanal</MenuItem>
-            <MenuItem value="anual">Anual</MenuItem>
-          </Select>
-        </FormControl>
-
-        {/* Descrição */}
-        <TextField
-          variant="standard"
-          label="Descrição"
-          value={descricao}
-          onChange={(e) => setDescricao(e.target.value)}
-          fullWidth
-          multiline
-          rows={2}
-        />
-
-        {/* Conta */}
-        <FormControl variant="standard" fullWidth>
-          <InputLabel id="conta-label">Conta</InputLabel>
-          <Select
-            labelId="conta-label"
+        {/* Segunda linha: Descrição, Conta */}
+        <div className="grid grid-cols-2 gap-4">
+          <TextField
+            variant="standard"
+            label="Descrição"
+            value={descricao}
+            onChange={(e) => setDescricao(e.target.value)}
+            fullWidth
+            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+          />
+          
+          <TextField
+            variant="standard"
+            label="Conta"
             value={conta}
             onChange={(e) => setConta(e.target.value)}
-          >
-            <MenuItem value="conta-corrente">Conta Corrente</MenuItem>
-            <MenuItem value="poupanca">Poupança</MenuItem>
-            <MenuItem value="cartao-credito">Cartão de Crédito</MenuItem>
-          </Select>
-        </FormControl>
+            fullWidth
+            required
+            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+          />
+        </div>
+
+        {/* Terceira linha: Categoria, Contato */}
+        <div className="grid grid-cols-2 gap-4">
+          <TextField
+            variant="standard"
+            label="Categoria"
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value)}
+            fullWidth
+            required
+            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+          />
+          
+          <TextField
+            variant="standard"
+            label="Contato"
+            value={contato}
+            onChange={(e) => setContato(e.target.value)}
+            fullWidth
+            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+          />
+        </div>
+
+        {/* Quarta linha: Número de documento */}
+        <div className="relative">
+          <TextField
+            variant="standard"
+            label="Número de documento"
+            value={numeroDocumento}
+            onChange={(e) => setNumeroDocumento(e.target.value)}
+            fullWidth
+            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+          />
+          <div className="absolute right-0 bottom-0 text-xs text-gray-400">
+            {numeroDocumento.length} / 60
+          </div>
+        </div>
+
+        {/* Quinta linha: Observações */}
+        <div className="relative">
+          <TextField
+            variant="standard"
+            label="Observações"
+            value={observacoes}
+            onChange={(e) => setObservacoes(e.target.value.slice(0, 400))}
+            fullWidth
+            multiline
+            rows={3}
+            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+          />
+          <div className="absolute right-0 bottom-0 text-xs text-gray-400">
+            {observacoes.length} / 400
+          </div>
+        </div>
+
+        {/* Sexta linha: Tags */}
+        <TextField
+          variant="standard"
+          label="Tags"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          fullWidth
+          sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+        />
       </div>
 
-      {/* Botões */}
-      <div className="flex justify-end gap-3 p-6 border-t bg-gray-50">
-        <button
-          onClick={onClose}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
-          onClick={handleSave}
-          disabled={!tipo || !valor || !data}
-          className="px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition-colors"
-        >
-          Salvar
-        </button>
+      {/* Botões inferiores */}
+      <div className="flex items-center justify-between p-4 border-t bg-gray-50">
+        <div className="flex items-center gap-2">
+          <IconButton 
+            size="small" 
+            sx={{ 
+              backgroundColor: '#22c55e', 
+              color: 'white',
+              '&:hover': { backgroundColor: '#16a34a' },
+              width: 32,
+              height: 32
+            }}
+          >
+            <Check className="h-4 w-4" />
+          </IconButton>
+          
+          <IconButton 
+            size="small"
+            sx={{ 
+              backgroundColor: '#64748b', 
+              color: 'white',
+              '&:hover': { backgroundColor: '#475569' },
+              width: 32,
+              height: 32
+            }}
+          >
+            <CheckCheck className="h-4 w-4" />
+          </IconButton>
+          
+          <IconButton 
+            size="small"
+            sx={{ 
+              backgroundColor: '#64748b', 
+              color: 'white',
+              '&:hover': { backgroundColor: '#475569' },
+              width: 32,
+              height: 32
+            }}
+          >
+            <Paperclip className="h-4 w-4" />
+          </IconButton>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleSave}
+            disabled={!valor || !conta || !categoria}
+            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
+          >
+            Salvar
+          </button>
+          
+          <IconButton 
+            size="small"
+            sx={{ 
+              backgroundColor: '#64748b', 
+              color: 'white',
+              '&:hover': { backgroundColor: '#475569' },
+              width: 32,
+              height: 32
+            }}
+          >
+            <Plus className="h-4 w-4" />
+          </IconButton>
+        </div>
       </div>
     </Dialog>
   );
