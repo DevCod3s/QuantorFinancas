@@ -69,13 +69,9 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       maxWidth="md"
       fullWidth
       sx={{ 
-        zIndex: 99999,
+        zIndex: 1300,
         '& .MuiBackdrop-root': {
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 99998
-        },
-        '& .MuiDialog-paper': {
-          zIndex: 99999
+          backgroundColor: 'rgba(0, 0, 0, 0.5)'
         }
       }}
       PaperProps={{
@@ -103,8 +99,16 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             MenuProps={{
               PaperProps: {
                 sx: {
-                  zIndex: 100000
+                  zIndex: 1400
                 }
+              },
+              anchorOrigin: {
+                vertical: 'bottom',
+                horizontal: 'left',
+              },
+              transformOrigin: {
+                vertical: 'top',
+                horizontal: 'left',
               }
             }}
           >
@@ -157,8 +161,16 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 MenuProps={{
                   PaperProps: {
                     sx: {
-                      zIndex: 100000
+                      zIndex: 1400
                     }
+                  },
+                  anchorOrigin: {
+                    vertical: 'bottom',
+                    horizontal: 'left',
+                  },
+                  transformOrigin: {
+                    vertical: 'top',
+                    horizontal: 'left',
                   }
                 }}
               >
