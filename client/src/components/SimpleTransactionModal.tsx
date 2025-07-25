@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { X } from 'lucide-react';
 
 interface SimpleTransactionModalProps {
@@ -61,22 +59,21 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
         <div className="space-y-4 mt-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="tipo">Tipo *</Label>
-              <Select value={tipo} onValueChange={setTipo}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Receita">Receita</SelectItem>
-                  <SelectItem value="Despesa">Despesa</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Tipo *</label>
+              <select 
+                value={tipo} 
+                onChange={(e) => setTipo(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecione...</option>
+                <option value="Receita">Receita</option>
+                <option value="Despesa">Despesa</option>
+              </select>
             </div>
             
             <div>
-              <Label htmlFor="valor">Valor (R$) *</Label>
+              <label className="text-sm font-medium">Valor (R$) *</label>
               <Input
-                id="valor"
                 value={valor}
                 onChange={(e) => setValor(e.target.value)}
                 placeholder="0,00"
@@ -84,9 +81,8 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
             </div>
             
             <div>
-              <Label htmlFor="data">Data</Label>
+              <label className="text-sm font-medium">Data</label>
               <Input
-                id="data"
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
@@ -96,40 +92,38 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
           
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="repeticao">Repetição</Label>
-              <Select value={repeticao} onValueChange={setRepeticao}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Única">Única</SelectItem>
-                  <SelectItem value="Parcelada">Parcelada</SelectItem>
-                  <SelectItem value="Recorrente">Recorrente</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Repetição</label>
+              <select 
+                value={repeticao} 
+                onChange={(e) => setRepeticao(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Única">Única</option>
+                <option value="Parcelada">Parcelada</option>
+                <option value="Recorrente">Recorrente</option>
+              </select>
             </div>
             
             <div>
-              <Label htmlFor="conta">Conta *</Label>
-              <Select value={conta} onValueChange={setConta}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Banco Inter">Banco Inter</SelectItem>
-                  <SelectItem value="Banco do Brasil">Banco do Brasil</SelectItem>
-                  <SelectItem value="Caixa Econômica">Caixa Econômica</SelectItem>
-                  <SelectItem value="Nubank">Nubank</SelectItem>
-                  <SelectItem value="Santander">Santander</SelectItem>
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Conta *</label>
+              <select 
+                value={conta} 
+                onChange={(e) => setConta(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Selecione...</option>
+                <option value="Banco Inter">Banco Inter</option>
+                <option value="Banco do Brasil">Banco do Brasil</option>
+                <option value="Caixa Econômica">Caixa Econômica</option>
+                <option value="Nubank">Nubank</option>
+                <option value="Santander">Santander</option>
+              </select>
             </div>
           </div>
           
           <div>
-            <Label htmlFor="descricao">Descrição</Label>
+            <label className="text-sm font-medium">Descrição</label>
             <Input
-              id="descricao"
               value={descricao}
               onChange={(e) => setDescricao(e.target.value.slice(0, 30))}
               placeholder="Descrição do lançamento..."
