@@ -2015,6 +2015,16 @@ export function Transactions() {
         </TabsContent>
       </Tabs>
 
+      {/* Modal de Nova Transação */}
+      <TransactionModal
+        open={transactionModalOpen}
+        onClose={() => {
+          console.log("Closing transaction modal");
+          setTransactionModalOpen(false);
+        }}
+        onSave={handleSaveTransaction}
+      />
+
       {/* Dialogs personalizados no componente principal */}
       <SuccessDialogComponent />
       <ErrorDialogComponent />
