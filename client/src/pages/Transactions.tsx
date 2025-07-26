@@ -2201,62 +2201,56 @@ function ChartOfAccountsContent({
       return;
     }
 
-    // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRIGIDO
+    // GERAÇÃO DE CÓDIGO HIERÁRQUICO DEFINITIVO
     const generateHierarchicalCode = () => {
       if (level === 1) {
-        // Nível 1: Verificar se já existe antes de usar mapeamento
-        const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
-        
-        // Verificar se já existe uma conta com este tipo no nível 1
-        const existingWithSameType = safeChartAccountsData?.find(acc => 
-          acc.type === categoriaMapping.type && acc.level === 1
-        );
-        
-        if (existingWithSameType) {
-          // Se já existe, gerar próximo código disponível
-          const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-          const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
-          return (maxCode + 1).toString();
-        } else {
-          // Se não existe, usar o código do mapeamento
-          return categoriaMapping.code;
-        }
+        // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
+        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
+        return (maxCode + 1).toString();
       }
       
       if (level === 2) {
-        // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
-        const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
-        const parentCode = categoriaMapping.code; // 1 para receita, 2 para despesa, etc.
-        
-        const sameTypeAccounts = safeChartAccountsData?.filter(acc => 
-          acc.type === categoriaMapping.type && acc.level === 2
-        ) || [];
-        
-        return `${parentCode}.${sameTypeAccounts.length + 1}`;
+        // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
+        if (parentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+          const parentCode = parentAccount ? parentAccount.code : '1';
+          
+          // Contar filhos diretos do mesmo pai no nível 2
+          const childrenCount = safeChartAccountsData?.filter(acc => 
+            acc.parentId === parentId && acc.level === 2
+          ).length || 0;
+          
+          return `${parentCode}.${childrenCount + 1}`;
+        }
       }
       
       if (level === 3) {
-        // Nível 3: Códigos 1.2.1, 1.2.2, 2.1.1...
-        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
-        const parentCode = parentAccount ? parentAccount.code : '1.1';
-        
-        const sameParentCount = safeChartAccountsData?.filter(acc => 
-          acc.parentId === parentAccount?.id && acc.level === 3
-        ).length || 0;
-        
-        return `${parentCode}.${sameParentCount + 1}`;
+        // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
+        if (parentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+          const parentCode = parentAccount ? parentAccount.code : '1.1';
+          
+          const childrenCount = safeChartAccountsData?.filter(acc => 
+            acc.parentId === parentId && acc.level === 3
+          ).length || 0;
+          
+          return `${parentCode}.${childrenCount + 1}`;
+        }
       }
       
       if (level === 4) {
-        // Nível 4: Códigos 1.2.3.1, 1.2.3.2...
-        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
-        const parentCode = parentAccount ? parentAccount.code : '1.1.1';
-        
-        const sameParentCount = safeChartAccountsData?.filter(acc => 
-          acc.parentId === parentAccount?.id && acc.level === 4
-        ).length || 0;
-        
-        return `${parentCode}.${sameParentCount + 1}`;
+        // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
+        if (parentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+          const parentCode = parentAccount ? parentAccount.code : '1.1.1';
+          
+          const childrenCount = safeChartAccountsData?.filter(acc => 
+            acc.parentId === parentId && acc.level === 4
+          ).length || 0;
+          
+          return `${parentCode}.${childrenCount + 1}`;
+        }
       }
       
       return '1';
@@ -2402,62 +2396,56 @@ function ChartOfAccountsContent({
       }
     };
 
-    // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRIGIDO (Mesma lógica de handleSaveAccount)
+    // GERAÇÃO DE CÓDIGO HIERÁRQUICO DEFINITIVO (Mesma lógica correta)
     const generateHierarchicalCode = () => {
       if (level === 1) {
-        // Nível 1: Verificar se já existe antes de usar mapeamento
-        const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
-        
-        // Verificar se já existe uma conta com este tipo no nível 1
-        const existingWithSameType = safeChartAccountsData?.find(acc => 
-          acc.type === categoriaMapping.type && acc.level === 1
-        );
-        
-        if (existingWithSameType) {
-          // Se já existe, gerar próximo código disponível
-          const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-          const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
-          return (maxCode + 1).toString();
-        } else {
-          // Se não existe, usar o código do mapeamento
-          return categoriaMapping.code;
-        }
+        // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
+        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
+        return (maxCode + 1).toString();
       }
       
       if (level === 2) {
-        // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
-        const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
-        const parentCode = categoriaMapping.code; // 1 para receita, 2 para despesa, etc.
-        
-        const sameTypeAccounts = safeChartAccountsData?.filter(acc => 
-          acc.type === categoriaMapping.type && acc.level === 2
-        ) || [];
-        
-        return `${parentCode}.${sameTypeAccounts.length + 1}`;
+        // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
+        if (parentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+          const parentCode = parentAccount ? parentAccount.code : '1';
+          
+          // Contar filhos diretos do mesmo pai no nível 2
+          const childrenCount = safeChartAccountsData?.filter(acc => 
+            acc.parentId === parentId && acc.level === 2
+          ).length || 0;
+          
+          return `${parentCode}.${childrenCount + 1}`;
+        }
       }
       
       if (level === 3) {
-        // Nível 3: Códigos 1.2.1, 1.2.2, 2.1.1...
-        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
-        const parentCode = parentAccount ? parentAccount.code : '1.1';
-        
-        const sameParentCount = safeChartAccountsData?.filter(acc => 
-          acc.parentId === parentAccount?.id && acc.level === 3
-        ).length || 0;
-        
-        return `${parentCode}.${sameParentCount + 1}`;
+        // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
+        if (parentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+          const parentCode = parentAccount ? parentAccount.code : '1.1';
+          
+          const childrenCount = safeChartAccountsData?.filter(acc => 
+            acc.parentId === parentId && acc.level === 3
+          ).length || 0;
+          
+          return `${parentCode}.${childrenCount + 1}`;
+        }
       }
       
       if (level === 4) {
-        // Nível 4: Códigos 1.2.3.1, 1.2.3.2...
-        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
-        const parentCode = parentAccount ? parentAccount.code : '1.1.1';
-        
-        const sameParentCount = safeChartAccountsData?.filter(acc => 
-          acc.parentId === parentAccount?.id && acc.level === 4
-        ).length || 0;
-        
-        return `${parentCode}.${sameParentCount + 1}`;
+        // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
+        if (parentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+          const parentCode = parentAccount ? parentAccount.code : '1.1.1';
+          
+          const childrenCount = safeChartAccountsData?.filter(acc => 
+            acc.parentId === parentId && acc.level === 4
+          ).length || 0;
+          
+          return `${parentCode}.${childrenCount + 1}`;
+        }
       }
       
       return '1';
