@@ -30,13 +30,15 @@ import type {
   AiInteraction,
   Relationship,
   ChartOfAccount,
+  BankAccount,
   InsertUser,
   InsertCategory,
   InsertTransaction,
   InsertBudget,
   InsertAiInteraction,
   InsertRelationship,
-  InsertChartOfAccount
+  InsertChartOfAccount,
+  InsertBankAccount
 } from "@shared/schema";
 
 // Configuração da conexão com PostgreSQL via Neon
@@ -90,6 +92,13 @@ export interface IStorage {
   createChartOfAccount(account: InsertChartOfAccount): Promise<ChartOfAccount>;
   updateChartOfAccount(id: number, account: Partial<InsertChartOfAccount>): Promise<ChartOfAccount>;
   deleteChartOfAccount(id: number): Promise<void>;
+
+  // Bank Accounts
+  getBankAccountsByUserId(userId: string): Promise<BankAccount[]>;
+  getBankAccountById(id: number): Promise<BankAccount | null>;
+  createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount>;
+  updateBankAccount(id: number, bankAccount: Partial<InsertBankAccount>): Promise<BankAccount>;
+  deleteBankAccount(id: number): Promise<void>;
 
   // Dashboard
   getDashboardStats(userId: string): Promise<{
@@ -335,6 +344,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteChartOfAccount(id: number): Promise<void> {
     await db.delete(schema.chartOfAccounts).where(eq(schema.chartOfAccounts.id, id));
+  }
+
+  // Bank Accounts methods
+  async getBankAccountsByUserId(userId: string): Promise<BankAccount[]> {
+    return db.select()
+      .from(schema.bankAccounts)
+      .where(eq(schema.bankAccounts.userId, userId))
+      .orderBy(schema.bankAccounts.name);
+  }
+
+  async getBankAccountById(id: number): Promise<BankAccount | null> {
+    const result = await db.select()
+      .from(schema.bankAccounts)
+      .where(eq(schema.bankAccounts.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount> {
+    const newBankAccount = await db.insert(schema.bankAccounts)
+      .values(bankAccount)
+      .returning();
+    return newBankAccount[0];
+  }
+
+  async updateBankAccount(id: number, bankAccount: Partial<InsertBankAccount>): Promise<BankAccount> {
+    const updated = await db.update(schema.bankAccounts)
+      .set(bankAccount)
+      .where(eq(schema.bankAccounts.id, id))
+      .returning();
+    return updated[0];
+  }
+
+  async deleteBankAccount(id: number): Promise<void> {
+    await db.delete(schema.bankAccounts).where(eq(schema.bankAccounts.id, id));
   }
 
   async getDashboardStats(userId: string) {

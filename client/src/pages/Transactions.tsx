@@ -97,6 +97,7 @@ export function Transactions() {
   const [filterPeriod, setFilterPeriod] = useState("Mensal");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
+  const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -105,6 +106,20 @@ export function Transactions() {
     categoria: '',
     subcategoria: '',
     incluirComo: ''
+  });
+  const [bankAccountData, setBankAccountData] = useState({
+    initialBalanceDate: new Date().toISOString().split('T')[0],
+    currentBalance: '',
+    balanceType: 'credor',
+    accountType: 'conta_corrente',
+    name: '',
+    currency: 'BRL',
+    bank: '',
+    agency: '',
+    accountNumber: '',
+    creditLimit: '',
+    contactName: '',
+    contactPhone: ''
   });
   
   const queryClient = useQueryClient();
@@ -208,6 +223,12 @@ export function Transactions() {
     queryFn: () => fetch('/api/chart-accounts').then(res => res.json()),
   });
 
+  // Query para buscar contas bancárias
+  const { data: bankAccounts = [], isLoading: isLoadingBankAccounts, refetch: refetchBankAccounts } = useQuery({
+    queryKey: ['/api/bank-accounts'],
+    queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
+  });
+
   // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData = Array.isArray(chartAccounts) ? chartAccounts : [];
 
@@ -282,12 +303,96 @@ export function Transactions() {
       fetch(`/api/chart-accounts/${id}`, { method: 'DELETE' }),
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta excluída com sucesso!');
-    },
-    onError: (error: any, variables, context) => {
-      showError(error.message || 'Erro ao excluir conta');
     }
   });
+
+  // Mutations para contas bancárias
+  const createBankAccountMutation = useMutation({
+    mutationFn: (bankAccountData: any) => 
+      apiRequest('/api/bank-accounts', {
+        method: 'POST',
+        body: JSON.stringify(bankAccountData),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      showSuccess('Conta bancária criada com sucesso!');
+      setBankAccountModalOpen(false);
+      resetBankAccountForm();
+    },
+    onError: (error: any) => {
+      showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+    }
+  });
+
+  const updateBankAccountMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => 
+      apiRequest(`/api/bank-accounts/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      showSuccess('Conta bancária atualizada com sucesso!');
+      setBankAccountModalOpen(false);
+      resetBankAccountForm();
+    },
+    onError: (error: any) => {
+      showError('Erro ao atualizar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+    }
+  });
+
+  const deleteBankAccountMutation = useMutation({
+    mutationFn: (id: number) => 
+      apiRequest(`/api/bank-accounts/${id}`, { method: 'DELETE' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      showSuccess('Conta bancária excluída com sucesso!');
+    },
+    onError: (error: any) => {
+      showError('Erro ao excluir conta bancária', error.message || 'Não foi possível excluir a conta.');
+    }
+  });
+
+  // Funções auxiliares para contas bancárias
+  const resetBankAccountForm = () => {
+    setBankAccountData({
+      initialBalanceDate: new Date().toISOString().split('T')[0],
+      currentBalance: '',
+      balanceType: 'credor',
+      accountType: 'conta_corrente',
+      name: '',
+      currency: 'BRL',
+      bank: '',
+      agency: '',
+      accountNumber: '',
+      creditLimit: '',
+      contactName: '',
+      contactPhone: ''
+    });
+  };
+
+  const handleBankAccountSave = async () => {
+    if (!bankAccountData.name) {
+      showError('Campo obrigatório', 'O nome da conta é obrigatório.');
+      return;
+    }
+
+    if (!bankAccountData.currentBalance) {
+      showError('Campo obrigatório', 'O saldo inicial é obrigatório.');
+      return;
+    }
+
+    if (!bankAccountData.bank) {
+      showError('Campo obrigatório', 'O banco é obrigatório.');
+      return;
+    }
+
+    try {
+      await createBankAccountMutation.mutateAsync(bankAccountData);
+    } catch (error) {
+      console.error('Erro ao salvar conta bancária:', error);
+    }
+  };
 
   // Funções auxiliares para gerenciar o modal
   const resetForm = () => {
@@ -529,6 +634,9 @@ export function Transactions() {
               } else if (activeTab === "movimentacoes") {
                 console.log("Opening transaction modal");
                 setTransactionModalOpen(true);
+              } else if (activeTab === "contas") {
+                console.log("Opening bank account modal");
+                setBankAccountModalOpen(true);
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
@@ -537,6 +645,8 @@ export function Transactions() {
                 ? "Nova Conta - Plano de Contas" 
                 : activeTab === "movimentacoes"
                 ? "Novo Lançamento Financeiro"
+                : activeTab === "contas"
+                ? "Nova Conta Bancária"
                 : "Adicionar Novo"
             }
             style={{ 
@@ -562,6 +672,8 @@ export function Transactions() {
                 ? "Nova Conta - Plano de Contas" 
                 : activeTab === "movimentacoes"
                 ? "Novo Lançamento Financeiro"
+                : activeTab === "contas"
+                ? "Nova Conta Bancária"
                 : "Adicionar Novo"
             }
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
@@ -2881,6 +2993,221 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
+
+      {/* Modal Editar conta bancária - Baseado na imagem fornecida */}
+      {bankAccountModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-100 rounded-lg w-full max-w-2xl mx-4 transform transition-all duration-300 scale-100" 
+               style={{
+                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+               }}>
+            {/* Cabeçalho */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">Editar conta</h2>
+              <button
+                onClick={() => setBankAccountModalOpen(false)}
+                className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Campos do formulário baseados na imagem */}
+            <div className="p-6 space-y-4">
+              {/* Primeira linha: Data do saldo inicial e Saldo com Radio buttons */}
+              <div className="grid grid-cols-12 gap-4 items-end">
+                {/* Data do saldo inicial */}
+                <div className="col-span-3">
+                  <TextField
+                    label="Data do saldo inicial *"
+                    variant="standard"
+                    type="date"
+                    value={bankAccountData.initialBalanceDate}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, initialBalanceDate: e.target.value })}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </div>
+
+                {/* Saldo em R$ */}
+                <div className="col-span-3">
+                  <TextField
+                    label="Saldo em 17/04/2025 (R$)"
+                    variant="standard"
+                    value={bankAccountData.currentBalance}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, currentBalance: e.target.value })}
+                    fullWidth
+                    placeholder="2.600,96"
+                  />
+                </div>
+
+                {/* Radio buttons Credor/Devedor */}
+                <div className="col-span-6 flex items-center gap-4 ml-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="balanceType"
+                      value="credor"
+                      checked={bankAccountData.balanceType === 'credor'}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
+                      className="w-4 h-4 text-pink-500"
+                    />
+                    <span className="text-sm">Credor</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="balanceType"
+                      value="devedor"
+                      checked={bankAccountData.balanceType === 'devedor'}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Devedor</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Segunda linha: Tipo, Nome e Moeda */}
+              <div className="grid grid-cols-12 gap-4">
+                {/* Tipo */}
+                <div className="col-span-3">
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel id="tipo-label">Tipo</InputLabel>
+                    <Select
+                      labelId="tipo-label"
+                      value={bankAccountData.accountType}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, accountType: e.target.value })}
+                    >
+                      <MenuItem value="conta_corrente">Conta Corrente</MenuItem>
+                      <MenuItem value="poupanca">Poupança</MenuItem>
+                      <MenuItem value="conta_salario">Conta Salário</MenuItem>
+                      <MenuItem value="investimento">Investimento</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+
+                {/* Nome */}
+                <div className="col-span-6">
+                  <TextField
+                    label="Nome *"
+                    variant="standard"
+                    value={bankAccountData.name}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, name: e.target.value })}
+                    fullWidth
+                    placeholder="Bancos | Pessoa Física"
+                  />
+                </div>
+
+                {/* Moeda */}
+                <div className="col-span-3">
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel id="moeda-label">Moeda</InputLabel>
+                    <Select
+                      labelId="moeda-label"
+                      value={bankAccountData.currency}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, currency: e.target.value })}
+                    >
+                      <MenuItem value="BRL">🇧🇷 Real (R$)</MenuItem>
+                      <MenuItem value="USD">🇺🇸 Dólar (US$)</MenuItem>
+                      <MenuItem value="EUR">🇪🇺 Euro (€)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              </div>
+
+              {/* Terceira linha: Banco */}
+              <div className="grid grid-cols-1">
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel id="banco-label">Banco</InputLabel>
+                  <Select
+                    labelId="banco-label"
+                    value={bankAccountData.bank}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, bank: e.target.value })}
+                  >
+                    <MenuItem value="">
+                      <em>Selecione o banco...</em>
+                    </MenuItem>
+                    <MenuItem value="Banco do Brasil">Banco do Brasil</MenuItem>
+                    <MenuItem value="Caixa Econômica Federal">Caixa Econômica Federal</MenuItem>
+                    <MenuItem value="Itaú">Itaú</MenuItem>
+                    <MenuItem value="Bradesco">Bradesco</MenuItem>
+                    <MenuItem value="Santander">Santander</MenuItem>
+                    <MenuItem value="Nubank">Nubank</MenuItem>
+                    <MenuItem value="Inter">Inter</MenuItem>
+                    <MenuItem value="C6 Bank">C6 Bank</MenuItem>
+                    <MenuItem value="Notas">Notas</MenuItem>
+                    <MenuItem value="Outros">Outros</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+
+              {/* Quarta linha: Agência e Conta */}
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  label="Agência"
+                  variant="standard"
+                  value={bankAccountData.agency}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, agency: e.target.value })}
+                  fullWidth
+                />
+                <TextField
+                  label="Conta"
+                  variant="standard"
+                  value={bankAccountData.accountNumber}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, accountNumber: e.target.value })}
+                  fullWidth
+                />
+              </div>
+
+              {/* Quinta linha: Limite */}
+              <div className="grid grid-cols-1">
+                <TextField
+                  label="Limite (R$)"
+                  variant="standard"
+                  value={bankAccountData.creditLimit}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, creditLimit: e.target.value })}
+                  fullWidth
+                />
+              </div>
+
+              {/* Sexta linha: Contato e Telefone */}
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  label="Contato"
+                  variant="standard"
+                  value={bankAccountData.contactName}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, contactName: e.target.value })}
+                  fullWidth
+                />
+                <TextField
+                  label="Telefone"
+                  variant="standard"
+                  value={bankAccountData.contactPhone}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, contactPhone: e.target.value })}
+                  fullWidth
+                />
+              </div>
+            </div>
+
+            {/* Botão Salvar - posicionado conforme a imagem */}
+            <div className="flex justify-end items-center p-6 pt-2 border-t border-gray-200">
+              <button
+                onClick={handleBankAccountSave}
+                disabled={!bankAccountData.name || !bankAccountData.currentBalance || !bankAccountData.bank || createBankAccountMutation.isPending}
+                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
+              >
+                {createBankAccountMutation.isPending ? 'Salvando...' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dialogs de feedback */}
+      <SuccessDialogComponent />
+      <ErrorDialogComponent />
+      <ConfirmDialogComponent />
     </div>
   );
 }

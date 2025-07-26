@@ -712,4 +712,155 @@ router.delete("/chart-accounts/:id", requireAuth, async (req, res) => {
   }
 });
 
+/**
+ * ROTAS PARA CONTAS BANCÁRIAS
+ * Gerenciam o CRUD de contas bancárias do usuário
+ */
+
+/**
+ * GET /api/bank-accounts
+ * Lista todas as contas bancárias do usuário autenticado
+ */
+router.get("/bank-accounts", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const bankAccounts = await storage.getBankAccountsByUserId(userId);
+    res.json(bankAccounts);
+  } catch (error) {
+    console.error("Erro ao buscar contas bancárias:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * GET /api/bank-accounts/:id
+ * Busca uma conta bancária específica por ID
+ */
+router.get("/bank-accounts/:id", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const bankAccount = await storage.getBankAccountById(id);
+    if (!bankAccount || bankAccount.userId !== userId) {
+      return res.status(404).json({ error: "Conta bancária não encontrada" });
+    }
+
+    res.json(bankAccount);
+  } catch (error) {
+    console.error("Erro ao buscar conta bancária:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * POST /api/bank-accounts
+ * Cria uma nova conta bancária
+ */
+router.post("/bank-accounts", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    // Validar dados usando schema Zod
+    const bankAccountData = schema.insertBankAccountSchema.parse({
+      ...req.body,
+      userId
+    });
+
+    const newBankAccount = await storage.createBankAccount(bankAccountData);
+    res.status(201).json(newBankAccount);
+  } catch (error) {
+    console.error("Erro ao criar conta bancária:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: "Dados inválidos", 
+        details: error.errors 
+      });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * PUT /api/bank-accounts/:id
+ * Atualiza uma conta bancária existente
+ */
+router.put("/bank-accounts/:id", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // Verificar se a conta existe e pertence ao usuário
+    const existing = await storage.getBankAccountById(id);
+    if (!existing || existing.userId !== userId) {
+      return res.status(404).json({ error: "Conta bancária não encontrada" });
+    }
+
+    const updateData = schema.insertBankAccountSchema.partial().parse(req.body);
+    const updatedBankAccount = await storage.updateBankAccount(id, updateData);
+    
+    res.json(updatedBankAccount);
+  } catch (error) {
+    console.error("Erro ao atualizar conta bancária:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        error: "Dados inválidos", 
+        details: error.errors 
+      });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * DELETE /api/bank-accounts/:id
+ * Remove uma conta bancária
+ */
+router.delete("/bank-accounts/:id", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // Verificar se a conta existe e pertence ao usuário
+    const existing = await storage.getBankAccountById(id);
+    if (!existing || existing.userId !== userId) {
+      return res.status(404).json({ error: "Conta bancária não encontrada" });
+    }
+
+    await storage.deleteBankAccount(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao deletar conta bancária:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
 export default router;

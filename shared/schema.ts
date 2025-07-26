@@ -325,3 +325,44 @@ export const insertChartOfAccountsSchema = createInsertSchema(chartOfAccounts).o
 // Tipos para plano de contas
 export type ChartOfAccount = typeof chartOfAccounts.$inferSelect;
 export type InsertChartOfAccount = z.infer<typeof insertChartOfAccountsSchema>;
+
+/**
+ * Tabela de contas bancárias
+ * 
+ * Armazena informações das contas bancárias para controle financeiro.
+ * Permite cadastro de diferentes tipos de contas com dados completos.
+ * 
+ * Campos baseados na imagem de referência fornecida:
+ * - Data do saldo inicial e saldo atual
+ * - Tipo de conta (Corrente, Poupança, etc.)
+ * - Dados bancários completos (banco, agência, conta)
+ * - Informações de contato e limites
+ */
+export const bankAccounts = pgTable("bank_accounts", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id),
+  initialBalanceDate: date("initial_balance_date").notNull(), // Data do saldo inicial
+  currentBalance: decimal("current_balance", { precision: 15, scale: 2 }).notNull(), // Saldo em R$
+  balanceType: text("balance_type").notNull().default("credor"), // 'credor' | 'devedor'
+  accountType: text("account_type").notNull().default("conta_corrente"), // Tipo (Conta Corrente, Poupança, etc.)
+  name: text("name").notNull(), // Nome da conta
+  currency: text("currency").notNull().default("BRL"), // Moeda (Real R$)
+  bank: text("bank").notNull(), // Banco
+  agency: text("agency"), // Agência
+  accountNumber: text("account_number"), // Conta
+  creditLimit: decimal("credit_limit", { precision: 15, scale: 2 }), // Limite (R$)
+  contactName: text("contact_name"), // Contato
+  contactPhone: text("contact_phone"), // Telefone
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema de inserção para contas bancárias
+export const insertBankAccountSchema = createInsertSchema(bankAccounts).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Tipos para contas bancárias
+export type BankAccount = typeof bankAccounts.$inferSelect;
+export type InsertBankAccount = z.infer<typeof insertBankAccountSchema>;
