@@ -301,6 +301,13 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • Cards idênticos com alinhamento perfeito e linhas separadoras
     • 74 erros TypeScript corrigidos para funcionamento sem falhas
     • Nota: Ícones de ações funcionam mas implementação específica pendente para depois
+- **Estrutura Hierárquica do Plano de Contas Corrigida**: Sistema definitivo de códigos sequenciais implementado (Janeiro 2025)
+    • **Problema Resolvido**: Códigos duplicados e hierarquia incorreta corrigidos
+    • **Lógica Baseada em ParentId**: Códigos gerados com base na conta pai (ex: 3.1, 3.2, 3.3...)
+    • **Sequência Automática**: Nível 1 (1, 2, 3...), Nível 2 (pai.1, pai.2...), etc.
+    • **Implementação Dupla**: Correção aplicada em handleSaveAccount e handleSaveAndContinue
+    • **Validação Funcional**: Testado e confirmado pelo usuário como "perfeito"
+    • **Dados Corrigidos**: Registros inconsistentes no banco ajustados (ID 35: 4.1 → 3.1)
 - **Problemas Técnicos Não Resolvidos**: Questões pendentes no wizard de relacionamentos (Janeiro 2025)
     • Campo CEP: Formatação funciona internamente (console mostra 9 caracteres) mas interface limita visualmente
     • API CNPJ: Funcionando com Brasil API, preenchimento automático operacional
