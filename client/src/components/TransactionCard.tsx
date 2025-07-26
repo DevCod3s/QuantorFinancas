@@ -240,7 +240,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             />
             
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+              <FormControl variant="standard" sx={{ width: '85%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>Conta</InputLabel>
                 <Select
                   value={conta}
@@ -258,22 +258,20 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   ))}
                 </Select>
               </FormControl>
-              {bankAccounts.length === 0 && (
-                <IconButton 
-                  size="small" 
-                  sx={{ mb: 0.5, color: '#1976d2' }}
-                  onClick={() => {/* Função para adicionar conta bancária */}}
-                >
-                  <CreditCard className="h-4 w-4" />
-                </IconButton>
-              )}
+              <IconButton 
+                size="small" 
+                sx={{ mb: 0.5, color: '#1976d2' }}
+                onClick={() => {/* Função para adicionar conta bancária */}}
+              >
+                <CreditCard className="h-4 w-4" />
+              </IconButton>
             </Box>
           </Box>
 
           {/* Terceira linha: Categoria, Contato */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+              <FormControl variant="standard" sx={{ width: '85%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>Categoria</InputLabel>
                 <Select
                   value={categoria}
@@ -291,19 +289,17 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   ))}
                 </Select>
               </FormControl>
-              {businessCategories.length === 0 && (
-                <IconButton 
-                  size="small" 
-                  sx={{ mb: 0.5, color: '#1976d2' }}
-                  onClick={() => {/* Função para adicionar categoria */}}
-                >
-                  <Building2 className="h-4 w-4" />
-                </IconButton>
-              )}
+              <IconButton 
+                size="small" 
+                sx={{ mb: 0.5, color: '#1976d2' }}
+                onClick={() => {/* Função para adicionar categoria */}}
+              >
+                <Building2 className="h-4 w-4" />
+              </IconButton>
             </Box>
             
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+              <FormControl variant="standard" sx={{ width: '85%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>Contato</InputLabel>
                 <Select
                   value={contato}
@@ -321,15 +317,13 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   ))}
                 </Select>
               </FormControl>
-              {relationships.length === 0 && (
-                <IconButton 
-                  size="small" 
-                  sx={{ mb: 0.5, color: '#1976d2' }}
-                  onClick={() => {/* Função para adicionar relacionamento */}}
-                >
-                  <Users className="h-4 w-4" />
-                </IconButton>
-              )}
+              <IconButton 
+                size="small" 
+                sx={{ mb: 0.5, color: '#1976d2' }}
+                onClick={() => {/* Função para adicionar relacionamento */}}
+              >
+                <Users className="h-4 w-4" />
+              </IconButton>
             </Box>
           </Box>
 
@@ -386,7 +380,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           {/* Sexta linha: Plano de Contas */}
           <Box sx={{ mb: 4 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+              <FormControl variant="standard" sx={{ width: '85%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
                 <Select
                   value={tags}
@@ -404,15 +398,13 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   ))}
                 </Select>
               </FormControl>
-              {filteredChartOfAccounts.length === 0 && (
-                <IconButton 
-                  size="small" 
-                  sx={{ mb: 0.5, color: '#1976d2' }}
-                  onClick={() => {/* Função para adicionar plano de contas */}}
-                >
-                  <BookOpen className="h-4 w-4" />
-                </IconButton>
-              )}
+              <IconButton 
+                size="small" 
+                sx={{ mb: 0.5, color: '#1976d2' }}
+                onClick={() => {/* Função para adicionar plano de contas */}}
+              >
+                <BookOpen className="h-4 w-4" />
+              </IconButton>
             </Box>
           </Box>
 
