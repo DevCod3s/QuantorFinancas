@@ -346,8 +346,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             />
           </Box>
 
-          {/* Quinta linha: Observações */}
-          <Box sx={{ mb: 4 }}>
+          {/* Quinta linha: Observações e Plano de Contas */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4 }}>
             <TextField
               variant="standard"
               label="Observações"
@@ -355,25 +355,10 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               onChange={(e) => setObservacoes(e.target.value)}
               fullWidth
               multiline
-              rows={3}
-              sx={{ 
-                '& .MuiInputLabel-root': { color: '#666' },
-                '& .MuiInput-root': { 
-                  '&::after': { 
-                    content: '"0 / 400"',
-                    position: 'absolute',
-                    right: 0,
-                    bottom: -20,
-                    fontSize: '12px',
-                    color: '#999'
-                  }
-                }
-              }}
+              maxRows={5}
+              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
-          </Box>
-
-          {/* Sexta linha: Plano de Contas */}
-          <Box sx={{ mb: 4 }}>
+            
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
               <FormControl variant="standard" sx={{ width: '85%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
