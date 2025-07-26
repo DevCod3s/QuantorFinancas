@@ -635,8 +635,9 @@ export function Transactions() {
                 console.log("Opening transaction modal");
                 setTransactionModalOpen(true);
               } else if (activeTab === "contas") {
-                console.log("Opening bank account modal");
+                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
                 setBankAccountModalOpen(true);
+                console.log("Bank account modal state set to true");
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
@@ -2995,6 +2996,7 @@ function ChartOfAccountsContent({
       )}
 
       {/* Modal Editar conta bancária - Baseado na imagem fornecida */}
+      {console.log("Rendering modal check - bankAccountModalOpen:", bankAccountModalOpen)}
       {bankAccountModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-100 rounded-lg w-full max-w-2xl mx-4 transform transition-all duration-300 scale-100" 
