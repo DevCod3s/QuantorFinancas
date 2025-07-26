@@ -400,22 +400,48 @@ router.post("/generate-contract", requireAuth, async (req, res) => {
 });
 
 // ==========================================
+// BANK ACCOUNTS ROUTES (Mock - para desenvolvimento)
+// ==========================================
+
+/**
+ * GET /api/bank-accounts
+ * Retorna contas bancárias mock do usuário
+ */
+router.get("/bank-accounts", requireAuth, async (req, res) => {
+  try {
+    // Mock de contas bancárias para desenvolvimento
+    const mockBankAccounts = [
+      { id: 1, bank: 'Banco do Brasil', accountNumber: '12345-6', accountType: 'Corrente' },
+      { id: 2, bank: 'Itaú', accountNumber: '98765-4', accountType: 'Poupança' },
+      { id: 3, bank: 'Bradesco', accountNumber: '55555-1', accountType: 'Corrente' }
+    ];
+    
+    res.json(mockBankAccounts);
+  } catch (error) {
+    console.error("Erro ao buscar contas bancárias:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// ==========================================
 // RELATIONSHIPS ROUTES
 // ==========================================
 
 /**
  * GET /api/relationships
- * Retorna todos os relacionamentos do usuário
+ * Retorna todos os relacionamentos do usuário (Mock para desenvolvimento)
  */
-router.get("/relationships", async (req, res) => {
+router.get("/relationships", requireAuth, async (req, res) => {
   try {
-    const userId = req.user?.id?.toString();
-    if (!userId) {
-      return res.status(401).json({ error: "Usuário não autenticado" });
-    }
+    // Mock de relacionamentos para desenvolvimento
+    const mockRelationships = [
+      { id: 1, name: 'Cliente ABC Ltda', companyName: 'ABC Ltda', type: 'cliente' },
+      { id: 2, name: 'Fornecedor XYZ S.A.', companyName: 'XYZ S.A.', type: 'fornecedor' },
+      { id: 3, name: 'João Silva', companyName: null, type: 'outros' },
+      { id: 4, name: 'Empresa DEF', companyName: 'DEF Serviços', type: 'cliente' }
+    ];
 
-    const relationships = await storage.getRelationshipsByUserId(userId);
-    res.json(relationships);
+    res.json(mockRelationships);
   } catch (error) {
     console.error("Erro ao buscar relacionamentos:", error);
     res.status(500).json({ error: "Erro interno do servidor" });

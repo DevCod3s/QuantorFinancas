@@ -21,7 +21,7 @@ import {
   Button,
   Box
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, CreditCard, Users, Building2, BookOpen } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 
 interface TransactionCardProps {
@@ -47,19 +47,39 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [observacoes, setObservacoes] = useState('');
   const [tags, setTags] = useState('');
 
-  // Buscar contas cadastradas no sistema
-  const { data: accounts = [] } = useQuery<any[]>({
+  // Buscar contas bancárias cadastradas no sistema
+  const { data: bankAccounts = [] } = useQuery<any[]>({
+    queryKey: ['/api/bank-accounts'],
+    enabled: open
+  });
+
+  // Buscar relacionamentos cadastrados no sistema  
+  const { data: relationships = [] } = useQuery<any[]>({
+    queryKey: ['/api/relationships'],
+    enabled: open
+  });
+
+  // Buscar categorias de negócios
+  const { data: businessCategories = [] } = useQuery<any[]>({
+    queryKey: ['/api/categories'],
+    enabled: open
+  });
+
+  // Buscar plano de contas filtrado por tipo
+  const { data: chartOfAccounts = [] } = useQuery<any[]>({
     queryKey: ['/api/chart-accounts'],
     enabled: open
   });
 
-  // Buscar relacionamentos cadastrados (mock por enquanto - será implementado)
-  const relationships = [
-    { id: 1, name: 'Cliente ABC Ltda' },
-    { id: 2, name: 'Fornecedor XYZ S.A.' },
-    { id: 3, name: 'João Silva' },
-    { id: 4, name: 'Empresa DEF' }
-  ];
+  // Filtrar plano de contas baseado no tipo selecionado
+  const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
+    if (tipo === 'Nova receita') {
+      return account.name?.toLowerCase().includes('receita') || account.type === 'income';
+    } else if (tipo === 'Nova despesa') {
+      return account.name?.toLowerCase().includes('despesa') || account.type === 'expense';
+    }
+    return true;
+  });
 
   // Função para formatação de moeda brasileira
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,56 +239,98 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
             
-            <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>Conta</InputLabel>
-              <Select
-                value={conta}
-                onChange={(e) => setConta(e.target.value)}
-                MenuProps={{
-                  PaperProps: {
-                    sx: { zIndex: 1400 }
-                  }
-                }}
-              >
-                {accounts.map((account: any) => (
-                  <MenuItem key={account.id} value={account.id}>
-                    {account.code} - {account.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>Conta</InputLabel>
+                <Select
+                  value={conta}
+                  onChange={(e) => setConta(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { zIndex: 1400 }
+                    }
+                  }}
+                >
+                  {bankAccounts.map((account: any) => (
+                    <MenuItem key={account.id} value={account.id}>
+                      {account.bank} - {account.accountNumber}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {bankAccounts.length === 0 && (
+                <IconButton 
+                  size="small" 
+                  sx={{ mb: 0.5, color: '#1976d2' }}
+                  onClick={() => {/* Função para adicionar conta bancária */}}
+                >
+                  <CreditCard className="h-4 w-4" />
+                </IconButton>
+              )}
+            </Box>
           </Box>
 
           {/* Terceira linha: Categoria, Contato */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4 }}>
-            <TextField
-              variant="standard"
-              label="Categoria"
-              value={categoria}
-              onChange={(e) => setCategoria(e.target.value)}
-              fullWidth
-              required
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>Categoria</InputLabel>
+                <Select
+                  value={categoria}
+                  onChange={(e) => setCategoria(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { zIndex: 1400 }
+                    }
+                  }}
+                >
+                  {businessCategories.map((category: any) => (
+                    <MenuItem key={category.id} value={category.id}>
+                      {category.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {businessCategories.length === 0 && (
+                <IconButton 
+                  size="small" 
+                  sx={{ mb: 0.5, color: '#1976d2' }}
+                  onClick={() => {/* Função para adicionar categoria */}}
+                >
+                  <Building2 className="h-4 w-4" />
+                </IconButton>
+              )}
+            </Box>
             
-            <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>Contato</InputLabel>
-              <Select
-                value={contato}
-                onChange={(e) => setContato(e.target.value)}
-                MenuProps={{
-                  PaperProps: {
-                    sx: { zIndex: 1400 }
-                  }
-                }}
-              >
-                {relationships.map((relationship) => (
-                  <MenuItem key={relationship.id} value={relationship.id}>
-                    {relationship.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>Contato</InputLabel>
+                <Select
+                  value={contato}
+                  onChange={(e) => setContato(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { zIndex: 1400 }
+                    }
+                  }}
+                >
+                  {relationships.map((relationship: any) => (
+                    <MenuItem key={relationship.id} value={relationship.id}>
+                      {relationship.name || relationship.companyName}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {relationships.length === 0 && (
+                <IconButton 
+                  size="small" 
+                  sx={{ mb: 0.5, color: '#1976d2' }}
+                  onClick={() => {/* Função para adicionar relacionamento */}}
+                >
+                  <Users className="h-4 w-4" />
+                </IconButton>
+              )}
+            </Box>
           </Box>
 
           {/* Quarta linha: Número do documento */}
@@ -321,16 +383,37 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             />
           </Box>
 
-          {/* Sexta linha: Etiquetas */}
+          {/* Sexta linha: Plano de Contas */}
           <Box sx={{ mb: 4 }}>
-            <TextField
-              variant="standard"
-              label="Etiquetas"
-              value={tags}
-              onChange={(e) => setTags(e.target.value)}
-              fullWidth
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+              <FormControl variant="standard" sx={{ flexGrow: 1 }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
+                <Select
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { zIndex: 1400 }
+                    }
+                  }}
+                >
+                  {filteredChartOfAccounts.map((account: any) => (
+                    <MenuItem key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              {filteredChartOfAccounts.length === 0 && (
+                <IconButton 
+                  size="small" 
+                  sx={{ mb: 0.5, color: '#1976d2' }}
+                  onClick={() => {/* Função para adicionar plano de contas */}}
+                >
+                  <BookOpen className="h-4 w-4" />
+                </IconButton>
+              )}
+            </Box>
           </Box>
 
           {/* Botões de ação */}
