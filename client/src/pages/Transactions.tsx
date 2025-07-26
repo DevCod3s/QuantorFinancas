@@ -2204,9 +2204,23 @@ function ChartOfAccountsContent({
     // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRIGIDO
     const generateHierarchicalCode = () => {
       if (level === 1) {
-        // Nível 1: Usar mapeamento automático de categorias
+        // Nível 1: Verificar se já existe antes de usar mapeamento
         const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
-        return categoriaMapping.code;
+        
+        // Verificar se já existe uma conta com este tipo no nível 1
+        const existingWithSameType = safeChartAccountsData?.find(acc => 
+          acc.type === categoriaMapping.type && acc.level === 1
+        );
+        
+        if (existingWithSameType) {
+          // Se já existe, gerar próximo código disponível
+          const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+          const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
+          return (maxCode + 1).toString();
+        } else {
+          // Se não existe, usar o código do mapeamento
+          return categoriaMapping.code;
+        }
       }
       
       if (level === 2) {
@@ -2391,9 +2405,23 @@ function ChartOfAccountsContent({
     // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRIGIDO (Mesma lógica de handleSaveAccount)
     const generateHierarchicalCode = () => {
       if (level === 1) {
-        // Nível 1: Usar mapeamento automático de categorias
+        // Nível 1: Verificar se já existe antes de usar mapeamento
         const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
-        return categoriaMapping.code;
+        
+        // Verificar se já existe uma conta com este tipo no nível 1
+        const existingWithSameType = safeChartAccountsData?.find(acc => 
+          acc.type === categoriaMapping.type && acc.level === 1
+        );
+        
+        if (existingWithSameType) {
+          // Se já existe, gerar próximo código disponível
+          const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+          const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
+          return (maxCode + 1).toString();
+        } else {
+          // Se não existe, usar o código do mapeamento
+          return categoriaMapping.code;
+        }
       }
       
       if (level === 2) {
