@@ -181,7 +181,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         </Box>
 
         <CardContent sx={{ p: 4, space: 3 }}>
-          {/* Primeira linha: Valor, Data, Repetição */}
+          {/* Primeira linha: Valor, Dados, Repetição */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3, mb: 4 }}>
             <TextField
               variant="standard"
@@ -197,7 +197,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               variant="standard"
               label="Dados"
               type="date"
-              value="2025-07-25"
+              value={data}
               onChange={(e) => setData(e.target.value)}
               fullWidth
               required
@@ -205,27 +205,22 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
             
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" fullWidth>
-                <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
-                <Select
-                  value={repeticao}
-                  onChange={(e) => setRepeticao(e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: { zIndex: 1400 }
-                    }
-                  }}
-                >
-                  <MenuItem value="Única">Única</MenuItem>
-                  <MenuItem value="Parcelado">Parcelado</MenuItem>
-                  <MenuItem value="Recorrente">Recorrente</MenuItem>
-                </Select>
-              </FormControl>
-              <IconButton size="small" sx={{ mb: 0.5 }}>
-                <HelpCircle className="h-4 w-4 text-gray-400" />
-              </IconButton>
-            </Box>
+            <FormControl variant="standard" fullWidth>
+              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
+              <Select
+                value={repeticao}
+                onChange={(e) => setRepeticao(e.target.value)}
+                MenuProps={{
+                  PaperProps: {
+                    sx: { zIndex: 1400 }
+                  }
+                }}
+              >
+                <MenuItem value="Única">Única</MenuItem>
+                <MenuItem value="Parcelado">Parcelado</MenuItem>
+                <MenuItem value="Recorrente">Recorrente</MenuItem>
+              </Select>
+            </FormControl>
           </Box>
 
           {/* Segunda linha: Descrição, Conta */}
