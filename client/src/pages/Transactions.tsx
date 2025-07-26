@@ -2201,25 +2201,24 @@ function ChartOfAccountsContent({
       return;
     }
 
-    // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRETO
+    // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRIGIDO
     const generateHierarchicalCode = () => {
       if (level === 1) {
-        // Nível 1: Códigos 1, 2, 3, 4...
-        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
-        return (maxCode + 1).toString();
+        // Nível 1: Usar mapeamento automático de categorias
+        const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
+        return categoriaMapping.code;
       }
       
       if (level === 2) {
         // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
-        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
-        const parentCode = parentAccount ? parentAccount.code : '1';
+        const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
+        const parentCode = categoriaMapping.code; // 1 para receita, 2 para despesa, etc.
         
-        const sameParentCount = safeChartAccountsData?.filter(acc => 
-          acc.parentId === parentAccount?.id && acc.level === 2
-        ).length || 0;
+        const sameTypeAccounts = safeChartAccountsData?.filter(acc => 
+          acc.type === categoriaMapping.type && acc.level === 2
+        ) || [];
         
-        return `${parentCode}.${sameParentCount + 1}`;
+        return `${parentCode}.${sameTypeAccounts.length + 1}`;
       }
       
       if (level === 3) {
@@ -2256,7 +2255,27 @@ function ChartOfAccountsContent({
     let subcategory = null;
     let type = formData.nome.toLowerCase();
 
-    // LÓGICA HIERÁRQUICA DEFINITIVA - BASEADA NOS CAMPOS PREENCHIDOS
+    // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS
+    const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
+      const categoriaNormalizada = categoria.toLowerCase().trim();
+      
+      if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
+        return { type: 'receita', code: '1' };
+      } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
+        return { type: 'despesa', code: '2' };
+      } else if (categoriaNormalizada.includes('ativo')) {
+        return { type: 'ativo', code: '3' };
+      } else if (categoriaNormalizada.includes('passivo')) {
+        return { type: 'passivo', code: '4' };
+      } else {
+        // Para categorias personalizadas, usar sequência numérica
+        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Começar após os tipos padrão
+        return { type: categoria.toLowerCase(), code: (maxCode + 1).toString() };
+      }
+    };
+
+    // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
@@ -2266,7 +2285,7 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
+      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
     } else if (formData.subcategoria) {
       // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
@@ -2276,22 +2295,35 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
+      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
     } else if (formData.categoria) {
       // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
-      const parentAccount = safeChartAccountsData?.find(acc => 
-        acc.name === formData.categoria && acc.level === 1
+      const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
+      
+      // Buscar ou usar código automático para categoria principal
+      let parentAccount = safeChartAccountsData?.find(acc => 
+        acc.type === categoriaMapping.type && acc.level === 1
       );
-      parentId = parentAccount ? parentAccount.id : null;
+      
+      // Se não encontrar categoria principal, usar mapeamento automático
+      if (!parentAccount) {
+        // A categoria principal será criada automaticamente pelo backend se necessário
+        // Para agora, usar o código correto baseado no tipo
+        parentId = null; // Backend vai criar a estrutura
+        type = categoriaMapping.type;
+      } else {
+        parentId = parentAccount.id;
+        type = parentAccount.type;
+      }
       category = formData.nome;
-      type = parentAccount ? parentAccount.type : formData.categoria;
     } else {
-      // NÍVEL 1: Só "Nome" preenchido
+      // NÍVEL 1: Só "Nome" preenchido - categoria principal
       level = 1;
       parentId = null;
+      const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
       category = formData.nome;
-      type = formData.nome.toLowerCase();
+      type = categoriaMapping.type;
     }
 
     const accountData = {
@@ -2336,26 +2368,44 @@ function ChartOfAccountsContent({
       return;
     }
 
-    // Mesma lógica do handleSaveAccount mas sem fechar modal
-    // MESMA LÓGICA DE GERAÇÃO DE CÓDIGO HIERÁRQUICO 
+    // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS (Mesma função de handleSaveAccount)
+    const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
+      const categoriaNormalizada = categoria.toLowerCase().trim();
+      
+      if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
+        return { type: 'receita', code: '1' };
+      } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
+        return { type: 'despesa', code: '2' };
+      } else if (categoriaNormalizada.includes('ativo')) {
+        return { type: 'ativo', code: '3' };
+      } else if (categoriaNormalizada.includes('passivo')) {
+        return { type: 'passivo', code: '4' };
+      } else {
+        // Para categorias personalizadas, usar sequência numérica
+        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Começar após os tipos padrão
+        return { type: categoria.toLowerCase(), code: (maxCode + 1).toString() };
+      }
+    };
+
+    // GERAÇÃO DE CÓDIGO HIERÁRQUICO CORRIGIDO (Mesma lógica de handleSaveAccount)
     const generateHierarchicalCode = () => {
       if (level === 1) {
-        // Nível 1: Códigos 1, 2, 3, 4...
-        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
-        return (maxCode + 1).toString();
+        // Nível 1: Usar mapeamento automático de categorias
+        const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
+        return categoriaMapping.code;
       }
       
       if (level === 2) {
         // Nível 2: Códigos 1.1, 1.2, 2.1, 2.2...
-        const parentAccount = safeChartAccountsData?.find(acc => acc.name === formData.categoria && acc.level === 1);
-        const parentCode = parentAccount ? parentAccount.code : '1';
+        const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
+        const parentCode = categoriaMapping.code; // 1 para receita, 2 para despesa, etc.
         
-        const sameParentCount = safeChartAccountsData?.filter(acc => 
-          acc.parentId === parentAccount?.id && acc.level === 2
-        ).length || 0;
+        const sameTypeAccounts = safeChartAccountsData?.filter(acc => 
+          acc.type === categoriaMapping.type && acc.level === 2
+        ) || [];
         
-        return `${parentCode}.${sameParentCount + 1}`;
+        return `${parentCode}.${sameTypeAccounts.length + 1}`;
       }
       
       if (level === 3) {
@@ -2385,14 +2435,13 @@ function ChartOfAccountsContent({
       return '1';
     };
 
-    // Determinar nível e parentId para Salvar e Continuar - MESMA LÓGICA DO SALVAR
+    // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO (Mesma lógica de handleSaveAccount)
     let level = 1;
     let parentId = null;
     let category = null;
     let subcategory = null;
     let type = formData.nome.toLowerCase();
 
-    // MESMA LÓGICA DEFINITIVA - BASEADA NOS CAMPOS PREENCHIDOS
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
@@ -2402,7 +2451,7 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
+      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
     } else if (formData.subcategoria) {
       // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
@@ -2412,22 +2461,35 @@ function ChartOfAccountsContent({
       parentId = parentAccount ? parentAccount.id : null;
       category = formData.nome;
       subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : (formData.categoria || formData.nome.toLowerCase());
+      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
     } else if (formData.categoria) {
       // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
-      const parentAccount = safeChartAccountsData?.find(acc => 
-        acc.name === formData.categoria && acc.level === 1
+      const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
+      
+      // Buscar ou usar código automático para categoria principal
+      let parentAccount = safeChartAccountsData?.find(acc => 
+        acc.type === categoriaMapping.type && acc.level === 1
       );
-      parentId = parentAccount ? parentAccount.id : null;
+      
+      // Se não encontrar categoria principal, usar mapeamento automático
+      if (!parentAccount) {
+        // A categoria principal será criada automaticamente pelo backend se necessário
+        // Para agora, usar o código correto baseado no tipo
+        parentId = null; // Backend vai criar a estrutura
+        type = categoriaMapping.type;
+      } else {
+        parentId = parentAccount.id;
+        type = parentAccount.type;
+      }
       category = formData.nome;
-      type = parentAccount ? parentAccount.type : formData.categoria;
     } else {
-      // NÍVEL 1: Só "Nome" preenchido
+      // NÍVEL 1: Só "Nome" preenchido - categoria principal
       level = 1;
       parentId = null;
+      const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
       category = formData.nome;
-      type = formData.nome.toLowerCase();
+      type = categoriaMapping.type;
     }
 
 
