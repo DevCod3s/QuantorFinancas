@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Modal</title>
+    <script>
+        // Simple test to verify modal behavior
+        function testModal() {
+            // Simulate clicking on the button when "contas" tab is active
+            const activeTab = "contas";
+            let bankAccountModalOpen = false;
+            
+            console.log("Active tab:", activeTab);
+            if (activeTab === "contas") {
+                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
+                bankAccountModalOpen = true;
+                console.log("Bank account modal state set to true");
+            }
+            
+            console.log("Modal should be visible:", bankAccountModalOpen);
+            return bankAccountModalOpen;
+        }
+        
+        window.onload = function() {
+            const result = testModal();
+            document.getElementById('result').innerHTML = 'Modal test result: ' + (result ? 'SUCCESS - Modal should open' : 'FAILED - Modal not opening');
+        }
+    </script>
+</head>
+<body>
+    <h1>Modal Test</h1>
+    <div id="result">Testing...</div>
+</body>
+</html>

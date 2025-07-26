@@ -229,7 +229,7 @@ export function Transactions() {
     queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
   });
 
-  // Garantir que chartAccounts seja sempre um array
+  // Garantir que chartAccounts seja sempre um array e seja um tipo correto
   const safeChartAccountsData = Array.isArray(chartAccounts) ? chartAccounts : [];
 
   // Função para salvar nova transação
@@ -267,14 +267,14 @@ export function Transactions() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(accountData)
       }).then(res => res.json()),
-    onSuccess: (data, variables, context) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta criada com sucesso!');
+      showSuccess('Conta criada com sucesso!', '');
       setChartAccountModalOpen(false);
       resetForm();
     },
-    onError: (error: any, variables, context) => {
-      showError(error.message || 'Erro ao criar conta');
+    onError: (error: any) => {
+      showError('Erro ao criar conta', error.message || 'Erro ao criar conta');
     }
   });
 
@@ -286,14 +286,14 @@ export function Transactions() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       }).then(res => res.json()),
-    onSuccess: (data, variables, context) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta atualizada com sucesso!');
+      showSuccess('Conta atualizada com sucesso!', '');
       setChartAccountModalOpen(false);
       resetForm();
     },
-    onError: (error: any, variables, context) => {
-      showError(error.message || 'Erro ao atualizar conta');
+    onError: (error: any) => {
+      showError('Erro ao atualizar conta', error.message || 'Erro ao atualizar conta');
     }
   });
 
@@ -315,7 +315,7 @@ export function Transactions() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária criada com sucesso!');
+      showSuccess('Conta bancária criada com sucesso!', '');
       setBankAccountModalOpen(false);
       resetBankAccountForm();
     },
@@ -332,7 +332,7 @@ export function Transactions() {
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária atualizada com sucesso!');
+      showSuccess('Conta bancária atualizada com sucesso!', '');
       setBankAccountModalOpen(false);
       resetBankAccountForm();
     },
@@ -346,7 +346,7 @@ export function Transactions() {
       apiRequest(`/api/bank-accounts/${id}`, { method: 'DELETE' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária excluída com sucesso!');
+      showSuccess('Conta bancária excluída com sucesso!', '');
     },
     onError: (error: any) => {
       showError('Erro ao excluir conta bancária', error.message || 'Não foi possível excluir a conta.');
@@ -2267,6 +2267,7 @@ function ChartOfAccountsContent({
     setModalMode('create');
     setSelectedAccount(null);
     setFormData({
+      tipo: '',
       nome: '',
       categoria: '',
       subcategoria: '',
@@ -2280,15 +2281,16 @@ function ChartOfAccountsContent({
     const existingAccount = safeChartAccountsData.find(acc => acc.id === account.id);
     if (!existingAccount) {
       showError("Conta não encontrada", "Esta conta pode ter sido excluída. Atualizando a lista...");
-      refetchAccounts();
+      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       return;
     }
     
     setModalMode('edit');
     setSelectedAccount(account);
     setFormData({
+      tipo: account.type || '',
       nome: account.name || '',
-      categoria: account.type || '',
+      categoria: account.category || '',
       subcategoria: account.subcategory || '',
       incluirComo: account.parentId || ''
     });
@@ -2299,8 +2301,9 @@ function ChartOfAccountsContent({
     setModalMode('view');
     setSelectedAccount(account);
     setFormData({
+      tipo: account.type || '',
       nome: account.name || '',
-      categoria: account.type || '',
+      categoria: account.category || '',
       subcategoria: account.subcategory || '',
       incluirComo: account.parentId || ''
     });
@@ -2640,6 +2643,7 @@ function ChartOfAccountsContent({
       await createAccountMutation.mutateAsync(accountData);
       // Limpar formulário mas manter modal aberto (apenas para Salvar e Continuar)
       setFormData({
+        tipo: '',
         nome: '',
         categoria: '',
         subcategoria: '',
@@ -2681,6 +2685,7 @@ function ChartOfAccountsContent({
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFormData({
+      tipo: '',
       nome: '',
       categoria: '',
       subcategoria: '',
@@ -2996,7 +3001,6 @@ function ChartOfAccountsContent({
       )}
 
       {/* Modal Editar conta bancária - Baseado na imagem fornecida */}
-      {console.log("Rendering modal check - bankAccountModalOpen:", bankAccountModalOpen)}
       {bankAccountModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-100 rounded-lg w-full max-w-2xl mx-4 transform transition-all duration-300 scale-100" 
