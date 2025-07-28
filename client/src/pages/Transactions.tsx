@@ -1980,84 +1980,103 @@ export function Transactions() {
 
         <TabsContent value="contas" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Conta Corrente */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-lg">Conta Corrente</CardTitle>
-                </div>
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600 mb-2">R$ 1.850,00</div>
-                <p className="text-sm text-gray-500 mb-4">Banco do Brasil - AG 1234</p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Última movimentação:</span>
-                  <span>Hoje</span>
-                </div>
+            {/* Botão para adicionar nova conta */}
+            <Card className="hover:shadow-lg transition-shadow border-2 border-dashed border-gray-300 hover:border-blue-400">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <button 
+                  onClick={() => {
+                    console.log("Opening bank account modal, current state:", bankAccountModalOpen);
+                    setBankAccountModalOpen(true);
+                    console.log("Bank account modal state set to true");
+                  }}
+                  className="w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-blue-600/25 mb-4"
+                  title="Nova Conta Financeira"
+                >
+                  <Plus className="h-8 w-8" />
+                </button>
+                <h3 className="text-lg font-medium text-gray-700 mb-2">Adicionar Nova Conta</h3>
+                <p className="text-sm text-gray-500 text-center">
+                  Cadastre suas contas bancárias, cartões e investimentos
+                </p>
               </CardContent>
             </Card>
 
-            {/* Poupança */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  <Building className="h-5 w-5 text-green-600" />
-                  <CardTitle className="text-lg">Poupança</CardTitle>
-                </div>
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600 mb-2">R$ 5.280,00</div>
-                <p className="text-sm text-gray-500 mb-4">Caixa Econômica - AG 0123</p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Rendimento mensal:</span>
-                  <span className="text-green-600">+0,5%</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Cartão de Crédito */}
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5 text-orange-600" />
-                  <CardTitle className="text-lg">Cartão de Crédito</CardTitle>
-                </div>
-                <Button variant="ghost" size="sm">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-orange-600 mb-2">R$ 890,00</div>
-                <p className="text-sm text-gray-500 mb-4">Nubank - Final 1234</p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Limite disponível:</span>
-                  <span>R$ 4.110,00</span>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Contas bancárias dinâmicas */}
+            {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.map((account: any) => (
+              <Card key={account.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      account.account_type === 'conta_corrente' ? 'bg-blue-100' :
+                      account.account_type === 'conta_poupanca' ? 'bg-green-100' :
+                      account.account_type === 'conta_investimento' ? 'bg-purple-100' :
+                      'bg-gray-100'
+                    }`}>
+                      <CreditCard className={`h-5 w-5 ${
+                        account.account_type === 'conta_corrente' ? 'text-blue-600' :
+                        account.account_type === 'conta_poupanca' ? 'text-green-600' :
+                        account.account_type === 'conta_investimento' ? 'text-purple-600' :
+                        'text-gray-600'
+                      }`} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-medium">{account.account_name || account.name}</CardTitle>
+                      <p className="text-xs text-gray-500">
+                        {account.bank} {account.agency && `- AG ${account.agency}`} {account.account_number && `- ${account.account_number}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    <button className="w-8 h-8 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition-colors" title="Editar">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button className="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center transition-colors" title="Excluir">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Saldo Atual</span>
+                      <span className={`font-medium ${
+                        (account.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        R$ {(account.balance || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                      </span>
+                    </div>
+                    {account.credit_limit && account.credit_limit > 0 && (
+                      <>
+                        <div className="w-full bg-gray-200 rounded-full h-1">
+                          <div 
+                            className={`h-1 rounded-full ${
+                              account.account_type === 'conta_corrente' ? 'bg-blue-500' :
+                              account.account_type === 'conta_poupanca' ? 'bg-green-500' :
+                              account.account_type === 'conta_investimento' ? 'bg-purple-500' :
+                              'bg-gray-500'
+                            }`}
+                            style={{ 
+                              width: `${Math.min(100, ((account.balance || 0) / account.credit_limit) * 100)}%` 
+                            }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-500">
+                          <span>{Math.round(((account.balance || 0) / account.credit_limit) * 100)}% do limite</span>
+                          <span>Limite: R$ {account.credit_limit.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</span>
+                        </div>
+                      </>
+                    )}
+                    {account.contact_name && (
+                      <div className="text-xs text-gray-500 mt-2">
+                        Contato: {account.contact_name}
+                        {account.contact_phone && ` - ${account.contact_phone}`}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-
-          {/* Botão para adicionar nova conta */}
-          <Card className="border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors">
-            <CardContent className="flex flex-col items-center justify-center py-12">
-              <Plus className="h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-600 mb-2">Adicionar Nova Conta</h3>
-              <p className="text-sm text-gray-500 text-center mb-4">
-                Conecte suas contas bancárias e cartões para um controle completo
-              </p>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Conta
-              </Button>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="centro-custo" className="space-y-6">
@@ -2115,7 +2134,7 @@ export function Transactions() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-100 rounded-lg w-full max-w-2xl mx-4">
             <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Editar conta</h2>
+              <h2 className="text-lg font-semibold text-gray-800">Contas Financeiras</h2>
               <button
                 onClick={() => setBankAccountModalOpen(false)}
                 className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
@@ -2175,7 +2194,7 @@ export function Transactions() {
 
               {/* Segunda linha: Tipo, Nome, Moeda */}
               <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-3">
+                <div className="col-span-2">
                   <FormControl variant="standard" fullWidth>
                     <InputLabel>Tipo</InputLabel>
                     <Select
@@ -2187,6 +2206,15 @@ export function Transactions() {
                       <MenuItem value="conta_investimento">Conta de Investimento</MenuItem>
                     </Select>
                   </FormControl>
+                </div>
+                <div className="col-span-1 flex items-end">
+                  <button
+                    onClick={() => {/* TODO: Implementar modal de novo tipo */}}
+                    className="w-8 h-8 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
+                    title="Cadastrar novo tipo de conta"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
                 </div>
                 <div className="col-span-6">
                   <TextField
@@ -2214,23 +2242,34 @@ export function Transactions() {
               </div>
 
               {/* Terceira linha: Banco */}
-              <div className="grid grid-cols-1">
-                <FormControl variant="standard" fullWidth>
-                  <InputLabel>Banco</InputLabel>
-                  <Select
-                    value={bankAccountData.bank}
-                    onChange={(e) => setBankAccountData({ ...bankAccountData, bank: e.target.value })}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-11">
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel>Banco</InputLabel>
+                    <Select
+                      value={bankAccountData.bank}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, bank: e.target.value })}
+                    >
+                      <MenuItem value="banco_do_brasil">Banco do Brasil</MenuItem>
+                      <MenuItem value="caixa">Caixa Econômica Federal</MenuItem>
+                      <MenuItem value="santander">Santander</MenuItem>
+                      <MenuItem value="itau">Itaú</MenuItem>
+                      <MenuItem value="bradesco">Bradesco</MenuItem>
+                      <MenuItem value="nubank">Nubank</MenuItem>
+                      <MenuItem value="inter">Banco Inter</MenuItem>
+                      <MenuItem value="outro">Outro</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+                <div className="col-span-1 flex items-end">
+                  <button
+                    onClick={() => {/* TODO: Implementar modal de novo banco */}}
+                    className="w-8 h-8 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
+                    title="Cadastrar novo banco"
                   >
-                    <MenuItem value="banco_do_brasil">Banco do Brasil</MenuItem>
-                    <MenuItem value="caixa">Caixa Econômica Federal</MenuItem>
-                    <MenuItem value="santander">Santander</MenuItem>
-                    <MenuItem value="itau">Itaú</MenuItem>
-                    <MenuItem value="bradesco">Bradesco</MenuItem>
-                    <MenuItem value="nubank">Nubank</MenuItem>
-                    <MenuItem value="inter">Banco Inter</MenuItem>
-                    <MenuItem value="outro">Outro</MenuItem>
-                  </Select>
-                </FormControl>
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Quarta linha: Agência, Conta */}
@@ -2288,11 +2327,11 @@ export function Transactions() {
               {/* Botões */}
               <div className="flex justify-end items-center gap-3 pt-4">
                 <button
-                  onClick={() => handleBankAccountSave()}
-                  disabled={!bankAccountData.name || !bankAccountData.currentBalance || !bankAccountData.bank || createBankAccountMutation.isPending}
+                  onClick={handleBankAccountSave}
+                  disabled={!bankAccountData.name || !bankAccountData.currentBalance || !bankAccountData.bank}
                   className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
                 >
-                  {createBankAccountMutation.isPending ? 'Salvando...' : 'Salvar'}
+                  Salvar
                 </button>
               </div>
             </div>
