@@ -2123,10 +2123,176 @@ export function Transactions() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="p-6">
-              <div className="flex justify-end">
-                <button className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded text-sm transition-colors">
-                  Salvar
+            <div className="p-6 space-y-6">
+              {/* Primeira linha: Data saldo inicial, Saldo em R$, Radio buttons */}
+              <div className="grid grid-cols-12 gap-4 items-end">
+                <div className="col-span-3">
+                  <TextField
+                    label="Data do saldo inicial *"
+                    variant="standard"
+                    type="date"
+                    value={bankAccountData.initialBalanceDate}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, initialBalanceDate: e.target.value })}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                  />
+                </div>
+                <div className="col-span-3">
+                  <TextField
+                    label="Saldo em 17/04/2025 (R$)"
+                    variant="standard"
+                    value={bankAccountData.currentBalance}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, currentBalance: e.target.value })}
+                    fullWidth
+                    placeholder="2.600,96"
+                  />
+                </div>
+                <div className="col-span-6 flex items-center gap-6 justify-center">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="balanceType"
+                      value="credor"
+                      checked={bankAccountData.balanceType === 'credor'}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
+                      className="w-4 h-4 text-pink-500 accent-pink-500"
+                    />
+                    <span className="text-sm text-gray-700">Credor</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="balanceType"
+                      value="devedor"
+                      checked={bankAccountData.balanceType === 'devedor'}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
+                      className="w-4 h-4 text-gray-500"
+                    />
+                    <span className="text-sm text-gray-700">Devedor</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Segunda linha: Tipo, Nome, Moeda */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-3">
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel>Tipo</InputLabel>
+                    <Select
+                      value={bankAccountData.accountType}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, accountType: e.target.value })}
+                    >
+                      <MenuItem value="conta_corrente">Conta Corrente</MenuItem>
+                      <MenuItem value="conta_poupanca">Conta Poupança</MenuItem>
+                      <MenuItem value="conta_investimento">Conta de Investimento</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+                <div className="col-span-6">
+                  <TextField
+                    label="Nome *"
+                    variant="standard"
+                    value={bankAccountData.name}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, name: e.target.value })}
+                    fullWidth
+                    placeholder="Bancos | Pessoa Física"
+                  />
+                </div>
+                <div className="col-span-3">
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel>Moeda</InputLabel>
+                    <Select
+                      value={bankAccountData.currency}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, currency: e.target.value })}
+                    >
+                      <MenuItem value="BRL">🇧🇷 Real (R$)</MenuItem>
+                      <MenuItem value="USD">🇺🇸 Dólar (US$)</MenuItem>
+                      <MenuItem value="EUR">🇪🇺 Euro (€)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              </div>
+
+              {/* Terceira linha: Banco */}
+              <div className="grid grid-cols-1">
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel>Banco</InputLabel>
+                  <Select
+                    value={bankAccountData.bank}
+                    onChange={(e) => setBankAccountData({ ...bankAccountData, bank: e.target.value })}
+                  >
+                    <MenuItem value="banco_do_brasil">Banco do Brasil</MenuItem>
+                    <MenuItem value="caixa">Caixa Econômica Federal</MenuItem>
+                    <MenuItem value="santander">Santander</MenuItem>
+                    <MenuItem value="itau">Itaú</MenuItem>
+                    <MenuItem value="bradesco">Bradesco</MenuItem>
+                    <MenuItem value="nubank">Nubank</MenuItem>
+                    <MenuItem value="inter">Banco Inter</MenuItem>
+                    <MenuItem value="outro">Outro</MenuItem>
+                  </Select>
+                </FormControl>
+              </div>
+
+              {/* Quarta linha: Agência, Conta */}
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  label="Agência"
+                  variant="standard"
+                  value={bankAccountData.agency}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, agency: e.target.value })}
+                  fullWidth
+                  placeholder="0123"
+                />
+                <TextField
+                  label="Conta"
+                  variant="standard"
+                  value={bankAccountData.accountNumber}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, accountNumber: e.target.value })}
+                  fullWidth
+                  placeholder="12345-6"
+                />
+              </div>
+
+              {/* Quinta linha: Limite de crédito, Nome do contato */}
+              <div className="grid grid-cols-2 gap-4">
+                <TextField
+                  label="Limite de crédito (R$)"
+                  variant="standard"
+                  value={bankAccountData.creditLimit}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, creditLimit: e.target.value })}
+                  fullWidth
+                  placeholder="5.000,00"
+                />
+                <TextField
+                  label="Nome do contato"
+                  variant="standard"
+                  value={bankAccountData.contactName}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, contactName: e.target.value })}
+                  fullWidth
+                  placeholder="João Silva"
+                />
+              </div>
+
+              {/* Sexta linha: Telefone do contato */}
+              <div className="grid grid-cols-1">
+                <TextField
+                  label="Telefone do contato"
+                  variant="standard"
+                  value={bankAccountData.contactPhone}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, contactPhone: e.target.value })}
+                  fullWidth
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+
+              {/* Botões */}
+              <div className="flex justify-end items-center gap-3 pt-4">
+                <button
+                  onClick={() => handleBankAccountSave()}
+                  disabled={!bankAccountData.name || !bankAccountData.currentBalance || !bankAccountData.bank || createBankAccountMutation.isPending}
+                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
+                >
+                  {createBankAccountMutation.isPending ? 'Salvando...' : 'Salvar'}
                 </button>
               </div>
             </div>
