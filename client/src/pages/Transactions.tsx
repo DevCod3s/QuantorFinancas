@@ -288,7 +288,7 @@ export function Transactions() {
   });
 
   // Garantir que chartAccounts seja sempre um array e seja um tipo correto
-  const safeChartAccountsData = Array.isArray(chartAccounts) ? chartAccounts : [];
+  const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
 
   // Função para salvar nova transação
   const handleSaveTransaction = (transactionData: any) => {
@@ -2152,13 +2152,13 @@ function ChartOfAccountsContent({
   });
 
   // Query para buscar contas
-  const { data: safeChartAccountsData, isLoading: isLoadingAccounts, refetch } = useQuery({
+  const { data: chartAccounts, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['/api/chart-accounts'],
     enabled: true
   });
 
   // Garantir que chartAccounts seja sempre um array
-  const chartAccounts = Array.isArray(safeChartAccountsData) ? safeChartAccountsData : [];
+  const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({
@@ -2172,7 +2172,7 @@ function ChartOfAccountsContent({
       return response.json();
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
     },
   });
 
@@ -2188,7 +2188,7 @@ function ChartOfAccountsContent({
       return response.json();
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
     },
   });
 
@@ -2206,7 +2206,7 @@ function ChartOfAccountsContent({
       return response.status === 204 ? { success: true } : response.json();
     },
     onSuccess: () => {
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
     },
     onError: (error: any) => {
       showError('Erro ao excluir', error.message || 'Não foi possível excluir a conta. Tente novamente.');
