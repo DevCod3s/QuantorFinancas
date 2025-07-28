@@ -3045,30 +3045,7 @@ export default function TransactionsPage() {
     }
   });
 
-  // Função para salvar conta bancária
-  const handleBankAccountSave = async () => {
-    if (!bankAccountData.name) {
-      alert('Nome é obrigatório');
-      return;
-    }
-    
-    if (!bankAccountData.currentBalance) {
-      alert('Saldo inicial é obrigatório');
-      return;
-    }
-    
-    if (!bankAccountData.bank) {
-      alert('Banco é obrigatório');
-      return;
-    }
-
-    try {
-      await createBankAccountMutation.mutateAsync(bankAccountData);
-    } catch (error) {
-      console.error('Erro ao salvar conta bancária:', error);
-      alert('Erro ao salvar conta bancária');
-    }
-  };
+  // Função removida - usando a do componente principal
 
   const renderContent = () => {
     if (activeTab === 'contas') {
