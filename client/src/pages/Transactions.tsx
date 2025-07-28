@@ -3007,7 +3007,6 @@ function ChartOfAccountsContent({
 export default function TransactionsPage() {
   // Estados do componente principal (onde as variáveis do modal existem)
   const [activeTab, setActiveTab] = useState('visao-geral');
-  const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [bankAccountData, setBankAccountData] = useState({
     initialBalanceDate: new Date().toISOString().split('T')[0],
     currentBalance: '',
