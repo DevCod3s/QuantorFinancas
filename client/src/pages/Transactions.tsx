@@ -122,6 +122,62 @@ export function Transactions() {
     contactPhone: ''
   });
 
+  // Mutation para criar conta bancária
+  const createBankAccountMutation = useMutation({
+    mutationFn: (bankAccountData: any) => 
+      fetch('/api/bank-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bankAccountData),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      showSuccess('Conta bancária criada com sucesso!', '');
+      setBankAccountModalOpen(false);
+      setBankAccountData({
+        initialBalanceDate: new Date().toISOString().split('T')[0],
+        currentBalance: '',
+        balanceType: 'credor',
+        accountType: 'conta_corrente',
+        name: '',
+        currency: 'BRL',
+        bank: '',
+        agency: '',
+        accountNumber: '',
+        creditLimit: '',
+        contactName: '',
+        contactPhone: ''
+      });
+    },
+    onError: (error: any) => {
+      showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+    }
+  });
+
+  // Handler para salvar conta bancária
+  const handleBankAccountSave = async () => {
+    if (!bankAccountData.name) {
+      showError('Campo obrigatório', 'O nome da conta é obrigatório.');
+      return;
+    }
+
+    if (!bankAccountData.currentBalance) {
+      showError('Campo obrigatório', 'O saldo inicial é obrigatório.');
+      return;
+    }
+
+    if (!bankAccountData.bank) {
+      showError('Campo obrigatório', 'O banco é obrigatório.');
+      return;
+    }
+
+    try {
+      await createBankAccountMutation.mutateAsync(bankAccountData);
+    } catch (error) {
+      console.error('Erro ao salvar conta bancária:', error);
+    }
+  };
+
 
   
   const queryClient = useQueryClient();
@@ -308,93 +364,7 @@ export function Transactions() {
     }
   });
 
-  // Mutations para contas bancárias
-  const createBankAccountMutation = useMutation({
-    mutationFn: (bankAccountData: any) => 
-      apiRequest('/api/bank-accounts', {
-        method: 'POST',
-        body: JSON.stringify(bankAccountData),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária criada com sucesso!', '');
-      setBankAccountModalOpen(false);
-      resetBankAccountForm();
-    },
-    onError: (error: any) => {
-      showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
-    }
-  });
 
-  const updateBankAccountMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
-      apiRequest(`/api/bank-accounts/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária atualizada com sucesso!', '');
-      setBankAccountModalOpen(false);
-      resetBankAccountForm();
-    },
-    onError: (error: any) => {
-      showError('Erro ao atualizar conta bancária', error.message || 'Verifique os dados e tente novamente.');
-    }
-  });
-
-  const deleteBankAccountMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/bank-accounts/${id}`, { method: 'DELETE' }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária excluída com sucesso!', '');
-    },
-    onError: (error: any) => {
-      showError('Erro ao excluir conta bancária', error.message || 'Não foi possível excluir a conta.');
-    }
-  });
-
-  // Funções auxiliares para contas bancárias
-  const resetBankAccountForm = () => {
-    setBankAccountData({
-      initialBalanceDate: new Date().toISOString().split('T')[0],
-      currentBalance: '',
-      balanceType: 'credor',
-      accountType: 'conta_corrente',
-      name: '',
-      currency: 'BRL',
-      bank: '',
-      agency: '',
-      accountNumber: '',
-      creditLimit: '',
-      contactName: '',
-      contactPhone: ''
-    });
-  };
-
-  const handleBankAccountSave = async () => {
-    if (!bankAccountData.name) {
-      showError('Campo obrigatório', 'O nome da conta é obrigatório.');
-      return;
-    }
-
-    if (!bankAccountData.currentBalance) {
-      showError('Campo obrigatório', 'O saldo inicial é obrigatório.');
-      return;
-    }
-
-    if (!bankAccountData.bank) {
-      showError('Campo obrigatório', 'O banco é obrigatório.');
-      return;
-    }
-
-    try {
-      await createBankAccountMutation.mutateAsync(bankAccountData);
-    } catch (error) {
-      console.error('Erro ao salvar conta bancária:', error);
-    }
-  };
 
   // Funções auxiliares para gerenciar o modal
   const resetForm = () => {
