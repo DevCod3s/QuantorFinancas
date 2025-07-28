@@ -315,6 +315,18 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • **Implementação Dupla**: Correção aplicada em handleSaveAccount e handleSaveAndContinue
     • **Validação Funcional**: Testado e confirmado pelo usuário como "perfeito"
     • **Dados Corrigidos**: Registros inconsistentes no banco ajustados (ID 35: 4.1 → 3.1)
+- **Modal de Conta Bancária Funcional**: Implementação completa seguindo layout de referência exata (Janeiro 2025)
+  - **PROCEDIMENTO CRÍTICO DOCUMENTADO**: Solução definitiva para modais com escopo de estados incorreto
+  - **Erro Comum Identificado**: Modal renderizado em componente filho sem acesso aos estados do pai
+  - **Solução Aplicada**: Mover modal para componente principal onde estão declarados os estados
+  - **Estados Necessários**: bankAccountModalOpen, setBankAccountModalOpen, bankAccountData, setBankAccountData
+  - **Correção LSP**: Substituir refetch() por queryClient.invalidateQueries() e useQueryClient hook
+  - **6 Linhas de Campos**: Data saldo inicial, Saldo/Radio buttons, Tipo/Nome/Moeda, Banco, Agência/Conta, Limite/Contato/Telefone
+  - **Material-UI Padrão**: variant="standard" em todos os TextField e FormControl/Select
+  - **Validação**: Campos Nome, Saldo e Banco obrigatórios para salvar
+  - **Layout Responsivo**: Grid system 12 colunas com distribuição conforme imagem de referência
+  - **Botão Funcional**: onClick com handleBankAccountSave e loading state implementado
+  - **Teste Final**: Modal abre corretamente ao clicar no botão "+" azul da aba Contas
 - **Problemas Técnicos Não Resolvidos**: Questões pendentes no wizard de relacionamentos (Janeiro 2025)
     • Campo CEP: Formatação funciona internamente (console mostra 9 caracteres) mas interface limita visualmente
     • API CNPJ: Funcionando com Brasil API, preenchimento automático operacional
