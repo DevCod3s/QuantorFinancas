@@ -3104,7 +3104,7 @@ export default function TransactionsPage() {
       );
     }
     
-    return <ChartOfAccountsSection />;
+    return <div>Plano de Contas</div>;
   };
 
   return (
@@ -3121,7 +3121,50 @@ export default function TransactionsPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <FinanceTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('visao-geral')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'visao-geral'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Visão Geral
+            </button>
+            <button
+              onClick={() => setActiveTab('movimentacoes')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'movimentacoes'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Movimentações
+            </button>
+            <button
+              onClick={() => setActiveTab('contas')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'contas'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Contas
+            </button>
+            <button
+              onClick={() => setActiveTab('centro-custo')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'centro-custo'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Centro de Custo
+            </button>
+          </nav>
+        </div>
         <div className="mt-6">
           {renderContent()}
         </div>
