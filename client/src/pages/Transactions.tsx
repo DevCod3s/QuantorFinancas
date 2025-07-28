@@ -1,36 +1,173 @@
 /**
  * @fileoverview Página principal de Finanças do sistema Quantor
- * Implementa sistema de abas completo para gestão financeira com modal de contas bancárias
- * @version 2.0
+ * Implementa sistema completo de gestão financeira com 4 abas principais
+ * @version 2.1
  * @author Sistema Quantor
  * @date Janeiro 2025
  */
 
 import React, { useState } from 'react';
-import { Plus, X, Save, Edit, Eye, Trash2, ArrowUpDown } from 'lucide-react';
+import { Plus, X, ChevronLeft, ChevronRight, Calendar, ChevronDown, TrendingUp, DollarSign, CreditCard, Target } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
-// Componente da aba Visão Geral
-const OverviewSection = () => {
+// Componente SubTabs para navegação interna
+const SubTabs = ({ tabs, activeTab, onTabChange }: any) => {
   return (
-    <div className="space-y-6">
-      <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Visão Geral Financeira</h3>
-        <p className="text-gray-600">Dashboard com métricas e relatórios será implementado aqui</p>
+    <div className="mb-6">
+      <div className="flex border-b border-gray-200 relative">
+        {tabs.map((tab: any) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabChange(tab.id)}
+            className={`px-6 py-3 text-sm font-medium transition-colors relative ${
+              activeTab === tab.id
+                ? 'text-blue-600 border-b-2 border-blue-500'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
     </div>
   );
 };
 
-// Componente da aba Movimentações
-const MovementsSection = () => {
-  return (
+// Componente da aba Visão Geral com sub-abas
+const OverviewSection = () => {
+  const [activeSubTab, setActiveSubTab] = useState('fluxo-caixa');
+  
+  const subTabs = [
+    { id: 'fluxo-caixa', label: 'Fluxo de Caixa' },
+    { id: 'lancamentos', label: 'Lançamentos' }
+  ];
+
+  const renderFluxoCaixa = () => (
     <div className="space-y-6">
-      <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Movimentações Financeiras</h3>
-        <p className="text-gray-600">Transações e lançamentos serão exibidos aqui</p>
+      {/* Header com controles temporais */}
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Fluxo de Caixa</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-medium">Janeiro 2025</span>
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            <button className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded-md text-sm">
+              <Calendar className="h-4 w-4" />
+              Mensal
+              <ChevronDown className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+        
+        {/* Placeholder para gráficos */}
+        <div className="grid grid-cols-2 gap-6">
+          <div className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300">
+            <TrendingUp className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600">Gráfico de Linha - Fluxo de Caixa</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300">
+            <DollarSign className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600">Gráfico de Barras - Saldos</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300">
+            <Target className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600">Gráfico Rosca - Despesas</p>
+          </div>
+          <div className="bg-gray-50 rounded-lg p-8 text-center border-2 border-dashed border-gray-300">
+            <CreditCard className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-600">Gráfico Rosca - Receitas</p>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+
+  const renderLancamentos = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Demonstrativo Diário</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-sm font-medium">Janeiro 2025</span>
+              <button className="p-1 hover:bg-gray-100 rounded">
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <h4 className="text-lg font-medium text-gray-900 mb-2">Demonstrativo de Lançamentos</h4>
+          <p className="text-gray-600">Tabela detalhada com entradas, saídas e resultados diários</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <SubTabs 
+        tabs={subTabs} 
+        activeTab={activeSubTab} 
+        onTabChange={setActiveSubTab} 
+      />
+      {activeSubTab === 'fluxo-caixa' && renderFluxoCaixa()}
+      {activeSubTab === 'lancamentos' && renderLancamentos()}
+    </div>
+  );
+};
+
+// Componente da aba Movimentações com sub-abas
+const MovementsSection = () => {
+  const [activeSubTab, setActiveSubTab] = useState('a-pagar');
+  
+  const subTabs = [
+    { id: 'a-pagar', label: 'À Pagar' },
+    { id: 'a-receber', label: 'À Receber' }
+  ];
+
+  const renderAPagar = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Total a pagar: R$ 2.805,23</h3>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <p className="text-gray-600">Tabela de contas a pagar com ordenação e paginação</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderAReceber = () => (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Total a receber: R$ 4.430,00</h3>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <p className="text-gray-600">Tabela de contas a receber com ordenação e paginação</p>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div>
+      <SubTabs 
+        tabs={subTabs} 
+        activeTab={activeSubTab} 
+        onTabChange={setActiveSubTab} 
+      />
+      {activeSubTab === 'a-pagar' && renderAPagar()}
+      {activeSubTab === 'a-receber' && renderAReceber()}
     </div>
   );
 };
@@ -72,9 +209,11 @@ const AccountsSection = ({ onOpenBankAccountModal }: { onOpenBankAccountModal: (
 const CostCenterSection = () => {
   return (
     <div className="space-y-6">
-      <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">Centro de Custo</h3>
-        <p className="text-gray-600">Categorização de gastos será implementada aqui</p>
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Centro de Custo</h3>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+          <p className="text-gray-600">Categorização de gastos por centro de custo</p>
+        </div>
       </div>
     </div>
   );
@@ -83,7 +222,7 @@ const CostCenterSection = () => {
 // Componente principal da página Transactions
 export function Transactions() {
   // Estados do componente principal
-  const [activeTab, setActiveTab] = useState('contas'); // Começar na aba contas para testar
+  const [activeTab, setActiveTab] = useState('visao-geral');
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [bankAccountData, setBankAccountData] = useState({
     initialBalanceDate: new Date().toISOString().split('T')[0],
@@ -163,7 +302,7 @@ export function Transactions() {
     }
   };
 
-  // Retorno da função principal TransactionsPage
+  // Retorno da função principal
   return (
     <div className="p-6">
       <div className="mb-6">
