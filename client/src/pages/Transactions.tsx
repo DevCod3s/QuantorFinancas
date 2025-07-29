@@ -87,6 +87,11 @@ ChartJS.register(
 );
 
 export function Transactions() {
+  const queryClient = useQueryClient();
+  const { showSuccessDialog } = useSuccessDialog();
+  const { showErrorDialog } = useErrorDialog();
+  const { showConfirmDialog } = useConfirmDialog();
+  
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [activeTab, setActiveTab] = useState("visao-geral");
@@ -132,7 +137,7 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária criada com sucesso!', '');
+      showSuccessDialog('Conta bancária criada com sucesso!', '');
       setBankAccountModalOpen(false);
       setBankAccountData({
         initialBalanceDate: new Date().toISOString().split('T')[0],
@@ -150,24 +155,24 @@ export function Transactions() {
       });
     },
     onError: (error: any) => {
-      showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+      showErrorDialog('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
     }
   });
 
   // Handler para salvar conta bancária
   const handleBankAccountSave = async () => {
     if (!bankAccountData.name) {
-      showError('Campo obrigatório', 'O nome da conta é obrigatório.');
+      showErrorDialog('Campo obrigatório', 'O nome da conta é obrigatório.');
       return;
     }
 
     if (!bankAccountData.currentBalance) {
-      showError('Campo obrigatório', 'O saldo inicial é obrigatório.');
+      showErrorDialog('Campo obrigatório', 'O saldo inicial é obrigatório.');
       return;
     }
 
     if (!bankAccountData.bank) {
-      showError('Campo obrigatório', 'O banco é obrigatório.');
+      showErrorDialog('Campo obrigatório', 'O banco é obrigatório.');
       return;
     }
 
@@ -179,13 +184,8 @@ export function Transactions() {
   };
 
 
-  
-  const queryClient = useQueryClient();
-  
-  // Importar dialogs personalizados
-  const { showSuccess, SuccessDialog: SuccessDialogComponent } = useSuccessDialog();
-  const { showError, ErrorDialog: ErrorDialogComponent } = useErrorDialog();
-  const { showConfirm, ConfirmDialog: ConfirmDialogComponent } = useConfirmDialog();
+
+
   
   // Estados para controle de ordenação e paginação
   const [payablesSortField, setPayablesSortField] = useState<string>('');
@@ -2240,11 +2240,13 @@ export function Transactions() {
                   </FormControl>
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
-                  <CreditCard 
-                    className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 cursor-pointer transition-colors" 
+                  <div 
                     onClick={() => {/* TODO: Implementar modal de novo tipo */}}
+                    className="cursor-pointer"
                     title="Cadastrar novo tipo de conta"
-                  />
+                  >
+                    <CreditCard className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />
+                  </div>
                 </div>
                 <div className="col-span-3">
                   <FormControl variant="standard" fullWidth>
@@ -2265,11 +2267,13 @@ export function Transactions() {
                   </FormControl>
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
-                  <Building2 
-                    className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 cursor-pointer transition-colors" 
+                  <div 
                     onClick={() => {/* TODO: Implementar modal de novo banco */}}
+                    className="cursor-pointer"
                     title="Cadastrar novo banco"
-                  />
+                  >
+                    <Building2 className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />
+                  </div>
                 </div>
                 <div className="col-span-4">
                   <FormControl variant="standard" fullWidth>
