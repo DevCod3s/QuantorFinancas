@@ -252,22 +252,23 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 </Select>
               </FormControl>
               
-              <TextField
-                variant="standard"
-                label="Repete-se a cada * meses"
-                type="number"
-                value={intervaloRepeticao}
-                onChange={(e) => setIntervaloRepeticao(e.target.value)}
-                fullWidth
-                required
-                inputProps={{ min: 1, max: 99 }}
-                sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-              />
-              
-              <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+                <TextField
+                  variant="standard"
+                  label="Repete-se a cada * meses"
+                  type="number"
+                  value={intervaloRepeticao}
+                  onChange={(e) => setIntervaloRepeticao(e.target.value)}
+                  sx={{ 
+                    width: '85%',
+                    '& .MuiInputLabel-root': { color: '#666' } 
+                  }}
+                  required
+                  inputProps={{ min: 1, max: 99 }}
+                />
                 <IconButton 
                   size="small" 
-                  sx={{ mb: 0.5, color: '#666' }}
+                  sx={{ mb: 0.5, color: '#1976d2' }}
                   onClick={() => {/* Função para personalizar recorrência */}}
                 >
                   <Settings className="h-4 w-4" />
