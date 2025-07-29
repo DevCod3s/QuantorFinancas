@@ -210,7 +210,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             />
             
             <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
+              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao}>Repetição</InputLabel>
               <Select
                 value={repeticao}
                 onChange={(e) => setRepeticao(e.target.value)}
@@ -231,7 +231,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           {repeticao === 'Recorrente' && (
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3, mb: 4 }}>
               <FormControl variant="standard" fullWidth>
-                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade}>
                   Periodicidade *
                 </InputLabel>
                 <Select
@@ -254,7 +254,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               
               <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
                 <FormControl variant="standard" sx={{ width: '85%' }}>
-                  <InputLabel sx={{ color: '#666' }} shrink={!!intervaloRepeticao || undefined}>
+                  <InputLabel sx={{ color: '#666' }} shrink={!!intervaloRepeticao}>
                     Repete-se a cada * meses
                   </InputLabel>
                   <Select
