@@ -21,7 +21,7 @@ import {
   Button,
   Box
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, CreditCard, Users, Building2, BookOpen } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, CreditCard, Users, Building2, BookOpen, Settings } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 
 interface TransactionCardProps {
@@ -264,22 +264,14 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
               />
               
-              <Box sx={{ display: 'flex', alignItems: 'end' }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  sx={{ 
-                    textTransform: 'none',
-                    borderColor: '#1976d2',
-                    color: '#1976d2',
-                    '&:hover': {
-                      borderColor: '#1565c0',
-                      backgroundColor: '#e3f2fd'
-                    }
-                  }}
+              <Box sx={{ display: 'flex', alignItems: 'end', justifyContent: 'center' }}>
+                <IconButton 
+                  size="small" 
+                  sx={{ mb: 0.5, color: '#666' }}
+                  onClick={() => {/* Função para personalizar recorrência */}}
                 >
-                  Personalizar ⚙
-                </Button>
+                  <Settings className="h-4 w-4" />
+                </IconButton>
               </Box>
             </Box>
           )}
