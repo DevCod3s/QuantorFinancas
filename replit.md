@@ -146,6 +146,18 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 
 ## Recent Changes (Janeiro 2025)
 
+- **Campos Condicionais de Recorrência**: Implementação completa da funcionalidade de transações recorrentes no modal de lançamentos financeiros (Janeiro 2025)
+  - **Lógica Condicional Inteligente**: Campos aparecem apenas quando "Recorrente" é selecionado no dropdown Repetição
+  - **Campo Periodicidade**: Dropdown com 6 opções (Diário, Semanal, Mensal, Trimestral, Semestral, Anual)
+  - **Campo Intervalo**: Input numérico "Repete-se a cada X meses" com validação (min: 1, max: 99)
+  - **Botão Personalizar**: Interface adicional para configurações avançadas de recorrência
+  - **Estados Gerenciados**: Novos estados `periodicidade` e `intervaloRepeticao` integrados ao fluxo de dados
+  - **Função handleSave Atualizada**: Campos condicionais incluídos apenas quando recorrência está ativa
+  - **Arquivo Correto Identificado**: Solução aplicada em `TransactionCard.tsx` (não TransactionModal.tsx)
+  - **Layout Responsivo**: Posicionamento exato conforme imagem de referência fornecida
+  - **Material-UI Components**: Utilização dos mesmos componentes já existentes no modal
+  - **Experiência do Usuário**: Transição suave de exibição/ocultação dos campos condicionais
+
 - **Restauração Completa do Sistema**: Sistema financeiro totalmente restaurado após correção de erro JSX (Janeiro 2025)
   - **Problema Corrigido**: Código duplicado no final do TransactionsBackup.tsx causando erro de compilação
   - **Solução Aplicada**: Remoção apenas das linhas 3318-3526 duplicadas, mantendo 100% das funcionalidades
