@@ -1979,104 +1979,136 @@ export function Transactions() {
         </TabsContent>
 
         <TabsContent value="contas" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Botão para adicionar nova conta */}
-            <Card className="hover:shadow-lg transition-shadow border-2 border-dashed border-gray-300 hover:border-blue-400">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <button 
-                  onClick={() => {
-                    console.log("Opening bank account modal, current state:", bankAccountModalOpen);
-                    setBankAccountModalOpen(true);
-                    console.log("Bank account modal state set to true");
-                  }}
-                  className="w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-blue-600/25 mb-4"
-                  title="Nova Conta Financeira"
-                >
-                  <Plus className="h-8 w-8" />
-                </button>
-                <h3 className="text-lg font-medium text-gray-700 mb-2">Adicionar Nova Conta</h3>
-                <p className="text-sm text-gray-500 text-center">
-                  Cadastre suas contas bancárias, cartões e investimentos
-                </p>
+          {/* Botão para adicionar nova conta */}
+          <div className="flex justify-end mb-4">
+            <button 
+              onClick={() => {
+                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
+                setBankAccountModalOpen(true);
+                console.log("Bank account modal state set to true");
+              }}
+              className="w-11 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-blue-600/25"
+              title="Nova Conta Financeira"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Tabela de Contas Bancárias */}
+          <Card className="shadow-lg hover:shadow-xl transition-shadow">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-gray-50">
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Banco</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Nome da Conta Bancária</th>
+                      <th className="text-left py-3 px-4 font-medium text-gray-600">Data da Criação</th>
+                      <th className="text-right py-3 px-4 font-medium text-gray-600">Saldo Atual</th>
+                      <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.length > 0 ? (
+                      bankAccounts.map((account: any) => (
+                        <tr key={account.id} className="border-b hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">
+                              {account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
+                               account.bank === 'caixa' ? 'Caixa Econômica Federal' :
+                               account.bank === 'santander' ? 'Santander' :
+                               account.bank === 'itau' ? 'Itaú' :
+                               account.bank === 'bradesco' ? 'Bradesco' :
+                               account.bank === 'nubank' ? 'Nubank' :
+                               account.bank === 'inter' ? 'Banco Inter' :
+                               account.bank || 'Banco não informado'}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="font-medium text-gray-900">{account.account_name || account.name || 'Nome não informado'}</div>
+                            <div className="text-xs text-gray-500">
+                              {account.account_type === 'conta_corrente' ? 'Conta Corrente' :
+                               account.account_type === 'conta_poupanca' ? 'Conta Poupança' :
+                               account.account_type === 'conta_investimento' ? 'Conta de Investimento' :
+                               'Tipo não informado'}
+                              {account.agency && ` - AG ${account.agency}`}
+                              {account.account_number && ` - ${account.account_number}`}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-gray-600">
+                            {account.created_at ? 
+                              new Date(account.created_at).toLocaleDateString('pt-BR') : 
+                              new Date().toLocaleDateString('pt-BR')}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <span className={`font-medium ${
+                              (account.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              R$ {(account.balance || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button 
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded" 
+                                title="Editar" 
+                                onClick={() => console.log('Edit account', account.id)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                              <button 
+                                className="p-1 text-red-600 hover:bg-red-50 rounded" 
+                                title="Excluir" 
+                                onClick={() => console.log('Delete account', account.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-gray-500">
+                          <div className="flex flex-col items-center">
+                            <CreditCard className="h-12 w-12 text-gray-300 mb-4" />
+                            <p className="text-lg font-medium mb-2">Nenhuma conta cadastrada</p>
+                            <p className="text-sm">Use o botão "+" para adicionar sua primeira conta bancária</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Paginação (se necessário no futuro) */}
+          {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.length > 10 && (
+            <Card className="shadow-lg mt-4">
+              <CardContent className="py-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="text-sm text-gray-600">
+                      Mostrando {bankAccounts.length} conta{bankAccounts.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="outline" size="sm" className="text-sm h-8" disabled>
+                      Anterior
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-sm h-8 bg-blue-50 text-blue-600">
+                      1
+                    </Button>
+                    <Button variant="outline" size="sm" className="text-sm h-8" disabled>
+                      Próxima
+                    </Button>
+                  </div>
+                </div>
               </CardContent>
             </Card>
-
-            {/* Contas bancárias dinâmicas */}
-            {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.map((account: any) => (
-              <Card key={account.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      account.account_type === 'conta_corrente' ? 'bg-blue-100' :
-                      account.account_type === 'conta_poupanca' ? 'bg-green-100' :
-                      account.account_type === 'conta_investimento' ? 'bg-purple-100' :
-                      'bg-gray-100'
-                    }`}>
-                      <CreditCard className={`h-5 w-5 ${
-                        account.account_type === 'conta_corrente' ? 'text-blue-600' :
-                        account.account_type === 'conta_poupanca' ? 'text-green-600' :
-                        account.account_type === 'conta_investimento' ? 'text-purple-600' :
-                        'text-gray-600'
-                      }`} />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base font-medium">{account.account_name || account.name}</CardTitle>
-                      <p className="text-xs text-gray-500">
-                        {account.bank} {account.agency && `- AG ${account.agency}`} {account.account_number && `- ${account.account_number}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <button className="w-8 h-8 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center transition-colors" title="Editar">
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button className="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-full flex items-center justify-center transition-colors" title="Excluir">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Saldo Atual</span>
-                      <span className={`font-medium ${
-                        (account.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        R$ {(account.balance || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                      </span>
-                    </div>
-                    {account.credit_limit && account.credit_limit > 0 && (
-                      <>
-                        <div className="w-full bg-gray-200 rounded-full h-1">
-                          <div 
-                            className={`h-1 rounded-full ${
-                              account.account_type === 'conta_corrente' ? 'bg-blue-500' :
-                              account.account_type === 'conta_poupanca' ? 'bg-green-500' :
-                              account.account_type === 'conta_investimento' ? 'bg-purple-500' :
-                              'bg-gray-500'
-                            }`}
-                            style={{ 
-                              width: `${Math.min(100, ((account.balance || 0) / account.credit_limit) * 100)}%` 
-                            }}
-                          ></div>
-                        </div>
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>{Math.round(((account.balance || 0) / account.credit_limit) * 100)}% do limite</span>
-                          <span>Limite: R$ {account.credit_limit.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}</span>
-                        </div>
-                      </>
-                    )}
-                    {account.contact_name && (
-                      <div className="text-xs text-gray-500 mt-2">
-                        Contato: {account.contact_name}
-                        {account.contact_phone && ` - ${account.contact_phone}`}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          )}
         </TabsContent>
 
         <TabsContent value="centro-custo" className="space-y-6">
@@ -2142,8 +2174,8 @@ export function Transactions() {
                 <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="p-6 space-y-6">
-              {/* Primeira linha: Data saldo inicial, Saldo em R$, Radio buttons */}
+            <div className="p-6 space-y-4">
+              {/* Primeira linha: Data do saldo inicial, Saldo em 17/04/2..., Radio buttons */}
               <div className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-3">
                   <TextField
@@ -2158,12 +2190,12 @@ export function Transactions() {
                 </div>
                 <div className="col-span-3">
                   <TextField
-                    label="Saldo em 17/04/2025 (R$)"
+                    label="Saldo em 17/04/2..."
                     variant="standard"
                     value={bankAccountData.currentBalance}
                     onChange={(e) => setBankAccountData({ ...bankAccountData, currentBalance: e.target.value })}
                     fullWidth
-                    placeholder="2.600,96"
+                    placeholder=""
                   />
                 </div>
                 <div className="col-span-6 flex items-center gap-6 justify-center">
@@ -2192,9 +2224,9 @@ export function Transactions() {
                 </div>
               </div>
 
-              {/* Segunda linha: Tipo, Nome, Moeda */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-2">
+              {/* Segunda linha: Tipo, ícone +, Banco, ícone +, Moeda */}
+              <div className="grid grid-cols-12 gap-2">
+                <div className="col-span-3">
                   <FormControl variant="standard" fullWidth>
                     <InputLabel>Tipo</InputLabel>
                     <Select
@@ -2207,7 +2239,7 @@ export function Transactions() {
                     </Select>
                   </FormControl>
                 </div>
-                <div className="col-span-1 flex items-end">
+                <div className="col-span-1 flex items-end justify-center">
                   <button
                     onClick={() => {/* TODO: Implementar modal de novo tipo */}}
                     className="w-8 h-8 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
@@ -2216,34 +2248,7 @@ export function Transactions() {
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
-                <div className="col-span-6">
-                  <TextField
-                    label="Nome *"
-                    variant="standard"
-                    value={bankAccountData.name}
-                    onChange={(e) => setBankAccountData({ ...bankAccountData, name: e.target.value })}
-                    fullWidth
-                    placeholder="Bancos | Pessoa Física"
-                  />
-                </div>
                 <div className="col-span-3">
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel>Moeda</InputLabel>
-                    <Select
-                      value={bankAccountData.currency}
-                      onChange={(e) => setBankAccountData({ ...bankAccountData, currency: e.target.value })}
-                    >
-                      <MenuItem value="BRL">🇧🇷 Real (R$)</MenuItem>
-                      <MenuItem value="USD">🇺🇸 Dólar (US$)</MenuItem>
-                      <MenuItem value="EUR">🇪🇺 Euro (€)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </div>
-
-              {/* Terceira linha: Banco */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-11">
                   <FormControl variant="standard" fullWidth>
                     <InputLabel>Banco</InputLabel>
                     <Select
@@ -2261,7 +2266,7 @@ export function Transactions() {
                     </Select>
                   </FormControl>
                 </div>
-                <div className="col-span-1 flex items-end">
+                <div className="col-span-1 flex items-end justify-center">
                   <button
                     onClick={() => {/* TODO: Implementar modal de novo banco */}}
                     className="w-8 h-8 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
@@ -2270,6 +2275,31 @@ export function Transactions() {
                     <Plus className="h-4 w-4" />
                   </button>
                 </div>
+                <div className="col-span-4">
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel>Moeda</InputLabel>
+                    <Select
+                      value={bankAccountData.currency}
+                      onChange={(e) => setBankAccountData({ ...bankAccountData, currency: e.target.value })}
+                    >
+                      <MenuItem value="BRL">Real (R$)</MenuItem>
+                      <MenuItem value="USD">Dólar (US$)</MenuItem>
+                      <MenuItem value="EUR">Euro (€)</MenuItem>
+                    </Select>
+                  </FormControl>
+                </div>
+              </div>
+
+              {/* Terceira linha: Nome * (campo único, largura total) */}
+              <div className="grid grid-cols-1">
+                <TextField
+                  label="Nome *"
+                  variant="standard"
+                  value={bankAccountData.name}
+                  onChange={(e) => setBankAccountData({ ...bankAccountData, name: e.target.value })}
+                  fullWidth
+                  placeholder=""
+                />
               </div>
 
               {/* Quarta linha: Agência, Conta */}
@@ -2280,7 +2310,7 @@ export function Transactions() {
                   value={bankAccountData.agency}
                   onChange={(e) => setBankAccountData({ ...bankAccountData, agency: e.target.value })}
                   fullWidth
-                  placeholder="0123"
+                  placeholder=""
                 />
                 <TextField
                   label="Conta"
@@ -2288,7 +2318,7 @@ export function Transactions() {
                   value={bankAccountData.accountNumber}
                   onChange={(e) => setBankAccountData({ ...bankAccountData, accountNumber: e.target.value })}
                   fullWidth
-                  placeholder="12345-6"
+                  placeholder=""
                 />
               </div>
 
@@ -2300,7 +2330,7 @@ export function Transactions() {
                   value={bankAccountData.creditLimit}
                   onChange={(e) => setBankAccountData({ ...bankAccountData, creditLimit: e.target.value })}
                   fullWidth
-                  placeholder="5.000,00"
+                  placeholder=""
                 />
                 <TextField
                   label="Nome do contato"
@@ -2308,7 +2338,7 @@ export function Transactions() {
                   value={bankAccountData.contactName}
                   onChange={(e) => setBankAccountData({ ...bankAccountData, contactName: e.target.value })}
                   fullWidth
-                  placeholder="João Silva"
+                  placeholder=""
                 />
               </div>
 
@@ -2320,7 +2350,7 @@ export function Transactions() {
                   value={bankAccountData.contactPhone}
                   onChange={(e) => setBankAccountData({ ...bankAccountData, contactPhone: e.target.value })}
                   fullWidth
-                  placeholder="(11) 99999-9999"
+                  placeholder=""
                 />
               </div>
 
