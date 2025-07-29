@@ -2240,13 +2240,11 @@ export function Transactions() {
                   </FormControl>
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
-                  <button
+                  <CreditCard 
+                    className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 cursor-pointer transition-colors" 
                     onClick={() => {/* TODO: Implementar modal de novo tipo */}}
-                    className="w-6 h-6 mb-1 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded flex items-center justify-center transition-colors border border-blue-200"
                     title="Cadastrar novo tipo de conta"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </button>
+                  />
                 </div>
                 <div className="col-span-3">
                   <FormControl variant="standard" fullWidth>
@@ -2267,13 +2265,11 @@ export function Transactions() {
                   </FormControl>
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
-                  <button
+                  <Building2 
+                    className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 cursor-pointer transition-colors" 
                     onClick={() => {/* TODO: Implementar modal de novo banco */}}
-                    className="w-6 h-6 mb-1 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded flex items-center justify-center transition-colors border border-blue-200"
                     title="Cadastrar novo banco"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </button>
+                  />
                 </div>
                 <div className="col-span-4">
                   <FormControl variant="standard" fullWidth>
