@@ -307,11 +307,11 @@ export function Transactions() {
     if (transactionData.tipo === 'Receita') {
       // Adicionar aos recebíveis
       receivablesData.push(newTransaction);
-      showSuccess('Receita adicionada com sucesso!');
+      showSuccessDialog('Receita adicionada com sucesso!');
     } else if (transactionData.tipo === 'Despesa') {
       // Adicionar aos pagáveis
       payablesData.push(newTransaction);
-      showSuccess('Despesa adicionada com sucesso!');
+      showSuccessDialog('Despesa adicionada com sucesso!');
     }
 
     setNewTransactions(prev => [...prev, newTransaction]);
@@ -327,12 +327,12 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta criada com sucesso!', '');
+      showSuccessDialog('Conta criada com sucesso!', '');
       setChartAccountModalOpen(false);
       resetForm();
     },
     onError: (error: any) => {
-      showError('Erro ao criar conta', error.message || 'Erro ao criar conta');
+      showErrorDialog('Erro ao criar conta', error.message || 'Erro ao criar conta');
     }
   });
 
@@ -346,12 +346,12 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta atualizada com sucesso!', '');
+      showSuccessDialog('Conta atualizada com sucesso!', '');
       setChartAccountModalOpen(false);
       resetForm();
     },
     onError: (error: any) => {
-      showError('Erro ao atualizar conta', error.message || 'Erro ao atualizar conta');
+      showErrorDialog('Erro ao atualizar conta', error.message || 'Erro ao atualizar conta');
     }
   });
 
@@ -421,11 +421,11 @@ export function Transactions() {
   const handleSaveAccount = () => {
     // Validação básica
     if (!formData.nome.trim()) {
-      showError('Nome da conta é obrigatório');
+      showErrorDialog('Nome da conta é obrigatório');
       return;
     }
     if (!formData.categoria) {
-      showError('Tipo da conta é obrigatório');
+      showErrorDialog('Tipo da conta é obrigatório');
       return;
     }
 
@@ -453,11 +453,11 @@ export function Transactions() {
   const handleSaveAndContinue = () => {
     // Validação básica
     if (!formData.nome.trim()) {
-      showError('Nome da conta é obrigatório');
+      showErrorDialog('Nome da conta é obrigatório');
       return;
     }
     if (!formData.categoria) {
-      showError('Tipo da conta é obrigatório');
+      showErrorDialog('Tipo da conta é obrigatório');
       return;
     }
 
@@ -481,7 +481,7 @@ export function Transactions() {
         }).then(res => res.json()),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-        showSuccess('Conta criada com sucesso! Você pode continuar criando mais contas.');
+        showSuccessDialog('Conta criada com sucesso! Você pode continuar criando mais contas.');
         // Limpar apenas o nome, manter outras seleções
         setFormData({
           ...formData,
@@ -489,7 +489,7 @@ export function Transactions() {
         });
       },
       onError: (error: any) => {
-        showError(error.message || 'Erro ao criar conta');
+        showErrorDialog(error.message || 'Erro ao criar conta');
       }
     };
 
@@ -2122,9 +2122,9 @@ export function Transactions() {
                 content: <ChartOfAccountsContent 
                   isModalOpen={chartAccountModalOpen} 
                   setIsModalOpen={setChartAccountModalOpen}
-                  showSuccess={showSuccess}
-                  showError={showError}
-                  showConfirm={showConfirm}
+                  showSuccess={showSuccessDialog}
+                  showError={showErrorDialog}
+                  showConfirm={showConfirmDialog}
                 />
               },
               {
@@ -2390,8 +2390,8 @@ function ChartOfAccountsContent({
 }: { 
   isModalOpen: boolean, 
   setIsModalOpen: (open: boolean) => void,
-  showSuccess: (title: string, message: string) => void,
-  showError: (title: string, message: string) => void,
+  showSuccess: (title: string, message?: string) => void,
+  showError: (title: string, message?: string) => void,
   showConfirm: (title: string, message: string, onConfirm: () => void) => void
 }) {
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
@@ -2468,7 +2468,7 @@ function ChartOfAccountsContent({
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
     },
     onError: (error: any) => {
-      showError('Erro ao excluir', error.message || 'Não foi possível excluir a conta. Tente novamente.');
+      showErrorDialog('Erro ao excluir', error.message || 'Não foi possível excluir a conta. Tente novamente.');
     }
   });
 
@@ -2511,7 +2511,7 @@ function ChartOfAccountsContent({
     // Verificar se a conta ainda existe antes de abrir modal de edição
     const existingAccount = safeChartAccountsData.find(acc => acc.id === account.id);
     if (!existingAccount) {
-      showError("Conta não encontrada", "Esta conta pode ter sido excluída. Atualizando a lista...");
+      showErrorDialog("Conta não encontrada", "Esta conta pode ter sido excluída. Atualizando a lista...");
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       return;
     }
@@ -2712,7 +2712,7 @@ function ChartOfAccountsContent({
       setModalMode('create');
     } catch (error) {
       console.error('Erro ao salvar conta:', error);
-      showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
+      showErrorDialog("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
     }
   };
 
@@ -2885,12 +2885,12 @@ function ChartOfAccountsContent({
       setSelectedAccount(null);
     } catch (error) {
       console.error('Erro ao salvar e continuar:', error);
-      showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
+      showErrorDialog("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
     }
   };
 
   const handleDeleteAccount = async (accountId: string) => {
-    showConfirm(
+    showConfirmDialog(
       "Confirmar Exclusão",
       "Tem certeza que deseja excluir esta conta?",
       async () => {
