@@ -35,6 +35,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState('25/07/2025');
   const [repeticao, setRepeticao] = useState('');
+  const [periodicidade, setPeriodicidade] = useState('mensal');
+  const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -69,6 +71,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       valor: parseFloat(valor.replace(',', '.')),
       data,
       repeticao,
+      periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
+      intervaloRepeticao: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
       descricao,
       conta,
       categoria,
@@ -204,6 +208,68 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             </IconButton>
           </div>
         </div>
+
+        {/* Campos condicionais de recorrência - aparecem quando "Recorrente" é selecionado */}
+        {repeticao === 'Recorrente' && (
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
+                  Periodicidade *
+                </InputLabel>
+                <Select
+                  value={periodicidade}
+                  onChange={(e) => setPeriodicidade(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        zIndex: 1400
+                      }
+                    },
+                    anchorOrigin: {
+                      vertical: 'bottom',
+                      horizontal: 'left',
+                    },
+                    transformOrigin: {
+                      vertical: 'top',
+                      horizontal: 'left',
+                    }
+                  }}
+                >
+                  <MenuItem value="diario">Diário</MenuItem>
+                  <MenuItem value="semanal">Semanal</MenuItem>
+                  <MenuItem value="mensal">Mensal</MenuItem>
+                  <MenuItem value="trimestral">Trimestral</MenuItem>
+                  <MenuItem value="semestral">Semestral</MenuItem>
+                  <MenuItem value="anual">Anual</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+            
+            <div>
+              <TextField
+                variant="standard"
+                label="Repete-se a cada * meses"
+                type="number"
+                value={intervaloRepeticao}
+                onChange={(e) => setIntervaloRepeticao(e.target.value)}
+                fullWidth
+                required
+                inputProps={{ min: 1, max: 99 }}
+                sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                type="button"
+                className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors border border-blue-200 hover:border-blue-300"
+              >
+                Personalizar ⚙
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Segunda linha: Descrição, Conta */}
         <div className="grid grid-cols-2 gap-4">
