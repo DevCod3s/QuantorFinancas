@@ -38,9 +38,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState('25/07/2025');
-  const [repeticao, setRepeticao] = useState('Única');
-  const [periodicidade, setPeriodicidade] = useState('mensal');
-  const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
+  const [repeticao, setRepeticao] = useState('');
+  const [periodicidade, setPeriodicidade] = useState('');
+  const [intervaloRepeticao, setIntervaloRepeticao] = useState('');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -220,6 +220,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   }
                 }}
               >
+                <MenuItem value="">Selecione</MenuItem>
                 <MenuItem value="Única">Única</MenuItem>
                 <MenuItem value="Parcelado">Parcelado</MenuItem>
                 <MenuItem value="Recorrente">Recorrente</MenuItem>
@@ -243,6 +244,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     }
                   }}
                 >
+                  <MenuItem value="">Selecione</MenuItem>
                   <MenuItem value="diario">Diário</MenuItem>
                   <MenuItem value="semanal">Semanal</MenuItem>
                   <MenuItem value="mensal">Mensal</MenuItem>
@@ -266,6 +268,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       }
                     }}
                   >
+                    <MenuItem value="">Selecione</MenuItem>
                     <MenuItem value="1">1 mês</MenuItem>
                     <MenuItem value="2">2 meses</MenuItem>
                     <MenuItem value="3">3 meses</MenuItem>
