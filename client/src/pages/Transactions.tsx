@@ -2369,10 +2369,7 @@ export function Transactions() {
         </div>
       )}
 
-      {/* Dialogs personalizados no componente principal */}
-      <SuccessDialogComponent />
-      <ErrorDialogComponent />
-      <ConfirmDialogComponent />
+      {/* Dialogs são renderizados pelos hooks personalizados */}
     </div>
   );
 }
