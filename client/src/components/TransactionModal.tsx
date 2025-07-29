@@ -209,16 +209,6 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           </div>
         </div>
 
-        {/* DEBUG: Verificando valor de repetição */}
-        <div style={{ background: 'yellow', padding: '10px', margin: '10px 0' }}>
-          DEBUG - Valor atual de repetição: "{repeticao}" | Tipo: {typeof repeticao}
-        </div>
-        
-        {/* Teste forçado - mostrar sempre para verificar renderização */}
-        <div style={{ background: 'lightgreen', padding: '10px', margin: '10px 0' }}>
-          TESTE: Estes campos deveriam aparecer quando selecionar "Recorrente"
-        </div>
-        
         {/* Campos condicionais de recorrência - aparecem quando "Recorrente" é selecionado */}
         {repeticao === 'Recorrente' && (
           <div className="grid grid-cols-3 gap-4">
