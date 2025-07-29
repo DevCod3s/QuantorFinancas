@@ -2242,10 +2242,10 @@ export function Transactions() {
                 <div className="col-span-1 flex items-end justify-center">
                   <button
                     onClick={() => {/* TODO: Implementar modal de novo tipo */}}
-                    className="w-8 h-8 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
+                    className="w-6 h-6 mb-1 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded flex items-center justify-center transition-colors border border-blue-200"
                     title="Cadastrar novo tipo de conta"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                   </button>
                 </div>
                 <div className="col-span-3">
@@ -2269,10 +2269,10 @@ export function Transactions() {
                 <div className="col-span-1 flex items-end justify-center">
                   <button
                     onClick={() => {/* TODO: Implementar modal de novo banco */}}
-                    className="w-8 h-8 mb-1 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-colors"
+                    className="w-6 h-6 mb-1 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded flex items-center justify-center transition-colors border border-blue-200"
                     title="Cadastrar novo banco"
                   >
-                    <Plus className="h-4 w-4" />
+                    <Plus className="h-3 w-3" />
                   </button>
                 </div>
                 <div className="col-span-4">
