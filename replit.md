@@ -381,3 +381,10 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • **Botão Específico Removido**: Eliminado botão duplicado que estava dentro da TabsContent "contas"
     • **UX Aprimorada**: Interface mais limpa sem redundância de controles
     • **Funcionalidade Preservada**: Modal de nova conta bancária continua funcionando pelo botão universal
+
+- **Limpeza da Sub-aba Lançamentos**: Remoção de linhas detalhadas dos bancos na Visão Geral (Janeiro 2025)
+    • **Linhas Removidas**: Eliminadas as linhas individuais "Banco Inter" e "Bancos | Pessoa Física"
+    • **Card Contas Simplificado**: Removida linha "Banco Inter" mantendo apenas o total
+    • **Demonstrativo Diário Limpo**: Removidas as duas linhas de bancos da tabela de resumo
+    • **Foco no Total**: Interface agora mostra apenas valores consolidados sem detalhamento por banco
+    • **UX Simplificada**: Visualização mais limpa focada nos totais gerais em vez de valores individuais

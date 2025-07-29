@@ -1259,28 +1259,6 @@ export function Transactions() {
 
                           {/* Contas resumo */}
                           <div className="space-y-2">
-                            <div className="grid grid-cols-6 gap-4 text-sm items-center">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-blue-500" readOnly />
-                                <span>Banco Inter</span>
-                              </div>
-                              <div></div>
-                              <div></div>
-                              <div></div>
-                              <div className="text-right font-medium">2.264,77</div>
-                              <div className="text-right text-green-600 font-medium">860,92</div>
-                            </div>
-                            <div className="grid grid-cols-6 gap-4 text-sm items-center">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-orange-500" readOnly />
-                                <span>Bancos | Pessoa Física</span>
-                              </div>
-                              <div></div>
-                              <div></div>
-                              <div></div>
-                              <div className="text-right font-medium">59,88</div>
-                              <div className="text-right text-green-600 font-medium">2.779,92</div>
-                            </div>
                             <div className="grid grid-cols-6 gap-4 text-sm items-center border-t pt-2 font-semibold">
                               <div>Total</div>
                               <div></div>
@@ -1731,14 +1709,6 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" checked className="text-blue-500" readOnly />
-                              <span className="text-xs text-gray-700">Banco Inter</span>
-                            </div>
-                            <span className="text-xs font-bold text-green-600">4.430,00</span>
-                          </div>
-                          
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Total</span>
