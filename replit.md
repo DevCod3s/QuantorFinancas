@@ -149,14 +149,17 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
 - **Campos Condicionais de Recorrência**: Implementação completa da funcionalidade de transações recorrentes no modal de lançamentos financeiros (Janeiro 2025)
   - **Lógica Condicional Inteligente**: Campos aparecem apenas quando "Recorrente" é selecionado no dropdown Repetição
   - **Campo Periodicidade**: Dropdown com 6 opções (Diário, Semanal, Mensal, Trimestral, Semestral, Anual)
-  - **Campo Intervalo**: Input numérico "Repete-se a cada X meses" com validação (min: 1, max: 99)
-  - **Botão Personalizar**: Interface adicional para configurações avançadas de recorrência
+  - **Campo Intervalo**: Select com opções pré-definidas "Repete-se a cada X meses" (1, 2, 3, 4, 5, 6, 12, 24 meses)
+  - **Ícone de Configuração**: Ícone Settings (engrenagem) azul posicionado próximo ao campo com mesmo padrão dos outros campos
   - **Estados Gerenciados**: Novos estados `periodicidade` e `intervaloRepeticao` integrados ao fluxo de dados
   - **Função handleSave Atualizada**: Campos condicionais incluídos apenas quando recorrência está ativa
   - **Arquivo Correto Identificado**: Solução aplicada em `TransactionCard.tsx` (não TransactionModal.tsx)
   - **Layout Responsivo**: Posicionamento exato conforme imagem de referência fornecida
-  - **Material-UI Components**: Utilização dos mesmos componentes já existentes no modal
-  - **Experiência do Usuário**: Transição suave de exibição/ocultação dos campos condicionais
+  - **Padronização Material-UI**: Todos os campos (Repetição, Periodicidade, Intervalo) usam FormControl/Select/MenuItem idênticos ao campo "Conta"
+  - **Float Labels Funcionais**: Labels iniciam na posição normal e fazem efeito float quando valor é selecionado
+  - **Estados Iniciais Vazios**: Campos iniciam sem valores padrão para permitir comportamento correto dos float labels
+  - **Opções Padrão**: Cada Select inclui "Selecione" como primeira opção para estado vazio
+  - **Experiência do Usuário**: Transição suave de exibição/ocultação dos campos condicionais com UX padronizada
 
 - **Restauração Completa do Sistema**: Sistema financeiro totalmente restaurado após correção de erro JSX (Janeiro 2025)
   - **Problema Corrigido**: Código duplicado no final do TransactionsBackup.tsx causando erro de compilação
