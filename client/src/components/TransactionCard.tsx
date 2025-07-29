@@ -253,19 +253,29 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               </FormControl>
               
               <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-                <TextField
-                  variant="standard"
-                  label="Repete-se a cada * meses"
-                  type="number"
-                  value={intervaloRepeticao}
-                  onChange={(e) => setIntervaloRepeticao(e.target.value)}
-                  sx={{ 
-                    width: '85%',
-                    '& .MuiInputLabel-root': { color: '#666' } 
-                  }}
-                  required
-                  inputProps={{ min: 1, max: 99 }}
-                />
+                <FormControl variant="standard" sx={{ width: '85%' }}>
+                  <InputLabel sx={{ color: '#666' }} shrink={!!intervaloRepeticao || undefined}>
+                    Repete-se a cada * meses
+                  </InputLabel>
+                  <Select
+                    value={intervaloRepeticao}
+                    onChange={(e) => setIntervaloRepeticao(e.target.value)}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: { zIndex: 1400 }
+                      }
+                    }}
+                  >
+                    <MenuItem value="1">1 mês</MenuItem>
+                    <MenuItem value="2">2 meses</MenuItem>
+                    <MenuItem value="3">3 meses</MenuItem>
+                    <MenuItem value="4">4 meses</MenuItem>
+                    <MenuItem value="5">5 meses</MenuItem>
+                    <MenuItem value="6">6 meses</MenuItem>
+                    <MenuItem value="12">12 meses</MenuItem>
+                    <MenuItem value="24">24 meses</MenuItem>
+                  </Select>
+                </FormControl>
                 <IconButton 
                   size="small" 
                   sx={{ mb: 0.5, color: '#1976d2' }}
