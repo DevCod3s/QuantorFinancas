@@ -374,3 +374,10 @@ O sistema utiliza PostgreSQL com as seguintes entidades principais:
     • CEP aceita 8 dígitos internamente mas problema de exibição visual persistente
     • Console logs confirmam processamento correto: digitalLength:8, totalLength:9
     • Múltiplas tentativas de correção: maxLength aumentado, navegação automática removida, logs adicionados
+
+- **Correção de Botões Duplicados na Aba Contas**: Eliminação de redundância na interface (Janeiro 2025)
+    • **Problema Identificado**: Dois botões "+" com mesma funcionalidade na aba Contas
+    • **Botão Universal Mantido**: Header da página com botão que funciona para todas as abas
+    • **Botão Específico Removido**: Eliminado botão duplicado que estava dentro da TabsContent "contas"
+    • **UX Aprimorada**: Interface mais limpa sem redundância de controles
+    • **Funcionalidade Preservada**: Modal de nova conta bancária continua funcionando pelo botão universal

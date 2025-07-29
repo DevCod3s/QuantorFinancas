@@ -1979,20 +1979,6 @@ export function Transactions() {
         </TabsContent>
 
         <TabsContent value="contas" className="space-y-6">
-          {/* Botão para adicionar nova conta */}
-          <div className="flex justify-end mb-4">
-            <button 
-              onClick={() => {
-                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
-                setBankAccountModalOpen(true);
-                console.log("Bank account modal state set to true");
-              }}
-              className="w-11 h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl hover:shadow-blue-600/25"
-              title="Nova Conta Financeira"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          </div>
 
           {/* Tabela de Contas Bancárias */}
           <Card className="shadow-lg hover:shadow-xl transition-shadow">
