@@ -2206,7 +2206,7 @@ export function Transactions() {
                       value="credor"
                       checked={bankAccountData.balanceType === 'credor'}
                       onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
-                      className="w-4 h-4 text-pink-500 accent-pink-500"
+                      className="w-4 h-4 text-blue-500 accent-blue-500"
                     />
                     <span className="text-sm text-gray-700">Credor</span>
                   </label>
@@ -2217,7 +2217,7 @@ export function Transactions() {
                       value="devedor"
                       checked={bankAccountData.balanceType === 'devedor'}
                       onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
-                      className="w-4 h-4 text-gray-500"
+                      className="w-4 h-4 text-red-500 accent-red-500"
                     />
                     <span className="text-sm text-gray-700">Devedor</span>
                   </label>
