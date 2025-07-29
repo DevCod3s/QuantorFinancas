@@ -34,7 +34,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState('25/07/2025');
-  const [repeticao, setRepeticao] = useState('');
+  const [repeticao, setRepeticao] = useState('Única');
   const [periodicidade, setPeriodicidade] = useState('mensal');
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
   const [descricao, setDescricao] = useState('');
