@@ -233,21 +233,12 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
       {/* Card dos Botões de navegação */}
       <div className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6">
         <div className="flex justify-center items-center gap-4">
-          {currentStep > 1 && (
-            <button
-              onClick={handlePrevious}
-              className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
-            >
-              <ArrowLeft className="h-5 w-5 text-gray-600" />
-            </button>
-          )}
-          
           <button
-            onClick={onClose}
-            className="w-12 h-12 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
-            title="Voltar"
+            onClick={currentStep > 1 ? handlePrevious : onClose}
+            className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg"
+            title={currentStep > 1 ? "Anterior" : "Voltar"}
           >
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
           </button>
           
           {currentStep < wizardSteps.length ? (
