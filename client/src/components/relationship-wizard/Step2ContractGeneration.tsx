@@ -17,8 +17,26 @@
  */
 
 import React, { useState, useRef } from "react";
-import { TEInput, TESelect, TETextarea } from "tw-elements-react";
-import { Button } from "@/components/ui/button";
+import { 
+  Card,
+  CardContent,
+  CardHeader,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Checkbox,
+  FormControlLabel,
+  Button as MuiButton,
+  Typography,
+  Box,
+  Grid,
+  Divider,
+  Chip,
+  Paper,
+  IconButton
+} from "@mui/material";
 import { 
   Upload, 
   Plus, 
@@ -218,284 +236,370 @@ export default function Step2ContractGeneration({
    */
   if (!formData.generateContract) {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-        <div className="text-center">
-          <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+      <Card sx={{ maxWidth: 800, mx: 'auto', boxShadow: 3 }}>
+        <CardContent sx={{ textAlign: 'center', py: 6 }}>
+          <FileText size={64} style={{ color: '#9CA3AF', margin: '0 auto 24px' }} />
+          <Typography variant="h5" gutterBottom color="text.primary" fontWeight={500}>
             Geração de Contrato (Opcional)
-          </h3>
-          <p className="text-gray-600 mb-6">
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
             Você pode gerar um contrato profissional automaticamente usando IA especializada ou pular esta etapa.
-          </p>
+          </Typography>
           
-          <div className="space-y-4">
-            <Button
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, alignItems: 'center' }}>
+            <MuiButton
+              variant="contained"
+              size="large"
               onClick={() => handleGenerateContractChange(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+              startIcon={<Wand2 size={20} />}
+              sx={{ 
+                px: 4, 
+                py: 1.5,
+                bgcolor: '#2563eb',
+                '&:hover': { bgcolor: '#1d4ed8' }
+              }}
             >
-              <Wand2 className="h-4 w-4 mr-2" />
               Gerar Contrato com IA
-            </Button>
+            </MuiButton>
             
-            <div className="text-sm text-gray-500">
+            <Typography variant="caption" color="text.secondary">
               ou prosseguir para a próxima etapa
-            </div>
-          </div>
-        </div>
-      </div>
+            </Typography>
+          </Box>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <FileText className="h-6 w-6 text-blue-600" />
-          <h3 className="text-lg font-medium text-gray-900">
+    <Card sx={{ maxWidth: 1000, mx: 'auto', boxShadow: 3 }}>
+      <CardHeader
+        avatar={<FileText size={24} style={{ color: '#2563eb' }} />}
+        title={
+          <Typography variant="h6" fontWeight={600} color="text.primary">
             Configuração do Contrato
-          </h3>
-        </div>
-        
-        <Button
-          variant="outline"
-          onClick={() => handleGenerateContractChange(false)}
-          size="sm"
-        >
-          Pular Etapa
-        </Button>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Coluna Esquerda - Configurações */}
-        <div className="space-y-6">
-          {/* Template Personalizado */}
-          <div>
-            <label className="flex items-center space-x-2 mb-3">
-              <input
-                type="checkbox"
-                checked={showTemplateUpload}
-                onChange={(e) => setShowTemplateUpload(e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Usar template personalizado
-              </span>
-            </label>
-            
-            {showTemplateUpload && (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
-                <div className="text-center">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <div className="text-sm text-gray-600 mb-2">
-                    Importe seu modelo de contrato
-                  </div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".txt,.doc,.docx,.html"
-                    onChange={handleTemplateUpload}
-                    className="hidden"
-                  />
-                  <Button
-                    variant="outline"
-                    size="sm"
+          </Typography>
+        }
+        action={
+          <MuiButton
+            variant="outlined"
+            size="small"
+            onClick={() => handleGenerateContractChange(false)}
+            sx={{ color: 'text.secondary', borderColor: 'grey.300' }}
+          >
+            Pular Etapa
+          </MuiButton>
+        }
+        sx={{ pb: 1 }}
+      />
+      <Divider />
+      
+      <CardContent sx={{ p: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, gap: 4 }}>
+          
+          {/* Coluna Esquerda - Configurações */}
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              
+              {/* Template Personalizado */}
+              <Paper sx={{ p: 3, backgroundColor: '#f8fafc' }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={showTemplateUpload}
+                      onChange={(e) => setShowTemplateUpload(e.target.checked)}
+                      sx={{ color: '#2563eb' }}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2" fontWeight={500}>
+                      Usar template personalizado
+                    </Typography>
+                  }
+                  sx={{ mb: 2 }}
+                />
+                
+                {showTemplateUpload && (
+                  <Paper 
+                    sx={{ 
+                      border: '2px dashed #d1d5db', 
+                      backgroundColor: 'white',
+                      p: 3, 
+                      textAlign: 'center',
+                      cursor: 'pointer',
+                      '&:hover': { borderColor: '#9ca3af' }
+                    }}
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    Selecionar Arquivo
-                  </Button>
-                  {formData.templateFile && (
-                    <div className="mt-2 text-xs text-green-600">
-                      ✓ {formData.templateFile.name}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+                    <Upload size={32} style={{ color: '#9ca3af', marginBottom: 16 }} />
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Importe seu modelo de contrato
+                    </Typography>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".txt,.doc,.docx,.html"
+                      onChange={handleTemplateUpload}
+                      style={{ display: 'none' }}
+                    />
+                    <MuiButton
+                      variant="outlined"
+                      size="small"
+                      sx={{ mt: 1 }}
+                    >
+                      Selecionar Arquivo
+                    </MuiButton>
+                    {formData.templateFile && (
+                      <Typography variant="caption" color="success.main" sx={{ display: 'block', mt: 1 }}>
+                        ✓ {formData.templateFile.name}
+                      </Typography>
+                    )}
+                  </Paper>
+                )}
+              </Paper>
 
-          {/* Segmento */}
-          <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <Building2 className="h-4 w-4 text-gray-500" />
-              <label className="text-sm font-medium text-gray-700">
-                Segmento de Negócio *
-              </label>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowCustomSegment(true)}
-                className="p-1"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
-            
-            {!showCustomSegment ? (
-              <TESelect
-                data={predefinedSegments}
-                label="Selecione o segmento"
-                value={formData.segment}
-                onValueChange={handleSegmentChange}
-              />
-            ) : (
-              <div className="flex space-x-2">
-                <TEInput
-                  type="text"
-                  label="Novo segmento"
-                  value={formData.customSegment}
-                  onChange={(e) => updateFormData({ customSegment: e.target.value })}
-                  size="base"
+              {/* Segmento de Negócio */}
+              <Paper sx={{ p: 3, backgroundColor: '#f8fafc' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                  <Building2 size={20} style={{ color: '#6b7280' }} />
+                  <Typography variant="body2" fontWeight={500}>
+                    Segmento de Negócio *
+                  </Typography>
+                  <IconButton 
+                    size="small" 
+                    onClick={() => setShowCustomSegment(true)}
+                    sx={{ p: 0.5 }}
+                  >
+                    <Plus size={16} />
+                  </IconButton>
+                </Box>
+                
+                {!showCustomSegment ? (
+                  <FormControl fullWidth variant="outlined">
+                    <InputLabel>Selecione o segmento</InputLabel>
+                    <Select
+                      value={formData.segment}
+                      onChange={(e) => handleSegmentChange(e.target.value)}
+                      label="Selecione o segmento"
+                    >
+                      {predefinedSegments.map((segment) => (
+                        <MenuItem key={segment.value} value={segment.value}>
+                          {segment.text}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField
+                      fullWidth
+                      label="Novo segmento"
+                      variant="outlined"
+                      value={formData.customSegment}
+                      onChange={(e) => updateFormData({ customSegment: e.target.value })}
+                    />
+                    <MuiButton
+                      variant="contained"
+                      onClick={handleAddCustomSegment}
+                      sx={{ minWidth: 100 }}
+                    >
+                      Adicionar
+                    </MuiButton>
+                  </Box>
+                )}
+              </Paper>
+
+              {/* Datas e Valor */}
+              <Paper sx={{ p: 3, backgroundColor: '#f8fafc' }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                  <Box sx={{ flex: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Calendar size={20} style={{ color: '#6b7280' }} />
+                      <Typography variant="body2" fontWeight={500}>
+                        Data Inicial *
+                      </Typography>
+                    </Box>
+                    <TextField
+                      type="date"
+                      fullWidth
+                      variant="outlined"
+                      value={formData.startDate}
+                      onChange={(e) => updateFormData({ startDate: e.target.value })}
+                      InputLabelProps={{ shrink: true }}
+                    />
+                  </Box>
+                  
+                  <Box sx={{ flex: 1 }}>
+                    <TextField
+                      fullWidth
+                      label="Prazo de Validade *"
+                      placeholder="Ex: 12 meses"
+                      variant="outlined"
+                      value={formData.validityPeriod}
+                      onChange={(e) => updateFormData({ validityPeriod: e.target.value })}
+                    />
+                  </Box>
+                </Box>
+                  
+                <Box sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <DollarSign size={20} style={{ color: '#6b7280' }} />
+                      <Typography variant="body2" fontWeight={500}>
+                        Valor Mensal (R$) *
+                      </Typography>
+                    </Box>
+                    <TextField
+                      type="number"
+                      fullWidth
+                      variant="outlined"
+                      inputProps={{ step: 0.01, min: 0 }}
+                      value={formData.monthlyValue}
+                      onChange={(e) => updateFormData({ monthlyValue: parseFloat(e.target.value) || 0 })}
+                    />
+                </Box>
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.hasAdhesion}
+                      onChange={(e) => updateFormData({ hasAdhesion: e.target.checked })}
+                    />
+                  }
+                  label="Contrato possui taxa de adesão"
+                  sx={{ mt: 2 }}
                 />
-                <Button
-                  onClick={handleAddCustomSegment}
-                  size="sm"
-                  className="mt-1"
-                >
-                  Adicionar
-                </Button>
-              </div>
-            )}
-          </div>
+              </Paper>
+            </Box>
+          </Box>
 
-          {/* Datas */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="flex items-center space-x-2 mb-3">
-                <Calendar className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium text-gray-700">
-                  Data Inicial *
-                </span>
-              </label>
-              <TEInput
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => updateFormData({ startDate: e.target.value })}
-                size="base"
-              />
-            </div>
-            
-            <div>
-              <TEInput
-                type="text"
-                label="Prazo de Validade *"
-                placeholder="Ex: 12 meses"
-                value={formData.validityPeriod}
-                onChange={(e) => updateFormData({ validityPeriod: e.target.value })}
-                size="base"
-              />
-            </div>
-          </div>
+          {/* Coluna Direita - Formas de Pagamento */}
+          <Box sx={{ flex: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              
+              {/* Formas de Pagamento */}
+              <Paper sx={{ p: 3, backgroundColor: '#f8fafc' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                  <CreditCard size={20} style={{ color: '#6b7280' }} />
+                  <Typography variant="body2" fontWeight={500}>
+                    Formas de Pagamento *
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                  {paymentOptions.map((option) => (
+                    <Box key={option.id}>
+                      <Paper 
+                        sx={{ 
+                          p: 2, 
+                          cursor: 'pointer',
+                          border: formData.paymentMethods.includes(option.id) ? '2px solid #2563eb' : '1px solid #e5e7eb',
+                          '&:hover': { borderColor: '#2563eb' }
+                        }}
+                        onClick={() => handlePaymentMethodChange(option.id, !formData.paymentMethods.includes(option.id))}
+                      >
+                        <FormControlLabel
+                          control={
+                            <Checkbox
+                              checked={formData.paymentMethods.includes(option.id)}
+                              onChange={(e) => handlePaymentMethodChange(option.id, e.target.checked)}
+                            />
+                          }
+                          label={
+                            <Typography variant="body2">
+                              {option.label}
+                            </Typography>
+                          }
+                        />
+                      </Paper>
+                    </Box>
+                  ))}
+                </Box>
+              </Paper>
 
-          {/* Valor Mensal */}
-          <div>
-            <label className="flex items-center space-x-2 mb-3">
-              <DollarSign className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Valor Mensal (R$) *
-              </span>
-            </label>
-            <TEInput
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.monthlyValue}
-              onChange={(e) => updateFormData({ monthlyValue: parseFloat(e.target.value) || 0 })}
-              size="base"
-            />
-          </div>
+              {/* Botões de Ação */}
+              <Paper sx={{ p: 3, backgroundColor: '#f8fafc' }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <MuiButton
+                    variant="contained"
+                    fullWidth
+                    size="large"
+                    onClick={handleGeneratePreview}
+                    disabled={isGenerating || (!formData.segment && !formData.customSegment)}
+                    startIcon={isGenerating ? null : <Eye size={20} />}
+                    sx={{ 
+                      bgcolor: '#16a34a',
+                      '&:hover': { bgcolor: '#15803d' },
+                      py: 1.5
+                    }}
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Box 
+                          sx={{ 
+                            width: 20, 
+                            height: 20, 
+                            border: '2px solid white',
+                            borderTop: '2px solid transparent',
+                            borderRadius: '50%',
+                            animation: 'spin 1s linear infinite',
+                            mr: 1,
+                            '@keyframes spin': {
+                              '0%': { transform: 'rotate(0deg)' },
+                              '100%': { transform: 'rotate(360deg)' }
+                            }
+                          }} 
+                        />
+                        Gerando Contrato...
+                      </>
+                    ) : (
+                      'Gerar Preview'
+                    )}
+                  </MuiButton>
 
-          {/* Adesão */}
-          <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.hasAdhesion}
-                onChange={(e) => updateFormData({ hasAdhesion: e.target.checked })}
-                className="rounded"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Contrato possui taxa de adesão
-              </span>
-            </label>
-          </div>
-        </div>
+                  {generatedContract && (
+                    <MuiButton
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => setShowPreview(!showPreview)}
+                      startIcon={<FileText size={20} />}
+                    >
+                      {showPreview ? 'Ocultar' : 'Visualizar'} Contrato
+                    </MuiButton>
+                  )}
+                </Box>
+              </Paper>
+            </Box>
+          </Box>
+        </Box>
 
-        {/* Coluna Direita - Formas de Pagamento */}
-        <div className="space-y-6">
-          <div>
-            <label className="flex items-center space-x-2 mb-4">
-              <CreditCard className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-medium text-gray-700">
-                Formas de Pagamento *
-              </span>
-            </label>
-            
-            <div className="grid grid-cols-2 gap-3">
-              {paymentOptions.map((option) => (
-                <label key={option.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.paymentMethods.includes(option.id)}
-                    onChange={(e) => handlePaymentMethodChange(option.id, e.target.checked)}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-700">{option.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Botões de Ação */}
-          <div className="space-y-3">
-            <Button
-              onClick={handleGeneratePreview}
-              disabled={isGenerating || !formData.segment && !formData.customSegment}
-              className="w-full bg-green-600 hover:bg-green-700 text-white"
-            >
-              {isGenerating ? (
-                <>
-                  <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2" />
-                  Gerando Contrato...
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4 mr-2" />
-                  Gerar Preview
-                </>
-              )}
-            </Button>
-
-            {generatedContract && (
-              <Button
-                onClick={() => setShowPreview(!showPreview)}
-                variant="outline"
-                className="w-full"
+        {/* Preview do Contrato */}
+        {showPreview && generatedContract && (
+          <Box sx={{ mt: 4, pt: 3, borderTop: '1px solid #e5e7eb' }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6" fontWeight={600}>
+                Preview do Contrato
+              </Typography>
+              <MuiButton 
+                variant="outlined" 
+                size="small"
+                startIcon={<Download size={16} />}
               >
-                <FileText className="h-4 w-4 mr-2" />
-                {showPreview ? 'Ocultar' : 'Visualizar'} Contrato
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Preview do Contrato */}
-      {showPreview && generatedContract && (
-        <div className="mt-8 border-t pt-8">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="text-lg font-medium text-gray-900">Preview do Contrato</h4>
-            <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Baixar PDF
-            </Button>
-          </div>
-          
-          <div 
-            className="border rounded-lg p-6 bg-white max-h-96 overflow-y-auto"
-            dangerouslySetInnerHTML={{ __html: generatedContract }}
-          />
-        </div>
-      )}
-    </div>
+                Baixar PDF
+              </MuiButton>
+            </Box>
+            
+            <Paper 
+              sx={{ 
+                p: 4, 
+                maxHeight: 400, 
+                overflow: 'auto',
+                border: '1px solid #e5e7eb'
+              }}
+              dangerouslySetInnerHTML={{ __html: generatedContract }}
+            />
+          </Box>
+        )}
+      </CardContent>
+    </Card>
   );
 }
