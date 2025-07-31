@@ -61,9 +61,10 @@ Quantor's architecture is built on a robust and scalable stack, emphasizing mode
 
 ## Recent Updates
 
-- **Correção de Botões Duplicados no Wizard de Relacionamento**: Eliminação de redundância na navegação da Etapa 2 (Janeiro 2025)
-    • **Problema Identificado**: Dois botões com seta esquerda na etapa 2 - "Anterior" e "Voltar"
-    • **Botão Duplicado Removido**: Eliminado botão específico "Voltar" que sempre estava visível
-    • **Lógica Inteligente Implementada**: Botão único que funciona como "Voltar" na etapa 1 e "Anterior" nas demais etapas
-    • **Navegação Otimizada**: Interface mais limpa com funcionalidade preservada
-    • **UX Melhorada**: Eliminada confusão na navegação mantendo todos os comportamentos necessários
+- **Otimização Completa do Wizard de Relacionamento**: Melhorias na navegação e nomenclatura (Janeiro 2025)
+    • **Botões Duplicados Corrigidos**: Eliminados dois botões "Anterior" e "Voltar" duplicados na etapa 2
+    • **Lógica Inteligente**: Botão único que funciona como "Voltar" na etapa 1 e "Anterior" nas demais
+    • **Nome da Etapa Atualizado**: Mudança de "Detalhes do Projeto" para "Gerar Contrato"
+    • **Navegação Sempre Habilitada**: Botão "Próximo" sempre ativo na etapa 2 - usuário pode pular geração
+    • **Validação Flexível**: Etapa 2 sempre válida permitindo fluxo contínuo sem obrigatoriedade
+    • **UX Aprimorada**: Interface mais intuitiva com navegação fluida e sem bloqueios desnecessários

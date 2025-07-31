@@ -56,7 +56,7 @@ const wizardSteps = [
   },
   {
     id: 2,
-    title: "Detalhes do Projeto", 
+    title: "Gerar Contrato", 
     subtitle: "Upcoming"
   },
   {
@@ -100,8 +100,10 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
    */
   const handleNext = () => {
     if (currentStep < wizardSteps.length && currentStepValid) {
-      setCurrentStep(prev => prev + 1);
-      setCurrentStepValid(false); // Reset validation for next step
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      // Etapa 2 (Gerar Contrato) sempre válida - usuário pode pular
+      setCurrentStepValid(nextStep === 2 ? true : false);
     }
   };
 

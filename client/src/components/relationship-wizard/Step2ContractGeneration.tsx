@@ -127,15 +127,8 @@ export default function Step2ContractGeneration({
     const newData = { ...formData, ...updates };
     setFormData(newData);
     
-    // Validar se etapa está completa
-    const isValid = !newData.generateContract || (
-      newData.generateContract &&
-      (newData.segment || newData.customSegment) &&
-      newData.startDate &&
-      newData.validityPeriod &&
-      newData.paymentMethods.length > 0 &&
-      newData.monthlyValue > 0
-    );
+    // Etapa 2 sempre válida - usuário pode pular geração de contrato
+    const isValid = true;
     
     onDataChange(newData, isValid);
   };
