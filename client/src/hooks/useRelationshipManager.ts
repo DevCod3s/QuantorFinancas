@@ -115,38 +115,41 @@ export function useRelationshipManager() {
    * Validação de CNPJ usando algoritmo oficial
    */
   const validateCNPJ = (cnpj: string): boolean => {
-    const cleanCnpj = cnpj.replace(/\D/g, '');
+    const numbers = cnpj.replace(/\D/g, '');
     
-    if (cleanCnpj.length !== 14) return false;
-    if (/^(\d)\1{13}$/.test(cleanCnpj)) return false;
+    if (numbers.length !== 14) return false;
+    if (/^(.)\1{13}$/.test(numbers)) return false; // Sequência igual
     
+    let length = numbers.length - 2;
+    let sequence = numbers.substring(0, length);
+    let digits = numbers.substring(length);
     let sum = 0;
-    let weight = 2;
+    let pos = length - 7;
     
-    for (let i = 11; i >= 0; i--) {
-      sum += parseInt(cleanCnpj.charAt(i)) * weight;
-      weight++;
-      if (weight > 9) weight = 2;
+    // Validação do primeiro dígito
+    for (let i = length; i >= 1; i--) {
+      sum += parseInt(sequence.charAt(length - i)) * pos--;
+      if (pos < 2) pos = 9;
     }
     
-    let remainder = sum % 11;
-    const digit1 = remainder < 2 ? 0 : 11 - remainder;
+    let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    if (result !== parseInt(digits.charAt(0))) return false;
     
-    if (digit1 !== parseInt(cleanCnpj.charAt(12))) return false;
-    
+    // Validação do segundo dígito
+    length += 1;
+    sequence = numbers.substring(0, length);
     sum = 0;
-    weight = 2;
+    pos = length - 7;
     
-    for (let i = 12; i >= 0; i--) {
-      sum += parseInt(cleanCnpj.charAt(i)) * weight;
-      weight++;
-      if (weight > 9) weight = 2;
+    for (let i = length; i >= 1; i--) {
+      sum += parseInt(sequence.charAt(length - i)) * pos--;
+      if (pos < 2) pos = 9;
     }
     
-    remainder = sum % 11;
-    const digit2 = remainder < 2 ? 0 : 11 - remainder;
+    result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    if (result !== parseInt(digits.charAt(1))) return false;
     
-    return digit2 === parseInt(cleanCnpj.charAt(13));
+    return true;
   };
 
   /**
