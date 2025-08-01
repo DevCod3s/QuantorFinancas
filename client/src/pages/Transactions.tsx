@@ -137,7 +137,7 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      showSuccess('Conta bancária criada com sucesso!', '');
+      showSuccess('Conta bancária criada com sucesso!', "");
       setBankAccountModalOpen(false);
       setBankAccountData({
         initialBalanceDate: new Date().toISOString().split('T')[0],
@@ -307,11 +307,11 @@ export function Transactions() {
     if (transactionData.tipo === 'Receita') {
       // Adicionar aos recebíveis
       receivablesData.push(newTransaction);
-      showSuccessDialog('Receita adicionada com sucesso!');
+      showSuccess('Receita adicionada com sucesso!', "");
     } else if (transactionData.tipo === 'Despesa') {
       // Adicionar aos pagáveis
       payablesData.push(newTransaction);
-      showSuccessDialog('Despesa adicionada com sucesso!');
+      showSuccess('Despesa adicionada com sucesso!', "");
     }
 
     setNewTransactions(prev => [...prev, newTransaction]);
@@ -327,7 +327,7 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccessDialog('Conta criada com sucesso!', '');
+      showSuccess('Conta criada com sucesso!', "");
       setChartAccountModalOpen(false);
       resetForm();
     },
@@ -346,7 +346,7 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccessDialog('Conta atualizada com sucesso!', '');
+      showSuccess('Conta atualizada com sucesso!', "");
       setChartAccountModalOpen(false);
       resetForm();
     },
@@ -421,11 +421,11 @@ export function Transactions() {
   const handleSaveAccount = () => {
     // Validação básica
     if (!formData.nome.trim()) {
-      showError('Nome da conta é obrigatório');
+      showError('Nome da conta é obrigatório', "");
       return;
     }
     if (!formData.categoria) {
-      showError('Tipo da conta é obrigatório');
+      showError('Tipo da conta é obrigatório', "");
       return;
     }
 
@@ -453,11 +453,11 @@ export function Transactions() {
   const handleSaveAndContinue = () => {
     // Validação básica
     if (!formData.nome.trim()) {
-      showError('Nome da conta é obrigatório');
+      showError('Nome da conta é obrigatório', "");
       return;
     }
     if (!formData.categoria) {
-      showError('Tipo da conta é obrigatório');
+      showError('Tipo da conta é obrigatório', "");
       return;
     }
 
@@ -481,7 +481,7 @@ export function Transactions() {
         }).then(res => res.json()),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-        showSuccessDialog('Conta criada com sucesso! Você pode continuar criando mais contas.');
+        showSuccess('Conta criada com sucesso! Você pode continuar criando mais contas.', "");
         // Limpar apenas o nome, manter outras seleções
         setFormData({
           ...formData,
@@ -489,7 +489,7 @@ export function Transactions() {
         });
       },
       onError: (error: any) => {
-        showError(error.message || 'Erro ao criar conta');
+        showError(error.message || 'Erro ao criar conta', "");
       }
     };
 
@@ -2078,7 +2078,7 @@ export function Transactions() {
                 content: <ChartOfAccountsContent 
                   isModalOpen={chartAccountModalOpen} 
                   setIsModalOpen={setChartAccountModalOpen}
-                  showSuccess={showSuccessDialog}
+                  showSuccess={showSuccess}
                   showError={showError}
                   showConfirm={showConfirm}
                 />
@@ -2371,6 +2371,7 @@ function ChartOfAccountsContent({
 
   // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
+  const safeChartAccounts: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({
@@ -2947,14 +2948,14 @@ function ChartOfAccountsContent({
                     Carregando contas...
                   </td>
                 </tr>
-              ) : chartAccounts.length === 0 ? (
+              ) : safeChartAccounts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                     Nenhuma conta cadastrada. Clique no botão "+" para criar a primeira conta.
                   </td>
                 </tr>
               ) : (
-                chartAccounts.map((account: any, index: number) => (
+                safeChartAccounts.map((account: any, index: number) => (
                   <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {index + 1}
@@ -3027,7 +3028,7 @@ function ChartOfAccountsContent({
         </div>
         
         {/* Rodapé com paginação similar à imagem */}
-        {chartAccounts.length > 0 && (
+        {safeChartAccounts.length > 0 && (
           <div className="bg-white px-6 py-3 border-t border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -3039,7 +3040,7 @@ function ChartOfAccountsContent({
               </div>
               
               <div className="text-sm text-gray-700">
-                Mostrando 1 a {Math.min(10, chartAccounts.length)} de {chartAccounts.length} resultados
+                Mostrando 1 a {Math.min(10, safeChartAccounts.length)} de {safeChartAccounts.length} resultados
               </div>
               
               <div className="flex items-center gap-1">
