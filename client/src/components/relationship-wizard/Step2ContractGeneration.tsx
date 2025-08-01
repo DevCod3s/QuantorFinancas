@@ -63,6 +63,7 @@ interface Step2FormData {
   validityPeriod: string; // Prazo de validade
   paymentMethods: string[]; // Formas de pagamento
   hasAdhesion: boolean; // Tem adesão
+  adhesionValue: number; // Valor da adesão
   monthlyValue: number; // Valor mensal
   customTemplate: string; // Template personalizado
   templateFile?: File; // Arquivo do template
@@ -122,6 +123,7 @@ export default function Step2ContractGeneration({
     validityPeriod: '',
     paymentMethods: [],
     hasAdhesion: false,
+    adhesionValue: 0,
     monthlyValue: 0,
     customTemplate: '',
     ...initialData
@@ -211,9 +213,10 @@ export default function Step2ContractGeneration({
   };
 
   /**
-   * Estado para controlar valor monetário formatado
+   * Estados para controlar valores monetários formatados
    */
   const [formattedMonthlyValue, setFormattedMonthlyValue] = useState('');
+  const [formattedAdhesionValue, setFormattedAdhesionValue] = useState('');
 
   /**
    * Formata valor monetário em tempo real
@@ -236,7 +239,7 @@ export default function Step2ContractGeneration({
   };
 
   /**
-   * Manipula mudança no valor monetário
+   * Manipula mudança no valor monetário mensal
    */
   const handleMonthlyValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = event.target.value;
@@ -262,6 +265,32 @@ export default function Step2ContractGeneration({
   };
 
   /**
+   * Manipula mudança no valor de adesão
+   */
+  const handleAdhesionValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    
+    // Remove caracteres não numéricos
+    const numericOnly = inputValue.replace(/\D/g, '');
+    
+    if (!numericOnly) {
+      setFormattedAdhesionValue('');
+      updateFormData({ adhesionValue: 0 });
+      return;
+    }
+    
+    // Converte para número (centavos) e depois para valor real
+    const numericValue = parseFloat(numericOnly) / 100;
+    
+    // Formata para exibição
+    const formatted = formatCurrency(numericOnly);
+    setFormattedAdhesionValue(formatted);
+    
+    // Salva o valor numérico
+    updateFormData({ adhesionValue: numericValue });
+  };
+
+  /**
    * Gera preview do contrato
    */
   const handleGeneratePreview = async () => {
@@ -271,6 +300,7 @@ export default function Step2ContractGeneration({
       validityPeriod: formData.validityPeriod,
       paymentMethods: formData.paymentMethods,
       hasAdhesion: formData.hasAdhesion,
+      adhesionValue: formData.adhesionValue,
       monthlyValue: formData.monthlyValue,
       relationshipData,
       customTemplate: formData.customTemplate
@@ -529,12 +559,44 @@ export default function Step2ContractGeneration({
                   control={
                     <Checkbox
                       checked={formData.hasAdhesion}
-                      onChange={(e) => updateFormData({ hasAdhesion: e.target.checked })}
+                      onChange={(e) => {
+                        const hasAdhesion = e.target.checked;
+                        updateFormData({ hasAdhesion });
+                        if (!hasAdhesion) {
+                          setFormattedAdhesionValue('');
+                          updateFormData({ adhesionValue: 0 });
+                        }
+                      }}
                     />
                   }
                   label="Contrato possui taxa de adesão"
                   sx={{ mt: 2 }}
                 />
+
+                {/* Campo de Valor de Adesão - Condicional */}
+                {formData.hasAdhesion && (
+                  <Box sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <DollarSign size={20} style={{ color: '#6b7280' }} />
+                      <Typography variant="body2" fontWeight={500}>
+                        Valor da Taxa de Adesão *
+                      </Typography>
+                    </Box>
+                    <TextField
+                      fullWidth
+                      variant="outlined"
+                      placeholder="R$ 0,00"
+                      value={formattedAdhesionValue}
+                      onChange={handleAdhesionValueChange}
+                      sx={{
+                        '& .MuiOutlinedInput-input': {
+                          fontSize: '1rem',
+                          fontWeight: 500
+                        }
+                      }}
+                    />
+                  </Box>
+                )}
               </Paper>
             </Box>
           </Box>
