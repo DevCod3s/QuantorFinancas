@@ -211,6 +211,57 @@ export default function Step2ContractGeneration({
   };
 
   /**
+   * Estado para controlar valor monetário formatado
+   */
+  const [formattedMonthlyValue, setFormattedMonthlyValue] = useState('');
+
+  /**
+   * Formata valor monetário em tempo real
+   */
+  const formatCurrency = (value: string): string => {
+    // Remove tudo que não é número
+    const numericValue = value.replace(/\D/g, '');
+    
+    if (!numericValue) return '';
+    
+    // Converte para número e divide por 100 para ter centavos
+    const number = parseFloat(numericValue) / 100;
+    
+    // Formata para moeda brasileira
+    return number.toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2
+    });
+  };
+
+  /**
+   * Manipula mudança no valor monetário
+   */
+  const handleMonthlyValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const inputValue = event.target.value;
+    
+    // Remove caracteres não numéricos
+    const numericOnly = inputValue.replace(/\D/g, '');
+    
+    if (!numericOnly) {
+      setFormattedMonthlyValue('');
+      updateFormData({ monthlyValue: 0 });
+      return;
+    }
+    
+    // Converte para número (centavos) e depois para valor real
+    const numericValue = parseFloat(numericOnly) / 100;
+    
+    // Formata para exibição
+    const formatted = formatCurrency(numericOnly);
+    setFormattedMonthlyValue(formatted);
+    
+    // Salva o valor numérico
+    updateFormData({ monthlyValue: numericValue });
+  };
+
+  /**
    * Gera preview do contrato
    */
   const handleGeneratePreview = async () => {
@@ -411,51 +462,67 @@ export default function Step2ContractGeneration({
 
               {/* Datas e Valor */}
               <Paper sx={{ p: 3, backgroundColor: '#f8fafc' }}>
-                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
+                {/* Data Inicial e Prazo de Validade - Lado a lado */}
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 3 }}>
                   <Box sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <Calendar size={20} style={{ color: '#6b7280' }} />
-                      <Typography variant="body2" fontWeight={500}>
-                        Data Inicial *
-                      </Typography>
-                    </Box>
                     <TextField
                       type="date"
                       fullWidth
+                      label="Data Inicial"
                       variant="outlined"
                       value={formData.startDate}
                       onChange={(e) => updateFormData({ startDate: e.target.value })}
                       InputLabelProps={{ shrink: true }}
+                      required
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          color: '#6b7280',
+                          fontWeight: 500
+                        }
+                      }}
                     />
                   </Box>
                   
                   <Box sx={{ flex: 1 }}>
                     <TextField
                       fullWidth
-                      label="Prazo de Validade *"
+                      label="Prazo de Validade"
                       placeholder="Ex: 12 meses"
                       variant="outlined"
                       value={formData.validityPeriod}
                       onChange={(e) => updateFormData({ validityPeriod: e.target.value })}
+                      required
+                      sx={{
+                        '& .MuiInputLabel-root': {
+                          color: '#6b7280',
+                          fontWeight: 500
+                        }
+                      }}
                     />
                   </Box>
                 </Box>
                   
-                <Box sx={{ mt: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                      <DollarSign size={20} style={{ color: '#6b7280' }} />
-                      <Typography variant="body2" fontWeight={500}>
-                        Valor Mensal (R$) *
-                      </Typography>
-                    </Box>
-                    <TextField
-                      type="number"
-                      fullWidth
-                      variant="outlined"
-                      inputProps={{ step: 0.01, min: 0 }}
-                      value={formData.monthlyValue}
-                      onChange={(e) => updateFormData({ monthlyValue: parseFloat(e.target.value) || 0 })}
-                    />
+                {/* Valor Mensal */}
+                <Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                    <DollarSign size={20} style={{ color: '#6b7280' }} />
+                    <Typography variant="body2" fontWeight={500}>
+                      Valor Mensal *
+                    </Typography>
+                  </Box>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="R$ 0,00"
+                    value={formattedMonthlyValue}
+                    onChange={handleMonthlyValueChange}
+                    sx={{
+                      '& .MuiOutlinedInput-input': {
+                        fontSize: '1rem',
+                        fontWeight: 500
+                      }
+                    }}
+                  />
                 </Box>
 
                 <FormControlLabel
