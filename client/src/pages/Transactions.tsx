@@ -2081,6 +2081,9 @@ export function Transactions() {
                   showSuccess={showSuccess}
                   showError={showError}
                   showConfirm={showConfirm}
+                  SuccessDialog={SuccessDialog}
+                  ErrorDialog={ErrorDialog}
+                  ConfirmDialog={ConfirmDialog}
                 />
               },
               {
@@ -2339,13 +2342,19 @@ function ChartOfAccountsContent({
   setIsModalOpen,
   showSuccess,
   showError,
-  showConfirm 
+  showConfirm,
+  SuccessDialog,
+  ErrorDialog,
+  ConfirmDialog
 }: { 
   isModalOpen: boolean, 
   setIsModalOpen: (open: boolean) => void,
   showSuccess: (title: string, message?: string) => void,
   showError: (title: string, message?: string) => void,
-  showConfirm: (title: string, message: string, onConfirm: () => void) => void
+  showConfirm: (title: string, message: string, onConfirm: () => void) => void,
+  SuccessDialog: React.ComponentType,
+  ErrorDialog: React.ComponentType,
+  ConfirmDialog: React.ComponentType
 }) {
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
