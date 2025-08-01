@@ -19,8 +19,8 @@ import React, { useState } from "react";
 import StepperWizard from "../StepperWizard";
 import Step1BasicInfo from "./Step1BasicInfo";
 import Step2ContractGeneration from "./Step2ContractGeneration";
-import Step3ReviewPRD from "./Step3ReviewPRD";
-import Step4FinalPRD from "./Step4FinalPRD";
+import Step3ReviewPRD from "./Step3ReviewPRD-simple";
+import Step4FinalPRD from "./Step4FinalPRD-new";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Save, CheckCircle, X } from "lucide-react";
 import { useRelationshipManager } from "@/hooks/useRelationshipManager";
@@ -51,22 +51,22 @@ interface RelationshipWizardProps {
 const wizardSteps = [
   {
     id: 1,
-    title: "Selecionar Cliente",
+    title: "Dados Básicos",
     subtitle: "Current"
   },
   {
     id: 2,
-    title: "Gerar Contrato", 
+    title: "Contrato Gerado", 
     subtitle: "Upcoming"
   },
   {
     id: 3,
-    title: "Revisar PRD",
+    title: "Revisão",
     subtitle: "Upcoming"
   },
   {
     id: 4,
-    title: "PRD Final",
+    title: "Finalização",
     subtitle: "Upcoming"
   }
 ];

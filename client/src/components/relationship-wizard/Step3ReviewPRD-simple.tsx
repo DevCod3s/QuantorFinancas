@@ -1,18 +1,6 @@
 /**
  * @fileoverview Etapa 3 do cadastro de relacionamento - Revisão
- * 
- * Terceira etapa do wizard para revisão completa das informações.
- * Layout melhorado com Material-UI e visualização profissional.
- * 
- * Funcionalidades:
- * - Revisão consolidada de todos os dados
- * - Interface Material-UI moderna
- * - Cards organizados por categoria
- * - Validação visual intuitiva
- * - Aprovação streamlined
- * 
- * @author Equipe Quantor
- * @version 2.0.0
+ * Versão Material-UI melhorada com layout profissional
  */
 
 import React, { useState } from "react";
@@ -33,48 +21,34 @@ import {
 } from "@mui/material";
 import { 
   CheckCircle, 
-  Edit, 
   Eye, 
   FileText, 
   User, 
-  Building,
-  Calendar,
-  DollarSign,
   AlertTriangle,
   Info,
   CheckCircle2
 } from "lucide-react";
 
-/**
- * Interface para dados do formulário da Etapa 3
- */
 interface Step3FormData {
-  reviewApproved: boolean; // Se a revisão foi aprovada
-  notes: string; // Observações da revisão
-  modificationsRequested: boolean; // Se há modificações solicitadas
-  modificationNotes: string; // Notas sobre modificações
+  reviewApproved: boolean;
+  notes: string;
+  modificationsRequested: boolean;
+  modificationNotes: string;
 }
 
-/**
- * Props do componente Step3ReviewPRD
- */
 interface Step3ReviewPRDProps {
-  onDataChange: (data: Step3FormData, isValid: boolean) => void; // Callback para mudança de dados
-  initialData?: Partial<Step3FormData>; // Dados iniciais
-  relationshipData?: any; // Dados da etapa 1
-  contractData?: any; // Dados da etapa 2
+  onDataChange: (data: Step3FormData, isValid: boolean) => void;
+  initialData?: Partial<Step3FormData>;
+  relationshipData?: any;
+  contractData?: any;
 }
 
-/**
- * Componente Step3ReviewPRD
- */
 export default function Step3ReviewPRD({ 
   onDataChange, 
   initialData = {},
   relationshipData,
   contractData
 }: Step3ReviewPRDProps) {
-  // Estado do formulário
   const [formData, setFormData] = useState<Step3FormData>({
     reviewApproved: false,
     notes: '',
@@ -83,22 +57,13 @@ export default function Step3ReviewPRD({
     ...initialData
   });
 
-  /**
-   * Atualiza dados do formulário
-   */
   const updateFormData = (updates: Partial<Step3FormData>) => {
     const newData = { ...formData, ...updates };
     setFormData(newData);
-    
-    // Validar se etapa está completa
     const isValid = newData.reviewApproved || newData.modificationsRequested;
-    
     onDataChange(newData, isValid);
   };
 
-  /**
-   * Formatar dados para exibição
-   */
   const formatDisplayData = (data: any) => {
     if (!data) return 'Não informado';
     if (typeof data === 'boolean') return data ? 'Sim' : 'Não';
@@ -291,8 +256,8 @@ export default function Step3ReviewPRD({
                     sx={{ 
                       mb: 2, 
                       cursor: 'pointer',
-                      '&:hover': { bgcolor: 'success.50' },
-                      bgcolor: formData.reviewApproved && !formData.modificationsRequested ? 'success.50' : 'transparent'
+                      '&:hover': { bgcolor: 'rgba(76, 175, 80, 0.1)' },
+                      bgcolor: formData.reviewApproved && !formData.modificationsRequested ? 'rgba(76, 175, 80, 0.1)' : 'transparent'
                     }}
                   >
                     <CardContent sx={{ py: 2 }}>
@@ -320,8 +285,8 @@ export default function Step3ReviewPRD({
                     variant="outlined" 
                     sx={{ 
                       cursor: 'pointer',
-                      '&:hover': { bgcolor: 'warning.50' },
-                      bgcolor: formData.modificationsRequested ? 'warning.50' : 'transparent'
+                      '&:hover': { bgcolor: 'rgba(255, 152, 0, 0.1)' },
+                      bgcolor: formData.modificationsRequested ? 'rgba(255, 152, 0, 0.1)' : 'transparent'
                     }}
                   >
                     <CardContent sx={{ py: 2 }}>
