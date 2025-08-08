@@ -536,11 +536,11 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         </CardContent>
       </Card>
       
-      {/* Modal de Adicionar Contato - Usando mesmo padrão do wizard de relacionamento */}
+      {/* Modal de Adicionar Contato - Layout idêntico ao Step1BasicInfo */}
       <Dialog 
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
         PaperProps={{
           sx: {
@@ -550,52 +550,45 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         }}
       >
         <DialogContent sx={{ p: 0, overflow: 'hidden' }}>
-          <Card sx={{ 
-            boxShadow: 'none', 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            minHeight: '500px'
+          <Box sx={{
+            backgroundColor: '#f8f9fa',
+            p: 3,
+            minHeight: '600px'
           }}>
-            <CardContent sx={{ 
-              p: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              height: '100%',
-              position: 'relative'
+            <Card sx={{
+              maxWidth: '1000px',
+              margin: '0 auto',
+              borderRadius: '12px',
+              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+              border: 'none',
+              backgroundColor: 'white'
             }}>
-              {/* Header com gradiente */}
-              <Box sx={{ 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                p: 3,
-                color: 'white',
-                textAlign: 'center'
-              }}>
-                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-                  Adicionar Novo Contato
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                  Preencha as informações do relacionamento
-                </Typography>
-              </Box>
-
-              {/* Conteúdo do formulário com fundo branco */}
-              <Box sx={{ 
-                flex: 1,
-                backgroundColor: 'white',
-                p: 4,
-                borderRadius: '20px 20px 0 0',
-                mt: -2,
-                position: 'relative',
-                zIndex: 1
-              }}>
-                {/* Tipo de relacionamento */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: '#333' }}>
+              <CardContent sx={{ p: 4 }}>
+                {/* Seção: Tipo de relacionamento */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      mb: 2, 
+                      color: '#333',
+                      fontSize: '18px' 
+                    }}
+                  >
                     Tipo de relacionamento
                   </Typography>
                   
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <FormControl fullWidth size="small">
-                      <InputLabel sx={{ color: '#1976d2', fontSize: '14px' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+                    <FormControl 
+                      variant="outlined" 
+                      size="small"
+                      sx={{ minWidth: 300, flexGrow: 1 }}
+                    >
+                      <InputLabel sx={{ 
+                        color: '#4285f4', 
+                        fontSize: '14px',
+                        fontWeight: 500 
+                      }}>
                         Selecione o tipo de relacionamento *
                       </InputLabel>
                       <Select
@@ -605,26 +598,37 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                           tipoRelacionamento: e.target.value
                         }))}
                         label="Selecione o tipo de relacionamento *"
+                        displayEmpty
                         sx={{
                           '& .MuiSelect-select': {
-                            color: contactFormData.tipoRelacionamento ? '#000' : '#999',
+                            color: contactFormData.tipoRelacionamento ? '#333' : '#999',
+                            fontSize: '14px'
+                          },
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
                           }
                         }}
                       >
-                        <MenuItem value="" sx={{ color: '#999' }}>Selecione...</MenuItem>
+                        <MenuItem value="">Selecione...</MenuItem>
                         <MenuItem value="cliente">Cliente</MenuItem>
                         <MenuItem value="fornecedor">Fornecedor</MenuItem>
                         <MenuItem value="funcionario">Funcionário</MenuItem>
                         <MenuItem value="parceiro">Parceiro</MenuItem>
+                        <MenuItem value="outros">Outros</MenuItem>
                       </Select>
                     </FormControl>
                     <IconButton 
+                      size="small"
                       sx={{ 
-                        border: '2px solid #1976d2',
-                        color: '#1976d2',
+                        border: '2px solid #4285f4',
+                        color: '#4285f4',
                         width: 40,
                         height: 40,
-                        borderRadius: 1
+                        borderRadius: '8px',
+                        '&:hover': {
+                          backgroundColor: '#f1f5ff',
+                          borderColor: '#3367d6'
+                        }
                       }}
                     >
                       <Plus className="h-4 w-4" />
@@ -632,14 +636,28 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   </Box>
                 </Box>
 
-                {/* Informação básica */}
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: '#333' }}>
+                {/* Seção: Informação básica */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      mb: 3, 
+                      color: '#333',
+                      fontSize: '18px' 
+                    }}
+                  >
                     Informação básica
                   </Typography>
                   
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gap: 3, 
+                    mb: 3 
+                  }}>
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="CPF/CNPJ *"
                       value={contactFormData.cpfCnpj}
@@ -648,10 +666,23 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         cpfCnpj: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Razão social *"
                       value={contactFormData.razaoSocial}
@@ -660,10 +691,23 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         razaoSocial: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Inscrição estadual *"
                       value={contactFormData.inscricaoEstadual}
@@ -672,21 +716,47 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         inscricaoEstadual: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                   </Box>
                 </Box>
 
-                {/* Localização */}
+                {/* Seção: Localização */}
                 <Box sx={{ mb: 4 }}>
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: '#333' }}>
+                  <Typography 
+                    variant="h6" 
+                    sx={{ 
+                      fontWeight: 600, 
+                      mb: 3, 
+                      color: '#333',
+                      fontSize: '18px' 
+                    }}
+                  >
                     Localização
                   </Typography>
                   
-                  {/* Primeira linha */}
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
+                  {/* Primeira linha - CEP, Logradouro, Número */}
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gap: 3, 
+                    mb: 3 
+                  }}>
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="CEP *"
                       value={contactFormData.cep}
@@ -695,10 +765,23 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         cep: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Logradouro *"
                       value={contactFormData.logradouro}
@@ -707,10 +790,23 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         logradouro: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Número *"
                       value={contactFormData.numero}
@@ -719,14 +815,32 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         numero: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                   </Box>
 
-                  {/* Segunda linha */}
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
+                  {/* Segunda linha - Complemento, Bairro, Estado */}
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 1fr 1fr', 
+                    gap: 3, 
+                    mb: 3 
+                  }}>
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Complemento"
                       value={contactFormData.complemento}
@@ -735,10 +849,23 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         complemento: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Bairro *"
                       value={contactFormData.bairro}
@@ -747,11 +874,27 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         bairro: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
-                    <FormControl size="small">
-                      <InputLabel sx={{ color: '#1976d2', fontSize: '14px' }}>
+                    <FormControl variant="outlined" size="small">
+                      <InputLabel sx={{ 
+                        color: '#4285f4', 
+                        fontSize: '14px',
+                        fontWeight: 500 
+                      }}>
                         Estado *
                       </InputLabel>
                       <Select
@@ -761,26 +904,42 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                           estado: e.target.value
                         }))}
                         label="Estado *"
+                        displayEmpty
                         sx={{
                           '& .MuiSelect-select': {
-                            color: contactFormData.estado ? '#000' : '#999',
+                            color: contactFormData.estado ? '#333' : '#999',
+                            fontSize: '14px'
+                          },
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: '8px',
                           }
                         }}
                       >
-                        <MenuItem value="" sx={{ color: '#999' }}>Selecione...</MenuItem>
+                        <MenuItem value="">Selecione...</MenuItem>
                         <MenuItem value="SP">São Paulo</MenuItem>
                         <MenuItem value="RJ">Rio de Janeiro</MenuItem>
                         <MenuItem value="MG">Minas Gerais</MenuItem>
                         <MenuItem value="RS">Rio Grande do Sul</MenuItem>
                         <MenuItem value="PR">Paraná</MenuItem>
                         <MenuItem value="SC">Santa Catarina</MenuItem>
+                        <MenuItem value="GO">Goiás</MenuItem>
+                        <MenuItem value="MT">Mato Grosso</MenuItem>
+                        <MenuItem value="MS">Mato Grosso do Sul</MenuItem>
+                        <MenuItem value="BA">Bahia</MenuItem>
+                        <MenuItem value="PE">Pernambuco</MenuItem>
+                        <MenuItem value="CE">Ceará</MenuItem>
                       </Select>
                     </FormControl>
                   </Box>
 
                   {/* Terceira linha - Cidade */}
-                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 2 }}>
+                  <Box sx={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 2fr', 
+                    gap: 3 
+                  }}>
                     <TextField
+                      variant="outlined"
                       size="small"
                       label="Cidade *"
                       value={contactFormData.cidade}
@@ -789,7 +948,19 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         cidade: e.target.value
                       }))}
                       InputLabelProps={{
-                        sx: { color: '#1976d2', fontSize: '14px' }
+                        sx: { 
+                          color: '#4285f4', 
+                          fontSize: '14px',
+                          fontWeight: 500 
+                        }
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: '8px',
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: '14px'
+                        }
                       }}
                     />
                   </Box>
@@ -798,9 +969,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 {/* Botões de ação */}
                 <Box sx={{ 
                   display: 'flex', 
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  pt: 2,
+                  justifyContent: 'flex-end',
+                  gap: 2,
+                  pt: 3,
                   borderTop: '1px solid #eee'
                 }}>
                   <Button
@@ -811,6 +982,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       borderColor: '#ddd',
                       textTransform: 'none',
                       px: 3,
+                      py: 1,
+                      fontSize: '14px',
+                      borderRadius: '8px',
                       '&:hover': {
                         borderColor: '#999',
                         backgroundColor: '#f5f5f5'
@@ -840,21 +1014,24 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       setContactModalOpen(false);
                     }}
                     sx={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      backgroundColor: '#4285f4',
                       textTransform: 'none',
                       px: 3,
+                      py: 1,
+                      fontSize: '14px',
                       fontWeight: 600,
+                      borderRadius: '8px',
                       '&:hover': {
-                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                        backgroundColor: '#3367d6',
                       }
                     }}
                   >
                     Salvar Contato
                   </Button>
                 </Box>
-              </Box>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Box>
         </DialogContent>
       </Dialog>
     </Box>
