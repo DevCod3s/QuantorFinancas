@@ -569,7 +569,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               border: 'none',
               backgroundColor: 'white'
             }}>
-              <CardContent sx={{ p: 4 }}>
+              <CardContent sx={{ p: 4 }} className="contact-modal-fields">
                 {/* Seção: Tipo de relacionamento */}
                 <Box sx={{ mb: 4 }}>
                   <Typography 
@@ -595,7 +595,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         fontSize: '14px',
                         fontWeight: 500 
                       }}>
-                        Selecione o tipo de relacionamento *
+                        Tipo de relacionamento *
                       </InputLabel>
                       <Select
                         value={contactFormData.tipoRelacionamento}
@@ -603,7 +603,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                           ...prev,
                           tipoRelacionamento: e.target.value
                         }))}
-                        label="Selecione o tipo de relacionamento *"
+                        label="Tipo de relacionamento *"
                         displayEmpty
                         MenuProps={{
                           PaperProps: {
@@ -617,6 +617,15 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                           },
                           '& .MuiOutlinedInput-root': {
                             borderRadius: '8px',
+                            border: 'none',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            '&:hover': {
+                              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                            },
+                            '&.Mui-focused': {
+                              border: '2px solid #4285f4',
+                              boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
+                            }
                           }
                         }}
                       >
@@ -672,9 +681,10 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       size="small"
                       label="CPF/CNPJ *"
                       value={contactFormData.cpfCnpj}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const value = e.target.value.replace(/\D/g, '');
                         let formatted = '';
+                        let documentType: 'CPF' | 'CNPJ' | null = null;
                         
                         if (value.length <= 11) {
                           // CPF format: 123.456.789-01
@@ -682,6 +692,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                             .replace(/(\d{3})(\d)/, '$1.$2')
                             .replace(/(\d{3})(\d)/, '$1.$2')
                             .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                          documentType = value.length === 11 ? 'CPF' : null;
                         } else {
                           // CNPJ format: 12.345.678/0001-90
                           formatted = value
@@ -689,12 +700,44 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                             .replace(/(\d{3})(\d)/, '$1.$2')
                             .replace(/(\d{3})(\d)/, '$1/$2')
                             .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+                          documentType = value.length === 14 ? 'CNPJ' : null;
                         }
                         
                         setContactFormData(prev => ({
                           ...prev,
                           cpfCnpj: formatted
                         }));
+                        
+                        // Auto-preenchimento se CNPJ válido
+                        if (documentType === 'CNPJ' && value.length === 14) {
+                          try {
+                            const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${value}`);
+                            if (response.ok) {
+                              const data = await response.json();
+                              
+                              // Processar CEP
+                              const cep = data.cep || '';
+                              const cleanCep = cep.replace(/\D/g, '');
+                              const formattedCep = cleanCep.length === 8 ? 
+                                `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
+                              
+                              setContactFormData(prev => ({
+                                ...prev,
+                                razaoSocial: data.razao_social || data.nome || '',
+                                inscricaoEstadual: '', // Deixar vazio para preenchimento manual
+                                cep: formattedCep,
+                                logradouro: data.logradouro || '',
+                                numero: data.numero || '',
+                                complemento: data.complemento || '',
+                                bairro: data.bairro || '',
+                                cidade: data.municipio || data.cidade || '',
+                                estado: data.uf || data.estado || ''
+                              }));
+                            }
+                          } catch (error) {
+                            console.error('Erro ao buscar CNPJ:', error);
+                          }
+                        }
                       }}
                       InputLabelProps={{
                         sx: { 
@@ -706,6 +749,15 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
+                          border: 'none',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          '&:hover': {
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                          },
+                          '&.Mui-focused': {
+                            border: '2px solid #4285f4',
+                            boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
+                          }
                         },
                         '& .MuiInputBase-input': {
                           fontSize: '14px'
@@ -731,6 +783,15 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
+                          border: 'none',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          '&:hover': {
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                          },
+                          '&.Mui-focused': {
+                            border: '2px solid #4285f4',
+                            boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
+                          }
                         },
                         '& .MuiInputBase-input': {
                           fontSize: '14px'
@@ -756,6 +817,15 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       sx={{
                         '& .MuiOutlinedInput-root': {
                           borderRadius: '8px',
+                          border: 'none',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          '&:hover': {
+                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                          },
+                          '&.Mui-focused': {
+                            border: '2px solid #4285f4',
+                            boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
+                          }
                         },
                         '& .MuiInputBase-input': {
                           fontSize: '14px'
