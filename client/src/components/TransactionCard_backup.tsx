@@ -19,7 +19,6 @@ import {
   MenuItem,
   IconButton,
   Button,
-  Box,
   Dialog,
   DialogContent,
   Typography,
@@ -223,20 +222,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   if (!open) return null;
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1300,
-        p: 2
-      }}
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <Card
@@ -252,7 +239,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         }}
       >
         {/* Cabeçalho */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, borderBottom: '1px solid #e0e0e0' }}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <FormControl variant="standard" sx={{ minWidth: 150 }}>
             <Select
               value={tipo}
@@ -273,10 +260,11 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           <IconButton onClick={onClose} sx={{ color: '#666' }}>
             <X className="h-5 w-5" />
           </IconButton>
-        </Box>
+        </div>
 
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+          {/* Campos de valor e data */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 3 }}>
             <TextField
               variant="standard"
               label="Valor"
@@ -298,7 +286,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             />
           </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
+          {/* Campos de repetição */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 3 }}>
             <FormControl variant="standard" fullWidth>
               <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>
                 Repetição
@@ -342,19 +331,25 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             )}
           </Box>
 
-          <TextField
-            variant="standard"
-            label="Descrição"
-            value={descricao}
-            onChange={(e) => setDescricao(e.target.value)}
-            fullWidth
-            sx={{ '& .MuiInputLabel-root': { color: '#666' }, mb: 2 }}
-          />
+          {/* Campo de descrição */}
+          <Box sx={{ mb: 3 }}>
+            <TextField
+              variant="standard"
+              label="Descrição"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              fullWidth
+              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            />
+          </Box>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+          {/* Campos de conta e categoria */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 3 }}>
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>Conta bancária</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>
+                  Conta bancária
+                </InputLabel>
                 <Select
                   value={conta}
                   onChange={(e) => setConta(e.target.value)}
@@ -373,11 +368,13 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <CreditCard className="h-4 w-4" />
               </IconButton>
-            </Box>
+            </div>
 
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>Categoria</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>
+                  Categoria
+                </InputLabel>
                 <Select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
@@ -394,13 +391,16 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Settings className="h-4 w-4" />
               </IconButton>
-            </Box>
-          </Box>
+            </div>
+          </div>
 
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+          {/* Campos de contato e documento */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>Relacionamento</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>
+                  Relacionamento
+                </InputLabel>
                 <Select
                   value={contato}
                   onChange={(e) => setContato(e.target.value)}
@@ -419,7 +419,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Users className="h-4 w-4" />
               </IconButton>
-            </Box>
+            </div>
 
             <TextField
               variant="standard"
@@ -429,50 +429,52 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               fullWidth
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
-          </Box>
+          </div>
 
-          <TextField
-            variant="standard"
-            label="Observações"
-            value={observacoes}
-            onChange={(e) => setObservacoes(e.target.value)}
-            fullWidth
-            multiline
-            maxRows={5}
-            sx={{ '& .MuiInputLabel-root': { color: '#666' }, mb: 2 }}
-          />
-          
-          <Box sx={{ display: 'flex', alignItems: 'end', gap: 1, mb: 2 }}>
-            <FormControl variant="standard" sx={{ width: '85%' }}>
-              <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
-              <Select
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                MenuProps={{
-                  PaperProps: {
-                    sx: { zIndex: 1400 }
-                  }
-                }}
+          <div className="space-y-4">
+            <TextField
+              variant="standard"
+              label="Observações"
+              value={observacoes}
+              onChange={(e) => setObservacoes(e.target.value)}
+              fullWidth
+              multiline
+              maxRows={5}
+              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            />
+            
+            <div className="flex items-end gap-2">
+              <FormControl variant="standard" sx={{ width: '85%' }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
+                <Select
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: { zIndex: 1400 }
+                    }
+                  }}
+                >
+                  {filteredChartOfAccounts.map((account: any) => (
+                    <MenuItem key={account.id} value={account.id}>
+                      {account.code} - {account.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <IconButton 
+                size="small" 
+                sx={{ mb: 0.5, color: '#1976d2' }}
+                onClick={() => {/* Função para adicionar plano de contas */}}
               >
-                {filteredChartOfAccounts.map((account: any) => (
-                  <MenuItem key={account.id} value={account.id}>
-                    {account.code} - {account.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <IconButton 
-              size="small" 
-              sx={{ mb: 0.5, color: '#1976d2' }}
-              onClick={() => {/* Função para adicionar plano de contas */}}
-            >
-              <BookOpen className="h-4 w-4" />
-            </IconButton>
-          </Box>
+                <BookOpen className="h-4 w-4" />
+              </IconButton>
+            </div>
+          </div>
 
           {/* Botões de ação */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2 }}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+          <div className="flex items-center justify-between pt-8">
+            <div className="flex gap-2">
               <IconButton 
                 sx={{ 
                   backgroundColor: '#4caf50',
@@ -501,9 +503,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Paperclip className="h-4 w-4" />
               </IconButton>
-            </Box>
+            </div>
             
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <div className="flex gap-4">
               <Button
                 variant="contained"
                 onClick={handleSave}
@@ -525,12 +527,12 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Plus className="h-4 w-4" />
               </IconButton>
-            </Box>
-          </Box>
+            </div>
+          </div>
         </CardContent>
       </Card>
       
-      {/* Modal de Adicionar Contato usando componentes customizados APENAS AQUI */}
+      {/* Modal de Adicionar Contato usando componentes customizados */}
       <Dialog 
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
@@ -743,6 +745,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           </div>
         </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   );
 }
