@@ -8,7 +8,7 @@
  * @since Janeiro 2025
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -19,15 +19,14 @@ import {
   MenuItem,
   IconButton,
   Button,
-  Box,
   Dialog,
-  DialogTitle,
   DialogContent,
   Typography,
-  Grid
 } from '@mui/material';
 import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, CreditCard, Users, Building2, BookOpen, Settings } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
+import CpfCnpjInput from "./CpfCnpjInput";
+import CustomInput, { CustomSelect } from "./CustomInput";
 
 interface TransactionCardProps {
   open: boolean;
@@ -43,9 +42,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState('25/07/2025');
-  const [repeticao, setRepeticao] = useState('');
-  const [periodicidade, setPeriodicidade] = useState('');
-  const [intervaloRepeticao, setIntervaloRepeticao] = useState('');
+  const [repeticao, setRepeticao] = useState('Única');
+  const [periodicidade, setPeriodicidade] = useState('Mensal');
+  const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -70,41 +69,116 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     estado: ''
   });
 
-  // Buscar contas bancárias cadastradas no sistema
-  const { data: bankAccounts = [] } = useQuery<any[]>({
-    queryKey: ['/api/bank-accounts'],
-    enabled: open
-  });
-
-  // Buscar relacionamentos cadastrados no sistema  
-  const { data: relationships = [] } = useQuery<any[]>({
-    queryKey: ['/api/relationships'],
-    enabled: open
-  });
-
-  // Buscar categorias de negócios
-  const { data: businessCategories = [] } = useQuery<any[]>({
-    queryKey: ['/api/categories'],
-    enabled: open
-  });
-
-  // Buscar plano de contas filtrado por tipo
-  const { data: chartOfAccounts = [] } = useQuery<any[]>({
-    queryKey: ['/api/chart-accounts'],
-    enabled: open
-  });
-
-  // Filtrar plano de contas baseado no tipo selecionado
-  const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
-    if (tipo === 'Nova receita') {
-      return account.name?.toLowerCase().includes('receita') || account.type === 'income';
-    } else if (tipo === 'Nova despesa') {
-      return account.name?.toLowerCase().includes('despesa') || account.type === 'expense';
+  // Função para buscar dados de CNPJ (mesma lógica do wizard)
+  const fetchCNPJData = async (cnpj: string) => {
+    const cleanCnpj = cnpj.replace(/\D/g, '');
+    
+    try {
+      const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Processar CEP
+        const cep = data.cep || '';
+        const cleanCep = cep.replace(/\D/g, '');
+        const formattedCep = cleanCep.length === 8 ? 
+          `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
+        
+        setContactFormData(prev => ({
+          ...prev,
+          razaoSocial: data.razao_social || data.nome || '',
+          cep: formattedCep,
+          logradouro: data.logradouro || '',
+          numero: data.numero || '',
+          complemento: data.complemento || '',
+          bairro: data.bairro || '',
+          cidade: data.municipio || data.cidade || '',
+          estado: data.uf || data.estado || ''
+        }));
+        
+        // Se CEP válido mas dados incompletos, buscar via ViaCEP
+        const hasCompleteAddress = data.logradouro && data.bairro && data.municipio;
+        if (cleanCep.length === 8 && !hasCompleteAddress) {
+          await fetchCEPData(cleanCep);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CNPJ:', error);
     }
+  };
+
+  // Função para buscar dados de CEP (mesma lógica do wizard)
+  const fetchCEPData = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      if (response.ok) {
+        const data = await response.json();
+        if (!data.erro) {
+          setContactFormData(prev => ({
+            ...prev,
+            logradouro: data.logradouro || prev.logradouro,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || prev.cidade,
+            estado: data.uf || prev.estado
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+    }
+  };
+
+  // Função para tratar mudança no CEP (mesma lógica do wizard)
+  const handleCEPChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value;
+    const numbersOnly = rawValue.replace(/\D/g, '');
+    const limitedNumbers = numbersOnly.substring(0, 8);
+    
+    let formatted = limitedNumbers;
+    if (limitedNumbers.length > 5) {
+      formatted = `${limitedNumbers.substring(0, 5)}-${limitedNumbers.substring(5)}`;
+    }
+    
+    setContactFormData(prev => ({
+      ...prev,
+      cep: formatted
+    }));
+    
+    // Se CEP completo, buscar endereço
+    if (limitedNumbers.length === 8) {
+      fetchCEPData(limitedNumbers);
+    }
+  };
+
+  // Função para buscar dados de relacionamentos
+  const { data: relationships = [] } = useQuery({
+    queryKey: ['/api/relationships'],
+    queryFn: () => fetch('/api/relationships').then(res => res.json())
+  });
+
+  // Função para buscar dados de contas bancárias  
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ['/api/bank-accounts'],
+    queryFn: () => fetch('/api/bank-accounts').then(res => res.json())
+  });
+
+  // Função para buscar dados do plano de contas
+  const { data: chartOfAccounts = [] } = useQuery({
+    queryKey: ['/api/chart-accounts'],
+    queryFn: () => fetch('/api/chart-accounts').then(res => res.json())
+  });
+
+  // Filtragem de contas por tipo (receita ou despesa)
+  const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
+    if (tipo.includes('receita')) return account.type === 'RECEITA';
+    if (tipo.includes('despesa')) return account.type === 'DESPESA';
     return true;
   });
 
-  // Função para formatação de moeda brasileira
+  // Formatação de valor monetário
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
     // Remove tudo exceto números
@@ -148,20 +222,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   if (!open) return null;
 
   return (
-    <Box
-      sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1300,
-        p: 2
-      }}
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <Card
@@ -177,7 +239,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         }}
       >
         {/* Cabeçalho */}
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, borderBottom: '1px solid #e0e0e0' }}>
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <FormControl variant="standard" sx={{ minWidth: 150 }}>
             <Select
               value={tipo}
@@ -189,130 +251,88 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 '&:after': { borderBottom: 'none' },
                 '&:hover:not(.Mui-disabled):before': { borderBottom: 'none' }
               }}
-              MenuProps={{
-                PaperProps: {
-                  sx: { zIndex: 1400 }
-                }
-              }}
             >
               <MenuItem value="Nova receita">Nova receita</MenuItem>
               <MenuItem value="Nova despesa">Nova despesa</MenuItem>
+              <MenuItem value="Transferência">Transferência</MenuItem>
             </Select>
           </FormControl>
-          
-          <IconButton onClick={onClose} size="small">
-            <X className="h-5 w-5 text-gray-400" />
+          <IconButton onClick={onClose} sx={{ color: '#666' }}>
+            <X className="h-5 w-5" />
           </IconButton>
-        </Box>
+        </div>
 
-        <CardContent sx={{ p: 4, space: 3 }}>
-          {/* Primeira linha: Valor, Dados, Repetição */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3, mb: 4 }}>
+        <CardContent sx={{ p: 3 }}>
+          {/* Campos de valor e data */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
             <TextField
               variant="standard"
-              label="Valor (R$)"
+              label="Valor"
               value={valor}
               onChange={handleValorChange}
               fullWidth
-              required
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+              sx={{ 
+                '& .MuiInput-root': { fontSize: '16px' },
+                '& .MuiInputLabel-root': { color: '#666' }
+              }}
             />
-            
             <TextField
               variant="standard"
-              label="Dados"
-              type="date"
+              label="Data"
               value={data}
               onChange={(e) => setData(e.target.value)}
               fullWidth
-              required
-              InputLabelProps={{ shrink: true }}
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
-            
+          </div>
+
+          {/* Campos de repetição */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
+              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>
+                Repetição
+              </InputLabel>
               <Select
                 value={repeticao}
                 onChange={(e) => setRepeticao(e.target.value)}
-                MenuProps={{
-                  PaperProps: {
-                    sx: { zIndex: 1400 }
-                  }
-                }}
               >
-                <MenuItem value="">Selecione</MenuItem>
                 <MenuItem value="Única">Única</MenuItem>
-                <MenuItem value="Parcelado">Parcelado</MenuItem>
+                <MenuItem value="Fixa">Fixa</MenuItem>
                 <MenuItem value="Recorrente">Recorrente</MenuItem>
               </Select>
             </FormControl>
-          </Box>
-
-          {/* Campos condicionais de recorrência - aparecem quando "Recorrente" é selecionado */}
-          {repeticao === 'Recorrente' && (
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 3, mb: 4 }}>
-              <FormControl variant="standard" fullWidth>
-                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
-                  Periodicidade *
-                </InputLabel>
-                <Select
-                  value={periodicidade}
-                  onChange={(e) => setPeriodicidade(e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: { zIndex: 1400 }
-                    }
-                  }}
-                >
-                  <MenuItem value="">Selecione</MenuItem>
-                  <MenuItem value="diario">Diário</MenuItem>
-                  <MenuItem value="semanal">Semanal</MenuItem>
-                  <MenuItem value="mensal">Mensal</MenuItem>
-                  <MenuItem value="trimestral">Trimestral</MenuItem>
-                  <MenuItem value="semestral">Semestral</MenuItem>
-                  <MenuItem value="anual">Anual</MenuItem>
-                </Select>
-              </FormControl>
-              
-              <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-                <FormControl variant="standard" sx={{ width: '85%' }}>
-                  <InputLabel sx={{ color: '#666' }} shrink={!!intervaloRepeticao || undefined}>
-                    Repete-se a cada * meses
+            
+            {repeticao === 'Recorrente' && (
+              <>
+                <FormControl variant="standard" fullWidth>
+                  <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
+                    Periodicidade
                   </InputLabel>
                   <Select
-                    value={intervaloRepeticao}
-                    onChange={(e) => setIntervaloRepeticao(e.target.value)}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: { zIndex: 1400 }
-                      }
-                    }}
+                    value={periodicidade}
+                    onChange={(e) => setPeriodicidade(e.target.value)}
                   >
-                    <MenuItem value="">Selecione</MenuItem>
-                    <MenuItem value="1">1 mês</MenuItem>
-                    <MenuItem value="2">2 meses</MenuItem>
-                    <MenuItem value="3">3 meses</MenuItem>
-                    <MenuItem value="4">4 meses</MenuItem>
-                    <MenuItem value="5">5 meses</MenuItem>
-                    <MenuItem value="6">6 meses</MenuItem>
-                    <MenuItem value="12">12 meses</MenuItem>
-                    <MenuItem value="24">24 meses</MenuItem>
+                    <MenuItem value="Diário">Diário</MenuItem>
+                    <MenuItem value="Semanal">Semanal</MenuItem>
+                    <MenuItem value="Mensal">Mensal</MenuItem>
+                    <MenuItem value="Anual">Anual</MenuItem>
                   </Select>
                 </FormControl>
-                <IconButton 
-                  size="small" 
-                  sx={{ mb: 0.5, color: '#1976d2' }}
-                  onClick={() => {/* Função para personalizar recorrência */}}
-                >
-                  <Settings className="h-4 w-4" />
-                </IconButton>
-              </Box>
-            </Box>
-          )}
+                
+                <TextField
+                  variant="standard"
+                  label="Intervalo"
+                  value={intervaloRepeticao}
+                  onChange={(e) => setIntervaloRepeticao(e.target.value)}
+                  fullWidth
+                  sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+                />
+              </>
+            )}
+          </div>
 
-          {/* Segunda linha: Descrição, Conta */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4 }}>
+          {/* Campo de descrição */}
+          <div className="mb-6">
             <TextField
               variant="standard"
               label="Descrição"
@@ -321,18 +341,18 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               fullWidth
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
-            
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+          </div>
+
+          {/* Campos de conta e categoria */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>Conta</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>
+                  Conta bancária
+                </InputLabel>
                 <Select
                   value={conta}
                   onChange={(e) => setConta(e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: { zIndex: 1400 }
-                    }
-                  }}
                 >
                   {bankAccounts.map((account: any) => (
                     <MenuItem key={account.id} value={account.id}>
@@ -348,28 +368,20 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <CreditCard className="h-4 w-4" />
               </IconButton>
-            </Box>
-          </Box>
+            </div>
 
-          {/* Terceira linha: Categoria, Contato */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4 }}>
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>Categoria</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>
+                  Categoria
+                </InputLabel>
                 <Select
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: { zIndex: 1400 }
-                    }
-                  }}
                 >
-                  {businessCategories.map((category: any) => (
-                    <MenuItem key={category.id} value={category.id}>
-                      {category.name}
-                    </MenuItem>
-                  ))}
+                  <MenuItem value="vendas">Vendas</MenuItem>
+                  <MenuItem value="servicos">Serviços</MenuItem>
+                  <MenuItem value="investimentos">Investimentos</MenuItem>
                 </Select>
               </FormControl>
               <IconButton 
@@ -377,25 +389,25 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 sx={{ mb: 0.5, color: '#1976d2' }}
                 onClick={() => {/* Função para adicionar categoria */}}
               >
-                <Building2 className="h-4 w-4" />
+                <Settings className="h-4 w-4" />
               </IconButton>
-            </Box>
-            
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+            </div>
+          </div>
+
+          {/* Campos de contato e documento */}
+          <div className="grid grid-cols-2 gap-6 mb-6">
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>Contato</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>
+                  Relacionamento
+                </InputLabel>
                 <Select
                   value={contato}
                   onChange={(e) => setContato(e.target.value)}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: { zIndex: 1400 }
-                    }
-                  }}
                 >
-                  {relationships.map((relationship: any) => (
-                    <MenuItem key={relationship.id} value={relationship.id}>
-                      {relationship.name || relationship.companyName}
+                  {relationships.map((rel: any) => (
+                    <MenuItem key={rel.id} value={rel.id}>
+                      {rel.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -407,35 +419,19 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Users className="h-4 w-4" />
               </IconButton>
-            </Box>
-          </Box>
+            </div>
 
-          {/* Quarta linha: Número do documento */}
-          <Box sx={{ mb: 4 }}>
             <TextField
               variant="standard"
               label="Número do documento"
               value={numeroDocumento}
               onChange={(e) => setNumeroDocumento(e.target.value)}
               fullWidth
-              sx={{ 
-                '& .MuiInputLabel-root': { color: '#666' },
-                '& .MuiInput-root': { 
-                  '&::after': { 
-                    content: '"0 / 60"',
-                    position: 'absolute',
-                    right: 0,
-                    bottom: -20,
-                    fontSize: '12px',
-                    color: '#999'
-                  }
-                }
-              }}
+              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
-          </Box>
+          </div>
 
-          {/* Quinta linha: Observações e Plano de Contas */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4 }}>
+          <div className="space-y-4">
             <TextField
               variant="standard"
               label="Observações"
@@ -447,7 +443,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
             
-            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+            <div className="flex items-end gap-2">
               <FormControl variant="standard" sx={{ width: '85%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
                 <Select
@@ -473,12 +469,12 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <BookOpen className="h-4 w-4" />
               </IconButton>
-            </Box>
-          </Box>
+            </div>
+          </div>
 
           {/* Botões de ação */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2 }}>
-            <Box sx={{ display: 'flex', gap: 1 }}>
+          <div className="flex items-center justify-between pt-8">
+            <div className="flex gap-2">
               <IconButton 
                 sx={{ 
                   backgroundColor: '#4caf50',
@@ -507,9 +503,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Paperclip className="h-4 w-4" />
               </IconButton>
-            </Box>
+            </div>
             
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <div className="flex gap-4">
               <Button
                 variant="contained"
                 onClick={handleSave}
@@ -531,576 +527,196 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Plus className="h-4 w-4" />
               </IconButton>
-            </Box>
-          </Box>
+            </div>
+          </div>
         </CardContent>
       </Card>
       
-      {/* Modal de Adicionar Contato - Layout idêntico ao Step1BasicInfo */}
+      {/* Modal de Adicionar Contato usando componentes customizados */}
       <Dialog 
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
         maxWidth="lg"
         fullWidth
-        disableEscapeKeyDown={false}
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            maxHeight: '90vh',
-            zIndex: 1400
-          }
-        }}
-        sx={{ zIndex: 1300 }}
       >
-        <DialogContent 
-          sx={{ p: 0, overflow: 'hidden' }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Box sx={{
-            backgroundColor: '#f8f9fa',
-            p: 3,
-            minHeight: '600px'
-          }}>
-            <Card sx={{
-              maxWidth: '1000px',
-              margin: '0 auto',
-              borderRadius: '12px',
-              boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
-              border: 'none',
-              backgroundColor: 'white'
-            }}>
-              <CardContent sx={{ p: 4 }} className="contact-modal-fields">
+        <DialogContent className="p-0 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-gray-50 p-6 min-h-[600px]">
+            <div className="max-w-4xl mx-auto rounded-xl shadow-2xl bg-white">
+              <div className="p-6 space-y-6">
                 {/* Seção: Tipo de relacionamento */}
-                <Box sx={{ mb: 4 }}>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 600, 
-                      mb: 2, 
-                      color: '#333',
-                      fontSize: '18px' 
-                    }}
-                  >
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Tipo de relacionamento
-                  </Typography>
+                  </h3>
                   
-                  <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-                    <FormControl 
-                      variant="outlined" 
-                      size="small"
-                      sx={{ minWidth: 250, maxWidth: 300 }}
-                    >
-                      <InputLabel sx={{ 
-                        color: '#4285f4', 
-                        fontSize: '14px',
-                        fontWeight: 500 
-                      }}>
-                        Tipo de relacionamento *
-                      </InputLabel>
-                      <Select
+                  <div className="max-w-md flex items-end gap-2">
+                    <div className="flex-1">
+                      <CustomSelect
+                        id="relationship-type"
+                        label="Tipo de relacionamento *"
                         value={contactFormData.tipoRelacionamento}
                         onChange={(e) => setContactFormData(prev => ({
                           ...prev,
                           tipoRelacionamento: e.target.value
                         }))}
-                        label="Tipo de relacionamento *"
-                        displayEmpty
-                        MenuProps={{
-                          PaperProps: {
-                            sx: { zIndex: 1500 }
-                          }
-                        }}
-                        sx={{
-                          '& .MuiSelect-select': {
-                            color: contactFormData.tipoRelacionamento ? '#333' : '#999',
-                            fontSize: '14px'
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: '8px',
-                            border: 'none',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            '&:hover': {
-                              boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                            },
-                            '&.Mui-focused': {
-                              border: '2px solid #4285f4',
-                              boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
-                            }
-                          }
-                        }}
                       >
-                        <MenuItem value="">Selecione...</MenuItem>
-                        <MenuItem value="cliente">Cliente</MenuItem>
-                        <MenuItem value="fornecedor">Fornecedor</MenuItem>
-                        <MenuItem value="funcionario">Funcionário</MenuItem>
-                        <MenuItem value="parceiro">Parceiro</MenuItem>
-                        <MenuItem value="outros">Outros</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <IconButton 
-                      size="small"
-                      sx={{ 
-                        border: '2px solid #4285f4',
-                        color: '#4285f4',
-                        width: 40,
-                        height: 40,
-                        borderRadius: '8px',
-                        '&:hover': {
-                          backgroundColor: '#f1f5ff',
-                          borderColor: '#3367d6'
-                        }
-                      }}
+                        <option value="">Selecione...</option>
+                        <option value="cliente">Cliente</option>
+                        <option value="fornecedor">Fornecedor</option>
+                        <option value="funcionario">Funcionário</option>
+                        <option value="parceiro">Parceiro</option>
+                        <option value="outros">Outros</option>
+                      </CustomSelect>
+                    </div>
+                    
+                    <button
+                      type="button"
+                      className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center rounded-md"
+                      title="Adicionar novo tipo"
                     >
-                      <Plus className="h-4 w-4" />
-                    </IconButton>
-                  </Box>
-                </Box>
+                      <Plus className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
 
                 {/* Seção: Informação básica */}
-                <Box sx={{ mb: 4 }}>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 600, 
-                      mb: 3, 
-                      color: '#333',
-                      fontSize: '18px' 
-                    }}
-                  >
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Informação básica
-                  </Typography>
+                  </h3>
                   
-                  <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr 1fr', 
-                    gap: 3, 
-                    mb: 3 
-                  }}>
-                    <TextField
-                      variant="outlined"
-                      size="small"
-                      label="CPF/CNPJ *"
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <CpfCnpjInput
                       value={contactFormData.cpfCnpj}
-                      onChange={async (e) => {
-                        const value = e.target.value.replace(/\D/g, '');
-                        let formatted = '';
-                        let documentType: 'CPF' | 'CNPJ' | null = null;
-                        
-                        if (value.length <= 11) {
-                          // CPF format: 123.456.789-01
-                          formatted = value
-                            .replace(/(\d{3})(\d)/, '$1.$2')
-                            .replace(/(\d{3})(\d)/, '$1.$2')
-                            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                          documentType = value.length === 11 ? 'CPF' : null;
-                        } else {
-                          // CNPJ format: 12.345.678/0001-90
-                          formatted = value
-                            .replace(/(\d{2})(\d)/, '$1.$2')
-                            .replace(/(\d{3})(\d)/, '$1.$2')
-                            .replace(/(\d{3})(\d)/, '$1/$2')
-                            .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
-                          documentType = value.length === 14 ? 'CNPJ' : null;
-                        }
-                        
+                      onChange={(value, isValid, type) => {
                         setContactFormData(prev => ({
                           ...prev,
-                          cpfCnpj: formatted
+                          cpfCnpj: value
                         }));
                         
                         // Auto-preenchimento se CNPJ válido
-                        if (documentType === 'CNPJ' && value.length === 14) {
-                          try {
-                            const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${value}`);
-                            if (response.ok) {
-                              const data = await response.json();
-                              
-                              // Processar CEP
-                              const cep = data.cep || '';
-                              const cleanCep = cep.replace(/\D/g, '');
-                              const formattedCep = cleanCep.length === 8 ? 
-                                `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
-                              
-                              setContactFormData(prev => ({
-                                ...prev,
-                                razaoSocial: data.razao_social || data.nome || '',
-                                inscricaoEstadual: '', // Deixar vazio para preenchimento manual
-                                cep: formattedCep,
-                                logradouro: data.logradouro || '',
-                                numero: data.numero || '',
-                                complemento: data.complemento || '',
-                                bairro: data.bairro || '',
-                                cidade: data.municipio || data.cidade || '',
-                                estado: data.uf || data.estado || ''
-                              }));
-                            }
-                          } catch (error) {
-                            console.error('Erro ao buscar CNPJ:', error);
-                          }
+                        if (isValid && type === 'CNPJ') {
+                          fetchCNPJData(value);
                         }
                       }}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                          border: 'none',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          '&:hover': {
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                          },
-                          '&.Mui-focused': {
-                            border: '2px solid #4285f4',
-                            boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
-                          }
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
+                      label="CPF/CNPJ *"
                     />
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                    <CustomInput
                       label="Razão social *"
                       value={contactFormData.razaoSocial}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         razaoSocial: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                          border: 'none',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          '&:hover': {
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                          },
-                          '&.Mui-focused': {
-                            border: '2px solid #4285f4',
-                            boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
-                          }
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                    <CustomInput
                       label="Inscrição estadual *"
                       value={contactFormData.inscricaoEstadual}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         inscricaoEstadual: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                          border: 'none',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          '&:hover': {
-                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                          },
-                          '&.Mui-focused': {
-                            border: '2px solid #4285f4',
-                            boxShadow: '0 4px 8px rgba(66,133,244,0.2)',
-                          }
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                  </Box>
-                </Box>
+                  </div>
+                </div>
 
                 {/* Seção: Localização */}
-                <Box sx={{ mb: 4 }}>
-                  <Typography 
-                    variant="h6" 
-                    sx={{ 
-                      fontWeight: 600, 
-                      mb: 3, 
-                      color: '#333',
-                      fontSize: '18px' 
-                    }}
-                  >
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Localização
-                  </Typography>
+                  </h3>
                   
                   {/* Primeira linha - CEP, Logradouro, Número */}
-                  <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr 1fr', 
-                    gap: 3, 
-                    mb: 3 
-                  }}>
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <CustomInput
                       label="CEP *"
                       value={contactFormData.cep}
-                      onChange={(e) => setContactFormData(prev => ({
-                        ...prev,
-                        cep: e.target.value
-                      }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
+                      onChange={handleCEPChange}
                     />
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                    <CustomInput
                       label="Logradouro *"
                       value={contactFormData.logradouro}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         logradouro: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                    <CustomInput
                       label="Número *"
                       value={contactFormData.numero}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         numero: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                  </Box>
+                  </div>
 
                   {/* Segunda linha - Complemento, Bairro, Estado */}
-                  <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 1fr 1fr', 
-                    gap: 3, 
-                    mb: 3 
-                  }}>
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <CustomInput
                       label="Complemento"
                       value={contactFormData.complemento}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         complemento: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                    <CustomInput
                       label="Bairro *"
                       value={contactFormData.bairro}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         bairro: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                    <FormControl variant="outlined" size="small">
-                      <InputLabel sx={{ 
-                        color: '#4285f4', 
-                        fontSize: '14px',
-                        fontWeight: 500 
-                      }}>
-                        Estado *
-                      </InputLabel>
-                      <Select
-                        value={contactFormData.estado}
-                        onChange={(e) => setContactFormData(prev => ({
-                          ...prev,
-                          estado: e.target.value
-                        }))}
-                        label="Estado *"
-                        displayEmpty
-                        MenuProps={{
-                          PaperProps: {
-                            sx: { zIndex: 1500 }
-                          }
-                        }}
-                        sx={{
-                          '& .MuiSelect-select': {
-                            color: contactFormData.estado ? '#333' : '#999',
-                            fontSize: '14px'
-                          },
-                          '& .MuiOutlinedInput-root': {
-                            borderRadius: '8px',
-                          }
-                        }}
-                      >
-                        <MenuItem value="">Selecione...</MenuItem>
-                        <MenuItem value="SP">São Paulo</MenuItem>
-                        <MenuItem value="RJ">Rio de Janeiro</MenuItem>
-                        <MenuItem value="MG">Minas Gerais</MenuItem>
-                        <MenuItem value="RS">Rio Grande do Sul</MenuItem>
-                        <MenuItem value="PR">Paraná</MenuItem>
-                        <MenuItem value="SC">Santa Catarina</MenuItem>
-                        <MenuItem value="GO">Goiás</MenuItem>
-                        <MenuItem value="MT">Mato Grosso</MenuItem>
-                        <MenuItem value="MS">Mato Grosso do Sul</MenuItem>
-                        <MenuItem value="BA">Bahia</MenuItem>
-                        <MenuItem value="PE">Pernambuco</MenuItem>
-                        <MenuItem value="CE">Ceará</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </Box>
+                    <CustomSelect
+                      label="Estado *"
+                      value={contactFormData.estado}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        estado: e.target.value
+                      }))}
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="SP">São Paulo</option>
+                      <option value="RJ">Rio de Janeiro</option>
+                      <option value="MG">Minas Gerais</option>
+                      <option value="RS">Rio Grande do Sul</option>
+                      <option value="PR">Paraná</option>
+                      <option value="SC">Santa Catarina</option>
+                      <option value="GO">Goiás</option>
+                      <option value="MT">Mato Grosso</option>
+                      <option value="MS">Mato Grosso do Sul</option>
+                      <option value="BA">Bahia</option>
+                      <option value="PE">Pernambuco</option>
+                      <option value="CE">Ceará</option>
+                    </CustomSelect>
+                  </div>
 
                   {/* Terceira linha - Cidade */}
-                  <Box sx={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: '1fr 2fr', 
-                    gap: 3 
-                  }}>
-                    <TextField
-                      variant="outlined"
-                      size="small"
+                  <div className="grid grid-cols-3 gap-4">
+                    <CustomInput
                       label="Cidade *"
                       value={contactFormData.cidade}
                       onChange={(e) => setContactFormData(prev => ({
                         ...prev,
                         cidade: e.target.value
                       }))}
-                      InputLabelProps={{
-                        sx: { 
-                          color: '#4285f4', 
-                          fontSize: '14px',
-                          fontWeight: 500 
-                        }
-                      }}
-                      sx={{
-                        '& .MuiOutlinedInput-root': {
-                          borderRadius: '8px',
-                        },
-                        '& .MuiInputBase-input': {
-                          fontSize: '14px'
-                        }
-                      }}
                     />
-                  </Box>
-                </Box>
+                  </div>
+                </div>
 
                 {/* Botões de ação */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'flex-end',
-                  gap: 2,
-                  pt: 3,
-                  borderTop: '1px solid #eee'
-                }}>
-                  <Button
-                    variant="outlined"
+                <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
                     onClick={() => setContactModalOpen(false)}
-                    sx={{
-                      color: '#666',
-                      borderColor: '#ddd',
-                      textTransform: 'none',
-                      px: 3,
-                      py: 1,
-                      fontSize: '14px',
-                      borderRadius: '8px',
-                      '&:hover': {
-                        borderColor: '#999',
-                        backgroundColor: '#f5f5f5'
-                      }
-                    }}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                   >
                     Cancelar
-                  </Button>
-                  <Button
-                    variant="contained"
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => {
                       console.log('Salvando contato:', contactFormData);
                       // Reset form
@@ -1119,27 +735,16 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       });
                       setContactModalOpen(false);
                     }}
-                    sx={{
-                      backgroundColor: '#4285f4',
-                      textTransform: 'none',
-                      px: 3,
-                      py: 1,
-                      fontSize: '14px',
-                      fontWeight: 600,
-                      borderRadius: '8px',
-                      '&:hover': {
-                        backgroundColor: '#3367d6',
-                      }
-                    }}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium"
                   >
                     Salvar Contato
-                  </Button>
-                </Box>
-              </CardContent>
-            </Card>
-          </Box>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
-    </Box>
+    </div>
   );
 }
