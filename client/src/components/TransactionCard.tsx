@@ -588,7 +588,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     <FormControl 
                       variant="outlined" 
                       size="small"
-                      sx={{ minWidth: 300, flexGrow: 1 }}
+                      sx={{ minWidth: 250, maxWidth: 300 }}
                     >
                       <InputLabel sx={{ 
                         color: '#4285f4', 
@@ -672,10 +672,30 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       size="small"
                       label="CPF/CNPJ *"
                       value={contactFormData.cpfCnpj}
-                      onChange={(e) => setContactFormData(prev => ({
-                        ...prev,
-                        cpfCnpj: e.target.value
-                      }))}
+                      onChange={(e) => {
+                        const value = e.target.value.replace(/\D/g, '');
+                        let formatted = '';
+                        
+                        if (value.length <= 11) {
+                          // CPF format: 123.456.789-01
+                          formatted = value
+                            .replace(/(\d{3})(\d)/, '$1.$2')
+                            .replace(/(\d{3})(\d)/, '$1.$2')
+                            .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                        } else {
+                          // CNPJ format: 12.345.678/0001-90
+                          formatted = value
+                            .replace(/(\d{2})(\d)/, '$1.$2')
+                            .replace(/(\d{3})(\d)/, '$1.$2')
+                            .replace(/(\d{3})(\d)/, '$1/$2')
+                            .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+                        }
+                        
+                        setContactFormData(prev => ({
+                          ...prev,
+                          cpfCnpj: formatted
+                        }));
+                      }}
                       InputLabelProps={{
                         sx: { 
                           color: '#4285f4', 
