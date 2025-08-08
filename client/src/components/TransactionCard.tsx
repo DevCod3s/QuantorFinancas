@@ -536,8 +536,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         </CardContent>
       </Card>
       
-      {/* Modal de Adicionar Contato */}
-      <Dialog
+      {/* Modal de Adicionar Contato - Usando mesmo padrão do wizard de relacionamento */}
+      <Dialog 
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
         maxWidth="md"
@@ -545,298 +545,313 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         PaperProps={{
           sx: {
             borderRadius: 2,
-            maxWidth: '600px'
+            maxHeight: '90vh'
           }
         }}
       >
-        <DialogContent sx={{ p: 0 }}>
-          <Card sx={{ boxShadow: 'none' }}>
-            <CardContent sx={{ p: 4 }}>
-              {/* Título */}
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
-                Tipo de relacionamento
-              </Typography>
-              
-              {/* Tipo de relacionamento com botão + */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 4 }}>
-                <FormControl fullWidth variant="outlined" size="small">
-                  <InputLabel sx={{ color: '#1976d2', fontSize: '14px' }}>
-                    Selecione o tipo de relacionamento *
-                  </InputLabel>
-                  <Select
-                    value={contactFormData.tipoRelacionamento}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      tipoRelacionamento: e.target.value
-                    }))}
-                    label="Selecione o tipo de relacionamento *"
-                    displayEmpty
+        <DialogContent sx={{ p: 0, overflow: 'hidden' }}>
+          <Card sx={{ 
+            boxShadow: 'none', 
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            minHeight: '500px'
+          }}>
+            <CardContent sx={{ 
+              p: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              height: '100%',
+              position: 'relative'
+            }}>
+              {/* Header com gradiente */}
+              <Box sx={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                p: 3,
+                color: 'white',
+                textAlign: 'center'
+              }}>
+                <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                  Adicionar Novo Contato
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                  Preencha as informações do relacionamento
+                </Typography>
+              </Box>
+
+              {/* Conteúdo do formulário com fundo branco */}
+              <Box sx={{ 
+                flex: 1,
+                backgroundColor: 'white',
+                p: 4,
+                borderRadius: '20px 20px 0 0',
+                mt: -2,
+                position: 'relative',
+                zIndex: 1
+              }}>
+                {/* Tipo de relacionamento */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: '#333' }}>
+                    Tipo de relacionamento
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel sx={{ color: '#1976d2', fontSize: '14px' }}>
+                        Selecione o tipo de relacionamento *
+                      </InputLabel>
+                      <Select
+                        value={contactFormData.tipoRelacionamento}
+                        onChange={(e) => setContactFormData(prev => ({
+                          ...prev,
+                          tipoRelacionamento: e.target.value
+                        }))}
+                        label="Selecione o tipo de relacionamento *"
+                        sx={{
+                          '& .MuiSelect-select': {
+                            color: contactFormData.tipoRelacionamento ? '#000' : '#999',
+                          }
+                        }}
+                      >
+                        <MenuItem value="" sx={{ color: '#999' }}>Selecione...</MenuItem>
+                        <MenuItem value="cliente">Cliente</MenuItem>
+                        <MenuItem value="fornecedor">Fornecedor</MenuItem>
+                        <MenuItem value="funcionario">Funcionário</MenuItem>
+                        <MenuItem value="parceiro">Parceiro</MenuItem>
+                      </Select>
+                    </FormControl>
+                    <IconButton 
+                      sx={{ 
+                        border: '2px solid #1976d2',
+                        color: '#1976d2',
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1
+                      }}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </IconButton>
+                  </Box>
+                </Box>
+
+                {/* Informação básica */}
+                <Box sx={{ mb: 3 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: '#333' }}>
+                    Informação básica
+                  </Typography>
+                  
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
+                    <TextField
+                      size="small"
+                      label="CPF/CNPJ *"
+                      value={contactFormData.cpfCnpj}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        cpfCnpj: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Razão social *"
+                      value={contactFormData.razaoSocial}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        razaoSocial: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Inscrição estadual *"
+                      value={contactFormData.inscricaoEstadual}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        inscricaoEstadual: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Localização */}
+                <Box sx={{ mb: 4 }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 500, color: '#333' }}>
+                    Localização
+                  </Typography>
+                  
+                  {/* Primeira linha */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
+                    <TextField
+                      size="small"
+                      label="CEP *"
+                      value={contactFormData.cep}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        cep: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Logradouro *"
+                      value={contactFormData.logradouro}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        logradouro: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Número *"
+                      value={contactFormData.numero}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        numero: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                  </Box>
+
+                  {/* Segunda linha */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
+                    <TextField
+                      size="small"
+                      label="Complemento"
+                      value={contactFormData.complemento}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        complemento: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                    <TextField
+                      size="small"
+                      label="Bairro *"
+                      value={contactFormData.bairro}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        bairro: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                    <FormControl size="small">
+                      <InputLabel sx={{ color: '#1976d2', fontSize: '14px' }}>
+                        Estado *
+                      </InputLabel>
+                      <Select
+                        value={contactFormData.estado}
+                        onChange={(e) => setContactFormData(prev => ({
+                          ...prev,
+                          estado: e.target.value
+                        }))}
+                        label="Estado *"
+                        sx={{
+                          '& .MuiSelect-select': {
+                            color: contactFormData.estado ? '#000' : '#999',
+                          }
+                        }}
+                      >
+                        <MenuItem value="" sx={{ color: '#999' }}>Selecione...</MenuItem>
+                        <MenuItem value="SP">São Paulo</MenuItem>
+                        <MenuItem value="RJ">Rio de Janeiro</MenuItem>
+                        <MenuItem value="MG">Minas Gerais</MenuItem>
+                        <MenuItem value="RS">Rio Grande do Sul</MenuItem>
+                        <MenuItem value="PR">Paraná</MenuItem>
+                        <MenuItem value="SC">Santa Catarina</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Box>
+
+                  {/* Terceira linha - Cidade */}
+                  <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 2 }}>
+                    <TextField
+                      size="small"
+                      label="Cidade *"
+                      value={contactFormData.cidade}
+                      onChange={(e) => setContactFormData(prev => ({
+                        ...prev,
+                        cidade: e.target.value
+                      }))}
+                      InputLabelProps={{
+                        sx: { color: '#1976d2', fontSize: '14px' }
+                      }}
+                    />
+                  </Box>
+                </Box>
+
+                {/* Botões de ação */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  pt: 2,
+                  borderTop: '1px solid #eee'
+                }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => setContactModalOpen(false)}
                     sx={{
-                      '& .MuiSelect-select': {
-                        color: contactFormData.tipoRelacionamento ? '#000' : '#999',
+                      color: '#666',
+                      borderColor: '#ddd',
+                      textTransform: 'none',
+                      px: 3,
+                      '&:hover': {
+                        borderColor: '#999',
+                        backgroundColor: '#f5f5f5'
                       }
                     }}
                   >
-                    <MenuItem value="" sx={{ color: '#999' }}>Selecione...</MenuItem>
-                    <MenuItem value="cliente">Cliente</MenuItem>
-                    <MenuItem value="fornecedor">Fornecedor</MenuItem>
-                    <MenuItem value="funcionario">Funcionário</MenuItem>
-                    <MenuItem value="parceiro">Parceiro</MenuItem>
-                  </Select>
-                </FormControl>
-                <IconButton 
-                  sx={{ 
-                    border: '2px solid #1976d2',
-                    color: '#1976d2',
-                    width: 40,
-                    height: 40,
-                    borderRadius: 1
-                  }}
-                  onClick={() => {/* Adicionar novo tipo */}}
-                >
-                  <Plus className="h-4 w-4" />
-                </IconButton>
-              </Box>
-
-              {/* Informação básica */}
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
-                Informação básica
-              </Typography>
-
-              {/* Primeira linha - CPF/CNPJ, Razão Social, Inscrição Estadual */}
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="CPF/CNPJ *"
-                    value={contactFormData.cpfCnpj}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      cpfCnpj: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      console.log('Salvando contato:', contactFormData);
+                      // Reset form
+                      setContactFormData({
+                        tipoRelacionamento: '',
+                        cpfCnpj: '',
+                        razaoSocial: '',
+                        inscricaoEstadual: '',
+                        cep: '',
+                        logradouro: '',
+                        numero: '',
+                        complemento: '',
+                        bairro: '',
+                        cidade: '',
+                        estado: ''
+                      });
+                      setContactModalOpen(false);
                     }}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Razão social *"
-                    value={contactFormData.razaoSocial}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      razaoSocial: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      textTransform: 'none',
+                      px: 3,
+                      fontWeight: 600,
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%)',
+                      }
                     }}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Inscrição estadual *"
-                    value={contactFormData.inscricaoEstadual}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      inscricaoEstadual: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-              </Grid>
-
-              {/* Localização */}
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 500 }}>
-                Localização
-              </Typography>
-
-              {/* Segunda linha - CEP, Logradouro, Número */}
-              <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="CEP *"
-                    value={contactFormData.cep}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      cep: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Logradouro *"
-                    value={contactFormData.logradouro}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      logradouro: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Número *"
-                    value={contactFormData.numero}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      numero: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-              </Grid>
-
-              {/* Terceira linha - Complemento, Bairro, Estado */}
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Complemento"
-                    value={contactFormData.complemento}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      complemento: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Bairro *"
-                    value={contactFormData.bairro}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      bairro: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <FormControl fullWidth variant="outlined" size="small">
-                    <InputLabel sx={{ color: '#1976d2', fontSize: '14px' }}>
-                      Estado *
-                    </InputLabel>
-                    <Select
-                      value={contactFormData.estado}
-                      onChange={(e) => setContactFormData(prev => ({
-                        ...prev,
-                        estado: e.target.value
-                      }))}
-                      label="Estado *"
-                      displayEmpty
-                      sx={{
-                        '& .MuiSelect-select': {
-                          color: contactFormData.estado ? '#000' : '#999',
-                        }
-                      }}
-                    >
-                      <MenuItem value="" sx={{ color: '#999' }}>Selecione...</MenuItem>
-                      <MenuItem value="SP">São Paulo</MenuItem>
-                      <MenuItem value="RJ">Rio de Janeiro</MenuItem>
-                      <MenuItem value="MG">Minas Gerais</MenuItem>
-                      <MenuItem value="RS">Rio Grande do Sul</MenuItem>
-                      <MenuItem value="PR">Paraná</MenuItem>
-                      <MenuItem value="SC">Santa Catarina</MenuItem>
-                      <MenuItem value="GO">Goiás</MenuItem>
-                      <MenuItem value="MT">Mato Grosso</MenuItem>
-                      <MenuItem value="MS">Mato Grosso do Sul</MenuItem>
-                      <MenuItem value="BA">Bahia</MenuItem>
-                      <MenuItem value="PE">Pernambuco</MenuItem>
-                      <MenuItem value="CE">Ceará</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-
-              {/* Quarta linha - Cidade */}
-              <Grid container spacing={2} sx={{ mb: 4 }}>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth
-                    variant="outlined"
-                    size="small"
-                    label="Cidade *"
-                    value={contactFormData.cidade}
-                    onChange={(e) => setContactFormData(prev => ({
-                      ...prev,
-                      cidade: e.target.value
-                    }))}
-                    InputLabelProps={{
-                      sx: { color: '#1976d2', fontSize: '14px' }
-                    }}
-                  />
-                </Grid>
-              </Grid>
-
-              {/* Botões de ação */}
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-                <Button
-                  variant="outlined"
-                  onClick={() => setContactModalOpen(false)}
-                  sx={{
-                    color: '#666',
-                    borderColor: '#ddd',
-                    textTransform: 'none',
-                    '&:hover': {
-                      borderColor: '#999',
-                      backgroundColor: '#f5f5f5'
-                    }
-                  }}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={() => {
-                    // Aqui você adicionaria a lógica para salvar o contato
-                    console.log('Salvando contato:', contactFormData);
-                    setContactModalOpen(false);
-                  }}
-                  sx={{
-                    backgroundColor: '#1976d2',
-                    textTransform: 'none',
-                    '&:hover': {
-                      backgroundColor: '#1565c0'
-                    }
-                  }}
-                >
-                  Salvar Contato
-                </Button>
+                  >
+                    Salvar Contato
+                  </Button>
+                </Box>
               </Box>
             </CardContent>
           </Card>
