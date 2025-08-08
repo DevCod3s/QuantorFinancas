@@ -542,14 +542,20 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         onClose={() => setContactModalOpen(false)}
         maxWidth="lg"
         fullWidth
+        disableEscapeKeyDown={false}
         PaperProps={{
           sx: {
             borderRadius: 2,
-            maxHeight: '90vh'
+            maxHeight: '90vh',
+            zIndex: 1400
           }
         }}
+        sx={{ zIndex: 1300 }}
       >
-        <DialogContent sx={{ p: 0, overflow: 'hidden' }}>
+        <DialogContent 
+          sx={{ p: 0, overflow: 'hidden' }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <Box sx={{
             backgroundColor: '#f8f9fa',
             p: 3,
@@ -599,6 +605,11 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         }))}
                         label="Selecione o tipo de relacionamento *"
                         displayEmpty
+                        MenuProps={{
+                          PaperProps: {
+                            sx: { zIndex: 1500 }
+                          }
+                        }}
                         sx={{
                           '& .MuiSelect-select': {
                             color: contactFormData.tipoRelacionamento ? '#333' : '#999',
@@ -905,6 +916,11 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         }))}
                         label="Estado *"
                         displayEmpty
+                        MenuProps={{
+                          PaperProps: {
+                            sx: { zIndex: 1500 }
+                          }
+                        }}
                         sx={{
                           '& .MuiSelect-select': {
                             color: contactFormData.estado ? '#333' : '#999',
