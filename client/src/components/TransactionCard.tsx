@@ -223,34 +223,18 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   if (!open) return null;
 
   return (
-    <Box
+    <Card
       sx={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1300,
-        p: 2
+        width: '100%',
+        maxWidth: '800px',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+        borderRadius: 3,
+        border: '1px solid #e0e0e0',
+        margin: '0 auto'
       }}
-      onClick={onClose}
     >
-      <Card
-        onClick={(e) => e.stopPropagation()}
-        sx={{
-          width: '100%',
-          maxWidth: '800px',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-          borderRadius: 3,
-          border: '1px solid #e0e0e0'
-        }}
-      >
         {/* Cabeçalho */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3, borderBottom: '1px solid #e0e0e0' }}>
           <FormControl variant="standard" sx={{ minWidth: 150 }}>
@@ -528,15 +512,14 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             </Box>
           </Box>
         </CardContent>
-      </Card>
-      
-      {/* Modal de Adicionar Contato usando componentes customizados APENAS AQUI */}
-      <Dialog 
-        open={contactModalOpen}
-        onClose={() => setContactModalOpen(false)}
-        maxWidth="lg"
-        fullWidth
-      >
+        
+        {/* Modal de Adicionar Contato usando componentes customizados APENAS AQUI */}
+        <Dialog 
+          open={contactModalOpen}
+          onClose={() => setContactModalOpen(false)}
+          maxWidth="lg"
+          fullWidth
+        >
         <DialogContent className="p-0 overflow-hidden" onClick={(e) => e.stopPropagation()}>
           <div className="bg-gray-50 p-6 min-h-[600px]">
             <div className="max-w-4xl mx-auto rounded-xl shadow-2xl bg-white">
@@ -743,6 +726,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           </div>
         </DialogContent>
       </Dialog>
-    </Box>
+    </Card>
   );
 }
