@@ -230,7 +230,11 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
         zIndex: 1300,
         p: 2
       }}
-      onClick={onClose}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <Card
         onClick={(e) => e.stopPropagation()}
