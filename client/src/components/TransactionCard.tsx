@@ -22,9 +22,8 @@ import {
   Box,
   Dialog,
   DialogContent,
-  Typography,
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, CreditCard, Users, Building2, BookOpen, Settings } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
@@ -70,7 +69,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     estado: ''
   });
 
-  // Função para buscar dados de CNPJ (mesma lógica do wizard)
+  // Função para buscar dados de CNPJ
   const fetchCNPJData = async (cnpj: string) => {
     const cleanCnpj = cnpj.replace(/\D/g, '');
     
@@ -79,7 +78,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
       if (response.ok) {
         const data = await response.json();
         
-        // Processar CEP
         const cep = data.cep || '';
         const cleanCep = cep.replace(/\D/g, '');
         const formattedCep = cleanCep.length === 8 ? 
@@ -97,7 +95,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           estado: data.uf || data.estado || ''
         }));
         
-        // Se CEP válido mas dados incompletos, buscar via ViaCEP
         const hasCompleteAddress = data.logradouro && data.bairro && data.municipio;
         if (cleanCep.length === 8 && !hasCompleteAddress) {
           await fetchCEPData(cleanCep);
@@ -108,7 +105,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     }
   };
 
-  // Função para buscar dados de CEP (mesma lógica do wizard)
+  // Função para buscar dados de CEP
   const fetchCEPData = async (cep: string) => {
     const cleanCep = cep.replace(/\D/g, '');
     if (cleanCep.length !== 8) return;
@@ -132,7 +129,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     }
   };
 
-  // Função para tratar mudança no CEP (mesma lógica do wizard)
+  // Função para tratar mudança no CEP
   const handleCEPChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
     const numbersOnly = rawValue.replace(/\D/g, '');
@@ -148,31 +145,30 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
       cep: formatted
     }));
     
-    // Se CEP completo, buscar endereço
     if (limitedNumbers.length === 8) {
       fetchCEPData(limitedNumbers);
     }
   };
 
-  // Função para buscar dados de relacionamentos
+  // Buscar dados de relacionamentos
   const { data: relationships = [] } = useQuery({
     queryKey: ['/api/relationships'],
     queryFn: () => fetch('/api/relationships').then(res => res.json())
   });
 
-  // Função para buscar dados de contas bancárias  
+  // Buscar dados de contas bancárias  
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ['/api/bank-accounts'],
     queryFn: () => fetch('/api/bank-accounts').then(res => res.json())
   });
 
-  // Função para buscar dados do plano de contas
+  // Buscar dados do plano de contas
   const { data: chartOfAccounts = [] } = useQuery({
     queryKey: ['/api/chart-accounts'],
     queryFn: () => fetch('/api/chart-accounts').then(res => res.json())
   });
 
-  // Filtragem de contas por tipo (receita ou despesa)
+  // Filtragem de contas por tipo
   const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
     if (tipo.includes('receita')) return account.type === 'RECEITA';
     if (tipo.includes('despesa')) return account.type === 'DESPESA';
@@ -182,11 +178,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   // Formatação de valor monetário
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-    // Remove tudo exceto números
     value = value.replace(/\D/g, '');
-    // Converte para número e divide por 100 para casas decimais
     const number = parseInt(value) / 100;
-    // Formata como moeda brasileira
     if (value === '') {
       setValor('');
     } else {
@@ -369,7 +362,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               <IconButton 
                 size="small" 
                 sx={{ mb: 0.5, color: '#1976d2' }}
-                onClick={() => {/* Função para adicionar conta bancária */}}
               >
                 <CreditCard className="h-4 w-4" />
               </IconButton>
@@ -390,7 +382,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               <IconButton 
                 size="small" 
                 sx={{ mb: 0.5, color: '#1976d2' }}
-                onClick={() => {/* Função para adicionar categoria */}}
               >
                 <Settings className="h-4 w-4" />
               </IconButton>
@@ -464,7 +455,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             <IconButton 
               size="small" 
               sx={{ mb: 0.5, color: '#1976d2' }}
-              onClick={() => {/* Função para adicionar plano de contas */}}
             >
               <BookOpen className="h-4 w-4" />
             </IconButton>
@@ -528,11 +518,19 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             </Box>
           </Box>
         </CardContent>
-        
-        {/* Modal de Adicionar Contato usando componentes customizados APENAS AQUI */}
-        {contactModalOpen && (
-          <div className="max-w-4xl mx-auto rounded-xl shadow-2xl bg-white">
-            <div className="p-6 space-y-6">
+      </Card>
+      
+      {/* Modal de Adicionar Contato */}
+      <Dialog 
+        open={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogContent className="p-0 overflow-hidden">
+          <div className="bg-gray-50 p-6 min-h-[600px]">
+            <div className="max-w-4xl mx-auto rounded-xl shadow-2xl bg-white">
+              <div className="p-6 space-y-6">
                 {/* Seção: Tipo de relacionamento */}
                 <div>
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -584,7 +582,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                           cpfCnpj: value
                         }));
                         
-                        // Auto-preenchimento se CNPJ válido
                         if (isValid && type === 'CNPJ') {
                           fetchCNPJData(value);
                         }
@@ -616,7 +613,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     Localização
                   </h3>
                   
-                  {/* Primeira linha - CEP, Logradouro, Número */}
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <CustomInput
                       label="CEP *"
@@ -641,7 +637,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     />
                   </div>
 
-                  {/* Segunda linha - Complemento, Bairro, Estado */}
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <CustomInput
                       label="Complemento"
@@ -683,7 +678,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     </CustomSelect>
                   </div>
 
-                  {/* Terceira linha - Cidade */}
                   <div className="grid grid-cols-3 gap-4">
                     <CustomInput
                       label="Cidade *"
@@ -709,7 +703,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     type="button"
                     onClick={() => {
                       console.log('Salvando contato:', contactFormData);
-                      // Reset form
                       setContactFormData({
                         tipoRelacionamento: '',
                         cpfCnpj: '',
@@ -732,8 +725,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 </div>
               </div>
             </div>
-        )}
-      </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }
