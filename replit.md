@@ -61,6 +61,13 @@ Quantor's architecture is built on a robust and scalable stack, emphasizing mode
 
 ## Recent Updates
 
+- **Modal de Contato Implementado no TransactionCard** (Janeiro 2025)
+    • **Componentes Customizados**: Integração completa com CustomInput, CustomSelect, e CpfCnpjInput
+    • **Auto-preenchimento**: Busca automática de dados CNPJ via BrasilAPI e CEP via ViaCEP
+    • **Layout Profissional**: Modal em 3 colunas com sombreamento conforme design fornecido
+    • **Bug de Evento Corrigido**: Resolvido problema que fechava modal ao clicar nos campos
+    • **Funcionalidade Completa**: Modal de contato funcional sem afetar formulário principal de transação
+
 - **Otimização Completa do Wizard de Relacionamento**: Melhorias na navegação e nomenclatura (Janeiro 2025)
     • **Botões Duplicados Corrigidos**: Eliminados dois botões "Anterior" e "Voltar" duplicados na etapa 2
     • **Lógica Inteligente**: Botão único que funciona como "Voltar" na etapa 1 e "Anterior" nas demais
