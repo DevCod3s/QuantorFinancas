@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -79,6 +79,20 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
 
   const selectedType = form.watch('type');
   
+  // Filtrar contas do plano baseado no tipo selecionado (receita/despesa)
+  const filteredChartAccounts = chartAccounts?.filter(account => {
+    if (!selectedType) return true; // Se não selecionou tipo, mostrar todas
+    
+    // Normalizar os tipos para comparação
+    const accountType = account.type?.toLowerCase();
+    const selectedTypeLower = selectedType.toLowerCase();
+    
+    // Verificar variações do tipo (receita/receitas, despesa/despesas)
+    return accountType === selectedTypeLower || 
+           accountType === selectedTypeLower + 's' ||
+           accountType === selectedTypeLower.slice(0, -1); // Remove 's' final se houver
+  }) || [];
+  
   // Limpar chartAccountId apenas quando o tipo muda e a seleção atual fica inválida
   const previousTypeRef = useRef(selectedType);
   useEffect(() => {
@@ -93,20 +107,6 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
     }
     previousTypeRef.current = selectedType;
   }, [selectedType, form, chartAccounts, filteredChartAccounts]);
-  
-  // Filtrar contas do plano baseado no tipo selecionado (receita/despesa)
-  const filteredChartAccounts = chartAccounts?.filter(account => {
-    if (!selectedType) return true; // Se não selecionou tipo, mostrar todas
-    
-    // Normalizar os tipos para comparação
-    const accountType = account.type?.toLowerCase();
-    const selectedTypeLower = selectedType.toLowerCase();
-    
-    // Verificar variações do tipo (receita/receitas, despesa/despesas)
-    return accountType === selectedTypeLower || 
-           accountType === selectedTypeLower + 's' ||
-           accountType === selectedTypeLower.slice(0, -1); // Remove 's' final se houver
-  }) || [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

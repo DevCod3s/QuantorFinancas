@@ -59,7 +59,7 @@ import { ptBR } from "date-fns/locale";
 import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import { TransactionCard } from "@/components/TransactionCard";
+import TransactionForm from "@/components/transactions/transaction-form";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -2106,13 +2106,12 @@ export function Transactions() {
       </Tabs>
 
       {/* Card de Nova Transação */}
-      <TransactionCard
+      <TransactionForm
         open={transactionModalOpen}
         onClose={() => {
           console.log("Closing transaction modal");
           setTransactionModalOpen(false);
         }}
-        onSave={handleSaveTransaction}
       />
 
       {/* Modal de Conta Bancária */}
