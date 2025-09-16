@@ -75,3 +75,10 @@ Quantor's architecture is built on a robust and scalable stack, emphasizing mode
     • **Navegação Sempre Habilitada**: Botão "Próximo" sempre ativo na etapa 2 - usuário pode pular geração
     • **Validação Flexível**: Etapa 2 sempre válida permitindo fluxo contínuo sem obrigatoriedade
     • **UX Aprimorada**: Interface mais intuitiva com navegação fluida e sem bloqueios desnecessários
+
+- **Sistema de Códigos Hierárquicos do Plano de Contas Implementado** (Janeiro 2025)
+    • **Hierarquia Perfeita**: Nível 1 (1, 2, 3...), Nível 2 (1.1, 1.2, 2.1...), Nível 3 (1.1.1, 1.1.2...), Nível 4 (1.1.1.1...)
+    • **Vinculação Pai-Filho Corrigida**: Contas filhas corretamente vinculadas às contas pai através de parent_id
+    • **Geração Automática**: Códigos hierárquicos gerados automaticamente seguindo sequência lógica
+    • **Invalidação de Cache Melhorada**: Sistema de cache atualizado com refetchQueries() para dados sempre atualizados
+    • **Estrutura Limpa**: Remoção de contas órfãs e dados inconsistentes do banco
