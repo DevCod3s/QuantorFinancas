@@ -2622,16 +2622,28 @@ function ChartOfAccountsContent({
         acc.type === categoriaMapping.type && acc.level === 1
       );
       
-      // Se não encontrar categoria principal, usar mapeamento automático
+      // GARANTIR vinculação pai-filho correta
       if (!parentAccount) {
-        // A categoria principal será criada automaticamente pelo backend se necessário
-        // Para agora, usar o código correto baseado no tipo
-        parentId = null; // Backend vai criar a estrutura
-        type = categoriaMapping.type;
-      } else {
-        parentId = parentAccount.id;
-        type = parentAccount.type;
+        // Buscar por nome similar se não encontrar por tipo
+        parentAccount = safeChartAccountsData?.find(acc => 
+          acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
+        );
+        
+        // Se ainda não encontrar, buscar categorias compatíveis existentes
+        if (!parentAccount) {
+          const categoriasCompatíveis = ['receitas', 'receita', 'despesas', 'despesa', 'ativos', 'ativo', 'passivos', 'passivo'];
+          parentAccount = safeChartAccountsData?.find(acc => 
+            acc.level === 1 && (
+              categoriasCompatíveis.some(cat => 
+                acc.name.toLowerCase().includes(cat) || acc.type.toLowerCase().includes(cat)
+              ) && acc.type === categoriaMapping.type
+            )
+          );
+        }
       }
+      
+      parentId = parentAccount ? parentAccount.id : null;
+      type = parentAccount ? parentAccount.type : categoriaMapping.type;
       category = formData.nome;
     } else {
       // NÍVEL 1: Só "Nome" preenchido - categoria principal
@@ -2797,16 +2809,28 @@ function ChartOfAccountsContent({
         acc.type === categoriaMapping.type && acc.level === 1
       );
       
-      // Se não encontrar categoria principal, usar mapeamento automático
+      // GARANTIR vinculação pai-filho correta
       if (!parentAccount) {
-        // A categoria principal será criada automaticamente pelo backend se necessário
-        // Para agora, usar o código correto baseado no tipo
-        parentId = null; // Backend vai criar a estrutura
-        type = categoriaMapping.type;
-      } else {
-        parentId = parentAccount.id;
-        type = parentAccount.type;
+        // Buscar por nome similar se não encontrar por tipo
+        parentAccount = safeChartAccountsData?.find(acc => 
+          acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
+        );
+        
+        // Se ainda não encontrar, buscar categorias compatíveis existentes
+        if (!parentAccount) {
+          const categoriasCompatíveis = ['receitas', 'receita', 'despesas', 'despesa', 'ativos', 'ativo', 'passivos', 'passivo'];
+          parentAccount = safeChartAccountsData?.find(acc => 
+            acc.level === 1 && (
+              categoriasCompatíveis.some(cat => 
+                acc.name.toLowerCase().includes(cat) || acc.type.toLowerCase().includes(cat)
+              ) && acc.type === categoriaMapping.type
+            )
+          );
+        }
       }
+      
+      parentId = parentAccount ? parentAccount.id : null;
+      type = parentAccount ? parentAccount.type : categoriaMapping.type;
       category = formData.nome;
     } else {
       // NÍVEL 1: Só "Nome" preenchido - categoria principal
