@@ -2390,7 +2390,9 @@ function ChartOfAccountsContent({
       return response.json();
     },
     onSuccess: () => {
+      // Forçar atualização completa do cache
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
+      queryClient.refetchQueries({ queryKey: ['/api/chart-accounts'] });
     },
   });
 
