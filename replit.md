@@ -5,7 +5,7 @@ Quantor is a modern web-based financial management system integrated with artifi
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
-Always communicate in Portuguese.
+**SEMPRE COMUNICAR EM PORTUGUÊS BRASILEIRO** - Toda interação deve ser em português do Brasil para facilitar o entendimento.
 Extremely detail-oriented with visual precision - requires exact alignment and positioning for UI elements.
 **CRITÉRIO OBRIGATÓRIO**: Ser extremamente atento nas criações - verificar sempre se a implementação está exatamente conforme solicitado, sem conflitos, modais duplicados ou elementos indesejados. Revisar cuidadosamente antes de apresentar qualquer resultado.
 
