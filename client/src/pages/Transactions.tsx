@@ -2344,13 +2344,14 @@ function ChartOfAccountsContent({
 }: { 
   isModalOpen: boolean, 
   setIsModalOpen: (open: boolean) => void,
-  showSuccess: (title: string, message?: string) => void,
-  showError: (title: string, message?: string) => void,
+  showSuccess: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
+  showError: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showConfirm: (title: string, message: string, onConfirm: () => void) => void,
   SuccessDialog: React.ComponentType,
   ErrorDialog: React.ComponentType,
   ConfirmDialog: React.ComponentType
 }) {
+  const queryClient = useQueryClient();
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
   
@@ -2562,11 +2563,11 @@ function ChartOfAccountsContent({
     };
 
     // LÓGICA HIERÁRQUICA CORRETA DO PLANO DE CONTAS
-    let level = 1;
-    let parentId = null;
-    let category = null;
-    let subcategory = null;
-    let type = formData.nome.toLowerCase();
+    let level: number = 1;
+    let parentId: number | null = null;
+    let category: string | null = null;
+    let subcategory: string | null = null;
+    let type: string = formData.nome.toLowerCase();
 
     // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS
     const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
@@ -2758,11 +2759,11 @@ function ChartOfAccountsContent({
     };
 
     // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO (Mesma lógica de handleSaveAccount)
-    let level = 1;
-    let parentId = null;
-    let category = null;
-    let subcategory = null;
-    let type = formData.nome.toLowerCase();
+    let level: number = 1;
+    let parentId: number | null = null;
+    let category: string | null = null;
+    let subcategory: string | null = null;
+    let type: string = formData.nome.toLowerCase();
 
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
