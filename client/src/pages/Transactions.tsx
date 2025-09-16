@@ -411,11 +411,6 @@ export function Transactions() {
     setChartAccountModalOpen(true);
   };
 
-  const handleDeleteAccount = (account: any) => {
-    if (window.confirm(`Tem certeza que deseja excluir a conta "${account.name}"?`)) {
-      deleteAccountMutation.mutate(account.id);
-    }
-  };
 
   // Função para salvar conta (criar ou editar)
   const handleSaveAccount = () => {
@@ -2854,18 +2849,25 @@ function ChartOfAccountsContent({
   };
 
   const handleDeleteAccount = async (accountId: string) => {
+    // Previne cliques duplos verificando se já há uma operação em andamento
+    if (deleteAccountMutation.isPending) {
+      return;
+    }
+    
     showConfirm(
       "Confirmar Exclusão",
       "Tem certeza que deseja excluir esta conta?",
       async () => {
         try {
           await deleteAccountMutation.mutateAsync(accountId);
+          showSuccess("Conta excluída", "A conta foi excluída com sucesso.");
         } catch (error) {
           console.error('Erro ao excluir conta:', error);
+          // O erro já é tratado pela mutation através do onError
         }
       }
     );
-  };;
+  };
 
   // Função para salvar conta (compatibilidade)
   const handleSave = (continueAdding = false) => {
@@ -3022,10 +3024,16 @@ function ChartOfAccountsContent({
                         </button>
                         <button 
                           onClick={() => handleDeleteAccount(account.id.toString())}
-                          className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-100 rounded transition-colors"
-                          title="Excluir conta"
+                          disabled={deleteAccountMutation.isPending}
+                          className={`p-1.5 rounded transition-colors ${
+                            deleteAccountMutation.isPending 
+                              ? 'text-gray-400 cursor-not-allowed bg-gray-100' 
+                              : 'text-red-600 hover:text-red-900 hover:bg-red-100'
+                          }`}
+                          title={deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta"}
+                          data-testid={`button-delete-account-${account.id}`}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className={`h-4 w-4 ${deleteAccountMutation.isPending ? 'animate-pulse' : ''}`} />
                         </button>
                       </div>
                     </td>
