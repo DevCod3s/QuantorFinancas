@@ -46,7 +46,7 @@ const router = Router();
  */
 const requireAuth = (req: any, res: any, next: any) => {
   if (!req.user) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ error: "Não autorizado" });
   }
   next();
 };
@@ -68,8 +68,8 @@ router.get("/login", (req, res) => {
     const loginUrl = getLoginUrl();
     res.redirect(loginUrl);
   } catch (error) {
-    console.error("Login error:", error);
-    res.status(500).json({ error: "Failed to initialize login" });
+    console.error("Erro de login:", error);
+    res.status(500).json({ error: "Falhou ao inicializar login" });
   }
 });
 
@@ -98,7 +98,7 @@ router.get("/auth/user", (req: any, res) => {
   if (req.user) {
     res.json(req.user);
   } else {
-    res.status(401).json({ error: "Not authenticated" });
+    res.status(401).json({ error: "Não autenticado" });
   }
 });
 
@@ -131,7 +131,7 @@ router.post("/auth/login", async (req: any, res) => {
     
     res.json({ success: true, user });
   } catch (error) {
-    console.error("Login error:", error);
+    console.error("Erro de login:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
@@ -155,8 +155,8 @@ router.get("/dashboard", requireAuth, async (req: any, res) => {
     const stats = await storage.getDashboardStats(req.user.id);
     res.json(stats);
   } catch (error) {
-    console.error("Dashboard error:", error);
-    res.status(500).json({ error: "Failed to fetch dashboard data" });
+    console.error("Erro do painel:", error);
+    res.status(500).json({ error: "Falhou ao buscar dados do painel" });
   }
 });
 
@@ -166,8 +166,8 @@ router.get("/categories", requireAuth, async (req: any, res) => {
     const categories = await storage.getCategoriesByUserId(req.user.id);
     res.json(categories);
   } catch (error) {
-    console.error("Categories error:", error);
-    res.status(500).json({ error: "Failed to fetch categories" });
+    console.error("Erro de categorias:", error);
+    res.status(500).json({ error: "Falhou ao buscar categorias" });
   }
 });
 
@@ -180,11 +180,11 @@ router.post("/categories", requireAuth, async (req: any, res) => {
     const category = await storage.createCategory(validatedData);
     res.status(201).json(category);
   } catch (error) {
-    console.error("Create category error:", error);
+    console.error("Erro ao criar categoria:", error);
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
-      res.status(500).json({ error: "Failed to create category" });
+      res.status(500).json({ error: "Falhou ao criar categoria" });
     }
   }
 });
@@ -196,11 +196,11 @@ router.put("/categories/:id", requireAuth, async (req: any, res) => {
     const category = await storage.updateCategory(id, validatedData);
     res.json(category);
   } catch (error) {
-    console.error("Update category error:", error);
+    console.error("Erro ao atualizar categoria:", error);
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
-      res.status(500).json({ error: "Failed to update category" });
+      res.status(500).json({ error: "Falhou ao atualizar categoria" });
     }
   }
 });
@@ -211,8 +211,8 @@ router.delete("/categories/:id", requireAuth, async (req: any, res) => {
     await storage.deleteCategory(id);
     res.status(204).send();
   } catch (error) {
-    console.error("Delete category error:", error);
-    res.status(500).json({ error: "Failed to delete category" });
+    console.error("Erro ao excluir categoria:", error);
+    res.status(500).json({ error: "Falhou ao excluir categoria" });
   }
 });
 
@@ -222,8 +222,8 @@ router.get("/transactions", requireAuth, async (req: any, res) => {
     const transactions = await storage.getTransactionsByUserId(req.user.id);
     res.json(transactions);
   } catch (error) {
-    console.error("Transactions error:", error);
-    res.status(500).json({ error: "Failed to fetch transactions" });
+    console.error("Erro de transações:", error);
+    res.status(500).json({ error: "Falhou ao buscar transações" });
   }
 });
 
@@ -236,11 +236,11 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
     const transaction = await storage.createTransaction(validatedData);
     res.status(201).json(transaction);
   } catch (error) {
-    console.error("Create transaction error:", error);
+    console.error("Erro ao criar transação:", error);
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
-      res.status(500).json({ error: "Failed to create transaction" });
+      res.status(500).json({ error: "Falhou ao criar transação" });
     }
   }
 });
@@ -252,11 +252,11 @@ router.put("/transactions/:id", requireAuth, async (req: any, res) => {
     const transaction = await storage.updateTransaction(id, validatedData);
     res.json(transaction);
   } catch (error) {
-    console.error("Update transaction error:", error);
+    console.error("Erro ao atualizar transação:", error);
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
-      res.status(500).json({ error: "Failed to update transaction" });
+      res.status(500).json({ error: "Falhou ao atualizar transação" });
     }
   }
 });
@@ -267,8 +267,8 @@ router.delete("/transactions/:id", requireAuth, async (req: any, res) => {
     await storage.deleteTransaction(id);
     res.status(204).send();
   } catch (error) {
-    console.error("Delete transaction error:", error);
-    res.status(500).json({ error: "Failed to delete transaction" });
+    console.error("Erro ao excluir transação:", error);
+    res.status(500).json({ error: "Falhou ao excluir transação" });
   }
 });
 
@@ -279,7 +279,7 @@ router.get("/budgets", requireAuth, async (req: any, res) => {
     res.json(budgets);
   } catch (error) {
     console.error("Budgets error:", error);
-    res.status(500).json({ error: "Failed to fetch budgets" });
+    res.status(500).json({ error: "Falhou ao buscar orçamentos" });
   }
 });
 
@@ -296,7 +296,7 @@ router.post("/budgets", requireAuth, async (req: any, res) => {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
-      res.status(500).json({ error: "Failed to create budget" });
+      res.status(500).json({ error: "Falhou ao criar orçamento" });
     }
   }
 });
@@ -312,7 +312,7 @@ router.put("/budgets/:id", requireAuth, async (req: any, res) => {
     if (error instanceof z.ZodError) {
       res.status(400).json({ error: error.errors });
     } else {
-      res.status(500).json({ error: "Failed to update budget" });
+      res.status(500).json({ error: "Falhou ao atualizar orçamento" });
     }
   }
 });
@@ -324,7 +324,7 @@ router.delete("/budgets/:id", requireAuth, async (req: any, res) => {
     res.status(204).send();
   } catch (error) {
     console.error("Delete budget error:", error);
-    res.status(500).json({ error: "Failed to delete budget" });
+    res.status(500).json({ error: "Falhou ao excluir orçamento" });
   }
 });
 
@@ -335,7 +335,7 @@ router.get("/reports", requireAuth, async (req: any, res) => {
     res.json({ message: "Reports endpoint - to be implemented" });
   } catch (error) {
     console.error("Reports error:", error);
-    res.status(500).json({ error: "Failed to fetch reports" });
+    res.status(500).json({ error: "Falhou ao buscar relatórios" });
   }
 });
 

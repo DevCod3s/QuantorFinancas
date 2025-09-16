@@ -90,7 +90,8 @@ export const categories = pgTable("categories", {
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
-  categoryId: integer("category_id").notNull().references(() => categories.id),
+  categoryId: integer("category_id").references(() => categories.id),
+  chartAccountId: integer("chart_account_id").references(() => chartOfAccounts.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Máx: 99.999.999,99
   description: text("description").notNull(),
   type: text("type").notNull(), // 'income' | 'expense'

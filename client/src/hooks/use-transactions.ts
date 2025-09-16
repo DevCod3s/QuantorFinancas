@@ -46,6 +46,7 @@ export function useCreateTransaction() {
       amount: string;
       date: string;
       categoryId?: number;
+      chartAccountId?: number;
       description: string;
       notes?: string;
     }) => {

@@ -18,13 +18,28 @@ export interface Category {
   createdAt: string;
 }
 
+export interface ChartAccount {
+  id: number;
+  userId: string;
+  parentId?: number;
+  code: string;
+  name: string;
+  type: string;
+  category?: string;
+  subcategory?: string;
+  level: number;
+  isActive: boolean;
+  description?: string;
+}
+
 export interface Transaction {
   id: number;
   userId: string;
   type: 'receita' | 'despesa';
   amount: string;
   date: string;
-  categoryId: number;
+  categoryId?: number;
+  chartAccountId?: number;
   description: string;
   notes?: string;
   createdAt: string;

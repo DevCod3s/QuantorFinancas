@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -8,13 +8,13 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from "@/component
 import { FloatingInput, FloatingSelect, FloatingTextarea } from "@/components/ui/floating-input";
 import { useCreateTransaction, useUpdateTransaction } from "@/hooks/use-transactions";
 import { useQuery } from "@tanstack/react-query";
-import { Transaction, Category } from "@/types";
+import { Transaction, Category, ChartAccount } from "@/types";
 
 const transactionSchema = z.object({
   type: z.enum(['receita', 'despesa']),
   amount: z.string().min(1, 'Valor é obrigatório'),
   date: z.string().min(1, 'Data é obrigatória'),
-  categoryId: z.number().optional(),
+  chartAccountId: z.number().optional(),
   description: z.string().min(1, 'Descrição é obrigatória'),
   notes: z.string().optional(),
 });
@@ -32,10 +32,10 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
   const updateTransaction = useUpdateTransaction();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: categories } = useQuery({
-    queryKey: ["/api/categories"],
-    queryFn: async (): Promise<Category[]> => {
-      const response = await fetch("/api/categories", {
+  const { data: chartAccounts } = useQuery({
+    queryKey: ["/api/chart-accounts"],
+    queryFn: async (): Promise<ChartAccount[]> => {
+      const response = await fetch("/api/chart-accounts", {
         credentials: "include",
       });
       if (!response.ok) {
@@ -51,7 +51,7 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
       type: transaction?.type || 'despesa',
       amount: transaction?.amount || '',
       date: transaction?.date || new Date().toISOString().split('T')[0],
-      categoryId: transaction?.categoryId || undefined,
+      chartAccountId: transaction?.chartAccountId || undefined,
       description: transaction?.description || '',
       notes: transaction?.notes || '',
     },
@@ -78,7 +78,35 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
   };
 
   const selectedType = form.watch('type');
-  const filteredCategories = categories?.filter(cat => cat.type === selectedType) || [];
+  
+  // Limpar chartAccountId apenas quando o tipo muda e a seleção atual fica inválida
+  const previousTypeRef = useRef(selectedType);
+  useEffect(() => {
+    if (previousTypeRef.current && previousTypeRef.current !== selectedType) {
+      const currentAccountId = form.getValues('chartAccountId');
+      const currentAccount = chartAccounts?.find(acc => acc.id === currentAccountId);
+      
+      // Só limpar se a conta atual não for compatível com o novo tipo
+      if (currentAccount && filteredChartAccounts.length > 0 && !filteredChartAccounts.find(acc => acc.id === currentAccountId)) {
+        form.setValue('chartAccountId', undefined);
+      }
+    }
+    previousTypeRef.current = selectedType;
+  }, [selectedType, form, chartAccounts, filteredChartAccounts]);
+  
+  // Filtrar contas do plano baseado no tipo selecionado (receita/despesa)
+  const filteredChartAccounts = chartAccounts?.filter(account => {
+    if (!selectedType) return true; // Se não selecionou tipo, mostrar todas
+    
+    // Normalizar os tipos para comparação
+    const accountType = account.type?.toLowerCase();
+    const selectedTypeLower = selectedType.toLowerCase();
+    
+    // Verificar variações do tipo (receita/receitas, despesa/despesas)
+    return accountType === selectedTypeLower || 
+           accountType === selectedTypeLower + 's' ||
+           accountType === selectedTypeLower.slice(0, -1); // Remove 's' final se houver
+  }) || [];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -149,20 +177,21 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
             
             <FormField
               control={form.control}
-              name="categoryId"
+              name="chartAccountId"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
                     <FloatingSelect
-                      label="Categoria"
+                      label="Plano de Contas"
                       {...field}
                       value={field.value?.toString() || ''}
                       onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                      data-testid="select-chart-account"
                     >
-                      <option value="">Selecionar categoria</option>
-                      {filteredCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
+                      <option value="">Selecionar conta</option>
+                      {filteredChartAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.code} - {account.name}
                         </option>
                       ))}
                     </FloatingSelect>
