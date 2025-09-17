@@ -153,19 +153,19 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   // Buscar dados de relacionamentos
   const { data: relationships = [] } = useQuery({
     queryKey: ['/api/relationships'],
-    queryFn: () => fetch('/api/relationships').then(res => res.json())
+    queryFn: () => fetch('/api/relationships', { credentials: 'include' }).then(res => res.json())
   });
 
   // Buscar dados de contas bancárias  
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ['/api/bank-accounts'],
-    queryFn: () => fetch('/api/bank-accounts').then(res => res.json())
+    queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
   // Buscar dados do plano de contas
   const { data: chartOfAccounts = [] } = useQuery({
     queryKey: ['/api/chart-accounts'],
-    queryFn: () => fetch('/api/chart-accounts').then(res => res.json())
+    queryFn: () => fetch('/api/chart-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
   // Filtragem de contas por tipo

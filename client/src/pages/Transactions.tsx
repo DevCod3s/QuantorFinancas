@@ -41,7 +41,6 @@ import { SubTabs } from "@/components/SubTabs";
 // Importações de tipos
 import { Transaction } from "@shared/schema";
 import { ChartOfAccountsTree, ChartOfAccountNode, SAMPLE_CHART_OF_ACCOUNTS } from "@/types/ChartOfAccountsTree";
-import { FloatingInput, FloatingSelect } from "@/components/ui/floating-input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,7 +58,7 @@ import { ptBR } from "date-fns/locale";
 import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
-import TransactionForm from "@/components/transactions/transaction-form";
+import { TransactionCard } from "@/components/TransactionCard";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -290,31 +289,42 @@ export function Transactions() {
   // Garantir que chartAccounts seja sempre um array e seja um tipo correto
   const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
 
-  // Função para salvar nova transação
-  const handleSaveTransaction = (transactionData: any) => {
-    const newTransaction = {
-      id: Date.now(), // ID temporário
-      company: transactionData.conta,
-      cnpj: '00.000.000/0001-00', // Placeholder
-      dueDate: transactionData.data,
-      product: transactionData.descricao || 'Lançamento',
-      type: transactionData.repeticao,
-      status: 'Pendente',
-      value: transactionData.valorNumerico
-    };
-
-    // Adicionar à lista correta baseado no tipo
-    if (transactionData.tipo === 'Receita') {
-      // Adicionar aos recebíveis
-      receivablesData.push(newTransaction);
-      showSuccess('Receita adicionada com sucesso!', "");
-    } else if (transactionData.tipo === 'Despesa') {
-      // Adicionar aos pagáveis
-      payablesData.push(newTransaction);
-      showSuccess('Despesa adicionada com sucesso!', "");
+  // Mutation para criar transação
+  const createTransactionMutation = useMutation({
+    mutationFn: (transactionData: any) =>
+      fetch('/api/transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(transactionData),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      showSuccess('Transação salva com sucesso!', "");
+      setTransactionModalOpen(false);
+    },
+    onError: (error: any) => {
+      showError('Erro ao salvar transação', error.message || 'Verifique os dados e tente novamente.');
     }
+  });
 
-    setNewTransactions(prev => [...prev, newTransaction]);
+  // Função para salvar nova transação
+  const handleSaveTransaction = async (transactionData: any) => {
+    try {
+      // Mapear os dados do formulário para o formato esperado pelo backend
+      const transactionPayload = {
+        amount: parseFloat(transactionData.valor.toString().replace(/[R$\s.,]/g, '')) / 100,
+        description: transactionData.descricao || 'Lançamento',
+        type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
+        date: new Date(transactionData.data.split('/').reverse().join('-')).toISOString(),
+        categoryId: transactionData.categoria ? parseInt(transactionData.categoria) : null,
+        chartAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
+      };
+
+      await createTransactionMutation.mutateAsync(transactionPayload);
+    } catch (error) {
+      console.error('Erro ao salvar transação:', error);
+    }
   };
 
   // Mutation para criar conta
@@ -2106,12 +2116,13 @@ export function Transactions() {
       </Tabs>
 
       {/* Card de Nova Transação */}
-      <TransactionForm
+      <TransactionCard
         open={transactionModalOpen}
         onClose={() => {
           console.log("Closing transaction modal");
           setTransactionModalOpen(false);
         }}
+        onSave={handleSaveTransaction}
       />
 
       {/* Modal de Conta Bancária */}
