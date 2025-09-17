@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,7 @@ import { useTransactions, useDeleteTransaction } from "@/hooks/use-transactions"
 import { useQuery } from "@tanstack/react-query";
 import { Transaction, Category } from "@/types";
 import TransactionForm from "./transaction-form";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function TransactionList() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -15,6 +16,8 @@ export default function TransactionList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const { data: transactions, isLoading } = useTransactions();
   const { data: categories } = useQuery({
@@ -61,6 +64,27 @@ export default function TransactionList() {
     const matchesType = !typeFilter || transaction.type === typeFilter;
     return matchesSearch && matchesCategory && matchesType;
   }) || [];
+
+  // Reset currentPage to 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, categoryFilter, typeFilter]);
+
+  // Clamp currentPage when totalPages decreases
+  useEffect(() => {
+    const filteredCount = filteredTransactions.length;
+    const newTotalPages = Math.ceil(filteredCount / itemsPerPage);
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages);
+    }
+  }, [filteredTransactions.length, currentPage, itemsPerPage]);
+
+  // Paginação
+  const totalPages = Math.ceil(filteredTransactions.length / itemsPerPage);
+  const paginatedTransactions = filteredTransactions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const getCategoryBadgeColor = (type: string) => {
     return type === 'receita' ? 'bg-secondary/10 text-secondary' : 'bg-destructive/10 text-destructive';
@@ -153,7 +177,7 @@ export default function TransactionList() {
       {/* Transactions Table */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
             <table className="w-full">
               <thead className="bg-muted/50 border-b">
                 <tr>
@@ -165,8 +189,8 @@ export default function TransactionList() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((transaction) => (
+                {paginatedTransactions.length > 0 ? (
+                  paginatedTransactions.map((transaction: Transaction) => (
                     <tr key={transaction.id} className="hover:bg-muted/50 transition-colors">
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-3">
@@ -229,6 +253,47 @@ export default function TransactionList() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600" data-testid="text-pagination-info">
+                  Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, filteredTransactions.length)} a{" "}
+                  {Math.min(currentPage * itemsPerPage, filteredTransactions.length)} de {filteredTransactions.length} registros
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  data-testid="button-previous-page"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <span className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded font-medium">
+                  {currentPage}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <TransactionForm
         open={isFormOpen}

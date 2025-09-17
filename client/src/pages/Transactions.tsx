@@ -1523,7 +1523,7 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="overflow-x-auto">
+                          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b">
@@ -1798,7 +1798,7 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="overflow-x-auto">
+                          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                             <table className="w-full text-sm">
                               <thead>
                                 <tr className="border-b">

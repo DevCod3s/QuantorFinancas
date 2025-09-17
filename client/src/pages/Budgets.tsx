@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Edit, Trash2, Target, AlertTriangle, CheckCircle } from "lucide-react";
+import { Plus, Edit, Trash2, Target, AlertTriangle, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -14,9 +14,20 @@ interface BudgetWithUsage extends Budget {
 }
 
 export function Budgets() {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  
   const { data: budgets = [], isLoading } = useQuery<BudgetWithUsage[]>({
     queryKey: ["/api/budgets"],
   });
+
+  // Clamp currentPage when totalPages decreases
+  useEffect(() => {
+    const newTotalPages = Math.ceil(budgets.length / itemsPerPage);
+    if (currentPage > newTotalPages && newTotalPages > 0) {
+      setCurrentPage(newTotalPages);
+    }
+  }, [budgets.length, currentPage, itemsPerPage]);
 
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -30,6 +41,13 @@ export function Budgets() {
     if (percentage >= 80) return { color: 'yellow', icon: AlertTriangle, text: 'Atenção' };
     return { color: 'green', icon: CheckCircle, text: 'No prazo' };
   };
+
+  // Paginação
+  const totalPages = Math.ceil(budgets.length / itemsPerPage);
+  const paginatedBudgets = budgets.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="space-y-6">
@@ -98,6 +116,7 @@ export function Budgets() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          <div className="max-h-[500px] overflow-y-auto">
           {isLoading ? (
             <div className="space-y-4">
               {[...Array(4)].map((_, i) => (
@@ -116,7 +135,7 @@ export function Budgets() {
             </div>
           ) : (
             <div className="space-y-4">
-              {budgets.map((budget) => {
+              {paginatedBudgets.map((budget: BudgetWithUsage) => {
                 const status = getBudgetStatus(budget.percentage);
                 const StatusIcon = status.icon;
                 
@@ -138,7 +157,7 @@ export function Budgets() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-600">
-                          {formatCurrency(budget.used.toString())} / {formatCurrency(budget.amount)}
+                          {formatCurrency(budget.used.toString())} / {formatCurrency(budget.budgetedAmount)}
                         </span>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="sm">
@@ -160,7 +179,7 @@ export function Budgets() {
                         <span>{budget.percentage.toFixed(1)}% utilizado</span>
                         <span>
                           {budget.period === 'monthly' ? 'Mensal' : 'Anual'} • 
-                          {budget.month ? ` ${budget.month}` : ''}/{budget.year}
+                          {new Date(budget.startDate).getFullYear()}
                         </span>
                       </div>
                     </div>
@@ -169,8 +188,50 @@ export function Budgets() {
               })}
             </div>
           )}
+          </div>
         </CardContent>
       </Card>
+
+      {/* Paginação */}
+      {totalPages > 1 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600" data-testid="text-pagination-info">
+                  Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, budgets.length)} a{" "}
+                  {Math.min(currentPage * itemsPerPage, budgets.length)} de {budgets.length} registros
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  data-testid="button-previous-page"
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Anterior
+                </Button>
+                <span className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded font-medium">
+                  {currentPage}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  data-testid="button-next-page"
+                >
+                  Próxima
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

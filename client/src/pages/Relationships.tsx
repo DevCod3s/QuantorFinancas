@@ -34,13 +34,13 @@ import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 
 // Lista de clientes (vazia para dados reais)
-const clientesDemoData = [];
+const clientesDemoData: any[] = [];
 
 // Lista de fornecedores (vazia para dados reais)
-const fornecedoresDemoData = [];
+const fornecedoresDemoData: any[] = [];
 
 // Lista de outros relacionamentos (vazia para dados reais)
-const outrosRelacionamentosDemoData = [];
+const outrosRelacionamentosDemoData: any[] = [];
 
 // Função para obter ícone e cor do status
 const getStatusIcon = (status: string) => {
@@ -185,12 +185,12 @@ export function Relationships() {
 
   // Função para abrir wizard de cadastro
   const handleAddNew = (tipo: string) => {
-    setShowWizard(true);
+    setIsAddingRelationship(true);
   };
 
   // Função para fechar wizard
   const handleCloseWizard = () => {
-    setShowWizard(false);
+    setIsAddingRelationship(false);
   };
 
   // Função para salvar dados do wizard
@@ -199,7 +199,7 @@ export function Relationships() {
       "Relacionamento Cadastrado!",
       `O novo relacionamento foi cadastrado com sucesso no sistema.`
     );
-    setShowWizard(false);
+    setIsAddingRelationship(false);
   };
 
   const handleInvalidOperation = () => {
