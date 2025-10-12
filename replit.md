@@ -82,3 +82,11 @@ Quantor's architecture is built on a robust and scalable stack, emphasizing mode
     • **Geração Automática**: Códigos hierárquicos gerados automaticamente seguindo sequência lógica
     • **Invalidação de Cache Melhorada**: Sistema de cache atualizado com refetchQueries() para dados sempre atualizados
     • **Estrutura Limpa**: Remoção de contas órfãs e dados inconsistentes do banco
+
+- **Filtro Dinâmico de Plano de Contas no Modal de Transação** (Janeiro 2025)
+    • **Correção de Bug Crítico**: Filtro estava comparando com tipos em maiúsculas quando banco usa minúsculas
+    • **Filtragem Inteligente**: Campo "Plano de Contas" mostra apenas contas compatíveis com o tipo selecionado
+    • **Receita Selecionada**: Exibe somente contas do tipo 'receita' ou 'receitas'
+    • **Despesa Selecionada**: Exibe somente contas do tipo 'despesa' ou 'despesas'
+    • **Case-Insensitive**: Normalização automática para comparação, suportando variações singular/plural
+    • **Sem Alteração de Layout**: Implementação manteve 100% do layout original do Material-UI
