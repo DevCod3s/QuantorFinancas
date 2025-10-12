@@ -168,10 +168,17 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     queryFn: () => fetch('/api/chart-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
-  // Filtragem de contas por tipo
+  // Filtragem de contas por tipo (receita/despesa)
   const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
-    if (tipo.includes('receita')) return account.type === 'RECEITA';
-    if (tipo.includes('despesa')) return account.type === 'DESPESA';
+    if (tipo.includes('receita')) {
+      // Normalizar para comparação case-insensitive
+      const accountType = account.type?.toLowerCase();
+      return accountType === 'receita' || accountType === 'receitas';
+    }
+    if (tipo.includes('despesa')) {
+      const accountType = account.type?.toLowerCase();
+      return accountType === 'despesa' || accountType === 'despesas';
+    }
     return true;
   });
 
