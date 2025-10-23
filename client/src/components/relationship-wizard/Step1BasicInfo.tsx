@@ -550,7 +550,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               value={formData.zipCode}
               onChange={handleZipCodeChange}
               placeholder="00000-000"
-              maxLength={15}
+              maxLength={9}
               onKeyDown={(e) => {
                 // Permitir navegação manual com Enter, mas não automática
                 if (e.key === 'Enter') {
