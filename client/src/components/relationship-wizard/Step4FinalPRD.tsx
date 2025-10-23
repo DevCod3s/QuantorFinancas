@@ -47,10 +47,12 @@ import {
   Phone,
   MapPin,
   Save,
-  Refresh,
+  RefreshCw,
   Settings,
   CheckCircle
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import CustomInput from "@/components/CustomInput";
 
 /**
  * Interface para dados do formulário da Etapa 4
@@ -256,14 +258,22 @@ export default function Step4FinalPRD({
           </div>
 
           {/* Observações Finais */}
-          <div>
-            <TETextarea
-              label="Observações Finais"
+          <div className="relative">
+            <textarea
+              id="observations"
               rows={3}
               value={formData.observations}
-              onChange={(e) => updateFormData({ observations: e.target.value })}
-              placeholder="Digite observações adicionais sobre este relacionamento..."
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData({ observations: e.target.value })}
+              placeholder=" "
+              className="w-full px-3 py-2 rounded-md shadow-md border-0 focus:outline-none focus:border-2 focus:border-blue-500 peer placeholder-transparent resize-none"
+              data-testid="textarea-observations"
             />
+            <label 
+              htmlFor="observations"
+              className="absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-600"
+            >
+              Observações Finais
+            </label>
           </div>
         </div>
 
@@ -278,14 +288,16 @@ export default function Step4FinalPRD({
                 id="relationship-code"
                 label="Código *"
                 value={formData.relationshipCode}
-                onChange={(e) => updateFormData({ relationshipCode: e.target.value })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ relationshipCode: e.target.value })}
                 readOnly
+                data-testid="input-relationship-code"
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => updateFormData({ relationshipCode: generateRelationshipCode() })}
                 className="mt-1"
+                data-testid="button-generate-code"
               >
                 Gerar
               </Button>
@@ -301,8 +313,9 @@ export default function Step4FinalPRD({
                 <input
                   type="checkbox"
                   checked={formData.notifyByEmail}
-                  onChange={(e) => updateFormData({ notifyByEmail: e.target.checked })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ notifyByEmail: e.target.checked })}
                   className="rounded"
+                  data-testid="checkbox-notify-email"
                 />
                 <Mail className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">Notificar por email</span>
@@ -312,8 +325,9 @@ export default function Step4FinalPRD({
                 <input
                   type="checkbox"
                   checked={formData.notifyBySMS}
-                  onChange={(e) => updateFormData({ notifyBySMS: e.target.checked })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ notifyBySMS: e.target.checked })}
                   className="rounded"
+                  data-testid="checkbox-notify-sms"
                 />
                 <Phone className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">Notificar por SMS</span>
@@ -323,8 +337,9 @@ export default function Step4FinalPRD({
                 <input
                   type="checkbox"
                   checked={formData.generateWelcomeKit}
-                  onChange={(e) => updateFormData({ generateWelcomeKit: e.target.checked })}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ generateWelcomeKit: e.target.checked })}
                   className="rounded"
+                  data-testid="checkbox-welcome-kit"
                 />
                 <FileText className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">Gerar kit de boas-vindas</span>
@@ -338,11 +353,21 @@ export default function Step4FinalPRD({
               <h4 className="font-medium text-gray-900 mb-3">Downloads</h4>
               
               <div className="space-y-2">
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  data-testid="button-download-contract"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Contrato PDF
                 </Button>
-                <Button variant="outline" size="sm" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full justify-start"
+                  data-testid="button-download-registration"
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Ficha Cadastral
                 </Button>
@@ -356,8 +381,9 @@ export default function Step4FinalPRD({
               <input
                 type="checkbox"
                 checked={formData.finalConfirmation}
-                onChange={(e) => updateFormData({ finalConfirmation: e.target.checked })}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateFormData({ finalConfirmation: e.target.checked })}
                 className="mt-1 rounded text-green-600"
+                data-testid="checkbox-final-confirmation"
               />
               <div>
                 <div className="font-medium text-green-900">Confirmar Cadastro</div>
