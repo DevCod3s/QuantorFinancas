@@ -122,63 +122,84 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   const zipCodeRef = useRef<HTMLInputElement>(null);
 
   /**
+   * useEffect para centralizar validação e notificar componente pai
+   * Isso evita problemas com múltiplas chamadas durante async/loading
+   */
+  useEffect(() => {
+    // Validar se formulário está completo baseado no tipo de documento
+    const isValid = !!(
+      formData.relationshipType &&
+      formData.document &&
+      formData.socialName &&
+      (formData.documentType === 'CPF' ? formData.birthDate : true) &&
+      formData.zipCode &&
+      formData.street &&
+      formData.number &&
+      formData.neighborhood &&
+      formData.city &&
+      formData.state
+    );
+    
+    console.log('Step1 isValid:', isValid, 'documentType:', formData.documentType);
+    
+    onDataChange(formData, isValid);
+  }, [formData, onDataChange]);
+
+  /**
    * Atualiza dados do formulário
    */
   const updateFormData = (updates: Partial<Step1FormData>) => {
-    const newData = { ...formData, ...updates };
-    setFormData(newData);
-    
-    // Debug: Log dos campos para validação
-    console.log('Validação Step1:', {
-      relationshipType: !!newData.relationshipType,
-      document: !!newData.document,
-      socialName: !!newData.socialName,
-      birthDateOrCNPJ: newData.documentType === 'CPF' ? !!newData.birthDate : true,
-      zipCode: !!newData.zipCode,
-      street: !!newData.street,
-      number: !!newData.number,
-      neighborhood: !!newData.neighborhood,
-      city: !!newData.city,
-      state: !!newData.state,
-      documentType: newData.documentType
-    });
-    
-    // Validar se formulário está completo baseado no tipo de documento
-    const isValid = !!(
-      newData.relationshipType &&
-      newData.document &&
-      newData.socialName &&
-      (newData.documentType === 'CPF' ? newData.birthDate : true) &&
-      newData.zipCode &&
-      newData.street &&
-      newData.number &&
-      newData.neighborhood &&
-      newData.city &&
-      newData.state
-    );
-    
-    console.log('Step1 isValid:', isValid);
-    
-    onDataChange(newData, isValid);
+    setFormData(prev => ({ ...prev, ...updates }));
   };
 
   /**
    * Manipula mudança no CPF/CNPJ
+   * CORRIGIDO: Detecta tipo antecipadamente e limpa campos incompatíveis
    */
   const handleDocumentChange = (value: string, isValid: boolean, type: 'CPF' | 'CNPJ' | null) => {
-    updateFormData({ 
-      document: value, 
-      documentType: type,
-      // Limpar nome fantasia se for CPF
-      fantasyName: type === 'CPF' ? '' : formData.fantasyName
-    });
+    // Detectar tipo baseado no comprimento dos números (antecipado)
+    const numbersOnly = value.replace(/\D/g, '');
+    let detectedType: 'CPF' | 'CNPJ' | null = type;
+    
+    // Se o tipo ainda não foi validado, detectar baseado no comprimento
+    if (!type && numbersOnly.length > 0) {
+      if (numbersOnly.length <= 11) {
+        detectedType = numbersOnly.length === 11 ? 'CPF' : null;
+      } else {
+        detectedType = numbersOnly.length === 14 ? 'CNPJ' : null;
+      }
+    }
+    
+    // Se mudou de CPF para CNPJ ou vice-versa, limpar campos incompatíveis
+    const changedType = formData.documentType !== detectedType;
+    
+    const updates: Partial<Step1FormData> = {
+      document: value,
+      documentType: detectedType
+    };
+    
+    // Limpar campos específicos ao trocar tipo
+    if (changedType) {
+      if (detectedType === 'CPF') {
+        // Mudou para CPF: limpar campos de CNPJ
+        updates.fantasyName = '';
+        updates.isExempt = false;
+        updates.stateRegistration = '';
+      } else if (detectedType === 'CNPJ') {
+        // Mudou para CNPJ: limpar campos de CPF
+        updates.birthDate = '';
+        updates.stateRegistration = '';
+      }
+    }
+    
+    updateFormData(updates);
     
     // Se CNPJ válido, buscar dados automaticamente
-    if (isValid && type === 'CNPJ') {
+    if (isValid && detectedType === 'CNPJ') {
       fetchCNPJData(value);
     }
     // Se CPF válido, focar no próximo campo
-    else if (isValid && socialNameRef.current) {
+    else if (isValid && detectedType === 'CPF' && socialNameRef.current) {
       setTimeout(() => {
         socialNameRef.current?.focus();
       }, 100);
