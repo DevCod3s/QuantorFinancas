@@ -84,6 +84,24 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
   // Estado de validação da etapa atual
   const [currentStepValid, setCurrentStepValid] = useState(false);
 
+  // Hook para gerenciamento de relacionamentos
+  const { saveRelationship, isLoading: isSaving, error, clearError } = useRelationshipManager();
+  
+  // Estado para controle de sucesso
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
+  /**
+   * Limpa erro quando wizard é aberto/fechado
+   */
+  React.useEffect(() => {
+    if (isOpen) {
+      clearError(); // Limpar erros anteriores ao abrir wizard
+      setCurrentStep(1); // Reset para primeira etapa
+      setWizardData({}); // Limpar dados anteriores
+      setCurrentStepValid(false);
+    }
+  }, [isOpen, clearError]);
+
   /**
    * Atualiza dados da etapa atual
    */
@@ -116,12 +134,6 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
       setCurrentStepValid(true); // Previous steps are assumed valid
     }
   };
-
-  // Hook para gerenciamento de relacionamentos
-  const { saveRelationship, isLoading: isSaving, error, clearError } = useRelationshipManager();
-  
-  // Estado para controle de sucesso
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   /**
    * Finaliza o wizard salvando o relacionamento
