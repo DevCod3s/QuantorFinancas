@@ -90,3 +90,10 @@ Quantor's architecture is built on a robust and scalable stack, emphasizing mode
     • **Despesa Selecionada**: Exibe somente contas do tipo 'despesa' ou 'despesas'
     • **Case-Insensitive**: Normalização automática para comparação, suportando variações singular/plural
     • **Sem Alteração de Layout**: Implementação manteve 100% do layout original do Material-UI
+
+- **Correção do Wizard de Novo Relacionamento - Campo Inscrição Estadual** (Janeiro 2025)
+    • **Problema Resolvido**: Botão "Próximo" ficava desabilitado mesmo com todos campos preenchidos
+    • **Campo Opcional**: Inscrição Estadual (CNPJ) e RG (CPF) agora são opcionais
+    • **Validação Ajustada**: Removida obrigatoriedade do campo stateRegistration da validação
+    • **Label Atualizado**: Removido asterisco (*) indicando campo obrigatório
+    • **Fluxo Melhorado**: Usuário pode avançar no wizard sem preencher Inscrição Estadual/RG
