@@ -128,6 +128,21 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
     const newData = { ...formData, ...updates };
     setFormData(newData);
     
+    // Debug: Log dos campos para validação
+    console.log('Validação Step1:', {
+      relationshipType: !!newData.relationshipType,
+      document: !!newData.document,
+      socialName: !!newData.socialName,
+      birthDateOrCNPJ: newData.documentType === 'CPF' ? !!newData.birthDate : true,
+      zipCode: !!newData.zipCode,
+      street: !!newData.street,
+      number: !!newData.number,
+      neighborhood: !!newData.neighborhood,
+      city: !!newData.city,
+      state: !!newData.state,
+      documentType: newData.documentType
+    });
+    
     // Validar se formulário está completo baseado no tipo de documento
     const isValid = !!(
       newData.relationshipType &&
@@ -141,6 +156,8 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       newData.city &&
       newData.state
     );
+    
+    console.log('Step1 isValid:', isValid);
     
     onDataChange(newData, isValid);
   };
