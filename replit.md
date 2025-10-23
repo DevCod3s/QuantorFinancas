@@ -102,3 +102,13 @@ Quantor's architecture is built on a robust and scalable stack, emphasizing mode
     • **Botão "Próximo" Funcional**: Habilita corretamente quando formulário válido, considerando campos obrigatórios por tipo de documento
     • **Campo Opcional**: Inscrição Estadual e RG são opcionais - não bloqueiam navegação
     • **Teste E2E Validado**: Fluxo completo testado e funcionando perfeitamente com CPF e CNPJ
+
+- **Correção do Step4 e Limpeza de Erros no Wizard** (Janeiro 2025)
+    • **Imports Corrigidos**: Adicionados imports de Button e CustomInput que estavam faltando no Step4FinalPRD.tsx
+    • **TETextarea Substituído**: Removido componente inexistente, substituído por textarea HTML nativo com label flutuante estilizado
+    • **Data-testids Implementados**: Todos elementos interativos do Step4 agora têm data-testids para testes automatizados
+    • **Tipagem TypeScript**: Todos eventos onChange agora têm tipos explícitos eliminando erros de tipo implícito
+    • **Limpeza de Erro Automática**: useEffect implementado no RelationshipWizard para limpar erros ao reabrir wizard
+    • **Reset de Estado**: Wizard agora reseta completamente (step, dados, validação) ao ser reaberto
+    • **Bug de Persistência Resolvido**: Mensagens de erro antigas não aparecem mais ao reabrir wizard
+    • **Validação Mantida**: Lógica de validação CPF/CNPJ permanece correta bloqueando salvamentos inválidos
