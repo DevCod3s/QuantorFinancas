@@ -88,13 +88,11 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
    * Atualiza dados da etapa atual
    */
   const updateStepData = (stepNumber: number, data: any, isValid: boolean) => {
-    console.log(`[RelationshipWizard] updateStepData - Step ${stepNumber}, isValid:`, isValid);
     setWizardData(prev => ({
       ...prev,
       [`step${stepNumber}`]: data
     }));
     setCurrentStepValid(isValid);
-    console.log(`[RelationshipWizard] currentStepValid atualizado para:`, isValid);
   };
 
   /**

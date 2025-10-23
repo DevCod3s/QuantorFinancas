@@ -121,6 +121,12 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   const birthDateRef = useRef<HTMLInputElement>(null);
   const zipCodeRef = useRef<HTMLInputElement>(null);
 
+  // Ref para callback onDataChange evitar loop infinito
+  const onDataChangeRef = useRef(onDataChange);
+  useEffect(() => {
+    onDataChangeRef.current = onDataChange;
+  }, [onDataChange]);
+
   /**
    * useEffect para centralizar validação e notificar componente pai
    * Isso evita problemas com múltiplas chamadas durante async/loading
@@ -140,10 +146,8 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       formData.state
     );
     
-    console.log('Step1 isValid:', isValid, 'documentType:', formData.documentType);
-    
-    onDataChange(formData, isValid);
-  }, [formData, onDataChange]);
+    onDataChangeRef.current(formData, isValid);
+  }, [formData]);
 
   /**
    * Atualiza dados do formulário
