@@ -133,7 +133,6 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       newData.relationshipType &&
       newData.document &&
       newData.socialName &&
-      newData.stateRegistration &&
       (newData.documentType === 'CPF' ? newData.birthDate : true) &&
       newData.zipCode &&
       newData.street &&
@@ -422,7 +421,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               ref={stateRegistrationRef}
               type="text"
               id="state-registration"
-              label={formData.documentType === 'CPF' ? 'RG *' : 'Inscrição estadual *'}
+              label={formData.documentType === 'CPF' ? 'RG' : 'Inscrição estadual'}
               value={formData.stateRegistration}
               onChange={(e) => updateFormData({ stateRegistration: e.target.value })}
               disabled={formData.documentType === 'CNPJ' && formData.isExempt}
