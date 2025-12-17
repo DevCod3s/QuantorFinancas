@@ -1,173 +1,107 @@
-/**
- * @fileoverview Dashboard principal do sistema Quantor
- * 
- * Exibe visão geral consolidada das finanças do usuário:
- * - Cards de métricas (receitas, despesas, saldo, orçamento)
- * - Lista de transações recentes
- * - Indicadores visuais de tendências
- * - Formatação automática de moeda brasileira
- * - Loading states com skeleton
- * 
- * Dados obtidos via TanStack Query da API /api/dashboard
- * 
- * @author Equipe Quantor
- * @version 1.0.0
- */
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { isUnauthorizedError } from "@/lib/authUtils";
+import Sidebar from "@/components/layout/sidebar";
+import Header from "@/components/layout/header";
+import { TABS } from "@/types";
+import DashboardOverview from "@/components/dashboard/dashboard-overview";
+import TransactionList from "@/components/transactions/transaction-list";
+import BudgetCards from "@/components/budgets/budget-cards";
+import ReportsCharts from "@/components/reports/charts";
+import ChatInterface from "@/components/ai/chat-interface";
 
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, TrendingDown, Target } from "lucide-react";
+export default function Dashboard() {
+  const { toast } = useToast();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
-/**
- * Interface para dados consolidados do dashboard
- * Retornados pela API /api/dashboard
- */
-interface DashboardStats {
-  totalIncome: number; // Total de receitas no período
-  totalExpenses: number; // Total de despesas no período
-  balance: number; // Saldo atual (receitas - despesas)
-  budgetUsage: number; // Percentual do orçamento utilizado
-  recentTransactions: Array<{
-    id: number;
-    description: string;
-    amount: string; // Já formatado como string
-    type: string; // 'income' | 'expense'
-    date: string; // Data formatada
-  }>;
-}
-
-export function Dashboard() {
-  const { data: stats, isLoading } = useQuery<DashboardStats>({
-    queryKey: ["/api/dashboard"],
-  });
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast({
+        title: "Não autorizado",
+        description: "Você precisa estar logado. Redirecionando...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+      return;
+    }
+  }, [isAuthenticated, isLoading, toast]);
 
   if (isLoading) {
     return (
-      <div className="animate-pulse">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-lg h-32"></div>
-          ))}
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-chart-line text-white text-2xl animate-pulse"></i>
+          </div>
+          <p className="text-muted-foreground">Carregando...</p>
         </div>
       </div>
     );
   }
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(amount);
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  const getPageTitle = (tabId: string) => {
+    const tab = TABS.find(t => t.id === tabId);
+    return tab?.label || 'Dashboard';
+  };
+
+  const getPageDescription = (tabId: string) => {
+    const descriptions = {
+      'dashboard': 'Bem-vindo de volta! Aqui está seu resumo financeiro.',
+      'transactions': 'Adicione, edite e organize suas receitas e despesas',
+      'budgets': 'Defina e acompanhe seus orçamentos mensais e anuais',
+      'reports': 'Análises detalhadas do seu comportamento financeiro',
+      'ai-assistant': 'Seu consultor financeiro pessoal com inteligência artificial'
+    };
+    return descriptions[tabId as keyof typeof descriptions] || '';
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <DashboardOverview />;
+      case 'transactions':
+        return <TransactionList />;
+      case 'budgets':
+        return <BudgetCards />;
+      case 'reports':
+        return <ReportsCharts />;
+      case 'ai-assistant':
+        return <ChatInterface />;
+      default:
+        return <DashboardOverview />;
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-600">
-          Visão geral das suas finanças
-        </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Receitas</CardTitle>
-            <TrendingUp className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(stats?.totalIncome || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              +12% em relação ao mês anterior
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Despesas</CardTitle>
-            <TrendingDown className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {formatCurrency(stats?.totalExpenses || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              -8% em relação ao mês anterior
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-            <DollarSign className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(stats?.balance || 0)}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Saldo atual disponível
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Orçamento</CardTitle>
-            <Target className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">
-              {stats?.budgetUsage || 0}%
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Do orçamento mensal utilizado
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Transações Recentes</CardTitle>
-          <CardDescription>
-            Suas últimas movimentações financeiras
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {stats?.recentTransactions?.map((transaction) => (
-              <div
-                key={transaction.id}
-                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-              >
-                <div>
-                  <p className="font-medium">{transaction.description}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(transaction.date).toLocaleDateString('pt-BR')}
-                  </p>
-                </div>
-                <div className={`font-bold ${
-                  transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {transaction.type === 'income' ? '+' : '-'}
-                  {formatCurrency(parseFloat(transaction.amount))}
-                </div>
-              </div>
-            )) || (
-              <div className="text-center py-8">
-                <p className="text-gray-500">Nenhuma transação encontrada</p>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="flex h-screen overflow-hidden bg-background">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab}
+        sidebarOpen={sidebarOpen}
+        setSidebarOpen={setSidebarOpen}
+      />
+      
+      <main className="flex-1 overflow-y-auto">
+        <Header 
+          title={getPageTitle(activeTab)}
+          description={getPageDescription(activeTab)}
+          onMenuClick={() => setSidebarOpen(true)}
+        />
+        
+        <div className="p-6">
+          {renderTabContent()}
+        </div>
+      </main>
     </div>
   );
 }
