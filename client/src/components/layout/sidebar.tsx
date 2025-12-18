@@ -53,18 +53,20 @@ export default function Sidebar({ activeTab, setActiveTab, sidebarOpen, setSideb
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-sidebar-border">
         <div className="flex items-center space-x-3 px-4 py-3">
           <img 
-            src={user?.profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
+            src={(user as any)?.profileImageUrl || (user as any)?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"} 
             alt="Foto do usuário" 
             className="w-10 h-10 rounded-full object-cover" 
           />
           <div>
             <p className="text-sm font-medium text-sidebar-foreground">
-              {user?.firstName && user?.lastName 
-                ? `${user.firstName} ${user.lastName}` 
-                : user?.email || 'Usuário'}
+              {(user as any)?.name 
+                ? `${(user as any).name}` 
+                : ((user as any)?.firstName && (user as any)?.lastName 
+                  ? `${(user as any).firstName} ${(user as any).lastName}` 
+                  : (user as any)?.email || 'Usuário')}
             </p>
             <p className="text-xs text-muted-foreground">
-              {user?.email || 'email@exemplo.com'}
+              {(user as any)?.email || 'email@exemplo.com'}
             </p>
           </div>
         </div>

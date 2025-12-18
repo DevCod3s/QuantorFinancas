@@ -1,11 +1,13 @@
 export interface User {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  profileImageUrl: string;
-  createdAt: string;
-  updatedAt: string;
+  id?: string | number;
+  email?: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  profileImageUrl?: string;
+  avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Category {

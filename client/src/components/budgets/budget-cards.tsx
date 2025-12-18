@@ -182,11 +182,10 @@ export default function BudgetCards() {
           Novo Orçamento
         </Button>
       </div>
-
       {/* Budget Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {budgets && budgets.length > 0 ? (
-          budgets.map((budget) => {
+          budgets.map((budget: any) => {
             const { spent, percentage, remaining } = calculateBudgetUsage(budget);
             const { status, color } = getBudgetStatus(percentage);
             const progressColor = getProgressColor(percentage);

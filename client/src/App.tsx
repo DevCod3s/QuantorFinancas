@@ -23,7 +23,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Importações de páginas
-import { Dashboard } from "@/pages/Dashboard";
+import Dashboard from "@/pages/dashboard";
 import { Relationships } from "@/pages/Relationships";
 import { Transactions } from "@/pages/Transactions";
 import { Categories } from "@/pages/Categories";

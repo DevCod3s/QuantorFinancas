@@ -214,20 +214,20 @@ export class ChartOfAccountsTree {
  */
 export const SAMPLE_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
   // Nível 1 - Categorias principais
-  { id: 1, userId: 1, parentId: null, code: '1', name: 'Receitas', type: 'receita', level: 1, isActive: true, category: 'Receitas', subcategory: null, description: 'Todas as receitas da empresa', createdAt: new Date() },
-  { id: 2, userId: 1, parentId: null, code: '2', name: 'Despesas', type: 'despesa', level: 1, isActive: true, category: 'Despesas', subcategory: null, description: 'Todas as despesas da empresa', createdAt: new Date() },
+  { id: 1, userId: '1', parentId: null, code: '1', name: 'Receitas', type: 'receita', level: 1, isActive: true, category: 'Receitas', subcategory: null, description: 'Todas as receitas da empresa', createdAt: new Date() },
+  { id: 2, userId: '1', parentId: null, code: '2', name: 'Despesas', type: 'despesa', level: 1, isActive: true, category: 'Despesas', subcategory: null, description: 'Todas as despesas da empresa', createdAt: new Date() },
   
   // Nível 2 - Subcategorias
-  { id: 3, userId: 1, parentId: 1, code: '1.1', name: 'Receitas Operacionais', type: 'receita', level: 2, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receitas da atividade principal', createdAt: new Date() },
-  { id: 4, userId: 1, parentId: 1, code: '1.2', name: 'Receitas Não Operacionais', type: 'receita', level: 2, isActive: true, category: 'Receitas', subcategory: 'Receitas Não Operacionais', description: 'Receitas de outras atividades', createdAt: new Date() },
-  { id: 5, userId: 1, parentId: 2, code: '2.1', name: 'Despesas Administrativas', type: 'despesa', level: 2, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Gastos administrativos', createdAt: new Date() },
-  { id: 6, userId: 1, parentId: 2, code: '2.2', name: 'Despesas Operacionais', type: 'despesa', level: 2, isActive: true, category: 'Despesas', subcategory: 'Despesas Operacionais', description: 'Gastos operacionais', createdAt: new Date() },
+  { id: 3, userId: '1', parentId: 1, code: '1.1', name: 'Receitas Operacionais', type: 'receita', level: 2, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receitas da atividade principal', createdAt: new Date() },
+  { id: 4, userId: '1', parentId: 1, code: '1.2', name: 'Receitas Não Operacionais', type: 'receita', level: 2, isActive: true, category: 'Receitas', subcategory: 'Receitas Não Operacionais', description: 'Receitas de outras atividades', createdAt: new Date() },
+  { id: 5, userId: '1', parentId: 2, code: '2.1', name: 'Despesas Administrativas', type: 'despesa', level: 2, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Gastos administrativos', createdAt: new Date() },
+  { id: 6, userId: '1', parentId: 2, code: '2.2', name: 'Despesas Operacionais', type: 'despesa', level: 2, isActive: true, category: 'Despesas', subcategory: 'Despesas Operacionais', description: 'Gastos operacionais', createdAt: new Date() },
   
   // Nível 3 - Contas específicas
-  { id: 7, userId: 1, parentId: 3, code: '1.1.001', name: 'Vendas de Produtos', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receita com vendas de produtos', createdAt: new Date() },
-  { id: 8, userId: 1, parentId: 3, code: '1.1.002', name: 'Prestação de Serviços', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receita com serviços prestados', createdAt: new Date() },
-  { id: 9, userId: 1, parentId: 4, code: '1.2.001', name: 'Rendimentos Financeiros', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Não Operacionais', description: 'Juros e rendimentos', createdAt: new Date() },
-  { id: 10, userId: 1, parentId: 5, code: '2.1.001', name: 'Material de Escritório', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Gastos com material de escritório', createdAt: new Date() },
-  { id: 11, userId: 1, parentId: 5, code: '2.1.002', name: 'Salários e Encargos', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Folha de pagamento', createdAt: new Date() },
-  { id: 12, userId: 1, parentId: 6, code: '2.2.001', name: 'Energia Elétrica', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Operacionais', description: 'Conta de energia elétrica', createdAt: new Date() },
+  { id: 7, userId: '1', parentId: 3, code: '1.1.001', name: 'Vendas de Produtos', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receita com vendas de produtos', createdAt: new Date() },
+  { id: 8, userId: '1', parentId: 3, code: '1.1.002', name: 'Prestação de Serviços', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receita com serviços prestados', createdAt: new Date() },
+  { id: 9, userId: '1', parentId: 4, code: '1.2.001', name: 'Rendimentos Financeiros', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Não Operacionais', description: 'Juros e rendimentos', createdAt: new Date() },
+  { id: 10, userId: '1', parentId: 5, code: '2.1.001', name: 'Material de Escritório', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Gastos com material de escritório', createdAt: new Date() },
+  { id: 11, userId: '1', parentId: 5, code: '2.1.002', name: 'Salários e Encargos', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Folha de pagamento', createdAt: new Date() },
+  { id: 12, userId: '1', parentId: 6, code: '2.2.001', name: 'Energia Elétrica', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Operacionais', description: 'Conta de energia elétrica', createdAt: new Date() },
 ];

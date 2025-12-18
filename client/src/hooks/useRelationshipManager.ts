@@ -230,10 +230,7 @@ export function useRelationshipManager() {
         userId: 0 // Será preenchido pelo backend
       };
 
-      return apiRequest('/api/relationships', {
-        method: 'POST',
-        body: JSON.stringify(relationshipData)
-      });
+      return apiRequest('POST', '/api/relationships', relationshipData);
     },
     onSuccess: () => {
       // Invalidar cache para atualizar listas

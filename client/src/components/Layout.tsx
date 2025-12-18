@@ -174,12 +174,12 @@ export function Layout({ children }: LayoutProps) {
             <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
               <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center border-2 border-blue-300">
                 <span className="text-white text-sm font-medium">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  {(user as any)?.name?.charAt(0).toUpperCase() || (user as any)?.firstName?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               {!sidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user?.name}</p>
+                  <p className="text-sm font-medium text-white truncate">{(user as any)?.name || (user as any)?.firstName}</p>
                   <p className="text-xs text-blue-200 truncate">Administrador</p>
                 </div>
               )}

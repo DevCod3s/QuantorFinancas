@@ -43,7 +43,7 @@ export function useSendMessage() {
   return useMutation({
     mutationFn: async (message: string) => {
       const response = await apiRequest("POST", "/api/ai/chat", { message });
-      return response.json();
+      return response;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/ai/interactions"] });

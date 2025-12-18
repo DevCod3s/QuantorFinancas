@@ -16,8 +16,7 @@
  */
 
 // Importações do Drizzle ORM
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { db } from "./db";
 import { desc, eq, and, sql } from "drizzle-orm";
 
 // Schema e tipos do banco de dados
@@ -41,9 +40,8 @@ import type {
   InsertBankAccount
 } from "@shared/schema";
 
-// Configuração da conexão com PostgreSQL via Neon
-const sql_client = neon(process.env.DATABASE_URL!);
-const db = drizzle(sql_client, { schema });
+// Configuração da conexão com PostgreSQL já feita em db.ts
+// Importação acima: import { db } from "./db";
 
 export interface IStorage {
   // Users
@@ -150,7 +148,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(schema.categories)
-      .where(eq(schema.categories.userId, userId))
+      .where(eq(schema.categories.userId, parseInt(userId)))
       .orderBy(schema.categories.name);
   }
 
@@ -187,7 +185,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(schema.transactions)
-      .where(eq(schema.transactions.userId, userId))
+      .where(eq(schema.transactions.userId, parseInt(userId)))
       .orderBy(desc(schema.transactions.date));
   }
 
@@ -261,7 +259,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(schema.aiInteractions)
-      .where(eq(schema.aiInteractions.userId, userId))
+      .where(eq(schema.aiInteractions.userId, parseInt(userId)))
       .orderBy(desc(schema.aiInteractions.createdAt));
   }
 
@@ -315,7 +313,7 @@ export class DatabaseStorage implements IStorage {
   async getChartOfAccounts(userId: number): Promise<ChartOfAccount[]> {
     return db.select()
       .from(schema.chartOfAccounts)
-      .where(eq(schema.chartOfAccounts.userId, userId))
+      .where(eq(schema.chartOfAccounts.userId, userId.toString()))
       .orderBy(schema.chartOfAccounts.code);
   }
 

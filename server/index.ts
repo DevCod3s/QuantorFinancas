@@ -21,6 +21,9 @@
  * @version 1.0.0
  */
 
+// Carregar variáveis de ambiente do arquivo .env
+import 'dotenv/config';
+
 // Importações do Express e HTTP
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";

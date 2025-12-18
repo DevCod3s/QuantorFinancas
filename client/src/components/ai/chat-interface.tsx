@@ -240,7 +240,7 @@ export default function ChatInterface() {
 
                   {msg.sender === 'user' && (
                     <img
-                      src={user?.profileImageUrl || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
+                      src={(user as any)?.profileImageUrl || (user as any)?.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=150&h=150"}
                       alt="Usuário"
                       className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                     />

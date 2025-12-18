@@ -15,7 +15,17 @@
  */
 
 // Importações do Express para roteamento
-import { Router } from "express";
+import { Router, Request } from "express";
+import type { User } from "@shared/schema";
+
+// Estender tipos do Express para incluir user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 // Camada de persistência de dados
 import { storage } from "./storage";

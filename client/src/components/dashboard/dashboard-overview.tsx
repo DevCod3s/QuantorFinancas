@@ -52,7 +52,15 @@ export default function DashboardOverview() {
           setTimeout(() => {
             window.location.href = "/api/login";
           }, 500);
-          return null;
+          return {
+            totalBalance: 0,
+            monthlyIncome: 0,
+            monthlyExpenses: 0,
+            monthlySavings: 0,
+            recentTransactions: [],
+            expensesByCategory: [],
+            monthlyTrends: []
+          };
         }
         throw error;
       }

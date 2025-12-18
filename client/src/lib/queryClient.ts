@@ -56,28 +56,32 @@ export const queryClient = new QueryClient({
  * Utilizado para operações POST, PUT, DELETE que modificam dados.
  * Adiciona automaticamente headers JSON e trata erros.
  * 
+ * @param method - Método HTTP (GET, POST, PUT, DELETE)
  * @param url - URL do endpoint da API
- * @param options - Opções do fetch (method, body, headers, etc)
+ * @param data - Dados a enviar no corpo da requisição (opcional)
  * @returns Promise com dados JSON da resposta
  * 
  * @example
  * // Criar nova categoria
- * await apiRequest('/api/categories', {
- *   method: 'POST',
- *   body: JSON.stringify({ name: 'Alimentação', type: 'expense' })
- * });
+ * await apiRequest('POST', '/api/categories', { name: 'Alimentação', type: 'expense' });
  */
-export const apiRequest = async (url: string, options: RequestInit = {}) => {
-  const response = await fetch(url, {
+export const apiRequest = async (method: string, url: string, data?: any) => {
+  const options: RequestInit = {
+    method,
     headers: {
-      "Content-Type": "application/json", // Header padrão para JSON
-      ...options.headers, // Permite override de headers
+      "Content-Type": "application/json",
     },
-    ...options,
-  });
+    credentials: "include",
+  };
+
+  if (data) {
+    options.body = JSON.stringify(data);
+  }
+
+  const response = await fetch(url, options);
 
   if (!response.ok) {
-    throw new Error(`API request failed: ${response.status}`);
+    throw new Error(`Requisição da API falhou: ${response.status}`);
   }
 
   return response.json();
