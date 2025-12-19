@@ -42,7 +42,7 @@ export default function BudgetCards() {
     const budgetEnd = new Date(budget.endDate);
     const budgetedAmount = parseFloat(budget.budgetedAmount);
 
-    // Filter transactions within budget period and same category
+    // Filtrar transações dentro do período do orçamento e mesma categoria
     const relevantTransactions = transactions.filter(transaction => {
       const transactionDate = new Date(transaction.date);
       return (

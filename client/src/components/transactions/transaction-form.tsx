@@ -71,7 +71,7 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
       onClose();
       form.reset();
     } catch (error) {
-      console.error('Error submitting transaction:', error);
+      console.error('Erro ao enviar transação:', error);
     } finally {
       setIsSubmitting(false);
     }

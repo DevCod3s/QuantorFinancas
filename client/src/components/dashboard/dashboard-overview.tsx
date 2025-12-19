@@ -258,7 +258,7 @@ export default function DashboardOverview() {
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              {dashboardData.expensesByCategory.length > 0 ? (
+              {dashboardData?.expensesByCategory?.length > 0 ? (
                 <Doughnut data={expenseChartData} options={{ responsive: true, maintainAspectRatio: false }} />
               ) : (
                 <div className="h-full flex items-center justify-center text-muted-foreground">
@@ -306,7 +306,7 @@ export default function DashboardOverview() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {dashboardData.recentTransactions.length > 0 ? (
+            {dashboardData?.recentTransactions?.length > 0 ? (
               dashboardData.recentTransactions.map((transaction) => (
                 <div
                   key={transaction.id}

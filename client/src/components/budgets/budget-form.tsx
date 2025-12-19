@@ -44,7 +44,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
     },
   });
 
-  // Set default dates based on current month
+  // Definir datas padrão baseado no mês atual
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
@@ -76,16 +76,16 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
       onClose();
       form.reset();
     } catch (error) {
-      console.error('Error submitting budget:', error);
+      console.error('Erro ao enviar orçamento:', error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Filter categories to only show expense categories for budgets
+  // Filtrar categorias para mostrar apenas categorias de despesa para orçamentos
   const expenseCategories = categories?.filter(cat => cat.type === 'despesa') || [];
 
-  // Update end date when period changes
+  // Atualizar data de término quando o período muda
   const handlePeriodChange = (period: 'mensal' | 'anual') => {
     const startDate = form.getValues('startDate');
     if (startDate) {

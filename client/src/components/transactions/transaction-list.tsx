@@ -65,12 +65,12 @@ export default function TransactionList() {
     return matchesSearch && matchesCategory && matchesType;
   }) || [];
 
-  // Reset currentPage to 1 when filters change
+  // Redefinir página atual para 1 quando os filtros mudam
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, categoryFilter, typeFilter]);
 
-  // Clamp currentPage when totalPages decreases
+  // Limitar página atual quando total de páginas diminui
   useEffect(() => {
     const filteredCount = filteredTransactions.length;
     const newTotalPages = Math.ceil(filteredCount / itemsPerPage);

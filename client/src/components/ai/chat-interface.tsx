@@ -33,7 +33,7 @@ export default function ChatInterface() {
 
   useEffect(() => {
     if (interactions && interactions.length > 0) {
-      // Convert interactions to chat messages
+      // Converter interações para mensagens de chat
       const chatMessages: ChatMessage[] = [];
       interactions.forEach((interaction: AiInteraction) => {
         chatMessages.push({
@@ -79,8 +79,8 @@ export default function ChatInterface() {
 
       setLocalMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error('Error sending message:', error);
-      // Add error message
+      console.error('Erro ao enviar mensagem:', error);
+      // Adicionar mensagem de erro
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         content: 'Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.',

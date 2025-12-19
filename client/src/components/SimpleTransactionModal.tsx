@@ -37,7 +37,7 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
     onSave(transactionData);
     onClose();
     
-    // Reset form
+    // Limpar formulário
     setTipo('');
     setValor('');
     setData(new Date().toISOString().split('T')[0]);

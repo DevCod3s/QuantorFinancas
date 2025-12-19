@@ -164,7 +164,7 @@ export default function ReportsCharts() {
 
     const categoryTotals: { [key: string]: { total: number; count: number; change: number } } = {};
 
-    // Get current month transactions
+    // Obter transações do mês atual
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();

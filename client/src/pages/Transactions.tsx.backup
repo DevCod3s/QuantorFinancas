@@ -295,7 +295,7 @@ export function Transactions() {
     const newTransaction = {
       id: Date.now(), // ID temporário
       company: transactionData.conta,
-      cnpj: '00.000.000/0001-00', // Placeholder
+      cnpj: '00.000.000/0001-00', // Valor de exemplo
       dueDate: transactionData.data,
       product: transactionData.descricao || 'Lançamento',
       type: transactionData.repeticao,

@@ -44,39 +44,39 @@ import type {
 // Importação acima: import { db } from "./db";
 
 export interface IStorage {
-  // Users
+  // Usuários
   getUserById(id: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
   getUserByUsername(username: string): Promise<User | null>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
 
-  // Categories
+  // Categorias
   getCategoriesByUserId(userId: string): Promise<Category[]>;
   getCategoryById(id: number): Promise<Category | null>;
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
   deleteCategory(id: number): Promise<void>;
 
-  // Transactions
+  // Transações
   getTransactionsByUserId(userId: string): Promise<Transaction[]>;
   getTransactionById(id: number): Promise<Transaction | null>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction>;
   deleteTransaction(id: number): Promise<void>;
 
-  // Budgets
+  // Orçamentos
   getBudgetsByUserId(userId: string): Promise<Budget[]>;
   getBudgetById(id: number): Promise<Budget | null>;
   createBudget(budget: InsertBudget): Promise<Budget>;
   updateBudget(id: number, budget: Partial<InsertBudget>): Promise<Budget>;
   deleteBudget(id: number): Promise<void>;
 
-  // AI Interactions
+  // Interações com IA
   getAiInteractionsByUserId(userId: string): Promise<AiInteraction[]>;
   createAiInteraction(interaction: InsertAiInteraction): Promise<AiInteraction>;
 
-  // Relationships
+  // Relacionamentos
   getRelationshipsByUserId(userId: string): Promise<Relationship[]>;
   getRelationshipsByType(userId: string, type: string): Promise<Relationship[]>;
   getRelationshipById(id: number): Promise<Relationship | null>;
@@ -84,21 +84,21 @@ export interface IStorage {
   updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship>;
   deleteRelationship(id: number): Promise<void>;
 
-  // Chart of Accounts
+  // Plano de contas
   getChartOfAccounts(userId: number): Promise<ChartOfAccount[]>;
   getChartOfAccountById(id: number): Promise<ChartOfAccount | null>;
   createChartOfAccount(account: InsertChartOfAccount): Promise<ChartOfAccount>;
   updateChartOfAccount(id: number, account: Partial<InsertChartOfAccount>): Promise<ChartOfAccount>;
   deleteChartOfAccount(id: number): Promise<void>;
 
-  // Bank Accounts
+  // Contas bancárias
   getBankAccountsByUserId(userId: string): Promise<BankAccount[]>;
   getBankAccountById(id: number): Promise<BankAccount | null>;
   createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount>;
   updateBankAccount(id: number, bankAccount: Partial<InsertBankAccount>): Promise<BankAccount>;
   deleteBankAccount(id: number): Promise<void>;
 
-  // Dashboard
+  // Painel (Dashboard)
   getDashboardStats(userId: string): Promise<{
     totalIncome: number;
     totalExpenses: number;
@@ -380,12 +380,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDashboardStats(userId: string) {
-    // Get current month transactions
+    // Obter transações do mês atual
     const currentMonth = new Date();
     const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
-    // Calculate totals
+    // Calcular totais
     const transactions = await db
       .select()
       .from(schema.transactions)
@@ -407,7 +407,7 @@ export class DatabaseStorage implements IStorage {
 
     const balance = totalIncome - totalExpenses;
 
-    // Get recent transactions
+    // Obter transações recentes
     const recentTransactions = await db
       .select({
         id: schema.transactions.id,

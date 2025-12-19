@@ -5,7 +5,7 @@ import * as RechartsPrimitive from "recharts"
 
 import { cn } from "@/lib/utils"
 
-// Format: { THEME_NAME: CSS_SELECTOR }
+// Formato: { NOME_DO_TEMA: SELETOR_CSS }
 const THEMES = { light: "", dark: ".dark" } as const
 
 export type ChartConfig = {
@@ -28,7 +28,7 @@ function useChart() {
   const context = React.useContext(ChartContext)
 
   if (!context) {
-    throw new Error("useChart must be used within a <ChartContainer />")
+    throw new Error("useChart deve ser usado dentro de um componente <ChartContainer />")
   }
 
   return context

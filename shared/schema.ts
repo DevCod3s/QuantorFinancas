@@ -45,6 +45,7 @@ export const users = pgTable("users", {
   username: text("username").unique(),
   password: text("password"), // Criptografada com bcrypt
   avatar: text("avatar"),
+  isAdmin: boolean("is_admin").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -117,7 +118,7 @@ export const transactions = pgTable("transactions", {
  */
 export const budgets = pgTable("budgets", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   categoryId: integer("category_id").references(() => categories.id), // NULL = orçamento geral
   budgetedAmount: decimal("budgeted_amount", { precision: 10, scale: 2 }).notNull(),
   period: text("period").notNull(), // 'monthly' | 'quarterly' | 'yearly'
@@ -304,7 +305,7 @@ export type InsertRelationship = z.infer<typeof insertRelationshipSchema>;
  */
 export const chartOfAccounts = pgTable("chart_of_accounts", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   parentId: integer("parent_id"), // Auto-referência para hierarquia será definida após a declaração
   code: text("code").notNull(), // Código da conta (ex: 1.1.001)
   name: text("name").notNull(), // Nome da conta
@@ -341,7 +342,7 @@ export type InsertChartOfAccount = z.infer<typeof insertChartOfAccountsSchema>;
  */
 export const bankAccounts = pgTable("bank_accounts", {
   id: serial("id").primaryKey(),
-  userId: text("user_id").notNull().references(() => users.id),
+  userId: integer("user_id").notNull().references(() => users.id),
   initialBalanceDate: date("initial_balance_date").notNull(), // Data do saldo inicial
   currentBalance: decimal("current_balance", { precision: 15, scale: 2 }).notNull(), // Saldo em R$
   balanceType: text("balance_type").notNull().default("credor"), // 'credor' | 'devedor'

@@ -41,7 +41,7 @@ export const queryClient = new QueryClient({
         const res = await fetch(url);
         
         if (!res.ok) {
-          throw new Error(`Request failed: ${res.status}`);
+          throw new Error(`Requisição falhou: ${res.status}`);
         }
         
         return res.json();
@@ -61,7 +61,7 @@ export const queryClient = new QueryClient({
  * @param data - Dados a enviar no corpo da requisição (opcional)
  * @returns Promise com dados JSON da resposta
  * 
- * @example
+ * @exemplo
  * // Criar nova categoria
  * await apiRequest('POST', '/api/categories', { name: 'Alimentação', type: 'expense' });
  */

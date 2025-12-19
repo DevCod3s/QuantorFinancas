@@ -137,7 +137,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       formData.relationshipType &&
       formData.document &&
       formData.socialName &&
-      (formData.documentType === 'CPF' ? formData.birthDate : true) &&
+      (formData.documentType === 'CPF' ? formData.birthDate : formData.fantasyName) &&
       formData.zipCode &&
       formData.street &&
       formData.number &&
@@ -145,6 +145,24 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
       formData.city &&
       formData.state
     );
+    
+    // Debug log para identificar qual campo está faltando
+    if (!isValid) {
+      console.log('Validação Step 1:', {
+        relationshipType: !!formData.relationshipType,
+        document: !!formData.document,
+        socialName: !!formData.socialName,
+        birthDateOrFantasy: formData.documentType === 'CPF' ? !!formData.birthDate : !!formData.fantasyName,
+        zipCode: !!formData.zipCode,
+        street: !!formData.street,
+        number: !!formData.number,
+        neighborhood: !!formData.neighborhood,
+        city: !!formData.city,
+        state: !!formData.state,
+        documentType: formData.documentType,
+        fantasyName: formData.fantasyName
+      });
+    }
     
     onDataChangeRef.current(formData, isValid);
   }, [formData]);
@@ -505,7 +523,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               ref={fantasyNameRef}
               type="text"
               id="fantasy-name"
-              label="Nome fantasia"
+              label="Nome fantasia *"
               value={formData.fantasyName}
               onChange={(e) => updateFormData({ fantasyName: e.target.value })}
               onKeyDown={(e) => {

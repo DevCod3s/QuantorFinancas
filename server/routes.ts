@@ -147,6 +147,65 @@ router.post("/auth/login", async (req: any, res) => {
 });
 
 /**
+ * POST /api/auth/register
+ * 
+ * Cadastro de novo usuário com credenciais locais.
+ * Cria usuário, criptografa senha e faz login automático.
+ * 
+ * Body: { username: string, email: string, name: string, password: string }
+ */
+router.post("/auth/register", async (req: any, res) => {
+  try {
+    const { username, email, name, password } = req.body;
+    
+    // Validação de campos obrigatórios
+    if (!username || !email || !name || !password) {
+      return res.status(400).json({ error: "Todos os campos são obrigatórios" });
+    }
+    
+    // Validar comprimento mínimo de senha
+    if (password.length < 6) {
+      return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
+    }
+    
+    // Verificar se username já existe
+    const existingUsername = await storage.getUserByUsername(username.toLowerCase());
+    if (existingUsername) {
+      return res.status(400).json({ error: "Username já está em uso" });
+    }
+    
+    // Verificar se email já existe
+    const existingEmail = await storage.getUserByEmail(email);
+    if (existingEmail) {
+      return res.status(400).json({ error: "Email já está cadastrado" });
+    }
+    
+    // Criptografar senha
+    const bcrypt = require("bcryptjs");
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Criar usuário
+    const newUser = await storage.createUser({
+      username: username.toLowerCase(),
+      email,
+      name,
+      password: hashedPassword,
+    });
+    
+    // Remover senha do objeto de resposta
+    const { password: _, ...userWithoutPassword } = newUser;
+    
+    // Salvar usuário na sessão
+    req.session.user = userWithoutPassword;
+    
+    res.json({ success: true, user: userWithoutPassword });
+  } catch (error) {
+    console.error("Erro ao registrar usuário:", error);
+    res.status(500).json({ error: "Erro ao registrar usuário" });
+  }
+});
+
+/**
  * =============================================================================
  * ROTAS DE DADOS
  * =============================================================================

@@ -74,7 +74,7 @@ app.use(
   })
 );
 
-// Add user to request if available
+// Adiciona o usuário ao request quando disponível
 app.use(addUser);
 
 app.use((req, res, next) => {
@@ -108,7 +108,7 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize authentication
+  // Inicializar autenticação
   await initializeAuth();
   
   // Rota para página de login
@@ -116,7 +116,7 @@ app.use((req, res, next) => {
     res.sendFile(path.join(__dirname, '../client/login.html'));
   });
   
-  // Configure API routes
+  // Configurar rotas da API
   app.use("/api", apiRoutes);
   
   const server = createServer(app);
@@ -143,11 +143,11 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
+  server.listen(
     port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+    process.platform === "win32" ? "127.0.0.1" : "0.0.0.0",
+    () => {
+      log(`serving on port ${port}`);
+    }
+  );
 })();
