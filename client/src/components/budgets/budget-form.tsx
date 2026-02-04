@@ -9,6 +9,7 @@ import CustomInput, { CustomSelect } from "@/components/CustomInput";
 import { useCreateBudget, useUpdateBudget } from "@/hooks/use-budgets";
 import { useQuery } from "@tanstack/react-query";
 import { Budget, Category } from "@/types";
+import { DateInput } from "../DateInput";
 
 const budgetSchema = z.object({
   categoryId: z.number().min(1, 'Categoria é obrigatória'),
@@ -190,18 +191,17 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <CustomInput
-                        id="start-date"
+                      <DateInput
                         label="Data de Início *"
-                        type="date"
-                        {...field}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                          field.onChange(e.target.value);
+                        value={field.value}
+                        onChange={(value) => {
+                          field.onChange(value);
                           const period = form.getValues('period');
                           if (period) {
                             handlePeriodChange(period);
                           }
                         }}
+                        required
                       />
                     </FormControl>
                     <FormMessage />
@@ -215,11 +215,11 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <CustomInput
-                        id="end-date"
+                      <DateInput
                         label="Data de Fim *"
-                        type="date"
-                        {...field}
+                        value={field.value}
+                        onChange={field.onChange}
+                        required
                       />
                     </FormControl>
                     <FormMessage />

@@ -73,7 +73,8 @@ export function Login() {
           setError(data.error || 'Erro ao fazer login');
         }
       } catch (error) {
-        setError('Erro de conexão');
+        console.error('Erro de login:', error);
+        setError('Erro de conexão com o servidor. Verifique se o servidor está rodando.');
       } finally {
         setIsLoading(false);
       }

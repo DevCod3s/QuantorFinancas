@@ -59,6 +59,7 @@ import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
+import { DateInput } from "@/components/DateInput";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -2142,14 +2143,10 @@ export function Transactions() {
               {/* Primeira linha: Data do saldo inicial, Saldo em 17/04/2..., Radio buttons */}
               <div className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-3">
-                  <TextField
+                  <DateInput
                     label="Data do saldo inicial *"
-                    variant="standard"
-                    type="date"
                     value={bankAccountData.initialBalanceDate}
-                    onChange={(e) => setBankAccountData({ ...bankAccountData, initialBalanceDate: e.target.value })}
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
+                    onChange={(value) => setBankAccountData({ ...bankAccountData, initialBalanceDate: value })}
                   />
                 </div>
                 <div className="col-span-3">

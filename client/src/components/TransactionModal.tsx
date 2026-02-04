@@ -19,6 +19,7 @@ import {
   IconButton
 } from '@mui/material';
 import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle } from 'lucide-react';
+import { DateInput } from './DateInput';
 
 interface TransactionModalProps {
   open: boolean;
@@ -162,17 +163,12 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             />
           </div>
           
-          <div>
-            <TextField
-              variant="standard"
+          <div className="pt-3">
+            <DateInput
               label="Data"
-              type="date"
-              value="2025-07-25"
-              onChange={(e) => setData(e.target.value)}
-              fullWidth
+              value={data}
+              onChange={setData}
               required
-              InputLabelProps={{ shrink: true }}
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
           </div>
           

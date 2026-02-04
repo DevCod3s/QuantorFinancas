@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X } from 'lucide-react';
+import { DateInput } from './DateInput';
 
 interface SimpleTransactionModalProps {
   open: boolean;
@@ -80,14 +81,11 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
               />
             </div>
             
-            <div>
-              <label className="text-sm font-medium">Data</label>
-              <Input
-                type="date"
-                value={data}
-                onChange={(e) => setData(e.target.value)}
-              />
-            </div>
+            <DateInput
+              label="Data"
+              value={data}
+              onChange={setData}
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">

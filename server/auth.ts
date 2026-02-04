@@ -56,17 +56,27 @@ export async function initializeAuth() {
       });
     }
     
-    // Verificar se o usuário mestre existe
+    // Verificar se o usuário mestre existe, se não, criar
     let masterUser = await storage.getUserByUsername(MASTER_USER.username.toLowerCase());
     if (masterUser) {
-      console.log("Master user already exists");
+      console.log("✅ Master user already exists");
     } else {
-      console.log("Master user not found in database");
+      console.log("🔧 Creating master user...");
+      const hashedPassword = await bcrypt.hash(MASTER_USER.password, 10);
+      masterUser = await storage.createUser({
+        email: MASTER_USER.email,
+        name: MASTER_USER.name,
+        username: MASTER_USER.username.toLowerCase(),
+        password: hashedPassword,
+        avatar: MASTER_USER.avatar,
+        isAdmin: true,
+      });
+      console.log("✅ Master user created successfully");
     }
     
-    console.log("Auth initialized successfully with default user and master user");
+    console.log("✅ Auth initialized successfully with default user and master user");
   } catch (error) {
-    console.error("Failed to initialize auth:", error);
+    console.error("❌ Failed to initialize auth:", error);
   }
 }
 

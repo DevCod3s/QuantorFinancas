@@ -21,6 +21,7 @@ import { Plus } from "lucide-react";
 import CpfCnpjInput from "../CpfCnpjInput";
 import CustomInput, { CustomSelect } from "../CustomInput";
 import AddRelationshipTypeModal from "../AddRelationshipTypeModal";
+import { DateInput } from "../DateInput";
 
 /**
  * Interface para dados do formulário da Etapa 1
@@ -538,18 +539,11 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
         {/* Data de Nascimento (apenas para CPF) */}
         {formData.documentType === 'CPF' && (
           <div className="mt-6">
-            <CustomInput
-              ref={birthDateRef}
-              type="date"
-              id="birth-date"
+            <DateInput
               label="Data de nascimento *"
               value={formData.birthDate}
-              onChange={(e) => updateFormData({ birthDate: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && zipCodeRef.current) {
-                  zipCodeRef.current.focus();
-                }
-              }}
+              onChange={(value) => updateFormData({ birthDate: value })}
+              required
             />
           </div>
         )}

@@ -50,6 +50,7 @@ import {
   Building2,
   AlertCircle
 } from "lucide-react";
+import { DateInput } from "../DateInput";
 import { useContractGenerator } from "../../hooks/useContractGenerator";
 
 /**
@@ -495,21 +496,11 @@ export default function Step2ContractGeneration({
                 {/* Data Inicial e Prazo de Validade - Lado a lado */}
                 <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2, mb: 3 }}>
                   <Box sx={{ flex: 1 }}>
-                    <TextField
-                      type="date"
-                      fullWidth
-                      label="Data Inicial"
-                      variant="outlined"
+                    <DateInput
+                      label="Data Inicial *"
                       value={formData.startDate}
-                      onChange={(e) => updateFormData({ startDate: e.target.value })}
-                      InputLabelProps={{ shrink: true }}
+                      onChange={(value) => updateFormData({ startDate: value })}
                       required
-                      sx={{
-                        '& .MuiInputLabel-root': {
-                          color: '#6b7280',
-                          fontWeight: 500
-                        }
-                      }}
                     />
                   </Box>
                   

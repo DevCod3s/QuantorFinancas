@@ -1,5 +1,5 @@
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -8,26 +8,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Neon serverless driver - ideal para edge computing e serverless
+const sql = neon(process.env.DATABASE_URL);
 
-pool.on('error', (err) => {
-  console.error('❌ Erro no pool de conexões PostgreSQL:', err);
-});
+// Drizzle ORM com driver Neon HTTP
+export const db = drizzle(sql, { schema });
 
-pool.on('connect', () => {
-  console.log('✅ Conectado ao PostgreSQL 17 - Contabo!');
-});
-
-export const db = drizzle({ client: pool, schema });
+console.log('✅ Conectado ao Neon DB - PostgreSQL Serverless!');
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('Encerrando conexões do pool...');
-  await pool.end();
+  console.log('Encerrando conexão com Neon DB...');
   process.exit(0);
 });

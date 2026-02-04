@@ -9,6 +9,7 @@ import { FloatingInput, FloatingSelect, FloatingTextarea } from "@/components/ui
 import { useCreateTransaction, useUpdateTransaction } from "@/hooks/use-transactions";
 import { useQuery } from "@tanstack/react-query";
 import { Transaction, Category, ChartAccount } from "@/types";
+import { DateInput } from "../DateInput";
 
 const transactionSchema = z.object({
   type: z.enum(['receita', 'despesa']),
@@ -207,10 +208,11 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <FloatingInput
+                    <DateInput
                       label="Data"
-                      type="date"
-                      {...field}
+                      value={field.value}
+                      onChange={field.onChange}
+                      required
                     />
                   </FormControl>
                   <FormMessage />

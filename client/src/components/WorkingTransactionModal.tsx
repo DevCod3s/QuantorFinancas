@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { DateInput } from './DateInput';
 
 interface WorkingTransactionModalProps {
   open: boolean;
@@ -99,17 +100,11 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Data
-                </label>
-                <input
-                  type="date"
-                  value={data}
-                  onChange={(e) => setData(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+              <DateInput
+                label="Data"
+                value={data}
+                onChange={setData}
+              />
             </div>
             
             {/* Row 2: Repetição, Conta */}
