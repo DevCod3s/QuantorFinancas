@@ -100,11 +100,13 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 />
               </div>
               
-              <DateInput
-                label="Data"
-                value={data}
-                onChange={setData}
-              />
+              <div>
+                <DateInput
+                  label="Data"
+                  value={data}
+                  onChange={setData}
+                />
+              </div>
             </div>
             
             {/* Row 2: Repetição, Conta */}

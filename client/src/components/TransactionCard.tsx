@@ -27,6 +27,7 @@ import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Set
 import { useQuery } from "@tanstack/react-query";
 import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
+import { DateInput } from "./DateInput";
 
 interface TransactionCardProps {
   open: boolean;
@@ -41,7 +42,7 @@ interface TransactionCardProps {
 export function TransactionCard({ open, onClose, onSave }: TransactionCardProps) {
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
-  const [data, setData] = useState('25/07/2025');
+  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [repeticao, setRepeticao] = useState('Única');
   const [periodicidade, setPeriodicidade] = useState('Mensal');
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
@@ -292,13 +293,10 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 '& .MuiInputLabel-root': { color: '#666' }
               }}
             />
-            <TextField
-              variant="standard"
+            <DateInput
               label="Data"
               value={data}
-              onChange={(e) => setData(e.target.value)}
-              fullWidth
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+              onChange={setData}
             />
           </Box>
 

@@ -9,6 +9,11 @@
  */
 
 import { forwardRef, useState, useEffect } from 'react';
+import { Calendar as CalendarIcon } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 interface DateInputProps {
   value: string; // Formato ISO: YYYY-MM-DD
@@ -22,13 +27,16 @@ interface DateInputProps {
 
 export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
   ({ value, onChange, label, className = '', required = false, disabled = false, placeholder = 'DD/MM/AAAA' }, ref) => {
-    const [displayValue, setDisplayValue] = useState('');
-    const [inputType, setInputType] = useState<'text' | 'date'>('text');
+    const [localValue, setLocalValue] = useState('');
+    const [isFocused, setIsFocused] = useState(false);
+    const [calendarOpen, setCalendarOpen] = useState(false);
 
     // Converte ISO (YYYY-MM-DD) para formato brasileiro (DD/MM/YYYY)
     const isoToBrazilian = (isoDate: string): string => {
       if (!isoDate) return '';
-      const [year, month, day] = isoDate.split('-');
+      const parts = isoDate.split('-');
+      if (parts.length !== 3) return '';
+      const [year, month, day] = parts;
       return `${day}/${month}/${year}`;
     };
 
@@ -54,6 +62,21 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       return `${year}-${month}-${day}`;
     };
 
+    // Converte ISO para Date object
+    const isoToDate = (isoDate: string): Date | undefined => {
+      if (!isoDate) return undefined;
+      const date = new Date(isoDate + 'T12:00:00');
+      return isNaN(date.getTime()) ? undefined : date;
+    };
+
+    // Converte Date object para ISO
+    const dateToISO = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
     // Formata a data enquanto o usuário digita
     const formatDateInput = (input: string): string => {
       // Remove tudo que não é número
@@ -64,77 +87,149 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       
       // Adiciona as barras automaticamente
       let formatted = limited;
-      if (limited.length >= 2) {
+      if (limited.length >= 3) {
         formatted = `${limited.substring(0, 2)}/${limited.substring(2)}`;
       }
-      if (limited.length >= 4) {
+      if (limited.length >= 5) {
         formatted = `${limited.substring(0, 2)}/${limited.substring(2, 4)}/${limited.substring(4)}`;
       }
       
       return formatted;
     };
 
-    // Atualiza o valor de exibição quando o valor ISO muda (de fora)
+    // Sincroniza valor externo com valor local quando não está focado
     useEffect(() => {
-      if (value && inputType === 'text') {
-        setDisplayValue(isoToBrazilian(value));
+      if (!isFocused && value) {
+        setLocalValue(isoToBrazilian(value));
+      } else if (!isFocused && !value) {
+        setLocalValue('');
       }
-    }, [value, inputType]);
+    }, [value, isFocused]);
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (inputType === 'text') {
-        const formatted = formatDateInput(e.target.value);
-        setDisplayValue(formatted);
-        
-        // Se completou 10 caracteres (DD/MM/YYYY), converte para ISO e notifica
-        if (formatted.length === 10) {
-          const isoDate = brazilianToISO(formatted);
-          if (isoDate) {
-            onChange(isoDate);
-          }
+      const inputValue = e.target.value;
+      const formatted = formatDateInput(inputValue);
+      
+      console.log('Input:', inputValue, 'Formatted:', formatted);
+      
+      setLocalValue(formatted);
+      
+      // Tenta converter para ISO se tiver 8 dígitos
+      const numbers = formatted.replace(/\D/g, '');
+      if (numbers.length === 8) {
+        const isoDate = brazilianToISO(formatted);
+        if (isoDate) {
+          onChange(isoDate);
         }
-      } else {
-        // Input tipo date já retorna no formato ISO
-        onChange(e.target.value);
+      } else if (numbers.length === 0) {
+        onChange('');
       }
     };
 
     const handleBlur = () => {
-      // Ao sair do campo, tenta converter para ISO se tiver valor parcial
-      if (inputType === 'text' && displayValue) {
-        const isoDate = brazilianToISO(displayValue);
+      setIsFocused(false);
+      
+      // Validação ao sair do campo
+      if (localValue) {
+        const isoDate = brazilianToISO(localValue);
         if (isoDate) {
           onChange(isoDate);
-          setDisplayValue(isoToBrazilian(isoDate));
+          setLocalValue(isoToBrazilian(isoDate));
+        } else {
+          // Data inválida, limpa
+          setLocalValue('');
+          onChange('');
         }
       }
     };
 
-    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-      // No mobile/tablet, muda para date picker nativo
-      if (window.innerWidth <= 768) {
-        setInputType('date');
+    const handleFocus = () => {
+      setIsFocused(true);
+      // Inicializa com valor formatado se existir
+      if (value && !localValue) {
+        setLocalValue(isoToBrazilian(value));
+      }
+    };
+
+    const handleCalendarSelect = (date: Date | undefined) => {
+      if (date) {
+        const isoDate = dateToISO(date);
+        onChange(isoDate);
+        setLocalValue(isoToBrazilian(isoDate));
+        setCalendarOpen(false);
       }
     };
 
     return (
-      <div className={className}>
+      <div className={className} style={{ position: 'relative', paddingTop: '16px' }}>
         {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {label} {required && '*'}
+          <label 
+            className="block text-xs absolute top-0 left-0 transition-all"
+            style={{ 
+              color: '#666',
+              fontSize: '12px',
+              lineHeight: '1',
+              transform: 'translate(0, 0) scale(0.75)',
+              transformOrigin: 'top left'
+            }}
+          >
+            {label}
           </label>
         )}
-        <input
-          ref={ref}
-          type={inputType}
-          value={inputType === 'text' ? displayValue : value}
-          onChange={handleInputChange}
-          onBlur={handleBlur}
-          onFocus={handleFocus}
-          placeholder={inputType === 'text' ? placeholder : ''}
-          disabled={disabled}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        />
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+          <input
+            ref={ref}
+            type="text"
+            value={localValue}
+            onChange={handleInputChange}
+            onBlur={handleBlur}
+            onFocus={handleFocus}
+            placeholder={placeholder}
+            disabled={disabled}
+            maxLength={10}
+            className="w-full border-0 border-b border-gray-300 focus:outline-none focus:border-blue-500 bg-transparent"
+            style={{ 
+              fontSize: '16px',
+              padding: '4px 0 5px',
+              paddingRight: '32px',
+              lineHeight: '1.4375em'
+            }}
+          />
+          <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCalendarOpen(!calendarOpen);
+                }}
+                className="absolute right-0 bottom-1 p-1 hover:bg-gray-100 rounded transition-colors"
+                style={{ height: '24px', width: '24px' }}
+              >
+                <CalendarIcon className="h-4 w-4 text-gray-500" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent 
+              className="w-auto p-0" 
+              align="start"
+              sideOffset={5}
+              style={{ zIndex: 9999 }}
+              onInteractOutside={(e) => {
+                e.preventDefault();
+              }}
+            >
+              <Calendar
+                mode="single"
+                selected={isoToDate(value)}
+                onSelect={handleCalendarSelect}
+                locale={ptBR}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     );
   }

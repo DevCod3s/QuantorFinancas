@@ -81,11 +81,13 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
               />
             </div>
             
-            <DateInput
-              label="Data"
-              value={data}
-              onChange={setData}
-            />
+            <div>
+              <DateInput
+                label="Data"
+                value={data}
+                onChange={setData}
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
