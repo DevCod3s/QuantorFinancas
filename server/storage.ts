@@ -276,6 +276,10 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(schema.relationships).where(eq(schema.relationships.userId, parseInt(userId)));
   }
 
+  async getAllRelationships(userId: string): Promise<Relationship[]> {
+    return this.getRelationshipsByUserId(userId);
+  }
+
   async getRelationshipsByType(userId: string, type: string): Promise<Relationship[]> {
     return db.select()
       .from(schema.relationships)

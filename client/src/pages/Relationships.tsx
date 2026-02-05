@@ -18,6 +18,9 @@
 // Importações React
 import { useState, useEffect, useRef } from "react";
 
+// Importações React Query
+import { useQuery } from "@tanstack/react-query";
+
 // Importação do wizard de relacionamento
 import RelationshipWizard from "../components/relationship-wizard/RelationshipWizard";
 
@@ -32,15 +35,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 // Importações de dialogs personalizados
 import { useSuccessDialog } from "@/components/ui/success-dialog";
 import { useErrorDialog } from "@/components/ui/error-dialog";
-
-// Lista de clientes (vazia para dados reais)
-const clientesDemoData: any[] = [];
-
-// Lista de fornecedores (vazia para dados reais)
-const fornecedoresDemoData: any[] = [];
-
-// Lista de outros relacionamentos (vazia para dados reais)
-const outrosRelacionamentosDemoData: any[] = [];
 
 // Função para obter ícone e cor do status
 const getStatusIcon = (status: string) => {
@@ -66,9 +60,30 @@ export function Relationships() {
   // Estado para controlar se está na página de cadastro
   const [isAddingRelationship, setIsAddingRelationship] = useState(false);
   
+  // Estado para controlar edição
+  const [editingRelationship, setEditingRelationship] = useState<any>(null);
+  const [viewingRelationship, setViewingRelationship] = useState<any>(null);
+  
   // Hooks para dialogs de feedback
   const { showSuccess, SuccessDialog } = useSuccessDialog();
   const { showError, ErrorDialog } = useErrorDialog();
+  
+  // Query para buscar relacionamentos
+  const { data: relationships = [], isLoading, refetch } = useQuery({
+    queryKey: ['/api/relationships'],
+    queryFn: async () => {
+      const response = await fetch('/api/relationships');
+      if (!response.ok) throw new Error('Erro ao carregar relacionamentos');
+      const data = await response.json();
+      console.log('Relacionamentos recebidos:', data); // Debug para ver estrutura
+      return data;
+    }
+  });
+
+  // Filtrar relacionamentos por tipo
+  const clientesDemoData = relationships.filter((r: any) => r.type === 'cliente');
+  const fornecedoresDemoData = relationships.filter((r: any) => r.type === 'fornecedor');
+  const outrosRelacionamentosDemoData = relationships.filter((r: any) => r.type === 'outros');
   
   // Estados de paginação para cada aba
   const [clientesPage, setClientesPage] = useState(1);
@@ -152,35 +167,47 @@ export function Relationships() {
     return Math.ceil(totalItems / perPage);
   };
 
+  // Função para calcular range de itens mostrados
+  const getItemRange = (currentPage: number, perPage: number, totalItems: number) => {
+    if (totalItems === 0) return { start: 0, end: 0 };
+    const start = (currentPage - 1) * perPage + 1;
+    const end = Math.min(currentPage * perPage, totalItems);
+    return { start, end };
+  };
+
   // Funções de ação para os botões
   const handleEdit = (item: any, tipo: string) => {
-    showSuccess(
-      "Edição Iniciada!",
-      `Os dados de ${item.razaoSocialCompleta || item.nomeFantasia} foram carregados para edição.`
-    );
+    const nome = item.socialname || item.social_name || item.socialName || item.fantasyname || item.fantasy_name || item.fantasyName;
+    console.log('Editando relacionamento:', item);
+    setEditingRelationship(item);
+    setIsAddingRelationship(true);
   };
 
   const handleView = (item: any, tipo: string) => {
-    showSuccess(
-      "Visualização Aberta!",
-      `Detalhes completos de ${item.razaoSocialCompleta || item.nomeFantasia} foram carregados.`
-    );
+    const nome = item.socialname || item.social_name || item.socialName || item.fantasyname || item.fantasy_name || item.fantasyName;
+    console.log('Visualizando relacionamento:', item);
+    setViewingRelationship(item);
+    setIsAddingRelationship(true);
   };
 
   const handleDelete = (item: any, tipo: string) => {
-    // Simula validação - cliente com status "Ativo" não pode ser excluído
-    if (item.status === "Ativo") {
+    const nome = item.socialname || item.social_name || item.socialName || item.fantasyname || item.fantasy_name || item.fantasyName;
+    
+    // Validação - relacionamento com status "Ativo" não pode ser excluído
+    if (item.status === "ativo" || item.status === "Ativo") {
       showError(
         "Exclusão Negada!",
-        `Não é possível excluir ${item.razaoSocialCompleta || item.nomeFantasia} pois o status está ativo. Altere o status antes de excluir.`
+        `Não é possível excluir ${nome} pois o status está ativo. Altere o status antes de excluir.`
       );
       return;
     }
 
+    // TODO: Implementar exclusão real do banco de dados
     showSuccess(
       "Exclusão Realizada!",
-      `${item.razaoSocialCompleta || item.nomeFantasia} foi removido com sucesso dos ${tipo.toLowerCase()}.`
+      `${nome} foi removido com sucesso dos ${tipo.toLowerCase()}.`
     );
+    refetch(); // Recarrega a lista após exclusão
   };
 
   // Função para abrir wizard de cadastro
@@ -249,11 +276,28 @@ export function Relationships() {
 
   // Se está adicionando relacionamento, mostrar página de cadastro
   if (isAddingRelationship) {
+    // Determinar o tipo baseado na aba ativa
+    const relationshipTypeMap = {
+      'clientes': 'cliente' as const,
+      'fornecedores': 'fornecedor' as const,
+      'outros': 'outros' as const
+    };
+    
+    const selectedType = relationshipTypeMap[activeTab as keyof typeof relationshipTypeMap] || 'cliente';
+    
     return (
       <div className="space-y-6">
         <RelationshipWizard
           isOpen={true}
-          onClose={() => setIsAddingRelationship(false)}
+          onClose={() => {
+            setIsAddingRelationship(false);
+            setEditingRelationship(null);
+            setViewingRelationship(null);
+            refetch(); // Recarregar lista após fechar wizard
+          }}
+          relationshipType={selectedType}
+          initialData={editingRelationship || viewingRelationship || undefined}
+          mode={viewingRelationship ? 'view' : editingRelationship ? 'edit' : 'create'}
         />
       </div>
     );
@@ -341,55 +385,63 @@ export function Relationships() {
           <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{width: '60px'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: '120px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '120px'}} />
+                  </colgroup>
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center space-x-1">
-                          <span>#</span>
-                          <ArrowUpDown className="h-3 w-3" />
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center justify-center space-x-1">
+                          <span>ID</span>
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("razaoSocialCompleta")}
                       >
                         <div className="flex items-center space-x-1">
-                          <span>Razão Social | Nome</span>
+                          <span>Razão Social/Nome</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nome Fantasia
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("tipo")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Tipo</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("dataCadastro")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Data</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("status")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Status</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ações
                       </th>
                     </tr>
@@ -403,66 +455,117 @@ export function Relationships() {
           <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{width: '60px'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: '120px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '120px'}} />
+                  </colgroup>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedClientesData.map((cliente, index) => {
-                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(cliente.status);
+                    {processedClientesData.map((cliente) => {
+                      // Normalizar campos do banco (snake_case para camelCase)
+                      const id = cliente.id;
+                      const document = cliente.document;
+                      const documentType = cliente.documenttype || cliente.document_type || cliente.documentType;
+                      const socialName = cliente.socialname || cliente.social_name || cliente.socialName;
+                      const fantasyName = cliente.fantasyname || cliente.fantasy_name || cliente.fantasyName;
+                      const createdAt = cliente.createdat || cliente.created_at || cliente.createdAt;
+                      const status = cliente.status || 'ativo';
+                      
+                      // Formatar status
+                      const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
+                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
+                      
+                      // Formatar documento (CPF: 000.000.000-00 | CNPJ: 00.000.000/0000-00)
+                      const formatDocument = (doc: string, type: string) => {
+                        if (!doc) return '-';
+                        const numbers = doc.replace(/\D/g, '');
+                        if (type === 'CPF' && numbers.length === 11) {
+                          return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                        }
+                        if (type === 'CNPJ' && numbers.length === 14) {
+                          return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                        }
+                        return doc;
+                      };
+                      
                       return (
-                        <tr key={cliente.id} className="hover:bg-gray-50 transition-colors duration-150">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {cliente.id}
+                        <tr key={id} className="hover:bg-gray-50 transition-colors duration-150">
+                          {/* 1. ID */}
+                          <td className="px-3 py-3 text-center text-xs font-medium text-gray-900">
+                            {id}
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm">
-                              <div className="font-medium text-gray-900">{cliente.razaoSocial}</div>
-                              <div className="text-gray-500 text-xs">{cliente.razaoSocialCompleta}</div>
+                          
+                          {/* 2. RAZÃO SOCIAL/NOME (2 linhas: documento + razão social) */}
+                          <td className="px-3 py-3">
+                            <div>
+                              <div className="text-gray-500 text-xs mb-0.5">
+                                {formatDocument(document, documentType)}
+                              </div>
+                              <div className="font-medium text-gray-900 text-xs truncate">
+                                {socialName || '-'}
+                              </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {cliente.nomeFantasia}
+                          
+                          {/* 3. NOME FANTASIA (nome fantasia para CNPJ, nome completo para CPF) */}
+                          <td className="px-3 py-3 text-xs text-gray-900 truncate">
+                            {fantasyName || socialName || '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              cliente.tipo === 'Pessoa Física' 
+                          
+                          {/* 4. TIPO (Pessoa Jurídica/Pessoa Física) */}
+                          <td className="px-3 py-3 text-center">
+                            <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                              documentType === 'CPF' 
                                 ? 'bg-blue-100 text-blue-800' 
                                 : 'bg-purple-100 text-purple-800'
                             }`}>
-                              {cliente.tipo === 'Pessoa Física' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                              {documentType === 'CPF' ? 'PF' : 'PJ'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {cliente.dataCadastro}
+                          
+                          {/* 5. DATA (data de cadastro) */}
+                          <td className="px-3 py-3 whitespace-nowrap text-center text-xs text-gray-900">
+                            {createdAt ? new Date(createdAt).toLocaleDateString('pt-BR') : '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-2">
-                              <StatusIcon className={`h-4 w-4 ${statusColor}`} />
-                              <span className={`text-sm font-medium ${statusColor}`}>
-                                {cliente.status}
+                          
+                          {/* 6. STATUS (Ativo/Inativo) */}
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center space-x-1">
+                              <StatusIcon className={`h-3 w-3 ${statusColor}`} />
+                              <span className={`text-xs font-medium ${statusColor}`}>
+                                {statusCapitalized}
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center space-x-2">
-                              <button 
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Editar"
-                                onClick={() => handleEdit(cliente, "Clientes")}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
+                          
+                          {/* 7. AÇÕES (Visualizar, Editar, Excluir) */}
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center space-x-2">
                               <button 
                                 className="text-green-600 hover:text-green-900 transition-colors"
                                 title="Visualizar"
                                 onClick={() => handleView(cliente, "Clientes")}
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                              <button 
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                title="Editar"
+                                onClick={() => handleEdit(cliente, "Clientes")}
+                              >
+                                <Edit className="h-3.5 w-3.5" />
                               </button>
                               <button 
                                 className="text-red-600 hover:text-red-900 transition-colors"
                                 title="Excluir"
                                 onClick={() => handleDelete(cliente, "Clientes")}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </td>
@@ -480,7 +583,10 @@ export function Relationships() {
             <CardContent className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">Mostrando</span>
+                  <span className="text-sm text-gray-700">
+                    Mostrando {getItemRange(clientesPage, clientesPerPage, clientesDemoData.length).start} a {getItemRange(clientesPage, clientesPerPage, clientesDemoData.length).end} de {clientesDemoData.length} resultados
+                  </span>
+                  <span className="text-sm text-gray-500">|</span>
                   <select 
                     className="border border-gray-300 rounded px-2 py-1 text-sm" 
                     value={clientesPerPage}
@@ -489,11 +595,10 @@ export function Relationships() {
                       setClientesPage(1);
                     }}
                   >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
+                    <option value="5">5 por página</option>
+                    <option value="10">10 por página</option>
+                    <option value="20">20 por página</option>
                   </select>
-                  <span className="text-sm text-gray-700">de {clientesDemoData.length} resultados</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button 
@@ -545,55 +650,63 @@ export function Relationships() {
           <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{width: '60px'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: '120px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '120px'}} />
+                  </colgroup>
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center space-x-1">
-                          <span>#</span>
-                          <ArrowUpDown className="h-3 w-3" />
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center justify-center space-x-1">
+                          <span>ID</span>
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("razaoSocialCompleta")}
                       >
                         <div className="flex items-center space-x-1">
-                          <span>Razão Social | Nome</span>
+                          <span>Razão Social/Nome</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nome Fantasia
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("tipo")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Tipo</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("dataCadastro")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Data</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("status")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Status</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ações
                       </th>
                     </tr>
@@ -607,10 +720,22 @@ export function Relationships() {
           <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{width: '60px'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: '120px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '120px'}} />
+                  </colgroup>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {processedFornecedoresData.map((fornecedor, index) => {
-                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(fornecedor.status);
+                      const statusValue = fornecedor.status || 'ativo';
+                      const statusCapitalized = statusValue.charAt(0).toUpperCase() + statusValue.slice(1);
+                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
+                      
                       return (
                         <tr key={fornecedor.id} className="hover:bg-gray-50 transition-colors duration-150">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -618,30 +743,30 @@ export function Relationships() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="text-sm">
-                              <div className="font-medium text-gray-900">{fornecedor.razaoSocial}</div>
-                              <div className="text-gray-500 text-xs">{fornecedor.razaoSocialCompleta}</div>
+                              <div className="font-medium text-gray-900">{fornecedor.social_name || fornecedor.socialName}</div>
+                              <div className="text-gray-500 text-xs">{fornecedor.document}</div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {fornecedor.nomeFantasia}
+                            {fornecedor.fantasy_name || fornecedor.fantasyName || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              fornecedor.tipo === 'Pessoa Física' 
+                              (fornecedor.document_type || fornecedor.documentType) === 'CPF' 
                                 ? 'bg-blue-100 text-blue-800' 
                                 : 'bg-purple-100 text-purple-800'
                             }`}>
-                              {fornecedor.tipo === 'Pessoa Física' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                              {(fornecedor.document_type || fornecedor.documentType) === 'CPF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {fornecedor.dataCadastro}
+                            {fornecedor.created_at || fornecedor.createdAt ? new Date(fornecedor.created_at || fornecedor.createdAt).toLocaleDateString('pt-BR') : '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center space-x-2">
                               <StatusIcon className={`h-4 w-4 ${statusColor}`} />
                               <span className={`text-sm font-medium ${statusColor}`}>
-                                {fornecedor.status}
+                                {statusCapitalized}
                               </span>
                             </div>
                           </td>
@@ -681,7 +806,10 @@ export function Relationships() {
             <CardContent className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">Mostrando</span>
+                  <span className="text-sm text-gray-700">
+                    Mostrando {getItemRange(fornecedoresPage, fornecedoresPerPage, fornecedoresDemoData.length).start} a {getItemRange(fornecedoresPage, fornecedoresPerPage, fornecedoresDemoData.length).end} de {fornecedoresDemoData.length} resultados
+                  </span>
+                  <span className="text-sm text-gray-500">|</span>
                   <select 
                     className="border border-gray-300 rounded px-2 py-1 text-sm" 
                     value={fornecedoresPerPage}
@@ -690,11 +818,10 @@ export function Relationships() {
                       setFornecedoresPage(1);
                     }}
                   >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
+                    <option value="5">5 por página</option>
+                    <option value="10">10 por página</option>
+                    <option value="20">20 por página</option>
                   </select>
-                  <span className="text-sm text-gray-700">de {fornecedoresDemoData.length} resultados</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button 
@@ -746,55 +873,63 @@ export function Relationships() {
           <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{width: '60px'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: '120px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '120px'}} />
+                  </colgroup>
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center space-x-1">
-                          <span>#</span>
-                          <ArrowUpDown className="h-3 w-3" />
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center justify-center space-x-1">
+                          <span>ID</span>
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("razaoSocialCompleta")}
                       >
                         <div className="flex items-center space-x-1">
-                          <span>Razão Social | Nome</span>
+                          <span>Razão Social/Nome</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Nome Fantasia
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("tipo")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Tipo</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("dataCadastro")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Data</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
                       <th 
-                        className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
+                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
                         onClick={() => handleSort("status")}
                       >
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center justify-center space-x-1">
                           <span>Status</span>
                           <ArrowUpDown className="h-3 w-3" />
                         </div>
                       </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Ações
                       </th>
                     </tr>
@@ -808,63 +943,117 @@ export function Relationships() {
           <Card className="shadow-lg">
             <CardContent className="p-0">
               <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
+                  <colgroup>
+                    <col style={{width: '60px'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: 'auto'}} />
+                    <col style={{width: '120px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '100px'}} />
+                    <col style={{width: '120px'}} />
+                  </colgroup>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {processedOutrosData.map((relacionamento, index) => {
-                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(relacionamento.status);
+                    {processedOutrosData.map((relacionamento) => {
+                      // Normalizar campos do banco
+                      const id = relacionamento.id;
+                      const document = relacionamento.document;
+                      const documentType = relacionamento.documenttype || relacionamento.document_type || relacionamento.documentType;
+                      const socialName = relacionamento.socialname || relacionamento.social_name || relacionamento.socialName;
+                      const fantasyName = relacionamento.fantasyname || relacionamento.fantasy_name || relacionamento.fantasyName;
+                      const createdAt = relacionamento.createdat || relacionamento.created_at || relacionamento.createdAt;
+                      const status = relacionamento.status || 'ativo';
+                      
+                      // Formatar status
+                      const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
+                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
+                      
+                      // Formatar documento
+                      const formatDocument = (doc: string, type: string) => {
+                        if (!doc) return '-';
+                        const numbers = doc.replace(/\D/g, '');
+                        if (type === 'CPF' && numbers.length === 11) {
+                          return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                        }
+                        if (type === 'CNPJ' && numbers.length === 14) {
+                          return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                        }
+                        return doc;
+                      };
+                      
                       return (
-                        <tr key={relacionamento.id} className="hover:bg-gray-50 transition-colors duration-150">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {relacionamento.id}
+                        <tr key={id} className="hover:bg-gray-50 transition-colors duration-150">
+                          {/* 1. ID */}
+                          <td className="px-3 py-3 text-center text-xs font-medium text-gray-900">
+                            {id}
                           </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm">
-                              <div className="font-medium text-gray-900">{relacionamento.razaoSocial}</div>
-                              <div className="text-gray-500 text-xs">{relacionamento.razaoSocialCompleta}</div>
+                          
+                          {/* 2. RAZÃO SOCIAL/NOME (2 linhas: documento + razão social) */}
+                          <td className="px-3 py-3">
+                            <div>
+                              <div className="text-gray-500 text-xs mb-0.5">
+                                {formatDocument(document, documentType)}
+                              </div>
+                              <div className="font-medium text-gray-900 text-xs truncate">
+                                {socialName || '-'}
+                              </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {relacionamento.nomeFantasia}
+                          
+                          {/* 3. NOME FANTASIA */}
+                          <td className="px-3 py-3 text-xs text-gray-900 truncate">
+                            {fantasyName || socialName || '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              relacionamento.tipo === 'Pessoa Física' 
+                          
+                          {/* 4. TIPO */}
+                          <td className="px-3 py-3 text-center">
+                            <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${
+                              documentType === 'CPF' 
                                 ? 'bg-blue-100 text-blue-800' 
                                 : 'bg-purple-100 text-purple-800'
                             }`}>
-                              {relacionamento.tipo === 'Pessoa Física' ? 'Pessoa Física' : 'Pessoa Jurídica'}
+                              {documentType === 'CPF' ? 'PF' : 'PJ'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {relacionamento.dataCadastro}
+                          
+                          {/* 5. DATA */}
+                          <td className="px-3 py-3 whitespace-nowrap text-center text-xs text-gray-900">
+                            {createdAt ? new Date(createdAt).toLocaleDateString('pt-BR') : '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-2">
-                              <StatusIcon className={`h-4 w-4 ${statusColor}`} />
-                              <span className={`text-sm font-medium ${statusColor}`}>
-                                {relacionamento.status}
+                          
+                          {/* 6. STATUS */}
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center space-x-1">
+                              <StatusIcon className={`h-3 w-3 ${statusColor}`} />
+                              <span className={`text-xs font-medium ${statusColor}`}>
+                                {statusCapitalized}
                               </span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center space-x-2">
-                              <button 
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Editar"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
+                          
+                          {/* 7. AÇÕES */}
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center space-x-2">
                               <button 
                                 className="text-green-600 hover:text-green-900 transition-colors"
                                 title="Visualizar"
+                                onClick={() => handleView(relacionamento, "Outros")}
                               >
-                                <Eye className="h-4 w-4" />
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                              <button 
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                                title="Editar"
+                                onClick={() => handleEdit(relacionamento, "Outros")}
+                              >
+                                <Edit className="h-3.5 w-3.5" />
                               </button>
                               <button 
                                 className="text-red-600 hover:text-red-900 transition-colors"
                                 title="Excluir"
+                                onClick={() => handleDelete(relacionamento, "Outros")}
                               >
-                                <Trash2 className="h-4 w-4" />
+                                <Trash2 className="h-3.5 w-3.5" />
                               </button>
                             </div>
                           </td>
@@ -882,7 +1071,10 @@ export function Relationships() {
             <CardContent className="px-6 py-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">Mostrando</span>
+                  <span className="text-sm text-gray-700">
+                    Mostrando {getItemRange(outrosPage, outrosPerPage, outrosRelacionamentosDemoData.length).start} a {getItemRange(outrosPage, outrosPerPage, outrosRelacionamentosDemoData.length).end} de {outrosRelacionamentosDemoData.length} resultados
+                  </span>
+                  <span className="text-sm text-gray-500">|</span>
                   <select 
                     className="border border-gray-300 rounded px-2 py-1 text-sm" 
                     value={outrosPerPage}
@@ -891,11 +1083,10 @@ export function Relationships() {
                       setOutrosPage(1);
                     }}
                   >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="20">20</option>
+                    <option value="5">5 por página</option>
+                    <option value="10">10 por página</option>
+                    <option value="20">20 por página</option>
                   </select>
-                  <span className="text-sm text-gray-700">de {outrosRelacionamentosDemoData.length} resultados</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button 

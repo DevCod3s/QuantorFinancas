@@ -243,15 +243,51 @@ export function useRelationshipManager() {
   });
 
   /**
+   * Mutation para atualizar relacionamento
+   */
+  const updateRelationshipMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: RelationshipData }) => {
+      const relationshipData = {
+        type: data.type,
+        documentType: data.documentType,
+        document: data.document,
+        socialName: data.socialName,
+        fantasyName: data.fantasyName || null,
+        stateRegistration: data.stateRegistration || null,
+        birthDate: data.birthDate || null,
+        zipCode: data.zipCode,
+        street: data.street,
+        number: data.number,
+        complement: data.complement || null,
+        neighborhood: data.neighborhood,
+        city: data.city,
+        state: data.state,
+        status: data.status || 'ativo'
+        // userId será adicionado pelo backend baseado no token
+      };
+
+      return apiRequest('PUT', `/api/relationships/${id}`, relationshipData);
+    },
+    onSuccess: () => {
+      // Invalidar cache para atualizar listas
+      queryClient.invalidateQueries({ queryKey: ['/api/relationships'] });
+      setError(null);
+    },
+    onError: (error: any) => {
+      setError(error.message || 'Erro ao atualizar relacionamento');
+    }
+  });
+
+  /**
    * Função principal para salvar relacionamento
    */
-  const saveRelationship = async (data: Omit<RelationshipData, 'type' | 'status'>) => {
+  const saveRelationship = async (data: Omit<RelationshipData, 'type' | 'status'>, relationshipType?: 'cliente' | 'fornecedor' | 'outros') => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Detectar tipo automaticamente
-      const type = detectRelationshipType();
+      // Usar tipo fornecido ou detectar automaticamente
+      const type = relationshipType || detectRelationshipType();
       
       // Validar documento
       if (data.documentType === 'CPF' && !validateCPF(data.document)) {
@@ -281,9 +317,48 @@ export function useRelationshipManager() {
     }
   };
 
+  /**
+   * Função principal para atualizar relacionamento
+   */
+  const updateRelationship = async (id: number, data: Omit<RelationshipData, 'type' | 'status'>, relationshipType?: 'cliente' | 'fornecedor' | 'outros') => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Usar tipo fornecido ou detectar automaticamente
+      const type = relationshipType || detectRelationshipType();
+      
+      // Validar documento
+      if (data.documentType === 'CPF' && !validateCPF(data.document)) {
+        throw new Error('CPF inválido');
+      }
+      
+      if (data.documentType === 'CNPJ' && !validateCNPJ(data.document)) {
+        throw new Error('CNPJ inválido');
+      }
+
+      // Preparar dados completos
+      const completeData: RelationshipData = {
+        ...data,
+        type,
+        status: 'ativo'
+      };
+
+      // Atualizar no backend
+      await updateRelationshipMutation.mutateAsync({ id, data: completeData });
+      
+      return true;
+    } catch (error: any) {
+      setError(error.message);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     // Estados
-    isLoading: isLoading || createRelationshipMutation.isPending,
+    isLoading: isLoading || createRelationshipMutation.isPending || updateRelationshipMutation.isPending,
     error,
     
     // Funções de validação
@@ -294,8 +369,9 @@ export function useRelationshipManager() {
     fetchCNPJData,
     fetchCEPData,
     
-    // Função principal
+    // Funções principais
     saveRelationship,
+    updateRelationship,
     
     // Utilitários
     detectRelationshipType,

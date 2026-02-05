@@ -15,7 +15,7 @@
  * @version 1.0.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import StepperWizard from "../StepperWizard";
 import Step1BasicInfo from "./Step1BasicInfo";
 import Step2ContractGeneration from "./Step2ContractGeneration";
@@ -43,6 +43,8 @@ interface RelationshipWizardProps {
   isOpen: boolean; // Estado de abertura do modal
   onClose: () => void; // Callback para fechar o wizard
   relationshipType?: 'cliente' | 'fornecedor' | 'outros'; // Tipo do relacionamento
+  initialData?: any; // Dados iniciais para edição/visualização
+  mode?: 'create' | 'edit' | 'view'; // Modo do wizard
 }
 
 /**
@@ -74,7 +76,13 @@ const wizardSteps = [
 /**
  * Componente RelationshipWizard
  */
-export default function RelationshipWizard({ isOpen, onClose, relationshipType = 'cliente' }: RelationshipWizardProps) {
+export default function RelationshipWizard({ 
+  isOpen, 
+  onClose, 
+  relationshipType = 'cliente',
+  initialData,
+  mode = 'create'
+}: RelationshipWizardProps) {
   // Estado atual da etapa
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -85,33 +93,68 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
   const [currentStepValid, setCurrentStepValid] = useState(false);
 
   // Hook para gerenciamento de relacionamentos
-  const { saveRelationship, isLoading: isSaving, error, clearError } = useRelationshipManager();
+  const { saveRelationship, updateRelationship, isLoading: isSaving, error, clearError } = useRelationshipManager();
   
   // Estado para controle de sucesso
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   /**
+   * Inicializa wizard com dados existentes quando em modo edição/visualização
+   */
+  React.useEffect(() => {
+    if (isOpen && initialData && (mode === 'edit' || mode === 'view')) {
+      console.log('Inicializando wizard com dados:', initialData);
+      
+      // Mapear dados do banco para formato do wizard
+      const mappedData = {
+        step1: {
+          relationshipType: initialData.type || relationshipType,
+          document: initialData.document || '',
+          documentType: initialData.documenttype || initialData.document_type || (initialData.document?.length === 11 ? 'CPF' : 'CNPJ'),
+          socialName: initialData.socialname || initialData.social_name || '',
+          fantasyName: initialData.fantasyname || initialData.fantasy_name || '',
+          stateRegistration: initialData.stateregistration || initialData.state_registration || '',
+          birthDate: initialData.birthdate || initialData.birth_date || '',
+          zipCode: initialData.zipcode || initialData.zip_code || '',
+          street: initialData.street || '',
+          number: initialData.number || '',
+          complement: initialData.complement || '',
+          neighborhood: initialData.neighborhood || '',
+          city: initialData.city || '',
+          state: initialData.state || ''
+        }
+      };
+      
+      setWizardData(mappedData);
+      setCurrentStepValid(true); // Dados já validados anteriormente
+    }
+  }, [isOpen, initialData, mode, relationshipType]);
+
+  /**
    * Limpa erro quando wizard é aberto/fechado
    */
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && mode === 'create') {
       clearError(); // Limpar erros anteriores ao abrir wizard
       setCurrentStep(1); // Reset para primeira etapa
       setWizardData({}); // Limpar dados anteriores
       setCurrentStepValid(false);
     }
-  }, [isOpen, clearError]);
+  }, [isOpen]); // REMOVIDO clearError das dependências
 
   /**
-   * Atualiza dados da etapa atual
+   * Atualiza dados da etapa atual - ESTABILIZADO COM CALLBACK
    */
-  const updateStepData = (stepNumber: number, data: any, isValid: boolean) => {
+  const updateStepData = useCallback((stepNumber: number, data: any, isValid: boolean) => {
+    console.log(`Step ${stepNumber} atualizado - isValid: ${isValid}`);
+    
     setWizardData(prev => ({
       ...prev,
       [`step${stepNumber}`]: data
     }));
+    
     setCurrentStepValid(isValid);
-  };
+  }, []);
 
   /**
    * Navega para próxima etapa
@@ -136,29 +179,63 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
   };
 
   /**
-   * Finaliza o wizard salvando o relacionamento
+   * Finaliza o wizard salvando ou atualizando o relacionamento
    */
   const handleFinish = async () => {
     if (!wizardData.step1) return;
     
     const step1Data = wizardData.step1;
     
+    // Mapear tipo selecionado para os tipos aceitos pelo sistema
+    let selectedType: 'cliente' | 'fornecedor' | 'outros';
+    
+    if (step1Data.relationshipType === 'cliente') {
+      selectedType = 'cliente';
+    } else if (step1Data.relationshipType === 'fornecedor') {
+      selectedType = 'fornecedor';
+    } else {
+      // Qualquer outro tipo (prestador_servicos, tipos customizados, etc.) vai para "outros"
+      selectedType = 'outros';
+    }
+    
     try {
-      const success = await saveRelationship({
-        document: step1Data.document,
-        documentType: step1Data.documentType,
-        socialName: step1Data.socialName,
-        fantasyName: step1Data.fantasyName,
-        stateRegistration: step1Data.stateRegistration,
-        birthDate: step1Data.birthDate,
-        zipCode: step1Data.zipCode,
-        street: step1Data.street,
-        number: step1Data.number,
-        complement: step1Data.complement,
-        neighborhood: step1Data.neighborhood,
-        city: step1Data.city,
-        state: step1Data.state
-      });
+      let success;
+      
+      if (mode === 'edit' && initialData?.id) {
+        // Modo edição - atualizar relacionamento existente
+        success = await updateRelationship(initialData.id, {
+          document: step1Data.document,
+          documentType: step1Data.documentType,
+          socialName: step1Data.socialName,
+          fantasyName: step1Data.fantasyName,
+          stateRegistration: step1Data.stateRegistration,
+          birthDate: step1Data.birthDate,
+          zipCode: step1Data.zipCode,
+          street: step1Data.street,
+          number: step1Data.number,
+          complement: step1Data.complement,
+          neighborhood: step1Data.neighborhood,
+          city: step1Data.city,
+          state: step1Data.state
+        }, selectedType);
+      } else {
+        // Modo criação - criar novo relacionamento
+        success = await saveRelationship({
+          document: step1Data.document,
+          documentType: step1Data.documentType,
+          socialName: step1Data.socialName,
+          fantasyName: step1Data.fantasyName,
+          stateRegistration: step1Data.stateRegistration,
+          birthDate: step1Data.birthDate,
+          zipCode: step1Data.zipCode,
+          street: step1Data.street,
+          number: step1Data.number,
+          complement: step1Data.complement,
+          neighborhood: step1Data.neighborhood,
+          city: step1Data.city,
+          state: step1Data.state
+        }, selectedType);
+      }
       
       if (success) {
         setShowSuccessDialog(true);
@@ -181,8 +258,9 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
       case 1:
         return (
           <Step1BasicInfo
-            onDataChange={(data, isValid) => updateStepData(1, data, isValid)}
+            onDataChange={(stepNum, data, isValid) => updateStepData(stepNum, data, isValid)}
             initialData={wizardData.step1}
+            readOnly={mode === 'view'}
           />
         );
       case 2:
@@ -259,7 +337,12 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
             <button
               onClick={handleNext}
               disabled={!currentStepValid}
-              className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${
+                currentStepValid 
+                  ? 'bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95 cursor-pointer' 
+                  : 'bg-gray-300 cursor-not-allowed'
+              }`}
+              title={currentStepValid ? "Próximo" : "Preencha o CPF/CNPJ"}
             >
               <ArrowRight className="h-5 w-5 text-white" />
             </button>
@@ -267,7 +350,11 @@ export default function RelationshipWizard({ isOpen, onClose, relationshipType =
             <button
               onClick={handleFinish}
               disabled={!currentStepValid || isSaving}
-              className="w-12 h-12 rounded-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${
+                (currentStepValid && !isSaving)
+                  ? 'bg-green-600 hover:bg-green-700 hover:scale-105 active:scale-95 cursor-pointer'
+                  : 'bg-gray-300 cursor-not-allowed'
+              }`}
             >
               {isSaving ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

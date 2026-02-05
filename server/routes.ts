@@ -498,19 +498,17 @@ router.get("/bank-accounts", requireAuth, async (req, res) => {
 
 /**
  * GET /api/relationships
- * Retorna todos os relacionamentos do usuário (Mock para desenvolvimento)
+ * Retorna todos os relacionamentos do usuário
  */
 router.get("/relationships", requireAuth, async (req, res) => {
   try {
-    // Mock de relacionamentos para desenvolvimento
-    const mockRelationships = [
-      { id: 1, name: 'Cliente ABC Ltda', companyName: 'ABC Ltda', type: 'cliente' },
-      { id: 2, name: 'Fornecedor XYZ S.A.', companyName: 'XYZ S.A.', type: 'fornecedor' },
-      { id: 3, name: 'João Silva', companyName: null, type: 'outros' },
-      { id: 4, name: 'Empresa DEF', companyName: 'DEF Serviços', type: 'cliente' }
-    ];
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
 
-    res.json(mockRelationships);
+    const relationships = await storage.getAllRelationships(userId);
+    res.json(relationships);
   } catch (error) {
     console.error("Erro ao buscar relacionamentos:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
@@ -581,17 +579,35 @@ router.put("/relationships/:id", async (req, res) => {
       return res.status(400).json({ error: "ID inválido" });
     }
 
+    console.log('=== UPDATE RELATIONSHIP DEBUG ===');
+    console.log('ID:', id);
+    console.log('UserID:', userId);
+    console.log('Body recebido:', JSON.stringify(req.body, null, 2));
+
     // Verificar se o relacionamento existe e pertence ao usuário
     const existing = await storage.getRelationshipById(id);
+    console.log('Relacionamento existente:', existing ? 'Encontrado' : 'Não encontrado');
+    
     if (!existing || existing.userId !== parseInt(userId)) {
       return res.status(404).json({ error: "Relacionamento não encontrado" });
     }
 
-    const updatedRelationship = await storage.updateRelationship(id, req.body);
+    // Remover userId do body se existir e adicionar o userId correto
+    const { userId: _, ...updateData } = req.body;
+    const dataWithUserId = {
+      ...updateData,
+      userId: parseInt(userId)
+    };
+
+    console.log('Dados para atualização:', JSON.stringify(dataWithUserId, null, 2));
+
+    const updatedRelationship = await storage.updateRelationship(id, dataWithUserId);
+    
+    console.log('Relacionamento atualizado com sucesso');
     res.json(updatedRelationship);
   } catch (error) {
     console.error("Erro ao atualizar relacionamento:", error);
-    res.status(500).json({ error: "Erro interno do servidor" });
+    res.status(500).json({ error: "Erro interno do servidor", details: error instanceof Error ? error.message : String(error) });
   }
 });
 
@@ -928,6 +944,44 @@ router.delete("/bank-accounts/:id", requireAuth, async (req, res) => {
     res.status(204).send();
   } catch (error) {
     console.error("Erro ao deletar conta bancária:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * PATCH /api/relationships/:id/type
+ * Endpoint temporário para corrigir tipo de relacionamento
+ */
+router.patch("/api/relationships/:id/type", requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: "Não autenticado" });
+    }
+
+    if (!['cliente', 'fornecedor', 'outros'].includes(type)) {
+      return res.status(400).json({ error: "Tipo inválido" });
+    }
+
+    // Verificar se o relacionamento existe e pertence ao usuário
+    const relationships = await storage.getAllRelationships(userId);
+    const relationship = relationships.find((r: any) => r.id === parseInt(id));
+
+    if (!relationship) {
+      return res.status(404).json({ error: "Relacionamento não encontrado" });
+    }
+
+    // Atualizar tipo usando query direta
+    await storage.db.update(schema.relationships)
+      .set({ type })
+      .where(schema.eq(schema.relationships.id, parseInt(id)));
+
+    res.json({ success: true, message: `Tipo atualizado para ${type}` });
+  } catch (error) {
+    console.error("Erro ao atualizar tipo:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });

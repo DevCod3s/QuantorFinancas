@@ -49,8 +49,9 @@ interface Step1FormData {
  * Props do componente Step1BasicInfo
  */
 interface Step1BasicInfoProps {
-  onDataChange: (data: Step1FormData, isValid: boolean) => void; // Callback para mudança de dados
+  onDataChange: (stepNumber: number, data: Step1FormData, isValid: boolean) => void; // Callback para mudança de dados
   initialData?: Partial<Step1FormData>; // Dados iniciais
+  readOnly?: boolean; // Se true, desabilita todos os campos
 }
 
 /**
@@ -87,9 +88,66 @@ const brazilianStates = [
 ];
 
 /**
+ * Normaliza nome de estado para sigla (UF)
+ */
+const normalizeStateToUF = (state: string): string => {
+  if (!state) return '';
+  
+  // Se já é uma sigla (2 caracteres), retorna como está
+  if (state.length === 2) {
+    return state.toUpperCase();
+  }
+  
+  // Mapear nome completo para sigla
+  const stateMap: Record<string, string> = {
+    'acre': 'AC',
+    'alagoas': 'AL',
+    'amapá': 'AP',
+    'amapa': 'AP',
+    'amazonas': 'AM',
+    'bahia': 'BA',
+    'ceará': 'CE',
+    'ceara': 'CE',
+    'distrito federal': 'DF',
+    'espírito santo': 'ES',
+    'espirito santo': 'ES',
+    'goiás': 'GO',
+    'goias': 'GO',
+    'maranhão': 'MA',
+    'maranhao': 'MA',
+    'mato grosso': 'MT',
+    'mato grosso do sul': 'MS',
+    'minas gerais': 'MG',
+    'pará': 'PA',
+    'para': 'PA',
+    'paraíba': 'PB',
+    'paraiba': 'PB',
+    'paraná': 'PR',
+    'parana': 'PR',
+    'pernambuco': 'PE',
+    'piauí': 'PI',
+    'piaui': 'PI',
+    'rio de janeiro': 'RJ',
+    'rio grande do norte': 'RN',
+    'rio grande do sul': 'RS',
+    'rondônia': 'RO',
+    'rondonia': 'RO',
+    'roraima': 'RR',
+    'santa catarina': 'SC',
+    'são paulo': 'SP',
+    'sao paulo': 'SP',
+    'sergipe': 'SE',
+    'tocantins': 'TO'
+  };
+  
+  const normalized = state.toLowerCase().trim();
+  return stateMap[normalized] || state.toUpperCase();
+};
+
+/**
  * Componente Step1BasicInfo
  */
-export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1BasicInfoProps) {
+export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnly = false }: Step1BasicInfoProps) {
   // Estado do formulário
   const [formData, setFormData] = useState<Step1FormData>({
     relationshipType: '',
@@ -122,57 +180,23 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
   const birthDateRef = useRef<HTMLInputElement>(null);
   const zipCodeRef = useRef<HTMLInputElement>(null);
 
-  // Ref para callback onDataChange evitar loop infinito
-  const onDataChangeRef = useRef(onDataChange);
-  useEffect(() => {
-    onDataChangeRef.current = onDataChange;
-  }, [onDataChange]);
-
-  /**
-   * useEffect para centralizar validação e notificar componente pai
-   * Isso evita problemas com múltiplas chamadas durante async/loading
-   */
-  useEffect(() => {
-    // Validar se formulário está completo baseado no tipo de documento
-    const isValid = !!(
-      formData.relationshipType &&
-      formData.document &&
-      formData.socialName &&
-      (formData.documentType === 'CPF' ? formData.birthDate : formData.fantasyName) &&
-      formData.zipCode &&
-      formData.street &&
-      formData.number &&
-      formData.neighborhood &&
-      formData.city &&
-      formData.state
-    );
-    
-    // Debug log para identificar qual campo está faltando
-    if (!isValid) {
-      console.log('Validação Step 1:', {
-        relationshipType: !!formData.relationshipType,
-        document: !!formData.document,
-        socialName: !!formData.socialName,
-        birthDateOrFantasy: formData.documentType === 'CPF' ? !!formData.birthDate : !!formData.fantasyName,
-        zipCode: !!formData.zipCode,
-        street: !!formData.street,
-        number: !!formData.number,
-        neighborhood: !!formData.neighborhood,
-        city: !!formData.city,
-        state: !!formData.state,
-        documentType: formData.documentType,
-        fantasyName: formData.fantasyName
-      });
-    }
-    
-    onDataChangeRef.current(formData, isValid);
-  }, [formData]);
-
   /**
    * Atualiza dados do formulário
    */
   const updateFormData = (updates: Partial<Step1FormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData(prev => {
+      const newData = { ...prev, ...updates };
+      
+      // Notificar o pai com os novos dados
+      const isValid = !!(newData.document && newData.documentType);
+      
+      // Usar setTimeout para evitar atualização durante render
+      setTimeout(() => {
+        onDataChange(1, newData, isValid);
+      }, 0);
+      
+      return newData;
+    });
   };
 
   /**
@@ -258,7 +282,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           complement: data.complemento || '',
           neighborhood: data.bairro || '',
           city: data.municipio || data.cidade || '',
-          state: data.uf || data.estado || '',
+          state: normalizeStateToUF(data.uf || data.estado || ''),
           isLoading: false
         });
         
@@ -302,7 +326,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
             street: data.logradouro || formData.street,
             neighborhood: data.bairro || formData.neighborhood,
             city: data.localidade || formData.city,
-            state: data.uf || formData.state,
+            state: normalizeStateToUF(data.uf || formData.state),
             isLoading: false
           });
         } else {
@@ -410,7 +434,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           <div className="flex-1">
             <CustomSelect
               id="relationship-type"
-              label="Selecione o tipo de relacionamento *"
+              label="Selecione o tipo de relacionamento"
               value={formData.relationshipType}
               onChange={(e) => updateFormData({ relationshipType: e.target.value })}
             >
@@ -448,6 +472,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               onValidDocument={handleValidDocument}
               label="CPF/CNPJ *"
               id="document"
+              disabled={readOnly}
             />
             {formData.isLoading && (
               <div className="mt-1 text-xs text-blue-600 flex items-center">
@@ -463,9 +488,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               ref={socialNameRef}
               type="text"
               id="social-name"
-              label={formData.documentType === 'CPF' ? 'Nome completo *' : 'Razão social *'}
+              label={formData.documentType === 'CPF' ? 'Nome completo' : 'Razão social'}
               value={formData.socialName}
               onChange={(e) => updateFormData({ socialName: e.target.value })}
+              disabled={readOnly}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && formData.documentType === 'CNPJ' && fantasyNameRef.current) {
                   fantasyNameRef.current.focus();
@@ -485,7 +511,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               label={formData.documentType === 'CPF' ? 'RG' : 'Inscrição estadual'}
               value={formData.stateRegistration}
               onChange={(e) => updateFormData({ stateRegistration: e.target.value })}
-              disabled={formData.documentType === 'CNPJ' && formData.isExempt}
+              disabled={readOnly || (formData.documentType === 'CNPJ' && formData.isExempt)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   if (formData.documentType === 'CPF' && birthDateRef.current) {
@@ -507,6 +533,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
                     isExempt: e.target.checked, 
                     stateRegistration: e.target.checked ? 'ISENTO' : '' 
                   })}
+                  disabled={readOnly}
                   className="mr-2"
                 />
                 <label htmlFor="exempt-checkbox" className="text-xs text-gray-600">
@@ -524,7 +551,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               ref={fantasyNameRef}
               type="text"
               id="fantasy-name"
-              label="Nome fantasia *"
+              label="Nome fantasia"
               value={formData.fantasyName}
               onChange={(e) => updateFormData({ fantasyName: e.target.value })}
               onKeyDown={(e) => {
@@ -540,10 +567,10 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
         {formData.documentType === 'CPF' && (
           <div className="mt-6">
             <DateInput
-              label="Data de nascimento *"
+              label="Data de nascimento"
               value={formData.birthDate}
               onChange={(value) => updateFormData({ birthDate: value })}
-              required
+              required={false}
             />
           </div>
         )}
@@ -562,7 +589,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
               ref={zipCodeRef}
               type="text"
               id="zip-code"
-              label="CEP *"
+              label="CEP"
               value={formData.zipCode}
               onChange={handleZipCodeChange}
               placeholder="00000-000"
@@ -587,7 +614,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
             <CustomInput
               type="text"
               id="street"
-              label="Logradouro *"
+              label="Logradouro"
               value={formData.street}
               onChange={(e) => updateFormData({ street: e.target.value })}
             />
@@ -598,7 +625,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
             <CustomInput
               type="text"
               id="number"
-              label="Número *"
+              label="Número"
               value={formData.number}
               onChange={(e) => updateFormData({ number: e.target.value })}
             />
@@ -622,7 +649,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
             <CustomInput
               type="text"
               id="neighborhood"
-              label="Bairro *"
+              label="Bairro"
               value={formData.neighborhood}
               onChange={(e) => updateFormData({ neighborhood: e.target.value })}
             />
@@ -632,7 +659,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
           <div>
             <CustomSelect
               id="state"
-              label="Estado *"
+              label="Estado"
               value={formData.state}
               onChange={(e) => updateFormData({ state: e.target.value })}
             >
@@ -652,7 +679,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {} }: Step1
             <CustomInput
               type="text"
               id="city"
-              label="Cidade *"
+              label="Cidade"
               value={formData.city}
               onChange={(e) => updateFormData({ city: e.target.value })}
             />
