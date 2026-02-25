@@ -123,22 +123,22 @@ router.get("/auth/user", (req: any, res) => {
 router.post("/auth/login", async (req: any, res) => {
   try {
     const { username, password } = req.body;
-    
+
     // Validação de campos obrigatórios
     if (!username || !password) {
       return res.status(400).json({ error: "Username e senha são obrigatórios" });
     }
-    
+
     // Tentativa de autenticação
     const user = await loginWithCredentials(username, password);
-    
+
     if (!user) {
       return res.status(401).json({ error: "Credenciais inválidas" });
     }
-    
+
     // Salva usuário na sessão
     req.session.user = user;
-    
+
     res.json({ success: true, user });
   } catch (error) {
     console.error("Erro de login:", error);
@@ -157,33 +157,33 @@ router.post("/auth/login", async (req: any, res) => {
 router.post("/auth/register", async (req: any, res) => {
   try {
     const { username, email, name, password } = req.body;
-    
+
     // Validação de campos obrigatórios
     if (!username || !email || !name || !password) {
       return res.status(400).json({ error: "Todos os campos são obrigatórios" });
     }
-    
+
     // Validar comprimento mínimo de senha
     if (password.length < 6) {
       return res.status(400).json({ error: "A senha deve ter no mínimo 6 caracteres" });
     }
-    
+
     // Verificar se username já existe
     const existingUsername = await storage.getUserByUsername(username.toLowerCase());
     if (existingUsername) {
       return res.status(400).json({ error: "Username já está em uso" });
     }
-    
+
     // Verificar se email já existe
     const existingEmail = await storage.getUserByEmail(email);
     if (existingEmail) {
       return res.status(400).json({ error: "Email já está cadastrado" });
     }
-    
+
     // Criptografar senha
     const bcrypt = require("bcryptjs");
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     // Criar usuário
     const newUser = await storage.createUser({
       username: username.toLowerCase(),
@@ -191,13 +191,13 @@ router.post("/auth/register", async (req: any, res) => {
       name,
       password: hashedPassword,
     });
-    
+
     // Remover senha do objeto de resposta
     const { password: _, ...userWithoutPassword } = newUser;
-    
+
     // Salvar usuário na sessão
     req.session.user = userWithoutPassword;
-    
+
     res.json({ success: true, user: userWithoutPassword });
   } catch (error) {
     console.error("Erro ao registrar usuário:", error);
@@ -298,9 +298,55 @@ router.get("/transactions", requireAuth, async (req: any, res) => {
 
 router.post("/transactions", requireAuth, async (req: any, res) => {
   try {
+    const { repeticao, numeroParcelas, ...rest } = req.body;
+
+    // Se for parcelado, gerar múltiplas transações (uma por parcela)
+    if (repeticao === 'Parcelado' && numeroParcelas && parseInt(numeroParcelas) > 1) {
+      const totalParcelas = parseInt(numeroParcelas);
+      const valorTotal = parseFloat(rest.amount);
+      const valorParcela = Math.round((valorTotal / totalParcelas) * 100) / 100;
+      // Ajuste na última parcela para cobrir arredondamento
+      const valorUltimaParcela = Math.round((valorTotal - valorParcela * (totalParcelas - 1)) * 100) / 100;
+
+      const parcelamentoId = crypto.randomUUID();
+      const dataBase = new Date(rest.date);
+      const criadas: any[] = [];
+
+      for (let i = 0; i < totalParcelas; i++) {
+        const dataParcela = new Date(dataBase);
+        dataParcela.setMonth(dataParcela.getMonth() + i);
+
+        const valorDestaParcela = i === totalParcelas - 1 ? valorUltimaParcela : valorParcela;
+        const descricaoParcela = `${rest.description || 'Parcelamento'} (${i + 1}/${totalParcelas})`;
+
+        const validatedData = insertTransactionSchema.parse({
+          ...rest,
+          userId: req.user.id,
+          amount: valorDestaParcela.toFixed(2),
+          description: descricaoParcela,
+          date: dataParcela.toISOString(),
+          repeticao: 'Parcelado',
+          numeroParcelas: totalParcelas,
+          parcelaAtual: i + 1,
+          parcelamentoId,
+        });
+
+        const transaction = await storage.createTransaction(validatedData);
+        criadas.push(transaction);
+      }
+
+      return res.status(201).json({
+        message: `${totalParcelas} parcelas criadas com sucesso`,
+        parcelamentoId,
+        parcelas: criadas,
+      });
+    }
+
+    // Transação única (padrão)
     const validatedData = insertTransactionSchema.parse({
       ...req.body,
       userId: req.user.id,
+      repeticao: repeticao || 'Única',
     });
     const transaction = await storage.createTransaction(validatedData);
     res.status(201).json(transaction);
@@ -421,7 +467,7 @@ router.get("/reports", requireAuth, async (req: any, res) => {
 router.post("/generate-contract", requireAuth, async (req, res) => {
   try {
     const { prompt, contractData } = req.body;
-    
+
     if (!prompt) {
       return res.status(400).json({ error: "Prompt é obrigatório" });
     }
@@ -461,7 +507,7 @@ router.post("/generate-contract", requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error("Erro na geração de contrato:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Erro interno do servidor",
       success: false
     });
@@ -484,7 +530,7 @@ router.get("/bank-accounts", requireAuth, async (req, res) => {
       { id: 2, bank: 'Itaú', accountNumber: '98765-4', accountType: 'Poupança' },
       { id: 3, bank: 'Bradesco', accountNumber: '55555-1', accountType: 'Corrente' }
     ];
-    
+
     res.json(mockBankAccounts);
   } catch (error) {
     console.error("Erro ao buscar contas bancárias:", error);
@@ -587,7 +633,7 @@ router.put("/relationships/:id", async (req, res) => {
     // Verificar se o relacionamento existe e pertence ao usuário
     const existing = await storage.getRelationshipById(id);
     console.log('Relacionamento existente:', existing ? 'Encontrado' : 'Não encontrado');
-    
+
     if (!existing || existing.userId !== parseInt(userId)) {
       return res.status(404).json({ error: "Relacionamento não encontrado" });
     }
@@ -602,7 +648,7 @@ router.put("/relationships/:id", async (req, res) => {
     console.log('Dados para atualização:', JSON.stringify(dataWithUserId, null, 2));
 
     const updatedRelationship = await storage.updateRelationship(id, dataWithUserId);
-    
+
     console.log('Relacionamento atualizado com sucesso');
     res.json(updatedRelationship);
   } catch (error) {
@@ -716,9 +762,9 @@ router.post("/chart-accounts", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Erro ao criar conta:", error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Dados inválidos", 
-        details: error.errors 
+      return res.status(400).json({
+        error: "Dados inválidos",
+        details: error.errors
       });
     }
     res.status(500).json({ error: "Erro interno do servidor" });
@@ -758,9 +804,9 @@ router.put("/chart-accounts/:id", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Erro ao atualizar conta:", error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Dados inválidos", 
-        details: error.errors 
+      return res.status(400).json({
+        error: "Dados inválidos",
+        details: error.errors
       });
     }
     res.status(500).json({ error: "Erro interno do servidor" });
@@ -871,9 +917,9 @@ router.post("/bank-accounts", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Erro ao criar conta bancária:", error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Dados inválidos", 
-        details: error.errors 
+      return res.status(400).json({
+        error: "Dados inválidos",
+        details: error.errors
       });
     }
     res.status(500).json({ error: "Erro interno do servidor" });
@@ -904,14 +950,14 @@ router.put("/bank-accounts/:id", requireAuth, async (req, res) => {
 
     const updateData = schema.insertBankAccountSchema.partial().parse(req.body);
     const updatedBankAccount = await storage.updateBankAccount(id, updateData);
-    
+
     res.json(updatedBankAccount);
   } catch (error) {
     console.error("Erro ao atualizar conta bancária:", error);
     if (error instanceof z.ZodError) {
-      return res.status(400).json({ 
-        error: "Dados inválidos", 
-        details: error.errors 
+      return res.status(400).json({
+        error: "Dados inválidos",
+        details: error.errors
       });
     }
     res.status(500).json({ error: "Erro interno do servidor" });

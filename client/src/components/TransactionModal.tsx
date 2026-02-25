@@ -38,6 +38,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
   const [repeticao, setRepeticao] = useState('Única');
   const [periodicidade, setPeriodicidade] = useState('mensal');
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
+  const [numeroParcelas, setNumeroParcelas] = useState('2');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -66,6 +67,16 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
     }
   };
 
+  // Calcula valor por parcela
+  const valorNumerico = parseFloat(valor.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+  const numParcelas = parseInt(numeroParcelas) || 1;
+  const valorPorParcela = numParcelas > 0 ? (valorNumerico / numParcelas) : valorNumerico;
+  const valorPorParcelaFormatado = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2
+  }).format(valorPorParcela);
+
   const handleSave = () => {
     const transaction = {
       tipo,
@@ -74,6 +85,8 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       repeticao,
       periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
       intervaloRepeticao: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
+      numeroParcelas: repeticao === 'Parcelado' ? parseInt(numeroParcelas) : undefined,
+      valorParcela: repeticao === 'Parcelado' ? valorPorParcela : undefined,
       descricao,
       conta,
       categoria,
@@ -82,7 +95,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       observacoes,
       tags
     };
-    
+
     onSave(transaction);
     onClose();
   };
@@ -93,7 +106,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      sx={{ 
+      sx={{
         zIndex: 1300,
         '& .MuiBackdrop-root': {
           backgroundColor: 'rgba(0, 0, 0, 0.5)'
@@ -114,7 +127,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           <Select
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
-            sx={{ 
+            sx={{
               fontSize: '16px',
               fontWeight: 500,
               '&:before': { borderBottom: 'none' },
@@ -141,7 +154,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             <MenuItem value="Nova despesa">Nova despesa</MenuItem>
           </Select>
         </FormControl>
-        
+
         <IconButton onClick={onClose} size="small">
           <X className="h-5 w-5 text-gray-400" />
         </IconButton>
@@ -162,14 +175,14 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
           </div>
-          
+
           <DateInput
             label="Data"
             value={data}
             onChange={setData}
             required
           />
-          
+
           <div className="flex items-end gap-2">
             <FormControl variant="standard" fullWidth>
               <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
@@ -202,6 +215,45 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             </IconButton>
           </div>
         </div>
+
+        {/* Campos condicionais de parcelamento - aparecem quando "Parcelado" é selecionado */}
+        {repeticao === 'Parcelado' && (
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <TextField
+                variant="standard"
+                label="Nº de Parcelas"
+                type="number"
+                value={numeroParcelas}
+                onChange={(e) => setNumeroParcelas(e.target.value)}
+                fullWidth
+                required
+                inputProps={{ min: 2, max: 360 }}
+                sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+              />
+            </div>
+
+            <div>
+              <TextField
+                variant="standard"
+                label="Valor por Parcela"
+                value={valorPorParcelaFormatado}
+                fullWidth
+                InputProps={{ readOnly: true }}
+                sx={{
+                  '& .MuiInputLabel-root': { color: '#666' },
+                  '& .MuiInput-input': { color: '#1976d2', fontWeight: 500 }
+                }}
+              />
+            </div>
+
+            <div className="flex items-end">
+              <span className="text-sm text-gray-500 pb-1">
+                Total: {valor || 'R$ 0,00'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Campos condicionais de recorrência - aparecem quando "Recorrente" é selecionado */}
         {repeticao === 'Recorrente' && (
@@ -239,7 +291,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 </Select>
               </FormControl>
             </div>
-            
+
             <div>
               <TextField
                 variant="standard"
@@ -253,7 +305,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
               />
             </div>
-            
+
             <div className="flex items-end">
               <button
                 type="button"
@@ -275,7 +327,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             fullWidth
             sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
           />
-          
+
           <TextField
             variant="standard"
             label="Conta"
@@ -298,7 +350,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             required
             sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
           />
-          
+
           <TextField
             variant="standard"
             label="Contato"
@@ -355,10 +407,10 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       {/* Botões inferiores */}
       <div className="flex items-center justify-between p-4 border-t bg-gray-50">
         <div className="flex items-center gap-2">
-          <IconButton 
-            size="small" 
-            sx={{ 
-              backgroundColor: '#22c55e', 
+          <IconButton
+            size="small"
+            sx={{
+              backgroundColor: '#22c55e',
               color: 'white',
               '&:hover': { backgroundColor: '#16a34a' },
               width: 32,
@@ -367,11 +419,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           >
             <Check className="h-4 w-4" />
           </IconButton>
-          
-          <IconButton 
+
+          <IconButton
             size="small"
-            sx={{ 
-              backgroundColor: '#64748b', 
+            sx={{
+              backgroundColor: '#64748b',
               color: 'white',
               '&:hover': { backgroundColor: '#475569' },
               width: 32,
@@ -380,11 +432,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           >
             <CheckCheck className="h-4 w-4" />
           </IconButton>
-          
-          <IconButton 
+
+          <IconButton
             size="small"
-            sx={{ 
-              backgroundColor: '#64748b', 
+            sx={{
+              backgroundColor: '#64748b',
               color: 'white',
               '&:hover': { backgroundColor: '#475569' },
               width: 32,
@@ -403,11 +455,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           >
             Salvar
           </button>
-          
-          <IconButton 
+
+          <IconButton
             size="small"
-            sx={{ 
-              backgroundColor: '#64748b', 
+            sx={{
+              backgroundColor: '#64748b',
               color: 'white',
               '&:hover': { backgroundColor: '#475569' },
               width: 32,

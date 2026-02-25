@@ -13,6 +13,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
   const [valor, setValor] = useState('');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [repeticao, setRepeticao] = useState('Única');
+  const [numeroParcelas, setNumeroParcelas] = useState('2');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
 
@@ -22,24 +23,32 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
       return;
     }
 
+    // Calcula valor por parcela
+    const valorNum = parseFloat(valor.replace(',', '.')) || 0;
+    const numParc = parseInt(numeroParcelas) || 1;
+    const valorParc = numParc > 0 ? (valorNum / numParc) : valorNum;
+
     const transactionData = {
       tipo,
-      valor: parseFloat(valor.replace(',', '.')),
+      valor: valorNum,
       data,
       repeticao,
+      numeroParcelas: repeticao === 'Parcelado' ? parseInt(numeroParcelas) : undefined,
+      valorParcela: repeticao === 'Parcelado' ? valorParc : undefined,
       descricao,
       conta,
-      valorNumerico: parseFloat(valor.replace(',', '.'))
+      valorNumerico: valorNum
     };
 
     onSave(transactionData);
     onClose();
-    
+
     // Reset form
     setTipo('');
     setValor('');
     setData(new Date().toISOString().split('T')[0]);
     setRepeticao('Única');
+    setNumeroParcelas('2');
     setDescricao('');
     setConta('');
   };
@@ -49,25 +58,25 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
   return (
     <>
       {/* Background overlay */}
-      <div 
+      <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b">
             <h2 className="text-xl font-semibold">Novo Lançamento</h2>
-            <button 
+            <button
               onClick={onClose}
               className="p-1 hover:bg-gray-100 rounded transition-colors"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
-          
+
           {/* Content */}
           <div className="p-6 space-y-4">
             {/* Row 1: Tipo, Valor, Data */}
@@ -76,8 +85,8 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tipo *
                 </label>
-                <select 
-                  value={tipo} 
+                <select
+                  value={tipo}
                   onChange={(e) => setTipo(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -86,7 +95,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                   <option value="Despesa">Despesa</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Valor (R$) *
@@ -99,7 +108,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
-              
+
               <div>
                 <DateInput
                   label="Data"
@@ -108,30 +117,30 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 />
               </div>
             </div>
-            
+
             {/* Row 2: Repetição, Conta */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Repetição
                 </label>
-                <select 
-                  value={repeticao} 
+                <select
+                  value={repeticao}
                   onChange={(e) => setRepeticao(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="Única">Única</option>
-                  <option value="Parcelada">Parcelada</option>
+                  <option value="Parcelado">Parcelado</option>
                   <option value="Recorrente">Recorrente</option>
                 </select>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Conta *
                 </label>
-                <select 
-                  value={conta} 
+                <select
+                  value={conta}
                   onChange={(e) => setConta(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
@@ -144,7 +153,41 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 </select>
               </div>
             </div>
-            
+
+            {/* Campos condicionais de parcelamento */}
+            {repeticao === 'Parcelado' && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nº de Parcelas *
+                  </label>
+                  <input
+                    type="number"
+                    value={numeroParcelas}
+                    onChange={(e) => setNumeroParcelas(e.target.value)}
+                    min={2}
+                    max={360}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Valor por Parcela
+                  </label>
+                  <input
+                    type="text"
+                    readOnly
+                    value={(() => {
+                      const v = parseFloat(valor.replace(',', '.')) || 0;
+                      const n = parseInt(numeroParcelas) || 1;
+                      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v / n);
+                    })()}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-blue-600 font-medium"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Row 3: Descrição */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -161,7 +204,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
               <div className="text-xs text-gray-500 mt-1">{descricao.length}/30</div>
             </div>
           </div>
-          
+
           {/* Footer */}
           <div className="flex justify-start gap-3 p-6 pt-4 border-t bg-gray-50">
             <button

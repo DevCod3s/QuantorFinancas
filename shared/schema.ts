@@ -97,6 +97,11 @@ export const transactions = pgTable("transactions", {
   description: text("description").notNull(),
   type: text("type").notNull(), // 'income' | 'expense'
   date: timestamp("date").notNull(), // Data da transação
+  // Campos de repetição/parcelamento
+  repeticao: text("repeticao").default("Única"), // 'Única' | 'Parcelado' | 'Recorrente'
+  numeroParcelas: integer("numero_parcelas"), // Total de parcelas (ex: 12)
+  parcelaAtual: integer("parcela_atual"), // Parcela atual (ex: 1 de 12)
+  parcelamentoId: text("parcelamento_id"), // UUID para agrupar parcelas do mesmo parcelamento
   createdAt: timestamp("created_at").defaultNow().notNull(), // Data de criação
 });
 

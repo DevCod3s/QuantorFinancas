@@ -46,6 +46,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [repeticao, setRepeticao] = useState('Única');
   const [periodicidade, setPeriodicidade] = useState('Mensal');
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
+  const [numeroParcelas, setNumeroParcelas] = useState('2');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
@@ -53,7 +54,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [numeroDocumento, setNumeroDocumento] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [tags, setTags] = useState('');
-  
+
   // Estados para modal de adicionar contato
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState({
@@ -73,17 +74,17 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   // Função para buscar dados de CNPJ
   const fetchCNPJData = async (cnpj: string) => {
     const cleanCnpj = cnpj.replace(/\D/g, '');
-    
+
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
       if (response.ok) {
         const data = await response.json();
-        
+
         const cep = data.cep || '';
         const cleanCep = cep.replace(/\D/g, '');
-        const formattedCep = cleanCep.length === 8 ? 
+        const formattedCep = cleanCep.length === 8 ?
           `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
-        
+
         setContactFormData(prev => ({
           ...prev,
           razaoSocial: data.razao_social || data.nome || '',
@@ -95,7 +96,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           cidade: data.municipio || data.cidade || '',
           estado: data.uf || data.estado || ''
         }));
-        
+
         const hasCompleteAddress = data.logradouro && data.bairro && data.municipio;
         if (cleanCep.length === 8 && !hasCompleteAddress) {
           await fetchCEPData(cleanCep);
@@ -135,17 +136,17 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     const rawValue = event.target.value;
     const numbersOnly = rawValue.replace(/\D/g, '');
     const limitedNumbers = numbersOnly.substring(0, 8);
-    
+
     let formatted = limitedNumbers;
     if (limitedNumbers.length > 5) {
       formatted = `${limitedNumbers.substring(0, 5)}-${limitedNumbers.substring(5)}`;
     }
-    
+
     setContactFormData(prev => ({
       ...prev,
       cep: formatted
     }));
-    
+
     if (limitedNumbers.length === 8) {
       fetchCEPData(limitedNumbers);
     }
@@ -200,14 +201,26 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     }
   };
 
+  // Calcula valor por parcela
+  const valorNumerico = parseFloat(valor.replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+  const numParcelas = parseInt(numeroParcelas) || 1;
+  const valorPorParcela = numParcelas > 0 ? (valorNumerico / numParcelas) : valorNumerico;
+  const valorPorParcelaFormatado = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2
+  }).format(valorPorParcela);
+
   const handleSave = () => {
     const transaction = {
       tipo,
-      valor: parseFloat(valor.replace(/[R$\s.,]/g, '').replace(',', '.')) / 100,
+      valor: valorNumerico,
       data,
       repeticao,
       periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
       intervaloRepeticao: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
+      numeroParcelas: repeticao === 'Parcelado' ? parseInt(numeroParcelas) : undefined,
+      valorParcela: repeticao === 'Parcelado' ? valorPorParcela : undefined,
       descricao,
       conta,
       categoria,
@@ -216,7 +229,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
       observacoes,
       tags
     };
-    
+
     onSave(transaction);
     onClose();
   };
@@ -262,7 +275,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             <Select
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
-              sx={{ 
+              sx={{
                 fontSize: '16px',
                 fontWeight: 500,
                 '&:before': { borderBottom: 'none' },
@@ -288,7 +301,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               value={valor}
               onChange={handleValorChange}
               fullWidth
-              sx={{ 
+              sx={{
                 '& .MuiInput-root': { fontSize: '16px' },
                 '& .MuiInputLabel-root': { color: '#666' }
               }}
@@ -310,11 +323,38 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 onChange={(e) => setRepeticao(e.target.value)}
               >
                 <MenuItem value="Única">Única</MenuItem>
-                <MenuItem value="Fixa">Fixa</MenuItem>
+                <MenuItem value="Parcelado">Parcelado</MenuItem>
                 <MenuItem value="Recorrente">Recorrente</MenuItem>
               </Select>
             </FormControl>
-            
+
+            {repeticao === 'Parcelado' && (
+              <>
+                <TextField
+                  variant="standard"
+                  label="Nº de Parcelas"
+                  type="number"
+                  value={numeroParcelas}
+                  onChange={(e) => setNumeroParcelas(e.target.value)}
+                  fullWidth
+                  inputProps={{ min: 2, max: 360 }}
+                  sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+                />
+
+                <TextField
+                  variant="standard"
+                  label="Valor por Parcela"
+                  value={valorPorParcelaFormatado}
+                  fullWidth
+                  InputProps={{ readOnly: true }}
+                  sx={{
+                    '& .MuiInputLabel-root': { color: '#666' },
+                    '& .MuiInput-input': { color: '#1976d2', fontWeight: 500 }
+                  }}
+                />
+              </>
+            )}
+
             {repeticao === 'Recorrente' && (
               <>
                 <FormControl variant="standard" fullWidth>
@@ -331,7 +371,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                     <MenuItem value="Anual">Anual</MenuItem>
                   </Select>
                 </FormControl>
-                
+
                 <TextField
                   variant="standard"
                   label="Intervalo"
@@ -368,8 +408,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   ))}
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
                 <CreditCard className="h-4 w-4" />
@@ -388,8 +428,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   <MenuItem value="investimentos">Investimentos</MenuItem>
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
                 <Settings className="h-4 w-4" />
@@ -412,8 +452,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   ))}
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
                 onClick={() => setContactModalOpen(true)}
               >
@@ -441,7 +481,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             maxRows={5}
             sx={{ '& .MuiInputLabel-root': { color: '#666' }, mb: 2 }}
           />
-          
+
           <Box sx={{ display: 'flex', alignItems: 'end', gap: 1, mb: 2 }}>
             <FormControl variant="standard" sx={{ width: '85%' }}>
               <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
@@ -461,8 +501,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 ))}
               </Select>
             </FormControl>
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
               sx={{ mb: 0.5, color: '#1976d2' }}
             >
               <BookOpen className="h-4 w-4" />
@@ -472,8 +512,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           {/* Botões de ação */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2 }}>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton 
-                sx={{ 
+              <IconButton
+                sx={{
                   backgroundColor: '#4caf50',
                   color: 'white',
                   '&:hover': { backgroundColor: '#45a049' }
@@ -482,8 +522,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <Check className="h-4 w-4" />
               </IconButton>
-              <IconButton 
-                sx={{ 
+              <IconButton
+                sx={{
                   backgroundColor: '#2196f3',
                   color: 'white',
                   '&:hover': { backgroundColor: '#1976d2' }
@@ -491,8 +531,8 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               >
                 <CheckCheck className="h-4 w-4" />
               </IconButton>
-              <IconButton 
-                sx={{ 
+              <IconButton
+                sx={{
                   backgroundColor: '#607d8b',
                   color: 'white',
                   '&:hover': { backgroundColor: '#546e7a' }
@@ -501,7 +541,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 <Paperclip className="h-4 w-4" />
               </IconButton>
             </Box>
-            
+
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Button
                 variant="contained"
@@ -528,9 +568,9 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           </Box>
         </CardContent>
       </Card>
-      
+
       {/* Modal de Adicionar Contato */}
-      <Dialog 
+      <Dialog
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
         maxWidth="lg"
@@ -545,7 +585,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Tipo de relacionamento
                   </h3>
-                  
+
                   <div className="max-w-md flex items-end gap-2">
                     <div className="flex-1">
                       <CustomSelect
@@ -565,7 +605,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                         <option value="outros">Outros</option>
                       </CustomSelect>
                     </div>
-                    
+
                     <button
                       type="button"
                       className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center rounded-md"
@@ -581,7 +621,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Informação básica
                   </h3>
-                  
+
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <CpfCnpjInput
                       value={contactFormData.cpfCnpj}
@@ -590,7 +630,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                           ...prev,
                           cpfCnpj: value
                         }));
-                        
+
                         if (isValid && type === 'CNPJ') {
                           fetchCNPJData(value);
                         }
@@ -621,7 +661,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Localização
                   </h3>
-                  
+
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <CustomInput
                       label="CEP *"
