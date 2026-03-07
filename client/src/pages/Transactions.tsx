@@ -91,7 +91,7 @@ export function Transactions() {
   const { showSuccess, SuccessDialog } = useSuccessDialog();
   const { showError, ErrorDialog } = useErrorDialog();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
-  
+
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [activeTab, setActiveTab] = useState("visao-geral");
@@ -129,7 +129,7 @@ export function Transactions() {
 
   // Mutation para criar conta bancária
   const createBankAccountMutation = useMutation({
-    mutationFn: (bankAccountData: any) => 
+    mutationFn: (bankAccountData: any) =>
       fetch('/api/bank-accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -186,22 +186,22 @@ export function Transactions() {
 
 
 
-  
+
   // Estados para controle de ordenação e paginação
   const [payablesSortField, setPayablesSortField] = useState<string>('');
   const [payablesSortDirection, setPayablesSortDirection] = useState<'asc' | 'desc'>('asc');
   const [payablesCurrentPage, setPayablesCurrentPage] = useState(1);
   const [payablesItemsPerPage] = useState(10);
-  
+
   const [receivablesSortField, setReceivablesSortField] = useState<string>('');
   const [receivablesSortDirection, setReceivablesSortDirection] = useState<'asc' | 'desc'>('asc');
   const [receivablesCurrentPage, setReceivablesCurrentPage] = useState(1);
   const [receivablesItemsPerPage] = useState(10);
-  
+
   // Estado para modal de transação
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
-  
+
   // Dados mockados para À Pagar
   const payablesData = [
     { id: 1, company: 'Banco Santander', cnpj: '90.400.888/0001-42', dueDate: '10/01/2025', product: 'Cartão de Crédito', type: 'Parcela', status: 'Vencida', value: 280.00 },
@@ -210,7 +210,7 @@ export function Transactions() {
     { id: 4, company: 'Companhia Energética de GO', cnpj: '01.628.539/0001-73', dueDate: '20/02/2025', product: 'Energia Elétrica', type: 'Mensal', status: 'Em dia', value: 125.00 },
     { id: 5, company: 'Telefonia Ltda', cnpj: '98.765.432/0001-10', dueDate: '22/02/2025', product: 'Telefone Comercial', type: 'Mensal', status: 'Em dia', value: 75.00 }
   ];
-  
+
   // Dados mockados para À Receber
   const receivablesData = [
     { id: 1, company: 'Empresa ABC Ltda', cnpj: '33.222.111/0001-55', dueDate: '15/01/2025', product: 'Salário', type: 'Mensal', status: 'Confirmado', value: 3500.00 },
@@ -218,59 +218,59 @@ export function Transactions() {
     { id: 3, company: 'Banco do Brasil', cnpj: '00.000.000/0001-91', dueDate: '30/01/2025', product: 'Rendimento Poupança', type: 'Rendimento', status: 'Automático', value: 25.30 },
     { id: 4, company: 'Nubank', cnpj: '18.236.120/0001-58', dueDate: '05/02/2025', product: 'Cashback Cartão', type: 'Cashback', status: 'Automático', value: 28.40 }
   ];
-  
+
   // Funções de ordenação
   const handlePayablesSort = (field: string) => {
     const direction = payablesSortField === field && payablesSortDirection === 'asc' ? 'desc' : 'asc';
     setPayablesSortField(field);
     setPayablesSortDirection(direction);
   };
-  
+
   const handleReceivablesSort = (field: string) => {
     const direction = receivablesSortField === field && receivablesSortDirection === 'asc' ? 'desc' : 'asc';
     setReceivablesSortField(field);
     setReceivablesSortDirection(direction);
   };
-  
+
   // Função para ordenar dados
   const sortData = (data: any[], sortField: string, sortDirection: 'asc' | 'desc') => {
     if (!sortField) return data;
-    
+
     return [...data].sort((a, b) => {
       let aVal = a[sortField];
       let bVal = b[sortField];
-      
+
       // Tratamento especial para datas
       if (sortField === 'dueDate') {
-        aVal = new Date(aVal.split('/').reverse().join('-'));
-        bVal = new Date(bVal.split('/').reverse().join('-'));
+        aVal = (typeof aVal === 'string' && aVal) ? new Date(aVal.split('/').reverse().join('-')) : new Date(0);
+        bVal = (typeof bVal === 'string' && bVal) ? new Date(bVal.split('/').reverse().join('-')) : new Date(0);
       }
-      
+
       // Tratamento especial para valores
       if (sortField === 'value') {
         aVal = parseFloat(aVal);
         bVal = parseFloat(bVal);
       }
-      
+
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
       return 0;
     });
   };
-  
+
   // Dados ordenados e paginados
   const sortedPayables = sortData(payablesData, payablesSortField, payablesSortDirection);
   const paginatedPayables = sortedPayables.slice(
     (payablesCurrentPage - 1) * payablesItemsPerPage,
     payablesCurrentPage * payablesItemsPerPage
   );
-  
+
   const sortedReceivables = sortData(receivablesData, receivablesSortField, receivablesSortDirection);
   const paginatedReceivables = sortedReceivables.slice(
     (receivablesCurrentPage - 1) * receivablesItemsPerPage,
     receivablesCurrentPage * receivablesItemsPerPage
   );
-  
+
   // Cálculos de paginação
   const payablesTotalPages = Math.ceil(sortedPayables.length / payablesItemsPerPage);
   const receivablesTotalPages = Math.ceil(sortedReceivables.length / receivablesItemsPerPage);
@@ -287,8 +287,11 @@ export function Transactions() {
     queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
   });
 
-  // Garantir que chartAccounts seja sempre um array e seja um tipo correto
+  // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
+
+  // Para compatibilidade com o código de renderização que usa safeChartAccounts
+  const safeChartAccounts = safeChartAccountsData;
 
   // Mutation para criar transação
   const createTransactionMutation = useMutation({
@@ -317,7 +320,7 @@ export function Transactions() {
         amount: parseFloat(transactionData.valor.toString().replace(/[R$\s.,]/g, '')) / 100,
         description: transactionData.descricao || 'Lançamento',
         type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
-        date: new Date(transactionData.data.split('/').reverse().join('-')).toISOString(),
+        date: transactionData.data ? new Date(transactionData.data.split('/').reverse().join('-')).toISOString() : new Date().toISOString(),
         categoryId: transactionData.categoria ? parseInt(transactionData.categoria) : null,
         chartAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
       };
@@ -330,7 +333,7 @@ export function Transactions() {
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({
-    mutationFn: (accountData: any) => 
+    mutationFn: (accountData: any) =>
       fetch('/api/chart-accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -349,7 +352,7 @@ export function Transactions() {
 
   // Mutation para atualizar conta
   const updateAccountMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) => 
+    mutationFn: ({ id, data }: { id: number; data: any }) =>
       fetch(`/api/chart-accounts/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -368,7 +371,7 @@ export function Transactions() {
 
   // Mutation para excluir conta
   const deleteAccountMutation = useMutation({
-    mutationFn: (id: number) => 
+    mutationFn: (id: number) =>
       fetch(`/api/chart-accounts/${id}`, { method: 'DELETE' }),
     onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
@@ -479,7 +482,7 @@ export function Transactions() {
 
     // Criar mutation que não fecha o modal
     const createAndContinueMutation = {
-      mutationFn: (data: any) => 
+      mutationFn: (data: any) =>
         fetch('/api/chart-accounts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -509,29 +512,29 @@ export function Transactions() {
   useEffect(() => {
     const updateProgressBar = () => {
       if (!tabListRef.current) return;
-      
+
       const activeTabElement = tabListRef.current.querySelector(`[data-state="active"]`) as HTMLElement;
       if (activeTabElement) {
         const tabListRect = tabListRef.current.getBoundingClientRect();
         const activeTabRect = activeTabElement.getBoundingClientRect();
-        
+
         const leftOffset = activeTabRect.left - tabListRect.left;
         const width = activeTabRect.width;
-        
+
         // Define a posição e largura da barra
         setProgressWidth(width);
-        
+
         // Aplica a posição através de CSS custom properties
         const progressBar = tabListRef.current.querySelector('.progress-bar') as HTMLElement;
         if (progressBar) {
           // Define a posição e largura final
           progressBar.style.setProperty('--progress-left', `${leftOffset}px`);
           progressBar.style.setProperty('--progress-width', `${width}px`);
-          
+
           // Remove animação anterior e força reset
           progressBar.style.animation = 'none';
           progressBar.offsetHeight; // Força repaint
-          
+
           // Aplica nova animação
           progressBar.style.animation = 'progressFill 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
         }
@@ -562,14 +565,14 @@ export function Transactions() {
 
   // Funções para navegação temporal
   const navigateMonth = (direction: 'prev' | 'next') => {
-    const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 
-                   'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
     const [monthName, year] = currentMonth.split(' ');
     const currentIndex = months.indexOf(monthName);
-    
+
     let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
     let newYear = parseInt(year);
-    
+
     if (newIndex > 11) {
       newIndex = 0;
       newYear++;
@@ -577,7 +580,7 @@ export function Transactions() {
       newIndex = 11;
       newYear--;
     }
-    
+
     setCurrentMonth(`${months[newIndex]} ${newYear}`);
   };
 
@@ -620,40 +623,40 @@ export function Transactions() {
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
             title={
-              activeTab === "centro-custo" 
-                ? "Nova Conta - Plano de Contas" 
+              activeTab === "centro-custo"
+                ? "Nova Conta - Plano de Contas"
                 : activeTab === "movimentacoes"
-                ? "Novo Lançamento Financeiro"
-                : activeTab === "contas"
-                ? "Nova Conta Bancária"
-                : "Adicionar Novo"
+                  ? "Novo Lançamento Financeiro"
+                  : activeTab === "contas"
+                    ? "Nova Conta Bancária"
+                    : "Adicionar Novo"
             }
-            style={{ 
+            style={{
               boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
           >
             {/* Efeito de brilho interno */}
             <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
+
             {/* Ícone Plus com animação */}
             <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
-            
+
             {/* Ripple effect */}
             <div className="absolute inset-0 rounded-full overflow-hidden">
               <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
             </div>
           </button>
-          
+
           {/* Tooltip */}
           <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
             {
-              activeTab === "centro-custo" 
-                ? "Nova Conta - Plano de Contas" 
+              activeTab === "centro-custo"
+                ? "Nova Conta - Plano de Contas"
                 : activeTab === "movimentacoes"
-                ? "Novo Lançamento Financeiro"
-                : activeTab === "contas"
-                ? "Nova Conta Bancária"
-                : "Adicionar Novo"
+                  ? "Novo Lançamento Financeiro"
+                  : activeTab === "contas"
+                    ? "Nova Conta Bancária"
+                    : "Adicionar Novo"
             }
             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
           </div>
@@ -663,28 +666,28 @@ export function Transactions() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <div className="relative" ref={tabListRef}>
           <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg relative">
-            <TabsTrigger 
-              value="visao-geral" 
+            <TabsTrigger
+              value="visao-geral"
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Eye className="h-4 w-4 mr-2" />
               Visão Geral
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="movimentacoes"
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <TrendingUp className="h-4 w-4 mr-2" />
               Movimentações
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="contas"
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Building className="h-4 w-4 mr-2" />
               Contas
             </TabsTrigger>
-            <TabsTrigger 
+            <TabsTrigger
               value="centro-custo"
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
@@ -692,10 +695,10 @@ export function Transactions() {
               Centro de Custo
             </TabsTrigger>
           </TabsList>
-          
+
           {/* Barra de progressão inteligente e animada */}
           <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
-            <div 
+            <div
               className="progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
               style={{
                 left: 'var(--progress-left, 0px)',
@@ -729,7 +732,7 @@ export function Transactions() {
                             <div className="flex items-center gap-3">
                               {/* Navegação de mês */}
                               <div className="flex items-center gap-1">
-                                <button 
+                                <button
                                   onClick={() => navigateMonth('prev')}
                                   className="p-1 hover:bg-gray-100 rounded transition-colors"
                                 >
@@ -738,7 +741,7 @@ export function Transactions() {
                                 <span className="text-sm font-medium min-w-[100px] text-center">
                                   {currentMonth}
                                 </span>
-                                <button 
+                                <button
                                   onClick={() => navigateMonth('next')}
                                   className="p-1 hover:bg-gray-100 rounded transition-colors"
                                 >
@@ -771,37 +774,37 @@ export function Transactions() {
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Semanal')}
                                     className={filterPeriod === 'Semanal' ? 'bg-blue-50 text-blue-600' : ''}
                                   >
                                     Semanal
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Mensal')}
                                     className={filterPeriod === 'Mensal' ? 'bg-blue-50 text-blue-600' : ''}
                                   >
                                     Mensal
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Trimestral')}
                                     className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
                                   >
                                     Trimestral
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Semestral')}
                                     className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
                                   >
                                     Semestral
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Anual')}
                                     className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
                                   >
                                     Anual
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem 
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Personalizar')}
                                     className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
                                   >
@@ -852,7 +855,7 @@ export function Transactions() {
                                   y: {
                                     beginAtZero: true,
                                     ticks: {
-                                      callback: function(value) {
+                                      callback: function (value) {
                                         return 'R$ ' + Number(value).toLocaleString('pt-BR');
                                       }
                                     }
@@ -920,7 +923,7 @@ export function Transactions() {
                                 </div>
                               </div>
                             </div>
-                            
+
                             {/* Gráfico de resultado do mês */}
                             <div className="mt-6">
                               <h4 className="text-sm font-medium mb-2">Resultado do mês</h4>
@@ -994,7 +997,7 @@ export function Transactions() {
                                   data: [73.24, 10.84, 7.97, 5.06, 1.93, 0.97],
                                   backgroundColor: [
                                     '#3b82f6',
-                                    '#10b981', 
+                                    '#10b981',
                                     '#f59e0b',
                                     '#ef4444',
                                     '#8b5cf6',
@@ -1083,7 +1086,7 @@ export function Transactions() {
                                   data: [65.5, 20.3, 8.7, 3.8, 1.7],
                                   backgroundColor: [
                                     '#10b981',
-                                    '#3b82f6', 
+                                    '#3b82f6',
                                     '#f59e0b',
                                     '#8b5cf6',
                                     '#6b7280'
@@ -1168,7 +1171,7 @@ export function Transactions() {
                           <div className="flex items-center gap-3">
                             {/* Navegação de mês */}
                             <div className="flex items-center gap-1">
-                              <button 
+                              <button
                                 onClick={() => navigateMonth('prev')}
                                 className="p-1 hover:bg-gray-100 rounded transition-colors"
                               >
@@ -1177,7 +1180,7 @@ export function Transactions() {
                               <span className="text-sm font-medium min-w-[100px] text-center">
                                 {currentMonth}
                               </span>
-                              <button 
+                              <button
                                 onClick={() => navigateMonth('next')}
                                 className="p-1 hover:bg-gray-100 rounded transition-colors"
                               >
@@ -1210,37 +1213,37 @@ export function Transactions() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Semanal')}
                                   className={filterPeriod === 'Semanal' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
                                   Semanal
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Mensal')}
                                   className={filterPeriod === 'Mensal' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
                                   Mensal
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Trimestral')}
                                   className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
                                   Trimestral
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Semestral')}
                                   className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
                                   Semestral
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Anual')}
                                   className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
                                   Anual
                                 </DropdownMenuItem>
-                                <DropdownMenuItem 
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Personalizar')}
                                   className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
@@ -1302,7 +1305,7 @@ export function Transactions() {
                                 <div></div>
                               </div>
                             ))}
-                            
+
                             {/* Total */}
                             <div className="grid grid-cols-6 gap-4 text-sm py-2 border-t font-semibold bg-gray-50 rounded">
                               <div>Total</div>
@@ -1329,7 +1332,7 @@ export function Transactions() {
                               labels: ['05/07', '07/07', '08/07', '10/07', '11/07', '14/07', '15/07', '17/07', '20/07', '21/07', '25/07', '26/07'],
                               datasets: [{
                                 data: [2315, -35, -141.34, 407.5, -1307.28, 271, 1449, -267.74, 1069, 1200, -2176.49, 1300],
-                                backgroundColor: function(context: any) {
+                                backgroundColor: function (context: any) {
                                   const value = context.parsed.y;
                                   return value >= 0 ? '#10b981' : '#ef4444';
                                 },
@@ -1346,7 +1349,7 @@ export function Transactions() {
                                 },
                                 tooltip: {
                                   callbacks: {
-                                    label: function(context) {
+                                    label: function (context) {
                                       const value = context.parsed.y;
                                       return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
                                     }
@@ -1360,7 +1363,7 @@ export function Transactions() {
                                     color: '#f3f4f6'
                                   },
                                   ticks: {
-                                    callback: function(value) {
+                                    callback: function (value) {
                                       return 'R$ ' + Number(value).toLocaleString('pt-BR');
                                     }
                                   }
@@ -1405,12 +1408,12 @@ export function Transactions() {
                             <span className="text-xs text-gray-700">À pagar</span>
                             <span className="text-sm font-bold text-red-600">-2.805,23</span>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-700">À receber</span>
                             <span className="text-sm font-bold text-green-600">4.430,00</span>
                           </div>
-                          
+
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Resultado</span>
@@ -1426,7 +1429,7 @@ export function Transactions() {
                           <div className="flex items-center justify-between">
                             <CardTitle className="text-base font-semibold">Contas</CardTitle>
                             <div className="flex items-center gap-2">
-                              
+
                               <span className="text-xs text-gray-500">Total a pagar</span>
                             </div>
                           </div>
@@ -1439,7 +1442,7 @@ export function Transactions() {
                             </div>
                             <span className="text-xs font-bold text-red-600">-2.805,23</span>
                           </div>
-                          
+
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Total</span>
@@ -1474,7 +1477,7 @@ export function Transactions() {
                               })}>
                                 <ChevronLeft className="h-3 w-3" />
                               </Button>
-                              
+
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
@@ -1497,7 +1500,7 @@ export function Transactions() {
                                   />
                                 </PopoverContent>
                               </Popover>
-                              
+
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
                                 const [month, year] = nextMonth.split(' ');
                                 const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -1512,11 +1515,11 @@ export function Transactions() {
                               })}>
                                 <ChevronRight className="h-3 w-3" />
                               </Button>
-                              
+
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                 <Calendar className="h-3 w-3" />
                               </Button>
-                              
+
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                 <Settings className="h-3 w-3" />
                               </Button>
@@ -1579,27 +1582,24 @@ export function Transactions() {
                                     <td className="py-2 px-3 text-xs">{item.dueDate}</td>
                                     <td className="py-2 px-3 text-xs">{item.product}</td>
                                     <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${
-                                        item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' : 
-                                        item.type === 'Mensal' ? 'bg-green-100 text-green-800' : 
-                                        'bg-gray-100 text-gray-800'
-                                      }`}>
+                                      <span className={`px-2 py-1 rounded-full text-xs ${item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                        item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
+                                          'bg-gray-100 text-gray-800'
+                                        }`}>
                                         {item.type}
                                       </span>
                                     </td>
                                     <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${
-                                        item.status === 'Vencida' ? 'bg-red-100 text-red-800' : 
-                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
-                                        item.status === 'Em dia' ? 'bg-green-100 text-green-800' : 
-                                        'bg-gray-100 text-gray-800'
-                                      }`}>
+                                      <span className={`px-2 py-1 rounded-full text-xs ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
+                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+                                          item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
+                                            'bg-gray-100 text-gray-800'
+                                        }`}>
                                         {item.status}
                                       </span>
                                     </td>
-                                    <td className={`py-2 px-3 text-right font-medium text-xs ${
-                                      item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
-                                    }`}>
+                                    <td className={`py-2 px-3 text-right font-medium text-xs ${item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
+                                      }`}>
                                       R$ {item.value.toFixed(2).replace('.', ',')}
                                     </td>
                                     <td className="py-2 px-3">
@@ -1625,7 +1625,7 @@ export function Transactions() {
                           </div>
                         </CardContent>
                       </Card>
-                      
+
                       {/* Card de paginação separado */}
                       <Card className="shadow-lg mt-6">
                         <CardContent className="py-2">
@@ -1636,9 +1636,9 @@ export function Transactions() {
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-xs h-7"
                                 disabled={payablesCurrentPage === 1}
                                 onClick={() => setPayablesCurrentPage(prev => Math.max(1, prev - 1))}
@@ -1646,19 +1646,19 @@ export function Transactions() {
                                 Anterior
                               </Button>
                               {Array.from({ length: payablesTotalPages }, (_, i) => i + 1).map((page) => (
-                                <Button 
+                                <Button
                                   key={page}
-                                  variant={page === payablesCurrentPage ? "default" : "outline"} 
-                                  size="sm" 
+                                  variant={page === payablesCurrentPage ? "default" : "outline"}
+                                  size="sm"
                                   className={`text-xs h-7 w-7 ${page === payablesCurrentPage ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                                   onClick={() => setPayablesCurrentPage(page)}
                                 >
                                   {page}
                                 </Button>
                               ))}
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-xs h-7"
                                 disabled={payablesCurrentPage === payablesTotalPages}
                                 onClick={() => setPayablesCurrentPage(prev => Math.min(payablesTotalPages, prev + 1))}
@@ -1691,12 +1691,12 @@ export function Transactions() {
                             <span className="text-xs text-gray-700">À pagar</span>
                             <span className="text-sm font-bold text-red-600">-2.805,23</span>
                           </div>
-                          
+
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-700">À receber</span>
                             <span className="text-sm font-bold text-green-600">4.430,00</span>
                           </div>
-                          
+
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Resultado</span>
@@ -1749,7 +1749,7 @@ export function Transactions() {
                               })}>
                                 <ChevronLeft className="h-3 w-3" />
                               </Button>
-                              
+
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
@@ -1772,7 +1772,7 @@ export function Transactions() {
                                   />
                                 </PopoverContent>
                               </Popover>
-                              
+
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
                                 const [month, year] = nextMonth.split(' ');
                                 const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
@@ -1787,11 +1787,11 @@ export function Transactions() {
                               })}>
                                 <ChevronRight className="h-3 w-3" />
                               </Button>
-                              
+
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                 <Calendar className="h-3 w-3" />
                               </Button>
-                              
+
                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                 <Settings className="h-3 w-3" />
                               </Button>
@@ -1854,29 +1854,26 @@ export function Transactions() {
                                     <td className="py-2 px-3 text-xs">{item.dueDate}</td>
                                     <td className="py-2 px-3 text-xs">{item.product}</td>
                                     <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${
-                                        item.type === 'Mensal' ? 'bg-green-100 text-green-800' : 
-                                        item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' : 
-                                        item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' : 
-                                        item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
-                                        'bg-gray-100 text-gray-800'
-                                      }`}>
+                                      <span className={`px-2 py-1 rounded-full text-xs ${item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
+                                        item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                          item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
+                                            item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
+                                              'bg-gray-100 text-gray-800'
+                                        }`}>
                                         {item.type}
                                       </span>
                                     </td>
                                     <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${
-                                        item.status === 'Confirmado' ? 'bg-green-100 text-green-800' : 
-                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : 
-                                        item.status === 'Automático' ? 'bg-green-100 text-green-800' : 
-                                        'bg-gray-100 text-gray-800'
-                                      }`}>
+                                      <span className={`px-2 py-1 rounded-full text-xs ${item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
+                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+                                          item.status === 'Automático' ? 'bg-green-100 text-green-800' :
+                                            'bg-gray-100 text-gray-800'
+                                        }`}>
                                         {item.status}
                                       </span>
                                     </td>
-                                    <td className={`py-2 px-3 text-right font-medium text-xs ${
-                                      item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
-                                    }`}>
+                                    <td className={`py-2 px-3 text-right font-medium text-xs ${item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
+                                      }`}>
                                       R$ {item.value.toFixed(2).replace('.', ',')}
                                     </td>
                                     <td className="py-2 px-3">
@@ -1902,7 +1899,7 @@ export function Transactions() {
                           </div>
                         </CardContent>
                       </Card>
-                      
+
                       {/* Card de paginação separado */}
                       <Card className="shadow-lg mt-6">
                         <CardContent className="py-2">
@@ -1913,9 +1910,9 @@ export function Transactions() {
                               </span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-xs h-7"
                                 disabled={receivablesCurrentPage === 1}
                                 onClick={() => setReceivablesCurrentPage(prev => Math.max(1, prev - 1))}
@@ -1923,19 +1920,19 @@ export function Transactions() {
                                 Anterior
                               </Button>
                               {Array.from({ length: receivablesTotalPages }, (_, i) => i + 1).map((page) => (
-                                <Button 
+                                <Button
                                   key={page}
-                                  variant={page === receivablesCurrentPage ? "default" : "outline"} 
-                                  size="sm" 
+                                  variant={page === receivablesCurrentPage ? "default" : "outline"}
+                                  size="sm"
                                   className={`text-xs h-7 w-7 ${page === receivablesCurrentPage ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
                                   onClick={() => setReceivablesCurrentPage(page)}
                                 >
                                   {page}
                                 </Button>
                               ))}
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
+                              <Button
+                                variant="outline"
+                                size="sm"
                                 className="text-xs h-7"
                                 disabled={receivablesCurrentPage === receivablesTotalPages}
                                 onClick={() => setReceivablesCurrentPage(prev => Math.min(receivablesTotalPages, prev + 1))}
@@ -1977,50 +1974,49 @@ export function Transactions() {
                           <td className="py-3 px-4">
                             <div className="font-medium text-gray-900">
                               {account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
-                               account.bank === 'caixa' ? 'Caixa Econômica Federal' :
-                               account.bank === 'santander' ? 'Santander' :
-                               account.bank === 'itau' ? 'Itaú' :
-                               account.bank === 'bradesco' ? 'Bradesco' :
-                               account.bank === 'nubank' ? 'Nubank' :
-                               account.bank === 'inter' ? 'Banco Inter' :
-                               account.bank || 'Banco não informado'}
+                                account.bank === 'caixa' ? 'Caixa Econômica Federal' :
+                                  account.bank === 'santander' ? 'Santander' :
+                                    account.bank === 'itau' ? 'Itaú' :
+                                      account.bank === 'bradesco' ? 'Bradesco' :
+                                        account.bank === 'nubank' ? 'Nubank' :
+                                          account.bank === 'inter' ? 'Banco Inter' :
+                                            account.bank || 'Banco não informado'}
                             </div>
                           </td>
                           <td className="py-3 px-4">
                             <div className="font-medium text-gray-900">{account.account_name || account.name || 'Nome não informado'}</div>
                             <div className="text-xs text-gray-500">
                               {account.account_type === 'conta_corrente' ? 'Conta Corrente' :
-                               account.account_type === 'conta_poupanca' ? 'Conta Poupança' :
-                               account.account_type === 'conta_investimento' ? 'Conta de Investimento' :
-                               'Tipo não informado'}
+                                account.account_type === 'conta_poupanca' ? 'Conta Poupança' :
+                                  account.account_type === 'conta_investimento' ? 'Conta de Investimento' :
+                                    'Tipo não informado'}
                               {account.agency && ` - AG ${account.agency}`}
                               {account.account_number && ` - ${account.account_number}`}
                             </div>
                           </td>
                           <td className="py-3 px-4 text-gray-600">
-                            {account.created_at ? 
-                              new Date(account.created_at).toLocaleDateString('pt-BR') : 
+                            {account.created_at ?
+                              new Date(account.created_at).toLocaleDateString('pt-BR') :
                               new Date().toLocaleDateString('pt-BR')}
                           </td>
                           <td className="py-3 px-4 text-right">
-                            <span className={`font-medium ${
-                              (account.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
+                            <span className={`font-medium ${(account.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+                              }`}>
                               R$ {(account.balance || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
                             </span>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-2">
-                              <button 
-                                className="p-1 text-blue-600 hover:bg-blue-50 rounded" 
-                                title="Editar" 
+                              <button
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                title="Editar"
                                 onClick={() => console.log('Edit account', account.id)}
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
-                              <button 
-                                className="p-1 text-red-600 hover:bg-red-50 rounded" 
-                                title="Excluir" 
+                              <button
+                                className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                title="Excluir"
                                 onClick={() => console.log('Delete account', account.id)}
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -2081,8 +2077,8 @@ export function Transactions() {
                 value: "plano-contas",
                 label: "Plano de Contas",
                 icon: <FileText className="h-4 w-4" />,
-                content: <ChartOfAccountsContent 
-                  isModalOpen={chartAccountModalOpen} 
+                content: <ChartOfAccountsContent
+                  isModalOpen={chartAccountModalOpen}
                   setIsModalOpen={setChartAccountModalOpen}
                   showSuccess={showSuccess}
                   showError={showError}
@@ -2201,8 +2197,8 @@ export function Transactions() {
                   </FormControl>
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
-                  <div 
-                    onClick={() => {/* TODO: Implementar modal de novo tipo */}}
+                  <div
+                    onClick={() => {/* TODO: Implementar modal de novo tipo */ }}
                     className="cursor-pointer"
                     title="Cadastrar novo tipo de conta"
                   >
@@ -2228,8 +2224,8 @@ export function Transactions() {
                   </FormControl>
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
-                  <div 
-                    onClick={() => {/* TODO: Implementar modal de novo banco */}}
+                  <div
+                    onClick={() => {/* TODO: Implementar modal de novo banco */ }}
                     className="cursor-pointer"
                     title="Cadastrar novo banco"
                   >
@@ -2339,8 +2335,8 @@ export function Transactions() {
  * Componente para gerenciamento do Plano de Contas
  * Inclui modal de cadastro, lista hierárquica e funcionalidades completas
  */
-function ChartOfAccountsContent({ 
-  isModalOpen, 
+function ChartOfAccountsContent({
+  isModalOpen,
   setIsModalOpen,
   showSuccess,
   showError,
@@ -2348,8 +2344,8 @@ function ChartOfAccountsContent({
   SuccessDialog,
   ErrorDialog,
   ConfirmDialog
-}: { 
-  isModalOpen: boolean, 
+}: {
+  isModalOpen: boolean,
   setIsModalOpen: (open: boolean) => void,
   showSuccess: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showError: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
@@ -2361,11 +2357,11 @@ function ChartOfAccountsContent({
   const queryClient = useQueryClient();
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
-  
+
   // Estados do modal - usando props do componente pai
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
-  
+
   // Estados do formulário
   const [formData, setFormData] = useState({
     tipo: '',
@@ -2375,6 +2371,42 @@ function ChartOfAccountsContent({
     incluirComo: ''
   });
 
+  // Estados para ordenação
+  const [chartSortField, setChartSortField] = useState<string>('');
+  const [chartSortDirection, setChartSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleChartSort = (field: string) => {
+    const direction = chartSortField === field && chartSortDirection === 'asc' ? 'desc' : 'asc';
+    setChartSortField(field);
+    setChartSortDirection(direction);
+  };
+
+  // Função para ordenar dados
+  const sortData = (data: any[], sortField: string, sortDirection: 'asc' | 'desc') => {
+    if (!sortField) return data;
+
+    return [...data].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+
+      // Tratamento especial para datas
+      if (sortField === 'dueDate' || sortField === 'date') {
+        aVal = aVal ? new Date(aVal.split('/').reverse().join('-')) : new Date(0);
+        bVal = bVal ? new Date(bVal.split('/').reverse().join('-')) : new Date(0);
+      }
+
+      // Tratamento especial para valores
+      if (sortField === 'value' || sortField === 'amount') {
+        aVal = parseFloat(aVal || 0);
+        bVal = parseFloat(bVal || 0);
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
   // Query para buscar contas
   const { data: chartAccounts, isLoading: isLoadingAccounts } = useQuery({
     queryKey: ['/api/chart-accounts'],
@@ -2383,7 +2415,9 @@ function ChartOfAccountsContent({
 
   // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
-  const safeChartAccounts: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
+
+  // Dados ordenados
+  const safeChartAccounts = sortData(safeChartAccountsData, chartSortField, chartSortDirection);
 
   // Mutation para criar conta
   const createAccountMutation = useMutation({
@@ -2483,7 +2517,7 @@ function ChartOfAccountsContent({
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       return;
     }
-    
+
     setModalMode('edit');
     setSelectedAccount(account);
     setFormData({
@@ -2524,50 +2558,50 @@ function ChartOfAccountsContent({
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
-      
+
       if (level === 2) {
         // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
         if (parentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
           const parentCode = parentAccount ? parentAccount.code : '1';
-          
+
           // Contar filhos diretos do mesmo pai no nível 2
-          const childrenCount = safeChartAccountsData?.filter(acc => 
+          const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === parentId && acc.level === 2
           ).length || 0;
-          
+
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
-      
+
       if (level === 3) {
         // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
         if (parentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1';
-          
-          const childrenCount = safeChartAccountsData?.filter(acc => 
+
+          const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === parentId && acc.level === 3
           ).length || 0;
-          
+
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
-      
+
       if (level === 4) {
         // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
         if (parentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1.1';
-          
-          const childrenCount = safeChartAccountsData?.filter(acc => 
+
+          const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === parentId && acc.level === 4
           ).length || 0;
-          
+
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
-      
+
       return '1';
     };
 
@@ -2581,7 +2615,7 @@ function ChartOfAccountsContent({
     // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS
     const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
       const categoriaNormalizada = categoria.toLowerCase().trim();
-      
+
       if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
         return { type: 'receita', code: '1' };
       } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
@@ -2602,7 +2636,7 @@ function ChartOfAccountsContent({
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
-      const parentAccount = safeChartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc =>
         acc.name === formData.incluirComo && acc.level === 3
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2612,7 +2646,7 @@ function ChartOfAccountsContent({
     } else if (formData.subcategoria) {
       // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
-      const parentAccount = safeChartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc =>
         acc.name === formData.subcategoria && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2623,32 +2657,32 @@ function ChartOfAccountsContent({
       // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
       const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
-      
+
       // Buscar ou usar código automático para categoria principal
-      let parentAccount = safeChartAccountsData?.find(acc => 
+      let parentAccount = safeChartAccountsData?.find(acc =>
         acc.type === categoriaMapping.type && acc.level === 1
       );
-      
+
       // GARANTIR vinculação pai-filho correta
       if (!parentAccount) {
         // Buscar por nome similar se não encontrar por tipo
-        parentAccount = safeChartAccountsData?.find(acc => 
+        parentAccount = safeChartAccountsData?.find(acc =>
           acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
         );
-        
+
         // Se ainda não encontrar, buscar categorias compatíveis existentes
         if (!parentAccount) {
           const categoriasCompatíveis = ['receitas', 'receita', 'despesas', 'despesa', 'ativos', 'ativo', 'passivos', 'passivo'];
-          parentAccount = safeChartAccountsData?.find(acc => 
+          parentAccount = safeChartAccountsData?.find(acc =>
             acc.level === 1 && (
-              categoriasCompatíveis.some(cat => 
+              categoriasCompatíveis.some(cat =>
                 acc.name.toLowerCase().includes(cat) || acc.type.toLowerCase().includes(cat)
               ) && acc.type === categoriaMapping.type
             )
           );
         }
       }
-      
+
       parentId = parentAccount ? parentAccount.id : null;
       type = parentAccount ? parentAccount.type : categoriaMapping.type;
       category = formData.nome;
@@ -2707,7 +2741,7 @@ function ChartOfAccountsContent({
     // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS (Mesma função de handleSaveAccount)
     const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
       const categoriaNormalizada = categoria.toLowerCase().trim();
-      
+
       if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
         return { type: 'receita', code: '1' };
       } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
@@ -2732,50 +2766,50 @@ function ChartOfAccountsContent({
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
-      
+
       if (level === 2) {
         // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
         if (parentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
           const parentCode = parentAccount ? parentAccount.code : '1';
-          
+
           // Contar filhos diretos do mesmo pai no nível 2
-          const childrenCount = safeChartAccountsData?.filter(acc => 
+          const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === parentId && acc.level === 2
           ).length || 0;
-          
+
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
-      
+
       if (level === 3) {
         // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
         if (parentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1';
-          
-          const childrenCount = safeChartAccountsData?.filter(acc => 
+
+          const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === parentId && acc.level === 3
           ).length || 0;
-          
+
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
-      
+
       if (level === 4) {
         // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
         if (parentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1.1';
-          
-          const childrenCount = safeChartAccountsData?.filter(acc => 
+
+          const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === parentId && acc.level === 4
           ).length || 0;
-          
+
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
-      
+
       return '1';
     };
 
@@ -2789,7 +2823,7 @@ function ChartOfAccountsContent({
     if (formData.incluirComo) {
       // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
       level = 4;
-      const parentAccount = safeChartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc =>
         acc.name === formData.incluirComo && acc.level === 3
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2799,7 +2833,7 @@ function ChartOfAccountsContent({
     } else if (formData.subcategoria) {
       // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
       level = 3;
-      const parentAccount = safeChartAccountsData?.find(acc => 
+      const parentAccount = safeChartAccountsData?.find(acc =>
         acc.name === formData.subcategoria && acc.level === 2
       );
       parentId = parentAccount ? parentAccount.id : null;
@@ -2810,32 +2844,32 @@ function ChartOfAccountsContent({
       // NÍVEL 2: Se só "Categoria" está preenchida
       level = 2;
       const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
-      
+
       // Buscar ou usar código automático para categoria principal
-      let parentAccount = safeChartAccountsData?.find(acc => 
+      let parentAccount = safeChartAccountsData?.find(acc =>
         acc.type === categoriaMapping.type && acc.level === 1
       );
-      
+
       // GARANTIR vinculação pai-filho correta
       if (!parentAccount) {
         // Buscar por nome similar se não encontrar por tipo
-        parentAccount = safeChartAccountsData?.find(acc => 
+        parentAccount = safeChartAccountsData?.find(acc =>
           acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
         );
-        
+
         // Se ainda não encontrar, buscar categorias compatíveis existentes
         if (!parentAccount) {
           const categoriasCompatíveis = ['receitas', 'receita', 'despesas', 'despesa', 'ativos', 'ativo', 'passivos', 'passivo'];
-          parentAccount = safeChartAccountsData?.find(acc => 
+          parentAccount = safeChartAccountsData?.find(acc =>
             acc.level === 1 && (
-              categoriasCompatíveis.some(cat => 
+              categoriasCompatíveis.some(cat =>
                 acc.name.toLowerCase().includes(cat) || acc.type.toLowerCase().includes(cat)
               ) && acc.type === categoriaMapping.type
             )
           );
         }
       }
-      
+
       parentId = parentAccount ? parentAccount.id : null;
       type = parentAccount ? parentAccount.type : categoriaMapping.type;
       category = formData.nome;
@@ -2887,7 +2921,7 @@ function ChartOfAccountsContent({
     if (deleteAccountMutation.isPending) {
       return;
     }
-    
+
     showConfirm(
       "Confirmar Exclusão",
       "Tem certeza que deseja excluir esta conta?",
@@ -2945,37 +2979,52 @@ function ChartOfAccountsContent({
             Estrutura do Plano de Contas
           </h3>
         </div>
-        
+
         {/* Tabela */}
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-white border-b border-gray-200">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                <th
+                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleChartSort('id')}
+                >
                   <div className="flex items-center gap-1">
-                    # 
+                    #
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                <th
+                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleChartSort('code')}
+                >
                   <div className="flex items-center gap-1">
                     Código
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                <th
+                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleChartSort('name')}
+                >
                   <div className="flex items-center gap-1">
                     Nome da Conta
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                <th
+                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleChartSort('type')}
+                >
                   <div className="flex items-center gap-1">
                     Tipo
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors">
+                <th
+                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => handleChartSort('level')}
+                >
                   <div className="flex items-center gap-1">
                     Nível
                     <ArrowUpDown className="h-3 w-3" />
@@ -3026,12 +3075,11 @@ function ChartOfAccountsContent({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        (account.type === 'receita' || account.type === 'receitas') ? 'bg-blue-100 text-blue-800' :
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-blue-100 text-blue-800' :
                         (account.type === 'despesa' || account.type === 'despesas') ? 'bg-red-100 text-red-800' :
-                        account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
-                        'bg-purple-100 text-purple-800'
-                      }`}>
+                          account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
+                            'bg-purple-100 text-purple-800'
+                        }`}>
                         {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
                       </span>
                     </td>
@@ -3042,28 +3090,27 @@ function ChartOfAccountsContent({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center gap-1">
-                        <button 
+                        <button
                           onClick={() => openEditModal(account)}
                           className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-100 rounded transition-colors"
                           title="Editar conta"
                         >
                           <Edit className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => openViewModal(account)}
                           className="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-100 rounded transition-colors"
                           title="Visualizar conta"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
-                        <button 
+                        <button
                           onClick={() => handleDeleteAccount(account.id.toString())}
                           disabled={deleteAccountMutation.isPending}
-                          className={`p-1.5 rounded transition-colors ${
-                            deleteAccountMutation.isPending 
-                              ? 'text-gray-400 cursor-not-allowed bg-gray-100' 
-                              : 'text-red-600 hover:text-red-900 hover:bg-red-100'
-                          }`}
+                          className={`p-1.5 rounded transition-colors ${deleteAccountMutation.isPending
+                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
+                            : 'text-red-600 hover:text-red-900 hover:bg-red-100'
+                            }`}
                           title={deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta"}
                           data-testid={`button-delete-account-${account.id}`}
                         >
@@ -3077,7 +3124,7 @@ function ChartOfAccountsContent({
             </tbody>
           </table>
         </div>
-        
+
         {/* Rodapé com paginação similar à imagem */}
         {safeChartAccounts.length > 0 && (
           <div className="bg-white px-6 py-3 border-t border-gray-200">
@@ -3089,11 +3136,11 @@ function ChartOfAccountsContent({
                   <option value="50">50</option>
                 </select>
               </div>
-              
+
               <div className="text-sm text-gray-700">
                 Mostrando 1 a {Math.min(10, safeChartAccounts.length)} de {safeChartAccounts.length} resultados
               </div>
-              
+
               <div className="flex items-center gap-1">
                 <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50" disabled>
                   Anterior
@@ -3115,10 +3162,10 @@ function ChartOfAccountsContent({
       {/* Modal Nova categoria - Baseado na imagem exata */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-200 rounded-lg w-full max-w-lg mx-4 transform transition-all duration-300 scale-100" 
-               style={{
-                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
-               }}>
+          <div className="bg-gray-200 rounded-lg w-full max-w-lg mx-4 transform transition-all duration-300 scale-100"
+            style={{
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+            }}>
             {/* Cabeçalho */}
             <div className="flex items-center justify-between p-6 pb-4">
               <h2 className="text-lg font-semibold text-gray-800">Nova categoria</h2>
@@ -3238,7 +3285,7 @@ function ChartOfAccountsContent({
       )}
 
       {/* Modal será renderizado no componente principal */}
-      
+
       {/* Componentes de Diálogo */}
       <SuccessDialog />
       <ErrorDialog />
