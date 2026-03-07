@@ -539,6 +539,56 @@ router.get("/bank-accounts", requireAuth, async (req, res) => {
 });
 
 // ==========================================
+// CUSTOM BANKS ROUTES
+// ==========================================
+
+/**
+ * GET /api/custom-banks
+ * Retorna os bancos personalizados criados pelo usuário
+ */
+router.get("/custom-banks", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const customBanks = await storage.getCustomBanksByUserId(userId);
+    res.json(customBanks);
+  } catch (error) {
+    console.error("Erro ao buscar bancos personalizados:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * POST /api/custom-banks
+ * Cadastra um novo banco personalizado para o usuário
+ */
+router.post("/custom-banks", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const validatedData = schema.insertCustomBankSchema.parse({
+      ...req.body,
+      userId: parseInt(userId),
+    });
+
+    const newBank = await storage.createCustomBank(validatedData);
+    res.status(201).json(newBank);
+  } catch (error) {
+    console.error("Erro ao criar banco personalizado:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// ==========================================
 // RELATIONSHIPS ROUTES
 // ==========================================
 
@@ -1020,10 +1070,8 @@ router.patch("/api/relationships/:id/type", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Relacionamento não encontrado" });
     }
 
-    // Atualizar tipo usando query direta
-    await storage.db.update(schema.relationships)
-      .set({ type })
-      .where(schema.eq(schema.relationships.id, parseInt(id)));
+    // Atualizar tipo
+    await storage.updateRelationship(parseInt(id), { type });
 
     res.json({ success: true, message: `Tipo atualizado para ${type}` });
   } catch (error) {

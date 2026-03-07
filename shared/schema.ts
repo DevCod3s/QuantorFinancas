@@ -373,3 +373,26 @@ export const insertBankAccountSchema = createInsertSchema(bankAccounts).omit({
 // Tipos para contas bancárias
 export type BankAccount = typeof bankAccounts.$inferSelect;
 export type InsertBankAccount = z.infer<typeof insertBankAccountSchema>;
+
+/**
+ * Tabela de bancos customizados criados pelo usuário
+ * 
+ * Permite que usuários salvem novos bancos localmente
+ */
+export const customBanks = pgTable("custom_banks", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  code: text("code").notNull(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema de inserção para bancos customizados
+export const insertCustomBankSchema = createInsertSchema(customBanks).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Tipos para bancos customizados
+export type CustomBank = typeof customBanks.$inferSelect;
+export type InsertCustomBank = z.infer<typeof insertCustomBankSchema>;

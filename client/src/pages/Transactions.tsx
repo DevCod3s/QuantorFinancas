@@ -30,6 +30,7 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
+import Autocomplete from '@mui/material/Autocomplete';
 
 // Importações de componentes UI
 import { Button } from "@/components/ui/button";
@@ -86,6 +87,75 @@ ChartJS.register(
   Legend
 );
 
+const formatCurrencyValue = (value: string, currencyCode: string) => {
+  // Se o valor estiver vazio, apenas retornar vazio
+  if (!value) return '';
+
+  // Extrair apenas os números
+  const numericString = value.replace(/\D/g, '');
+  if (!numericString) return '';
+
+  // Converter para valor em centavos
+  const numberValue = parseInt(numericString, 10) / 100;
+
+  // Retornar o valor formatado com o símbolo da moeda correto
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: currencyCode,
+  }).format(numberValue);
+};
+
+const BRAZILIAN_BANKS = [
+  { code: '001', name: 'Banco do Brasil S.A.' },
+  { code: '033', name: 'Banco Santander (Brasil) S.A.' },
+  { code: '104', name: 'Caixa Econômica Federal' },
+  { code: '237', name: 'Banco Bradesco S.A.' },
+  { code: '341', name: 'Itaú Unibanco S.A.' },
+  { code: '077', name: 'Banco Inter S.A.' },
+  { code: '260', name: 'Nu Pagamentos S.A. (Nubank)' },
+  { code: '212', name: 'Banco Original S.A.' },
+  { code: '336', name: 'Banco C6 S.A.' },
+  { code: '290', name: 'PagSeguro Internet S.A.' },
+  { code: '380', name: 'PicPay Serviços S.A.' },
+  { code: '332', name: 'Acesso Soluções de Pagamento S.A. (Banco BS2)' },
+  { code: '655', name: 'Banco Votorantim S.A. (Neon)' },
+  { code: '074', name: 'Banco J. Safra S.A.' },
+  { code: '422', name: 'Banco Safra S.A.' },
+  { code: '748', name: 'Banco Cooperativo Sicredi S.A.' },
+  { code: '756', name: 'Banco Cooperativo do Brasil S.A. (SICOOB)' },
+  { code: '047', name: 'Banco do Estado de Sergipe S.A. (Banese)' },
+  { code: '021', name: 'Banestes S.A. Banco do Estado do Espírito Santo' },
+  { code: '041', name: 'Banco do Estado do Rio Grande do Sul S.A. (Banrisul)' },
+  { code: '070', name: 'BRB - Banco de Brasília S.A.' },
+  { code: '653', name: 'Banco Indusval S.A.' },
+  { code: '604', name: 'Banco Industrial do Brasil S.A.' },
+  { code: '389', name: 'Banco Mercantil do Brasil S.A.' },
+  { code: '623', name: 'Banco Pan S.A.' },
+  { code: '611', name: 'Banco Paulista S.A.' },
+  { code: '643', name: 'Banco Pine S.A.' },
+  { code: '747', name: 'Banco Rabobank International Brasil S.A.' },
+  { code: '633', name: 'Banco Rendimento S.A.' },
+  { code: '752', name: 'Banco BNP Paribas Brasil S.A.' },
+  { code: '208', name: 'Banco BTG Pactual S.A.' },
+  { code: '003', name: 'Banco da Amazônia S.A.' },
+  { code: '004', name: 'Banco do Nordeste do Brasil S.A.' },
+  { code: '036', name: 'Banco Bradesco BBI S.A.' },
+  { code: '121', name: 'Banco Agibank S.A.' },
+  { code: '083', name: 'Banco da China Brasil S.A.' },
+  { code: '473', name: 'Banco Caixa Geral - Brasil S.A.' },
+  { code: '745', name: 'Banco Citibank S.A.' },
+  { code: '265', name: 'Banco Fator S.A.' },
+  { code: '224', name: 'Banco Fibra S.A.' },
+  { code: '612', name: 'Banco Guanabara S.A.' },
+  { code: '600', name: 'Banco Luso Brasileiro S.A.' },
+  { code: '318', name: 'Banco BMG S.A.' },
+  { code: '626', name: 'Banco Ficsa S.A.' },
+  { code: '079', name: 'Banco Original do Agronegócio S.A.' },
+  { code: '254', name: 'Paraná Banco S.A.' },
+  { code: '477', name: 'Citibank N.A.' },
+  { code: '999', name: 'Outro Banco' }
+].sort((a, b) => parseInt(a.code) - parseInt(b.code));
+
 export function Transactions() {
   const queryClient = useQueryClient();
   const { showSuccess, SuccessDialog } = useSuccessDialog();
@@ -103,6 +173,8 @@ export function Transactions() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
+  const [newBankModalOpen, setNewBankModalOpen] = useState(false);
+  const [newBankData, setNewBankData] = useState({ code: '', name: '' });
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [editingAccount, setEditingAccount] = useState<any>(null);
   const [formData, setFormData] = useState({
@@ -158,6 +230,54 @@ export function Transactions() {
       showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
     }
   });
+
+  // Mutation para criar banco customizado
+  const createCustomBankMutation = useMutation({
+    mutationFn: (bankData: { code: string; name: string }) =>
+      fetch('/api/custom-banks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(bankData),
+      }).then(async res => {
+        if (!res.ok) {
+          const error = await res.json();
+          throw new Error(error.error || 'Erro ao salvar o banco');
+        }
+        return res.json();
+      }),
+    onSuccess: (newBank) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/custom-banks'] });
+      setBankAccountData(prev => ({ ...prev, bank: newBank.code }));
+      showSuccess('Banco cadastrado', 'Novo banco adicionado à lista com sucesso.');
+      setNewBankModalOpen(false);
+      setNewBankData({ code: '', name: '' });
+    },
+    onError: (error: any) => {
+      showError('Erro ao criar banco', error.message || 'Verifique os dados e tente novamente.');
+    }
+  });
+
+  // Handler para salvar novo banco na lista
+  const handleNewBankSave = () => {
+    if (!newBankData.code || !newBankData.name) {
+      showError('Campos obrigatórios', 'O Código do Banco e o Nome da Instituição são obrigatórios.');
+      return;
+    }
+
+    const cleanedCode = newBankData.code.trim();
+    const isDuplicate = banksList.some(b => b.code.trim() === cleanedCode);
+
+    if (isDuplicate) {
+      showError('Código Duplicado', 'Já existe um banco cadastrado com esse código.');
+      return;
+    }
+
+    createCustomBankMutation.mutate({
+      code: cleanedCode,
+      name: newBankData.name.trim()
+    });
+  };
 
   // Handler para salvar conta bancária
   const handleBankAccountSave = async () => {
@@ -286,6 +406,15 @@ export function Transactions() {
     queryKey: ['/api/bank-accounts'],
     queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
   });
+
+  // Query para buscar bancos customizados
+  const { data: customBanks = [] } = useQuery({
+    queryKey: ['/api/custom-banks'],
+    queryFn: () => fetch('/api/custom-banks', { credentials: 'include' }).then(res => res.json()),
+  });
+
+  const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...customBanks].map(item => [item.code, item])).values())
+    .sort((a, b) => parseInt(a.code) - parseInt(b.code));
 
   // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
@@ -1973,14 +2102,15 @@ export function Transactions() {
                         <tr key={account.id} className="border-b hover:bg-gray-50">
                           <td className="py-3 px-4">
                             <div className="font-medium text-gray-900">
-                              {account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
-                                account.bank === 'caixa' ? 'Caixa Econômica Federal' :
-                                  account.bank === 'santander' ? 'Santander' :
-                                    account.bank === 'itau' ? 'Itaú' :
-                                      account.bank === 'bradesco' ? 'Bradesco' :
-                                        account.bank === 'nubank' ? 'Nubank' :
-                                          account.bank === 'inter' ? 'Banco Inter' :
-                                            account.bank || 'Banco não informado'}
+                              {banksList.find(b => b.code === account.bank)?.name ||
+                                (account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
+                                  account.bank === 'caixa' ? 'Caixa Econômica Federal' :
+                                    account.bank === 'santander' ? 'Santander' :
+                                      account.bank === 'itau' ? 'Itaú' :
+                                        account.bank === 'bradesco' ? 'Bradesco' :
+                                          account.bank === 'nubank' ? 'Nubank' :
+                                            account.bank === 'inter' ? 'Banco Inter' :
+                                              account.bank || 'Banco não informado')}
                             </div>
                           </td>
                           <td className="py-3 px-4">
@@ -2150,9 +2280,17 @@ export function Transactions() {
                     label="Saldo em 17/04/2..."
                     variant="standard"
                     value={bankAccountData.currentBalance}
-                    onChange={(e) => setBankAccountData({ ...bankAccountData, currentBalance: e.target.value })}
+                    onChange={(e) => {
+                      const formatted = formatCurrencyValue(e.target.value, bankAccountData.currency);
+                      setBankAccountData({ ...bankAccountData, currentBalance: formatted });
+                    }}
                     fullWidth
                     placeholder=""
+                    sx={{
+                      input: {
+                        color: bankAccountData.balanceType === 'devedor' ? '#ef4444' : 'inherit'
+                      }
+                    }}
                   />
                 </div>
                 <div className="col-span-6 flex items-center gap-6 justify-center">
@@ -2206,26 +2344,35 @@ export function Transactions() {
                   </div>
                 </div>
                 <div className="col-span-3">
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel>Banco</InputLabel>
-                    <Select
-                      value={bankAccountData.bank}
-                      onChange={(e) => setBankAccountData({ ...bankAccountData, bank: e.target.value })}
-                    >
-                      <MenuItem value="banco_do_brasil">Banco do Brasil</MenuItem>
-                      <MenuItem value="caixa">Caixa Econômica Federal</MenuItem>
-                      <MenuItem value="santander">Santander</MenuItem>
-                      <MenuItem value="itau">Itaú</MenuItem>
-                      <MenuItem value="bradesco">Bradesco</MenuItem>
-                      <MenuItem value="nubank">Nubank</MenuItem>
-                      <MenuItem value="inter">Banco Inter</MenuItem>
-                      <MenuItem value="outro">Outro</MenuItem>
-                    </Select>
-                  </FormControl>
+                  <Autocomplete
+                    options={banksList}
+                    getOptionLabel={(option: any) => `${option.code} - ${option.name}`}
+                    value={banksList.find(b => b.code === bankAccountData.bank) || null}
+                    onChange={(_: any, newValue: any) => {
+                      setBankAccountData({ ...bankAccountData, bank: newValue ? newValue.code : '' });
+                    }}
+                    slotProps={{
+                      paper: {
+                        sx: {
+                          width: 'max-content',
+                          minWidth: '100%',
+                        }
+                      }
+                    }}
+                    renderInput={(params: any) => (
+                      <TextField
+                        {...params}
+                        label="Banco"
+                        variant="standard"
+                        fullWidth
+                      />
+                    )}
+                    noOptionsText="Nenhum banco encontrado"
+                  />
                 </div>
                 <div className="col-span-1 flex items-end justify-center">
                   <div
-                    onClick={() => {/* TODO: Implementar modal de novo banco */ }}
+                    onClick={() => setNewBankModalOpen(true)}
                     className="cursor-pointer"
                     title="Cadastrar novo banco"
                   >
@@ -2237,7 +2384,21 @@ export function Transactions() {
                     <InputLabel>Moeda</InputLabel>
                     <Select
                       value={bankAccountData.currency}
-                      onChange={(e) => setBankAccountData({ ...bankAccountData, currency: e.target.value })}
+                      onChange={(e) => {
+                        const newCurrency = e.target.value;
+                        const newBalance = bankAccountData.currentBalance
+                          ? formatCurrencyValue(bankAccountData.currentBalance, newCurrency)
+                          : '';
+                        const newCreditLimit = bankAccountData.creditLimit
+                          ? formatCurrencyValue(bankAccountData.creditLimit, newCurrency)
+                          : '';
+                        setBankAccountData({
+                          ...bankAccountData,
+                          currency: newCurrency,
+                          currentBalance: newBalance,
+                          creditLimit: newCreditLimit
+                        });
+                      }}
                     >
                       <MenuItem value="BRL">Real (R$)</MenuItem>
                       <MenuItem value="USD">Dólar (US$)</MenuItem>
@@ -2282,10 +2443,13 @@ export function Transactions() {
               {/* Quinta linha: Limite de crédito, Nome do contato */}
               <div className="grid grid-cols-2 gap-4">
                 <TextField
-                  label="Limite de crédito (R$)"
+                  label={`Limite de crédito (${bankAccountData.currency === 'USD' ? 'US$' : bankAccountData.currency === 'EUR' ? '€' : 'R$'})`}
                   variant="standard"
                   value={bankAccountData.creditLimit}
-                  onChange={(e) => setBankAccountData({ ...bankAccountData, creditLimit: e.target.value })}
+                  onChange={(e) => {
+                    const formatted = formatCurrencyValue(e.target.value, bankAccountData.currency);
+                    setBankAccountData({ ...bankAccountData, creditLimit: formatted });
+                  }}
                   fullWidth
                   placeholder=""
                 />
@@ -2319,6 +2483,63 @@ export function Transactions() {
                   className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
                 >
                   Salvar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Novo Banco */}
+      {newBankModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-100 rounded-lg w-full max-w-lg mx-4">
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">Novo Banco</h2>
+              <button
+                onClick={() => setNewBankModalOpen(false)}
+                className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <TextField
+                  label="Código do Banco *"
+                  variant="standard"
+                  value={newBankData.code}
+                  onChange={(e) => setNewBankData({ ...newBankData, code: e.target.value.replace(/\\D/g, '') })}
+                  fullWidth
+                  placeholder="Ex: 001"
+                  autoFocus
+                />
+                <TextField
+                  label="Nome da Instituição *"
+                  variant="standard"
+                  value={newBankData.name}
+                  onChange={(e) => setNewBankData({ ...newBankData, name: e.target.value })}
+                  fullWidth
+                  placeholder="Ex: Banco do Brasil S.A."
+                />
+              </div>
+
+              {/* Botões */}
+              <div className="flex justify-end items-center gap-3 pt-6">
+                <button
+                  type="button"
+                  onClick={() => setNewBankModalOpen(false)}
+                  className="px-6 py-2 bg-transparent hover:bg-gray-200 text-gray-700 rounded text-sm transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNewBankSave}
+                  disabled={!newBankData.code || !newBankData.name}
+                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
+                >
+                  Salvar Banco
                 </button>
               </div>
             </div>

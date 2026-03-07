@@ -21,11 +21,11 @@ import { desc, eq, and, sql } from "drizzle-orm";
 
 // Schema e tipos do banco de dados
 import * as schema from "@shared/schema";
-import type { 
-  User, 
-  Category, 
-  Transaction, 
-  Budget, 
+import type {
+  User,
+  Category,
+  Transaction,
+  Budget,
   AiInteraction,
   Relationship,
   ChartOfAccount,
@@ -37,7 +37,9 @@ import type {
   InsertAiInteraction,
   InsertRelationship,
   InsertChartOfAccount,
-  InsertBankAccount
+  InsertBankAccount,
+  CustomBank,
+  InsertCustomBank
 } from "@shared/schema";
 
 // Configuração da conexão com PostgreSQL já feita em db.ts
@@ -97,6 +99,10 @@ export interface IStorage {
   createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount>;
   updateBankAccount(id: number, bankAccount: Partial<InsertBankAccount>): Promise<BankAccount>;
   deleteBankAccount(id: number): Promise<void>;
+
+  // Bancos Customizados
+  getCustomBanksByUserId(userId: string): Promise<CustomBank[]>;
+  createCustomBank(bank: InsertCustomBank): Promise<CustomBank>;
 
   // Painel (Dashboard)
   getDashboardStats(userId: string): Promise<{
@@ -222,7 +228,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(schema.budgets)
-      .where(eq(schema.budgets.userId, userId))
+      .where(eq(schema.budgets.userId, parseInt(userId)))
       .orderBy(schema.budgets.startDate);
   }
 
@@ -317,7 +323,7 @@ export class DatabaseStorage implements IStorage {
   async getChartOfAccounts(userId: number): Promise<ChartOfAccount[]> {
     return db.select()
       .from(schema.chartOfAccounts)
-      .where(eq(schema.chartOfAccounts.userId, userId.toString()))
+      .where(eq(schema.chartOfAccounts.userId, userId))
       .orderBy(schema.chartOfAccounts.code);
   }
 
@@ -352,7 +358,7 @@ export class DatabaseStorage implements IStorage {
   async getBankAccountsByUserId(userId: string): Promise<BankAccount[]> {
     return db.select()
       .from(schema.bankAccounts)
-      .where(eq(schema.bankAccounts.userId, userId))
+      .where(eq(schema.bankAccounts.userId, parseInt(userId)))
       .orderBy(schema.bankAccounts.name);
   }
 
@@ -381,6 +387,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBankAccount(id: number): Promise<void> {
     await db.delete(schema.bankAccounts).where(eq(schema.bankAccounts.id, id));
+  }
+
+  // Custom Banks methods
+  async getCustomBanksByUserId(userId: string): Promise<CustomBank[]> {
+    return db.select()
+      .from(schema.customBanks)
+      .where(eq(schema.customBanks.userId, parseInt(userId)))
+      .orderBy(schema.customBanks.name);
+  }
+
+  async createCustomBank(bank: InsertCustomBank): Promise<CustomBank> {
+    const newBank = await db.insert(schema.customBanks)
+      .values(bank)
+      .returning();
+    return newBank[0];
   }
 
   async getDashboardStats(userId: string) {
