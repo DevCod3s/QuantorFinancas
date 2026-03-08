@@ -584,18 +584,16 @@ export function Categories() {
           ]
         ]}
         onSave={handleSaveCategory}
-        saveButtonText=""
-        saveButtonIcon={<Save className="h-5 w-5" />}
-        saveButtonClassName="bg-transparent hover:bg-blue-50 text-blue-600 !rounded-full transition-all font-medium p-3 flex items-center justify-center"
-        cancelButtonText=""
-        cancelButtonIcon={<LogOut className="h-5 w-5" />}
-        cancelButtonClassName="bg-transparent hover:bg-red-50 text-red-600 !rounded-full transition-all font-medium p-3 flex items-center justify-center"
       />
 
       {/* Modal de Subcategorias */}
       <DynamicModal
         isOpen={isSubcategoryModalOpen}
-        onClose={() => setIsSubcategoryModalOpen(false)}
+        onClose={() => {
+          setIsSubcategoryModalOpen(false);
+          setEditingSubcategoryId(null);
+          setSubcategoryData({} as any);
+        }}
         title={editingSubcategoryId ? "Editar Subcategoria" : "Nova Subcategoria"}
         icon={<Tag className="w-5 h-5 text-blue-600" />}
         data={editingSubcategoryId ? { ...subcategoryData, id: `#${editingSubcategoryId}` } : { ...subcategoryData, id: 'Gerado Auto' }}
@@ -637,12 +635,6 @@ export function Categories() {
           ]
         ]}
         onSave={handleSaveSubcategory}
-        saveButtonText=""
-        saveButtonIcon={<Save className="h-5 w-5" />}
-        saveButtonClassName="bg-transparent hover:bg-blue-50 text-blue-600 !rounded-full transition-all font-medium p-3 flex items-center justify-center"
-        cancelButtonText=""
-        cancelButtonIcon={<LogOut className="h-5 w-5" />}
-        cancelButtonClassName="bg-transparent hover:bg-red-50 text-red-600 !rounded-full transition-all font-medium p-3 flex items-center justify-center"
       />
 
       {/* Dialogs de Sistema */}

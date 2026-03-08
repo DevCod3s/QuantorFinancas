@@ -39,6 +39,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubTabs } from "@/components/SubTabs";
 import { DynamicModal, DynamicField } from "@/components/DynamicModal";
+import { TabelaItens } from "@/components/ui/TabelaItens";
+import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
@@ -2084,120 +2086,85 @@ export function Transactions() {
         <TabsContent value="contas" className="space-y-6">
 
           {/* Tabela de Contas Bancárias */}
-          <Card className="shadow-lg hover:shadow-xl transition-shadow">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b bg-gray-50">
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Banco</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Nome da Conta Bancária</th>
-                      <th className="text-left py-3 px-4 font-medium text-gray-600">Data da Criação</th>
-                      <th className="text-right py-3 px-4 font-medium text-gray-600">Saldo Atual</th>
-                      <th className="text-center py-3 px-4 font-medium text-gray-600">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.length > 0 ? (
-                      bankAccounts.map((account: any) => (
-                        <tr key={account.id} className="border-b hover:bg-gray-50">
-                          <td className="py-3 px-4">
-                            <div className="font-medium text-gray-900">
-                              {banksList.find(b => b.code === account.bank)?.name ||
-                                (account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
-                                  account.bank === 'caixa' ? 'Caixa Econômica Federal' :
-                                    account.bank === 'santander' ? 'Santander' :
-                                      account.bank === 'itau' ? 'Itaú' :
-                                        account.bank === 'bradesco' ? 'Bradesco' :
-                                          account.bank === 'nubank' ? 'Nubank' :
-                                            account.bank === 'inter' ? 'Banco Inter' :
-                                              account.bank || 'Banco não informado')}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="font-medium text-gray-900">{account.account_name || account.name || 'Nome não informado'}</div>
-                            <div className="text-xs text-gray-500">
-                              {account.account_type === 'conta_corrente' ? 'Conta Corrente' :
-                                account.account_type === 'conta_poupanca' ? 'Conta Poupança' :
-                                  account.account_type === 'conta_investimento' ? 'Conta de Investimento' :
-                                    'Tipo não informado'}
-                              {account.agency && ` - AG ${account.agency}`}
-                              {account.account_number && ` - ${account.account_number}`}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {account.created_at ?
-                              new Date(account.created_at).toLocaleDateString('pt-BR') :
-                              new Date().toLocaleDateString('pt-BR')}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className={`font-medium ${(account.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-                              }`}>
-                              R$ {(account.balance || 0).toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                                title="Editar"
-                                onClick={() => console.log('Edit account', account.id)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button
-                                className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                title="Excluir"
-                                onClick={() => console.log('Delete account', account.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="py-12 text-center text-gray-500">
-                          <div className="flex flex-col items-center">
-                            <CreditCard className="h-12 w-12 text-gray-300 mb-4" />
-                            <p className="text-lg font-medium mb-2">Nenhuma conta cadastrada</p>
-                            <p className="text-sm">Use o botão "+" para adicionar sua primeira conta bancária</p>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Paginação (se necessário no futuro) */}
-          {bankAccounts && Array.isArray(bankAccounts) && bankAccounts.length > 10 && (
-            <Card className="shadow-lg mt-4">
-              <CardContent className="py-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <span className="text-sm text-gray-600">
-                      Mostrando {bankAccounts.length} conta{bankAccounts.length !== 1 ? 's' : ''}
+          <TabelaItens
+            data={bankAccounts || []}
+            columns={[
+              {
+                label: "Banco",
+                key: "bank",
+                render: (account: any) => (
+                  <div className="font-medium text-gray-900">
+                    {banksList.find(b => b.code === account.bank)?.name ||
+                      (account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
+                        account.bank === 'caixa' ? 'Caixa Econômica Federal' :
+                          account.bank === 'santander' ? 'Santander' :
+                            account.bank === 'itau' ? 'Itaú' :
+                              account.bank === 'bradesco' ? 'Bradesco' :
+                                account.bank === 'nubank' ? 'Nubank' :
+                                  account.bank === 'inter' ? 'Banco Inter' :
+                                    account.bank || 'Banco não informado')}
+                  </div>
+                )
+              },
+              {
+                label: "Nome da Conta Bancária",
+                key: "name",
+                render: (account: any) => (
+                  <div>
+                    <div className="font-medium text-gray-900">{account.account_name || account.name || 'Nome não informado'}</div>
+                    <div className="text-[10px] text-gray-500 uppercase tracking-wider">
+                      {account.account_type === 'conta_corrente' ? 'Conta Corrente' :
+                        account.account_type === 'conta_poupanca' ? 'Conta Poupança' :
+                          account.account_type === 'conta_investimento' ? 'Conta de Investimento' :
+                            'Tipo não informado'}
+                      {account.agency && ` • AG ${account.agency}`}
+                      {account.account_number && ` • CC ${account.account_number}`}
+                    </div>
+                  </div>
+                )
+              },
+              {
+                label: "Data da Criação",
+                key: "created_at",
+                align: "center",
+                render: (account: any) => (
+                  <span className="text-gray-600">
+                    {account.created_at ? new Date(account.created_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}
+                  </span>
+                )
+              },
+              {
+                label: "Saldo Atual",
+                key: "balance",
+                align: "right",
+                render: (account: any) => {
+                  const balance = account.balance || 0;
+                  return (
+                    <span className={`font-semibold ${balance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      R$ {balance.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="outline" size="sm" className="text-sm h-8" disabled>
-                      Anterior
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-sm h-8 bg-blue-50 text-blue-600">
-                      1
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-sm h-8" disabled>
-                      Próxima
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                  );
+                }
+              }
+            ]}
+            actions={(account) => (
+              <div className="flex items-center justify-center gap-1">
+                <IButtonPrime
+                  icon={<Edit className="h-4 w-4" />}
+                  onClick={() => console.log('Edit account', account.id)}
+                  title="Editar Conta"
+                />
+                <IButtonPrime
+                  icon={<Trash2 className="h-4 w-4" />}
+                  variant="red"
+                  onClick={() => console.log('Delete account', account.id)}
+                  title="Excluir Conta"
+                />
+              </div>
+            )}
+            emptyMessage="Nenhuma conta bancária cadastrada."
+            emptyIcon={<CreditCard className="h-10 w-10 text-gray-300" />}
+          />
         </TabsContent>
 
         <TabsContent value="centro-custo" className="space-y-6">
@@ -2253,7 +2220,6 @@ export function Transactions() {
         onSave={handleSaveTransaction}
       />
 
-      {/* Modal de Conta Bancária */}
       <DynamicModal
         isOpen={bankAccountModalOpen}
         onClose={() => setBankAccountModalOpen(false)}
@@ -2264,7 +2230,6 @@ export function Transactions() {
           handleBankAccountSave(data);
         }}
         isSaveDisabled={(data) => !data.name || !data.currentBalance || !data.bank}
-        saveButtonText="Salvar"
         maxWidth="2xl"
         fields={[
           // Primeira linha
@@ -2387,13 +2352,12 @@ export function Transactions() {
         isOpen={newBankModalOpen}
         onClose={() => {
           setNewBankModalOpen(false);
-          setNewBankData({ code: '', name: '' });
+          setNewBankData({ code: '', name: '' } as any);
         }}
         title="Novo Banco"
         initialData={{ code: '', name: '' }}
         onSave={handleNewBankSave}
         isSaveDisabled={(data) => !data.code || !data.name}
-        saveButtonText="Salvar Banco"
         maxWidth="lg"
         fields={[
           [

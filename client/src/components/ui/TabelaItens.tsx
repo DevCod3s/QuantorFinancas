@@ -22,7 +22,7 @@ interface Action {
 interface TabelaItensProps {
     data: any[];
     columns: Column[];
-    actions?: Action[];
+    actions?: Action[] | ((item: any) => React.ReactNode);
     emptyMessage?: string;
     emptyIcon?: any;
     initialPerPage?: number;
@@ -104,7 +104,7 @@ export function TabelaItens({
                                 {columns.map((col, idx) => (
                                     <col key={idx} style={{ width: col.width || 'auto' }} />
                                 ))}
-                                {actions.length > 0 && <col style={{ width: '120px' }} />}
+                                {actions && <col style={{ width: '120px' }} />}
                             </colgroup>
                             <thead className="bg-gray-50">
                                 <tr>
@@ -120,7 +120,7 @@ export function TabelaItens({
                                             </div>
                                         </th>
                                     ))}
-                                    {actions.length > 0 && (
+                                    {actions && (
                                         <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Ações
                                         </th>
@@ -141,7 +141,7 @@ export function TabelaItens({
                                 {columns.map((col, idx) => (
                                     <col key={idx} style={{ width: col.width || 'auto' }} />
                                 ))}
-                                {actions.length > 0 && <col style={{ width: '120px' }} />}
+                                {actions && <col style={{ width: '120px' }} />}
                             </colgroup>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {paginatedData.map((item, rowIdx) => (
@@ -151,19 +151,23 @@ export function TabelaItens({
                                                 {col.render ? col.render(item) : (item[col.key] || '-')}
                                             </td>
                                         ))}
-                                        {actions.length > 0 && (
+                                        {actions && (
                                             <td className="px-3 py-3 text-center">
                                                 <div className="flex items-center justify-center space-x-2">
-                                                    {actions.map((action, actionIdx) => (
-                                                        <button
-                                                            key={actionIdx}
-                                                            className={`${action.color} hover:opacity-80 transition-colors`}
-                                                            title={action.title}
-                                                            onClick={() => action.onClick(item)}
-                                                        >
-                                                            <action.icon className="h-3.5 w-3.5" />
-                                                        </button>
-                                                    ))}
+                                                    {typeof actions === 'function' ? (
+                                                        actions(item)
+                                                    ) : (
+                                                        actions.map((action, actionIdx) => (
+                                                            <button
+                                                                key={actionIdx}
+                                                                className={`${action.color} hover:opacity-80 transition-colors`}
+                                                                title={action.title}
+                                                                onClick={() => action.onClick(item)}
+                                                            >
+                                                                <action.icon className="h-3.5 w-3.5" />
+                                                            </button>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </td>
                                         )}

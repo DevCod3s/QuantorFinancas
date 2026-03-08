@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -8,6 +8,7 @@ import Select from '@mui/material/Select';
 import Autocomplete from '@mui/material/Autocomplete';
 import InputAdornment from '@mui/material/InputAdornment';
 import { DateInput } from './DateInput';
+import { IButtonPrime } from './ui/i-ButtonPrime';
 
 export type FieldType = 'text' | 'currency' | 'select' | 'autocomplete' | 'date' | 'radio';
 
@@ -321,35 +322,31 @@ export function DynamicModal({
 
                     {/* Botões de Ação no Rodapé */}
                     <div className="flex justify-end items-center gap-4 pt-4 mt-8 border-t border-gray-100">
-                        <button
-                            type="button"
-                            onClick={() => {
-                                if (onSaveAndContinue) {
-                                    onSaveAndContinue(formData, handleResetForm);
-                                } else {
-                                    onSave(formData);
-                                }
-                            }}
-                            disabled={isDisabled}
-                            title={saveButtonText}
-                            className={`flex items-center justify-center transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${saveButtonClassName || 'w-12 h-12 bg-[#2D82CD] hover:bg-[#1E6CAE] rounded-xl text-white shadow-sm'}`}
-                        >
-                            {saveButtonIcon || <span className="text-sm px-4">{saveButtonText}</span>}
-                        </button>
+                        {onSaveAndContinue ? (
+                            <IButtonPrime
+                                icon={saveButtonIcon || <Save className="h-5 w-5" />}
+                                onClick={() => onSaveAndContinue(formData, handleResetForm)}
+                                disabled={isDisabled}
+                                title={saveButtonText}
+                                className={saveButtonClassName}
+                            />
+                        ) : (
+                            <IButtonPrime
+                                icon={saveButtonIcon || <Save className="h-5 w-5" />}
+                                onClick={() => onSave(formData)}
+                                disabled={isDisabled}
+                                title={saveButtonText}
+                                className={saveButtonClassName}
+                            />
+                        )}
 
-                        <button
-                            type="button"
+                        <IButtonPrime
+                            icon={cancelButtonIcon || <X className="h-5 w-5" />}
                             onClick={onClose}
+                            variant="red"
                             title={cancelButtonText}
-                            className={`flex items-center justify-center transition-transform hover:scale-105 disabled:opacity-50 ${cancelButtonClassName || 'bg-[#DC3545] hover:bg-[#C82333] text-white rounded-md px-4 py-2 text-sm font-medium shadow-sm'}`}
-                        >
-                            {cancelButtonIcon}
-                            {(cancelButtonText && !cancelButtonIcon) ? (
-                                <span className="px-4 text-sm">{cancelButtonText}</span>
-                            ) : (
-                                cancelButtonText ? <span className="ml-1 pr-1">{cancelButtonText}</span> : null
-                            )}
-                        </button>
+                            className={cancelButtonClassName}
+                        />
                     </div>
                 </div>
             </div>
