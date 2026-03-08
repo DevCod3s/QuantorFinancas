@@ -18,6 +18,7 @@
 
 // Importações do Drizzle ORM para definição de schemas
 import { pgTable, text, serial, timestamp, decimal, boolean, integer, date } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // Importações para validação de dados
 import { createInsertSchema } from "drizzle-zod";
@@ -396,3 +397,59 @@ export const insertCustomBankSchema = createInsertSchema(customBanks).omit({
 // Tipos para bancos customizados
 export type CustomBank = typeof customBanks.$inferSelect;
 export type InsertCustomBank = z.infer<typeof insertCustomBankSchema>;
+
+/**
+ * Tabela de categorias do negócio (Unidade de Negócios)
+ */
+export const businessCategories = pgTable("business_categories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("income"), // 'income' ou 'expense'
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const businessSubcategories = pgTable("business_subcategories", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  categoryId: integer("category_id").notNull().references(() => businessCategories.id, { onDelete: 'cascade' }),
+  name: text("name").notNull(),
+  type: text("type").notNull().default("income"), // herdado ou independente 'income' / 'expense'
+  orderIndex: integer("order_index").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const businessCategoriesRelations = relations(businessCategories, ({ many, one }) => ({
+  user: one(users, {
+    fields: [businessCategories.userId],
+    references: [users.id],
+  }),
+  subcategories: many(businessSubcategories)
+}));
+
+export const businessSubcategoriesRelations = relations(businessSubcategories, ({ one }) => ({
+  user: one(users, {
+    fields: [businessSubcategories.userId],
+    references: [users.id],
+  }),
+  category: one(businessCategories, {
+    fields: [businessSubcategories.categoryId],
+    references: [businessCategories.id]
+  })
+}));
+
+export const insertBusinessCategorySchema = createInsertSchema(businessCategories).omit({
+  id: true,
+  userId: true
+});
+export const insertBusinessSubcategorySchema = createInsertSchema(businessSubcategories).omit({
+  id: true,
+  userId: true
+});
+
+export type BusinessCategory = typeof businessCategories.$inferSelect;
+export type InsertBusinessCategory = z.infer<typeof insertBusinessCategorySchema>;
+
+export type BusinessSubcategory = typeof businessSubcategories.$inferSelect;
+export type InsertBusinessSubcategory = z.infer<typeof insertBusinessSubcategorySchema>;

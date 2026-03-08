@@ -589,6 +589,221 @@ router.post("/custom-banks", requireAuth, async (req, res) => {
 });
 
 // ==========================================
+// BUSINESS CATEGORIES ROUTES
+// ==========================================
+
+/**
+ * GET /api/business-categories
+ * Retorna as categorias de negócio do usuário
+ */
+router.get("/business-categories", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const categories = await storage.getBusinessCategoriesByUserId(userId);
+    res.json(categories);
+  } catch (error) {
+    console.error("Erro ao buscar categorias de negócio:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * POST /api/business-categories
+ * Cadastra uma nova categoria de negócio
+ */
+router.post("/business-categories", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    console.log("Recebendo payload para criar categoria:", req.body);
+
+    // Verificação de duplicidade por nome
+    const existing = await storage.getBusinessCategoryByName(req.body.name, parseInt(userId));
+    if (existing) {
+      return res.status(400).json({ error: "Já existe uma categoria com este nome." });
+    }
+
+    const validatedData = schema.insertBusinessCategorySchema.parse({
+      ...req.body,
+      userId: parseInt(userId),
+    });
+
+    const newCategory = await storage.createBusinessCategory({
+      ...validatedData,
+      userId: parseInt(userId)
+    });
+    res.status(201).json(newCategory);
+  } catch (error) {
+    console.error("ERRO DETALHADO ao criar categoria:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * PUT /api/business-categories/:id
+ * Atualiza uma categoria de negócio
+ */
+router.put("/business-categories/:id", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    // A validação permite passar um id e userId para atualização, ou faz merge seguro
+    const updatedCategory = await storage.updateBusinessCategory(categoryId, userId, req.body);
+    res.json(updatedCategory);
+  } catch (error) {
+    console.error("Erro ao atualizar categoria de negócio:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * DELETE /api/business-categories/:id
+ * Exclui uma categoria de negócio
+ */
+router.delete("/business-categories/:id", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const categoryId = parseInt(req.params.id);
+    if (isNaN(categoryId)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    await storage.deleteBusinessCategory(categoryId, userId);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao excluir categoria de negócio:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * GET /api/business-subcategories
+ * Busca subcategorias pertencentes ao usuário logado
+ */
+router.get("/business-subcategories", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const subcategories = await storage.getBusinessSubcategoriesByUserId(userId);
+    res.json(subcategories);
+  } catch (error) {
+    console.error("Erro ao buscar subcategorias de negócio:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * POST /api/business-subcategories
+ * Cadastra uma nova subcategoria vinculada a uma categoria
+ */
+router.post("/business-subcategories", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    console.log("Recebendo payload para criar subcategoria:", req.body);
+
+    // Verificação de duplicidade por nome
+    const existing = await storage.getBusinessSubcategoryByName(req.body.name, parseInt(userId));
+    if (existing) {
+      return res.status(400).json({ error: "Já existe uma subcategoria com este nome." });
+    }
+
+    const validatedData = schema.insertBusinessSubcategorySchema.parse({
+      ...req.body,
+      userId: parseInt(userId),
+    });
+
+    const newSubcategory = await storage.createBusinessSubcategory({
+      ...validatedData,
+      userId: parseInt(userId)
+    });
+    res.status(201).json(newSubcategory);
+  } catch (error) {
+    console.error("ERRO DETALHADO ao criar subcategoria de negócio:", error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    }
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * PUT /api/business-subcategories/:id
+ * Atualiza uma subcategoria de negócio
+ */
+router.put("/business-subcategories/:id", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const subcategoryId = parseInt(req.params.id);
+    if (isNaN(subcategoryId)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    const updatedSubcategory = await storage.updateBusinessSubcategory(subcategoryId, userId, req.body);
+    res.json(updatedSubcategory);
+  } catch (error) {
+    console.error("Erro ao atualizar subcategoria de negócio:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+/**
+ * DELETE /api/business-subcategories/:id
+ * Exclui uma subcategoria de negócio
+ */
+router.delete("/business-subcategories/:id", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const subcategoryId = parseInt(req.params.id);
+    if (isNaN(subcategoryId)) {
+      return res.status(400).json({ error: "ID inválido" });
+    }
+
+    await storage.deleteBusinessSubcategory(subcategoryId, userId);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao excluir subcategoria de negócio:", error);
+    res.status(500).json({ error: "Erro interno do servidor" });
+  }
+});
+
+// ==========================================
 // RELATIONSHIPS ROUTES
 // ==========================================
 

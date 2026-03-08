@@ -38,6 +38,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubTabs } from "@/components/SubTabs";
+import { DynamicModal, DynamicField } from "@/components/DynamicModal";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
@@ -259,13 +260,13 @@ export function Transactions() {
   });
 
   // Handler para salvar novo banco na lista
-  const handleNewBankSave = () => {
-    if (!newBankData.code || !newBankData.name) {
+  const handleNewBankSave = (data: any) => {
+    if (!data.code || !data.name) {
       showError('Campos obrigatórios', 'O Código do Banco e o Nome da Instituição são obrigatórios.');
       return;
     }
 
-    const cleanedCode = newBankData.code.trim();
+    const cleanedCode = data.code.trim();
     const isDuplicate = banksList.some(b => b.code.trim() === cleanedCode);
 
     if (isDuplicate) {
@@ -275,29 +276,29 @@ export function Transactions() {
 
     createCustomBankMutation.mutate({
       code: cleanedCode,
-      name: newBankData.name.trim()
+      name: data.name.trim()
     });
   };
 
   // Handler para salvar conta bancária
-  const handleBankAccountSave = async () => {
-    if (!bankAccountData.name) {
+  const handleBankAccountSave = async (data: any) => {
+    if (!data.name) {
       showError('Campo obrigatório', 'O nome da conta é obrigatório.');
       return;
     }
 
-    if (!bankAccountData.currentBalance) {
+    if (!data.currentBalance) {
       showError('Campo obrigatório', 'O saldo inicial é obrigatório.');
       return;
     }
 
-    if (!bankAccountData.bank) {
+    if (!data.bank) {
       showError('Campo obrigatório', 'O banco é obrigatório.');
       return;
     }
 
     try {
-      await createBankAccountMutation.mutateAsync(bankAccountData);
+      await createBankAccountMutation.mutateAsync(data);
     } catch (error) {
       console.error('Erro ao salvar conta bancária:', error);
     }
@@ -2253,299 +2254,168 @@ export function Transactions() {
       />
 
       {/* Modal de Conta Bancária */}
-      {bankAccountModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-100 rounded-lg w-full max-w-2xl mx-4">
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Contas Financeiras</h2>
-              <button
-                onClick={() => setBankAccountModalOpen(false)}
-                className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              {/* Primeira linha: Data do saldo inicial, Saldo em 17/04/2..., Radio buttons */}
-              <div className="grid grid-cols-12 gap-4 items-end">
-                <div className="col-span-3">
-                  <DateInput
-                    label="Data do saldo inicial *"
-                    value={bankAccountData.initialBalanceDate}
-                    onChange={(value) => setBankAccountData({ ...bankAccountData, initialBalanceDate: value })}
-                  />
-                </div>
-                <div className="col-span-3">
-                  <TextField
-                    label="Saldo em 17/04/2..."
-                    variant="standard"
-                    value={bankAccountData.currentBalance}
-                    onChange={(e) => {
-                      const formatted = formatCurrencyValue(e.target.value, bankAccountData.currency);
-                      setBankAccountData({ ...bankAccountData, currentBalance: formatted });
-                    }}
-                    fullWidth
-                    placeholder=""
-                    sx={{
-                      input: {
-                        color: bankAccountData.balanceType === 'devedor' ? '#ef4444' : 'inherit'
-                      }
-                    }}
-                  />
-                </div>
-                <div className="col-span-6 flex items-center gap-6 justify-center">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="balanceType"
-                      value="credor"
-                      checked={bankAccountData.balanceType === 'credor'}
-                      onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
-                      className="w-4 h-4 text-blue-500 accent-blue-500"
-                    />
-                    <span className="text-sm text-gray-700">Credor</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="balanceType"
-                      value="devedor"
-                      checked={bankAccountData.balanceType === 'devedor'}
-                      onChange={(e) => setBankAccountData({ ...bankAccountData, balanceType: e.target.value })}
-                      className="w-4 h-4 text-red-500 accent-red-500"
-                    />
-                    <span className="text-sm text-gray-700">Devedor</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Segunda linha: Tipo, ícone +, Banco, ícone +, Moeda */}
-              <div className="grid grid-cols-12 gap-2">
-                <div className="col-span-3">
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel>Tipo</InputLabel>
-                    <Select
-                      value={bankAccountData.accountType}
-                      onChange={(e) => setBankAccountData({ ...bankAccountData, accountType: e.target.value })}
-                    >
-                      <MenuItem value="conta_corrente">Conta Corrente</MenuItem>
-                      <MenuItem value="conta_poupanca">Conta Poupança</MenuItem>
-                      <MenuItem value="conta_investimento">Conta de Investimento</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-                <div className="col-span-1 flex items-end justify-center">
-                  <div
-                    onClick={() => {/* TODO: Implementar modal de novo tipo */ }}
-                    className="cursor-pointer"
-                    title="Cadastrar novo tipo de conta"
-                  >
-                    <CreditCard className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />
-                  </div>
-                </div>
-                <div className="col-span-3">
-                  <Autocomplete
-                    options={banksList}
-                    getOptionLabel={(option: any) => `${option.code} - ${option.name}`}
-                    value={banksList.find(b => b.code === bankAccountData.bank) || null}
-                    onChange={(_: any, newValue: any) => {
-                      setBankAccountData({ ...bankAccountData, bank: newValue ? newValue.code : '' });
-                    }}
-                    slotProps={{
-                      paper: {
-                        sx: {
-                          width: 'max-content',
-                          minWidth: '100%',
-                        }
-                      }
-                    }}
-                    renderInput={(params: any) => (
-                      <TextField
-                        {...params}
-                        label="Banco"
-                        variant="standard"
-                        fullWidth
-                      />
-                    )}
-                    noOptionsText="Nenhum banco encontrado"
-                  />
-                </div>
-                <div className="col-span-1 flex items-end justify-center">
-                  <div
-                    onClick={() => setNewBankModalOpen(true)}
-                    className="cursor-pointer"
-                    title="Cadastrar novo banco"
-                  >
-                    <Building2 className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />
-                  </div>
-                </div>
-                <div className="col-span-4">
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel>Moeda</InputLabel>
-                    <Select
-                      value={bankAccountData.currency}
-                      onChange={(e) => {
-                        const newCurrency = e.target.value;
-                        const newBalance = bankAccountData.currentBalance
-                          ? formatCurrencyValue(bankAccountData.currentBalance, newCurrency)
-                          : '';
-                        const newCreditLimit = bankAccountData.creditLimit
-                          ? formatCurrencyValue(bankAccountData.creditLimit, newCurrency)
-                          : '';
-                        setBankAccountData({
-                          ...bankAccountData,
-                          currency: newCurrency,
-                          currentBalance: newBalance,
-                          creditLimit: newCreditLimit
-                        });
-                      }}
-                    >
-                      <MenuItem value="BRL">Real (R$)</MenuItem>
-                      <MenuItem value="USD">Dólar (US$)</MenuItem>
-                      <MenuItem value="EUR">Euro (€)</MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </div>
-
-              {/* Terceira linha: Nome * (campo único, largura total) */}
-              <div className="grid grid-cols-1">
-                <TextField
-                  label="Nome *"
-                  variant="standard"
-                  value={bankAccountData.name}
-                  onChange={(e) => setBankAccountData({ ...bankAccountData, name: e.target.value })}
-                  fullWidth
-                  placeholder=""
-                />
-              </div>
-
-              {/* Quarta linha: Agência, Conta */}
-              <div className="grid grid-cols-2 gap-4">
-                <TextField
-                  label="Agência"
-                  variant="standard"
-                  value={bankAccountData.agency}
-                  onChange={(e) => setBankAccountData({ ...bankAccountData, agency: e.target.value })}
-                  fullWidth
-                  placeholder=""
-                />
-                <TextField
-                  label="Conta"
-                  variant="standard"
-                  value={bankAccountData.accountNumber}
-                  onChange={(e) => setBankAccountData({ ...bankAccountData, accountNumber: e.target.value })}
-                  fullWidth
-                  placeholder=""
-                />
-              </div>
-
-              {/* Quinta linha: Limite de crédito, Nome do contato */}
-              <div className="grid grid-cols-2 gap-4">
-                <TextField
-                  label={`Limite de crédito (${bankAccountData.currency === 'USD' ? 'US$' : bankAccountData.currency === 'EUR' ? '€' : 'R$'})`}
-                  variant="standard"
-                  value={bankAccountData.creditLimit}
-                  onChange={(e) => {
-                    const formatted = formatCurrencyValue(e.target.value, bankAccountData.currency);
-                    setBankAccountData({ ...bankAccountData, creditLimit: formatted });
-                  }}
-                  fullWidth
-                  placeholder=""
-                />
-                <TextField
-                  label="Nome do contato"
-                  variant="standard"
-                  value={bankAccountData.contactName}
-                  onChange={(e) => setBankAccountData({ ...bankAccountData, contactName: e.target.value })}
-                  fullWidth
-                  placeholder=""
-                />
-              </div>
-
-              {/* Sexta linha: Telefone do contato */}
-              <div className="grid grid-cols-1">
-                <TextField
-                  label="Telefone do contato"
-                  variant="standard"
-                  value={bankAccountData.contactPhone}
-                  onChange={(e) => setBankAccountData({ ...bankAccountData, contactPhone: e.target.value })}
-                  fullWidth
-                  placeholder=""
-                />
-              </div>
-
-              {/* Botões */}
-              <div className="flex justify-end items-center gap-3 pt-4">
-                <button
-                  onClick={handleBankAccountSave}
-                  disabled={!bankAccountData.name || !bankAccountData.currentBalance || !bankAccountData.bank}
-                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
-                >
-                  Salvar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DynamicModal
+        isOpen={bankAccountModalOpen}
+        onClose={() => setBankAccountModalOpen(false)}
+        title="Contas Financeiras"
+        initialData={bankAccountData}
+        onSave={(data) => {
+          setBankAccountData(data);
+          handleBankAccountSave(data);
+        }}
+        isSaveDisabled={(data) => !data.name || !data.currentBalance || !data.bank}
+        saveButtonText="Salvar"
+        maxWidth="2xl"
+        fields={[
+          // Primeira linha
+          [
+            { name: 'initialBalanceDate', label: 'Data do saldo inicial *', type: 'date', colSpan: 3 },
+            {
+              name: 'currentBalance',
+              label: 'Saldo em...',
+              type: 'currency',
+              colSpan: 3,
+              placeholder: '',
+              textColorCondition: (data) => data.balanceType === 'devedor' ? '#ef4444' : 'inherit',
+              onChangeOverride: (val, currentData, setFormData) => {
+                const formatted = formatCurrencyValue(val, currentData.currency);
+                setFormData((prev: any) => ({ ...prev, currentBalance: formatted }));
+              }
+            },
+            {
+              name: 'balanceType',
+              label: '',
+              type: 'radio',
+              colSpan: 6,
+              options: [
+                { value: 'credor', label: 'Credor' },
+                { value: 'devedor', label: 'Devedor' }
+              ],
+              radioStyle: 'colored'
+            }
+          ],
+          // Segunda linha
+          [
+            {
+              name: 'accountType',
+              label: 'Tipo',
+              type: 'select',
+              colSpan: 4,
+              options: [
+                { value: 'conta_corrente', label: 'Conta Corrente' },
+                { value: 'conta_poupanca', label: 'Conta Poupança' },
+                { value: 'conta_investimento', label: 'Conta de Investimento' }
+              ],
+              iconAction: {
+                icon: <CreditCard className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />,
+                onClick: () => {/* TODO: Implementar modal de novo tipo */ },
+                title: "Cadastrar novo tipo de conta"
+              }
+            },
+            {
+              name: 'bank',
+              label: 'Banco',
+              type: 'autocomplete',
+              colSpan: 4,
+              options: banksList,
+              getOptionLabel: (opt: any) => `${opt.code} - ${opt.name}`,
+              getOptionValue: (opt: any) => opt.code,
+              iconAction: {
+                icon: <Building2 className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />,
+                onClick: () => setNewBankModalOpen(true),
+                title: "Cadastrar novo banco"
+              }
+            },
+            {
+              name: 'currency',
+              label: 'Moeda',
+              type: 'select',
+              colSpan: 4,
+              options: [
+                { value: 'BRL', label: 'Real (R$)' },
+                { value: 'USD', label: 'Dólar (US$)' },
+                { value: 'EUR', label: 'Euro (€)' }
+              ],
+              onChangeOverride: (val, currentData, setFormData) => {
+                const newBalance = currentData.currentBalance
+                  ? formatCurrencyValue(currentData.currentBalance, val)
+                  : '';
+                const newCreditLimit = currentData.creditLimit
+                  ? formatCurrencyValue(currentData.creditLimit, val)
+                  : '';
+                setFormData((prev: any) => ({
+                  ...prev,
+                  currency: val,
+                  currentBalance: newBalance,
+                  creditLimit: newCreditLimit
+                }));
+              }
+            }
+          ],
+          // Terceira linha
+          [
+            { name: 'name', label: 'Nome *', type: 'text', colSpan: 12 }
+          ],
+          // Quarta linha
+          [
+            { name: 'agency', label: 'Agência', type: 'text', colSpan: 6 },
+            { name: 'accountNumber', label: 'Conta', type: 'text', colSpan: 6 }
+          ],
+          // Quinta linha
+          [
+            {
+              name: 'creditLimit',
+              label: (data) => `Limite de crédito (${data.currency === 'USD' ? 'US$' : data.currency === 'EUR' ? '€' : 'R$'})`,
+              type: 'currency',
+              colSpan: 6,
+              onChangeOverride: (val, currentData, setFormData) => {
+                const formatted = formatCurrencyValue(val, currentData.currency);
+                setFormData((prev: any) => ({ ...prev, creditLimit: formatted }));
+              }
+            },
+            { name: 'contactName', label: 'Nome do contato', type: 'text', colSpan: 6 }
+          ],
+          // Sexta linha
+          [
+            { name: 'contactPhone', label: 'Telefone do contato', type: 'text', colSpan: 12 }
+          ]
+        ]}
+      />
 
       {/* Modal de Novo Banco */}
-      {newBankModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-100 rounded-lg w-full max-w-lg mx-4">
-            <div className="flex items-center justify-between p-6 pb-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Novo Banco</h2>
-              <button
-                onClick={() => setNewBankModalOpen(false)}
-                className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextField
-                  label="Código do Banco *"
-                  variant="standard"
-                  value={newBankData.code}
-                  onChange={(e) => setNewBankData({ ...newBankData, code: e.target.value.replace(/\\D/g, '') })}
-                  fullWidth
-                  placeholder="Ex: 001"
-                  autoFocus
-                />
-                <TextField
-                  label="Nome da Instituição *"
-                  variant="standard"
-                  value={newBankData.name}
-                  onChange={(e) => setNewBankData({ ...newBankData, name: e.target.value })}
-                  fullWidth
-                  placeholder="Ex: Banco do Brasil S.A."
-                />
-              </div>
-
-              {/* Botões */}
-              <div className="flex justify-end items-center gap-3 pt-6">
-                <button
-                  type="button"
-                  onClick={() => setNewBankModalOpen(false)}
-                  className="px-6 py-2 bg-transparent hover:bg-gray-200 text-gray-700 rounded text-sm transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={handleNewBankSave}
-                  disabled={!newBankData.code || !newBankData.name}
-                  className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
-                >
-                  Salvar Banco
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DynamicModal
+        isOpen={newBankModalOpen}
+        onClose={() => {
+          setNewBankModalOpen(false);
+          setNewBankData({ code: '', name: '' });
+        }}
+        title="Novo Banco"
+        initialData={{ code: '', name: '' }}
+        onSave={handleNewBankSave}
+        isSaveDisabled={(data) => !data.code || !data.name}
+        saveButtonText="Salvar Banco"
+        maxWidth="lg"
+        fields={[
+          [
+            {
+              name: 'code',
+              label: 'Código do Banco *',
+              type: 'text',
+              colSpan: 6,
+              placeholder: 'Ex: 001',
+              autoFocus: true,
+              transform: (val: string) => val.replace(/\D/g, '')
+            },
+            {
+              name: 'name',
+              label: 'Nome da Instituição *',
+              type: 'text',
+              colSpan: 6,
+              placeholder: 'Ex: Banco do Brasil S.A.'
+            }
+          ]
+        ]}
+      />
 
       {/* Dialogs são renderizados pelos hooks personalizados */}
     </div>

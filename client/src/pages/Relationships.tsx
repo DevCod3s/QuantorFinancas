@@ -31,6 +31,7 @@ import { Plus, Users, Building, Phone, Mail, MapPin, User, CheckCircle, XCircle,
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TabelaItens } from "@/components/ui/TabelaItens";
 
 // Importações de dialogs personalizados
 import { useSuccessDialog } from "@/components/ui/success-dialog";
@@ -84,96 +85,6 @@ export function Relationships() {
   const clientesDemoData = relationships.filter((r: any) => r.type === 'cliente');
   const fornecedoresDemoData = relationships.filter((r: any) => r.type === 'fornecedor');
   const outrosRelacionamentosDemoData = relationships.filter((r: any) => r.type === 'outros');
-
-  // Estados de paginação para cada aba
-  const [clientesPage, setClientesPage] = useState(1);
-  const [clientesPerPage, setClientesPerPage] = useState(5);
-  const [fornecedoresPage, setFornecedoresPage] = useState(1);
-  const [fornecedoresPerPage, setFornecedoresPerPage] = useState(5);
-  const [outrosPage, setOutrosPage] = useState(1);
-  const [outrosPerPage, setOutrosPerPage] = useState(5);
-
-  // Estados de ordenação
-  const [sortField, setSortField] = useState<string>("");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
-
-  // Função para ordenação
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
-
-  // Função para ordenar dados
-  const sortData = (data: any[], field: string, direction: "asc" | "desc") => {
-    return [...data].sort((a, b) => {
-      let aValue = a[field];
-      let bValue = b[field];
-
-      // Tratamento especial para diferentes tipos de campos
-      if (field === "dataCadastro") {
-        aValue = aValue ? new Date(aValue.split("/").reverse().join("/")) : new Date(0);
-        bValue = bValue ? new Date(bValue.split("/").reverse().join("/")) : new Date(0);
-      } else if (typeof aValue === "string") {
-        aValue = aValue.toLowerCase();
-        bValue = bValue.toLowerCase();
-      }
-
-      if (direction === "asc") {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-  };
-
-  // Função para paginar dados
-  const paginateData = (data: any[], page: number, perPage: number) => {
-    const startIndex = (page - 1) * perPage;
-    const endIndex = startIndex + perPage;
-    return data.slice(startIndex, endIndex);
-  };
-
-  // Dados processados para cada aba
-  const processedClientesData = (() => {
-    let data = clientesDemoData;
-    if (sortField) {
-      data = sortData(data, sortField, sortDirection);
-    }
-    return paginateData(data, clientesPage, clientesPerPage);
-  })();
-
-  const processedFornecedoresData = (() => {
-    let data = fornecedoresDemoData;
-    if (sortField) {
-      data = sortData(data, sortField, sortDirection);
-    }
-    return paginateData(data, fornecedoresPage, fornecedoresPerPage);
-  })();
-
-  const processedOutrosData = (() => {
-    let data = outrosRelacionamentosDemoData;
-    if (sortField) {
-      data = sortData(data, sortField, sortDirection);
-    }
-    return paginateData(data, outrosPage, outrosPerPage);
-  })();
-
-  // Função para calcular número total de páginas
-  const getTotalPages = (totalItems: number, perPage: number) => {
-    return Math.ceil(totalItems / perPage);
-  };
-
-  // Função para calcular range de itens mostrados
-  const getItemRange = (currentPage: number, perPage: number, totalItems: number) => {
-    if (totalItems === 0) return { start: 0, end: 0 };
-    const start = (currentPage - 1) * perPage + 1;
-    const end = Math.min(currentPage * perPage, totalItems);
-    return { start, end };
-  };
 
   // Funções de ação para os botões
   const handleEdit = (item: any, tipo: string) => {
@@ -381,745 +292,250 @@ export function Relationships() {
         </div>
 
         <TabsContent value="clientes" className="space-y-4">
-          {/* Card do Cabeçalho Fixo */}
-          <Card className="shadow-lg">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: '120px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '120px' }} />
-                  </colgroup>
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>ID</span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("razaoSocialCompleta")}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Razão Social/Nome</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nome Fantasia
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("tipo")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Tipo</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("dataCadastro")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Data</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("status")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Status</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          <TabelaItens
+            data={clientesDemoData}
+            initialPerPage={5}
+            columns={[
+              { label: "ID", key: "id", align: "center", width: "60px", sortable: true },
+              {
+                label: "Razão Social/Nome",
+                key: "socialName",
+                sortable: true,
+                render: (cliente) => {
+                  const document = cliente.document;
+                  const documentType = cliente.documenttype || cliente.document_type || cliente.documentType;
+                  const socialName = cliente.socialname || cliente.social_name || cliente.socialName;
 
-          {/* Card dos Dados com Scroll */}
-          <Card className="shadow-lg">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: '120px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '120px' }} />
-                  </colgroup>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {processedClientesData.map((cliente) => {
-                      // Normalizar campos do banco (snake_case para camelCase)
-                      const id = cliente.id;
-                      const document = cliente.document;
-                      const documentType = cliente.documenttype || cliente.document_type || cliente.documentType;
-                      const socialName = cliente.socialname || cliente.social_name || cliente.socialName;
-                      const fantasyName = cliente.fantasyname || cliente.fantasy_name || cliente.fantasyName;
-                      const createdAt = cliente.createdat || cliente.created_at || cliente.createdAt;
-                      const status = cliente.status || 'ativo';
+                  const formatDocument = (doc: string, type: string) => {
+                    if (!doc) return '-';
+                    const numbers = doc.replace(/\D/g, '');
+                    if (type === 'CPF' && numbers.length === 11) return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+                    if (type === 'CNPJ' && numbers.length === 14) return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+                    return doc;
+                  };
 
-                      // Formatar status
-                      const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
-                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
-
-                      // Formatar documento (CPF: 000.000.000-00 | CNPJ: 00.000.000/0000-00)
-                      const formatDocument = (doc: string, type: string) => {
-                        if (!doc) return '-';
-                        const numbers = doc.replace(/\D/g, '');
-                        if (type === 'CPF' && numbers.length === 11) {
-                          return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                        }
-                        if (type === 'CNPJ' && numbers.length === 14) {
-                          return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-                        }
-                        return doc;
-                      };
-
-                      return (
-                        <tr key={id} className="hover:bg-gray-50 transition-colors duration-150">
-                          {/* 1. ID */}
-                          <td className="px-3 py-3 text-center text-xs font-medium text-gray-900">
-                            {id}
-                          </td>
-
-                          {/* 2. RAZÃO SOCIAL/NOME (2 linhas: documento + razão social) */}
-                          <td className="px-3 py-3">
-                            <div>
-                              <div className="text-gray-500 text-xs mb-0.5">
-                                {formatDocument(document, documentType)}
-                              </div>
-                              <div className="font-medium text-gray-900 text-xs truncate">
-                                {socialName || '-'}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* 3. NOME FANTASIA (nome fantasia para CNPJ, nome completo para CPF) */}
-                          <td className="px-3 py-3 text-xs text-gray-900 truncate">
-                            {fantasyName || socialName || '-'}
-                          </td>
-
-                          {/* 4. TIPO (Pessoa Jurídica/Pessoa Física) */}
-                          <td className="px-3 py-3 text-center">
-                            <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${documentType === 'CPF'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-purple-100 text-purple-800'
-                              }`}>
-                              {documentType === 'CPF' ? 'PF' : 'PJ'}
-                            </span>
-                          </td>
-
-                          {/* 5. DATA (data de cadastro) */}
-                          <td className="px-3 py-3 whitespace-nowrap text-center text-xs text-gray-900">
-                            {createdAt ? new Date(createdAt).toLocaleDateString('pt-BR') : '-'}
-                          </td>
-
-                          {/* 6. STATUS (Ativo/Inativo) */}
-                          <td className="px-3 py-3 text-center">
-                            <div className="flex items-center justify-center space-x-1">
-                              <StatusIcon className={`h-3 w-3 ${statusColor}`} />
-                              <span className={`text-xs font-medium ${statusColor}`}>
-                                {statusCapitalized}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* 7. AÇÕES (Visualizar, Editar, Excluir) */}
-                          <td className="px-3 py-3 text-center">
-                            <div className="flex items-center justify-center space-x-2">
-                              <button
-                                className="text-green-600 hover:text-green-900 transition-colors"
-                                title="Visualizar"
-                                onClick={() => handleView(cliente, "Clientes")}
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Editar"
-                                onClick={() => handleEdit(cliente, "Clientes")}
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                className="text-red-600 hover:text-red-900 transition-colors"
-                                title="Excluir"
-                                onClick={() => handleDelete(cliente, "Clientes")}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card de Paginação Separado */}
-          <Card className="shadow-lg">
-            <CardContent className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">
-                    Mostrando {getItemRange(clientesPage, clientesPerPage, clientesDemoData.length).start} a {getItemRange(clientesPage, clientesPerPage, clientesDemoData.length).end} de {clientesDemoData.length} resultados
-                  </span>
-                  <span className="text-sm text-gray-500">|</span>
-                  <select
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
-                    value={clientesPerPage}
-                    onChange={(e) => {
-                      setClientesPerPage(Number(e.target.value));
-                      setClientesPage(1);
-                    }}
-                  >
-                    <option value="5">5 por página</option>
-                    <option value="10">10 por página</option>
-                    <option value="20">20 por página</option>
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${clientesPage === 1
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    onClick={() => setClientesPage(Math.max(1, clientesPage - 1))}
-                    disabled={clientesPage === 1}
-                  >
-                    Anterior
-                  </button>
-
-                  {/* Renderizar páginas dinamicamente */}
-                  {Array.from({ length: getTotalPages(clientesDemoData.length, clientesPerPage) }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      className={`px-3 py-1 text-sm rounded transition-colors ${page === clientesPage
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      onClick={() => setClientesPage(page)}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${clientesPage === getTotalPages(clientesDemoData.length, clientesPerPage)
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    onClick={() => setClientesPage(Math.min(getTotalPages(clientesDemoData.length, clientesPerPage), clientesPage + 1))}
-                    disabled={clientesPage === getTotalPages(clientesDemoData.length, clientesPerPage)}
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                  return (
+                    <div>
+                      <div className="text-gray-500 text-[10px] mb-0.5">{formatDocument(document, documentType)}</div>
+                      <div className="font-medium text-gray-900 truncate">{socialName || '-'}</div>
+                    </div>
+                  );
+                }
+              },
+              {
+                label: "Nome Fantasia",
+                key: "fantasyName",
+                render: (cliente) => cliente.fantasyname || cliente.fantasy_name || cliente.fantasyName || '-'
+              },
+              {
+                label: "Tipo",
+                key: "documentType",
+                align: "center",
+                width: "120px",
+                render: (cliente) => {
+                  const documentType = cliente.documenttype || cliente.document_type || cliente.documentType;
+                  return (
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                      {documentType === 'CPF' ? 'PF' : 'PJ'}
+                    </span>
+                  );
+                }
+              },
+              {
+                label: "Data",
+                key: "createdat",
+                align: "center",
+                width: "100px",
+                sortable: true,
+                render: (cliente) => {
+                  const date = cliente.createdat || cliente.created_at || cliente.createdAt;
+                  return date ? new Date(date).toLocaleDateString('pt-BR') : '-';
+                }
+              },
+              {
+                label: "Status",
+                key: "status",
+                align: "center",
+                width: "100px",
+                sortable: true,
+                render: (cliente) => {
+                  const status = cliente.status || 'ativo';
+                  const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
+                  const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
+                  return (
+                    <div className="flex items-center justify-center space-x-1">
+                      <StatusIcon className={`h-3 w-3 ${statusColor}`} />
+                      <span className={`text-[10px] font-medium ${statusColor}`}>{statusCapitalized}</span>
+                    </div>
+                  );
+                }
+              }
+            ]}
+            actions={[
+              { icon: Eye, color: "text-green-600", title: "Visualizar", onClick: (item) => handleView(item, "Clientes") },
+              { icon: Edit, color: "text-blue-600", title: "Editar", onClick: (item) => handleEdit(item, "Clientes") },
+              { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: (item) => handleDelete(item, "Clientes") }
+            ]}
+          />
         </TabsContent>
 
         <TabsContent value="fornecedores" className="space-y-4">
-          {/* Card do Cabeçalho Fixo */}
-          <Card className="shadow-lg">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: '120px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '120px' }} />
-                  </colgroup>
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>ID</span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("razaoSocialCompleta")}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Razão Social/Nome</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nome Fantasia
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("tipo")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Tipo</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("dataCadastro")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Data</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("status")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Status</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card dos Dados com Scroll */}
-          <Card className="shadow-lg">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: '120px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '120px' }} />
-                  </colgroup>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {processedFornecedoresData.map((fornecedor, index) => {
-                      const statusValue = fornecedor.status || 'ativo';
-                      const statusCapitalized = statusValue.charAt(0).toUpperCase() + statusValue.slice(1);
-                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
-
-                      return (
-                        <tr key={fornecedor.id} className="hover:bg-gray-50 transition-colors duration-150">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {fornecedor.id}
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="text-sm">
-                              <div className="font-medium text-gray-900">{fornecedor.social_name || fornecedor.socialName}</div>
-                              <div className="text-gray-500 text-xs">{fornecedor.document}</div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {fornecedor.fantasy_name || fornecedor.fantasyName || '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${(fornecedor.document_type || fornecedor.documentType) === 'CPF'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-purple-100 text-purple-800'
-                              }`}>
-                              {(fornecedor.document_type || fornecedor.documentType) === 'CPF' ? 'Pessoa Física' : 'Pessoa Jurídica'}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {fornecedor.created_at || fornecedor.createdAt ? new Date(fornecedor.created_at || fornecedor.createdAt).toLocaleDateString('pt-BR') : '-'}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center space-x-2">
-                              <StatusIcon className={`h-4 w-4 ${statusColor}`} />
-                              <span className={`text-sm font-medium ${statusColor}`}>
-                                {statusCapitalized}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div className="flex items-center space-x-2">
-                              <button
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Editar"
-                              >
-                                <Edit className="h-4 w-4" />
-                              </button>
-                              <button
-                                className="text-green-600 hover:text-green-900 transition-colors"
-                                title="Visualizar"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </button>
-                              <button
-                                className="text-red-600 hover:text-red-900 transition-colors"
-                                title="Excluir"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card de Paginação Separado */}
-          <Card className="shadow-lg">
-            <CardContent className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">
-                    Mostrando {getItemRange(fornecedoresPage, fornecedoresPerPage, fornecedoresDemoData.length).start} a {getItemRange(fornecedoresPage, fornecedoresPerPage, fornecedoresDemoData.length).end} de {fornecedoresDemoData.length} resultados
-                  </span>
-                  <span className="text-sm text-gray-500">|</span>
-                  <select
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
-                    value={fornecedoresPerPage}
-                    onChange={(e) => {
-                      setFornecedoresPerPage(Number(e.target.value));
-                      setFornecedoresPage(1);
-                    }}
-                  >
-                    <option value="5">5 por página</option>
-                    <option value="10">10 por página</option>
-                    <option value="20">20 por página</option>
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${fornecedoresPage === 1
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    onClick={() => setFornecedoresPage(Math.max(1, fornecedoresPage - 1))}
-                    disabled={fornecedoresPage === 1}
-                  >
-                    Anterior
-                  </button>
-
-                  {/* Renderizar páginas dinamicamente */}
-                  {Array.from({ length: getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage) }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      className={`px-3 py-1 text-sm rounded transition-colors ${page === fornecedoresPage
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      onClick={() => setFornecedoresPage(page)}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${fornecedoresPage === getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage)
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    onClick={() => setFornecedoresPage(Math.min(getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage), fornecedoresPage + 1))}
-                    disabled={fornecedoresPage === getTotalPages(fornecedoresDemoData.length, fornecedoresPerPage)}
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TabelaItens
+            data={fornecedoresDemoData}
+            initialPerPage={5}
+            columns={[
+              { label: "ID", key: "id", align: "center", width: "60px", sortable: true },
+              {
+                label: "Razão Social/Nome",
+                key: "socialName",
+                sortable: true,
+                render: (f: any) => {
+                  const document = f.document;
+                  const socialName = f.socialname || f.social_name || f.socialName;
+                  return (
+                    <div>
+                      <div className="text-gray-500 text-[10px] mb-0.5">{document || '-'}</div>
+                      <div className="font-medium text-gray-900 truncate">{socialName || '-'}</div>
+                    </div>
+                  );
+                }
+              },
+              {
+                label: "Nome Fantasia",
+                key: "fantasyName",
+                render: (f: any) => f.fantasyname || f.fantasy_name || f.fantasyName || '-'
+              },
+              {
+                label: "Tipo",
+                key: "documentType",
+                align: "center",
+                width: "120px",
+                render: (f: any) => {
+                  const documentType = f.documenttype || f.document_type || f.documentType;
+                  return (
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                      {documentType === 'CPF' ? 'PF' : 'PJ'}
+                    </span>
+                  );
+                }
+              },
+              {
+                label: "Data",
+                key: "createdat",
+                align: "center",
+                width: "100px",
+                sortable: true,
+                render: (f: any) => {
+                  const date = f.createdat || f.created_at || f.createdAt;
+                  return date ? new Date(date).toLocaleDateString('pt-BR') : '-';
+                }
+              },
+              {
+                label: "Status",
+                key: "status",
+                align: "center",
+                width: "100px",
+                sortable: true,
+                render: (f: any) => {
+                  const status = f.status || 'ativo';
+                  const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
+                  const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
+                  return (
+                    <div className="flex items-center justify-center space-x-1">
+                      <StatusIcon className={`h-3 w-3 ${statusColor}`} />
+                      <span className={`text-[10px] font-medium ${statusColor}`}>{statusCapitalized}</span>
+                    </div>
+                  );
+                }
+              }
+            ]}
+            actions={[
+              { icon: Eye, color: "text-green-600", title: "Visualizar", onClick: (item: any) => handleView(item, "Fornecedores") },
+              { icon: Edit, color: "text-blue-600", title: "Editar", onClick: (item: any) => handleEdit(item, "Fornecedores") },
+              { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: (item: any) => handleDelete(item, "Fornecedores") }
+            ]}
+          />
         </TabsContent>
+
 
         <TabsContent value="outros" className="space-y-4">
-          {/* Card do Cabeçalho Fixo */}
-          <Card className="shadow-lg">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: '120px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '120px' }} />
-                  </colgroup>
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>ID</span>
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("razaoSocialCompleta")}
-                      >
-                        <div className="flex items-center space-x-1">
-                          <span>Razão Social/Nome</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Nome Fantasia
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("tipo")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Tipo</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("dataCadastro")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Data</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th
-                        className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:text-gray-700 transition-colors"
-                        onClick={() => handleSort("status")}
-                      >
-                        <div className="flex items-center justify-center space-x-1">
-                          <span>Status</span>
-                          <ArrowUpDown className="h-3 w-3" />
-                        </div>
-                      </th>
-                      <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Ações
-                      </th>
-                    </tr>
-                  </thead>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card dos Dados com Scroll */}
-          <Card className="shadow-lg">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
-                <table className="w-full table-fixed">
-                  <colgroup>
-                    <col style={{ width: '60px' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: 'auto' }} />
-                    <col style={{ width: '120px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '100px' }} />
-                    <col style={{ width: '120px' }} />
-                  </colgroup>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {processedOutrosData.map((relacionamento) => {
-                      // Normalizar campos do banco
-                      const id = relacionamento.id;
-                      const document = relacionamento.document;
-                      const documentType = relacionamento.documenttype || relacionamento.document_type || relacionamento.documentType;
-                      const socialName = relacionamento.socialname || relacionamento.social_name || relacionamento.socialName;
-                      const fantasyName = relacionamento.fantasyname || relacionamento.fantasy_name || relacionamento.fantasyName;
-                      const createdAt = relacionamento.createdat || relacionamento.created_at || relacionamento.createdAt;
-                      const status = relacionamento.status || 'ativo';
-
-                      // Formatar status
-                      const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
-                      const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
-
-                      // Formatar documento
-                      const formatDocument = (doc: string, type: string) => {
-                        if (!doc) return '-';
-                        const numbers = doc.replace(/\D/g, '');
-                        if (type === 'CPF' && numbers.length === 11) {
-                          return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-                        }
-                        if (type === 'CNPJ' && numbers.length === 14) {
-                          return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-                        }
-                        return doc;
-                      };
-
-                      return (
-                        <tr key={id} className="hover:bg-gray-50 transition-colors duration-150">
-                          {/* 1. ID */}
-                          <td className="px-3 py-3 text-center text-xs font-medium text-gray-900">
-                            {id}
-                          </td>
-
-                          {/* 2. RAZÃO SOCIAL/NOME (2 linhas: documento + razão social) */}
-                          <td className="px-3 py-3">
-                            <div>
-                              <div className="text-gray-500 text-xs mb-0.5">
-                                {formatDocument(document, documentType)}
-                              </div>
-                              <div className="font-medium text-gray-900 text-xs truncate">
-                                {socialName || '-'}
-                              </div>
-                            </div>
-                          </td>
-
-                          {/* 3. NOME FANTASIA */}
-                          <td className="px-3 py-3 text-xs text-gray-900 truncate">
-                            {fantasyName || socialName || '-'}
-                          </td>
-
-                          {/* 4. TIPO */}
-                          <td className="px-3 py-3 text-center">
-                            <span className={`inline-flex px-2 py-0.5 text-xs font-semibold rounded-full ${documentType === 'CPF'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-purple-100 text-purple-800'
-                              }`}>
-                              {documentType === 'CPF' ? 'PF' : 'PJ'}
-                            </span>
-                          </td>
-
-                          {/* 5. DATA */}
-                          <td className="px-3 py-3 whitespace-nowrap text-center text-xs text-gray-900">
-                            {createdAt ? new Date(createdAt).toLocaleDateString('pt-BR') : '-'}
-                          </td>
-
-                          {/* 6. STATUS */}
-                          <td className="px-3 py-3 text-center">
-                            <div className="flex items-center justify-center space-x-1">
-                              <StatusIcon className={`h-3 w-3 ${statusColor}`} />
-                              <span className={`text-xs font-medium ${statusColor}`}>
-                                {statusCapitalized}
-                              </span>
-                            </div>
-                          </td>
-
-                          {/* 7. AÇÕES */}
-                          <td className="px-3 py-3 text-center">
-                            <div className="flex items-center justify-center space-x-2">
-                              <button
-                                className="text-green-600 hover:text-green-900 transition-colors"
-                                title="Visualizar"
-                                onClick={() => handleView(relacionamento, "Outros")}
-                              >
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                className="text-blue-600 hover:text-blue-900 transition-colors"
-                                title="Editar"
-                                onClick={() => handleEdit(relacionamento, "Outros")}
-                              >
-                                <Edit className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                className="text-red-600 hover:text-red-900 transition-colors"
-                                title="Excluir"
-                                onClick={() => handleDelete(relacionamento, "Outros")}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Card de Paginação Separado */}
-          <Card className="shadow-lg">
-            <CardContent className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm text-gray-700">
-                    Mostrando {getItemRange(outrosPage, outrosPerPage, outrosRelacionamentosDemoData.length).start} a {getItemRange(outrosPage, outrosPerPage, outrosRelacionamentosDemoData.length).end} de {outrosRelacionamentosDemoData.length} resultados
-                  </span>
-                  <span className="text-sm text-gray-500">|</span>
-                  <select
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
-                    value={outrosPerPage}
-                    onChange={(e) => {
-                      setOutrosPerPage(Number(e.target.value));
-                      setOutrosPage(1);
-                    }}
-                  >
-                    <option value="5">5 por página</option>
-                    <option value="10">10 por página</option>
-                    <option value="20">20 por página</option>
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${outrosPage === 1
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    onClick={() => setOutrosPage(Math.max(1, outrosPage - 1))}
-                    disabled={outrosPage === 1}
-                  >
-                    Anterior
-                  </button>
-
-                  {/* Renderizar páginas dinamicamente */}
-                  {Array.from({ length: getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage) }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      className={`px-3 py-1 text-sm rounded transition-colors ${page === outrosPage
-                          ? 'bg-blue-600 text-white hover:bg-blue-700'
-                          : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      onClick={() => setOutrosPage(page)}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                  <button
-                    className={`px-3 py-1 text-sm transition-colors ${outrosPage === getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage)
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    onClick={() => setOutrosPage(Math.min(getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage), outrosPage + 1))}
-                    disabled={outrosPage === getTotalPages(outrosRelacionamentosDemoData.length, outrosPerPage)}
-                  >
-                    Próxima
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <TabelaItens
+            data={outrosRelacionamentosDemoData}
+            initialPerPage={5}
+            columns={[
+              { label: "ID", key: "id", align: "center", width: "60px", sortable: true },
+              {
+                label: "Razão Social/Nome",
+                key: "socialName",
+                sortable: true,
+                render: (r: any) => {
+                  const document = r.document;
+                  const socialName = r.socialname || r.social_name || r.socialName;
+                  return (
+                    <div>
+                      <div className="text-gray-500 text-[10px] mb-0.5">{document || '-'}</div>
+                      <div className="font-medium text-gray-900 truncate">{socialName || '-'}</div>
+                    </div>
+                  );
+                }
+              },
+              {
+                label: "Nome Fantasia",
+                key: "fantasyName",
+                render: (r: any) => r.fantasyname || r.fantasy_name || r.fantasyName || '-'
+              },
+              {
+                label: "Tipo",
+                key: "documentType",
+                align: "center",
+                width: "120px",
+                render: (r: any) => {
+                  const documentType = r.documenttype || r.document_type || r.documentType;
+                  return (
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                      {documentType === 'CPF' ? 'PF' : 'PJ'}
+                    </span>
+                  );
+                }
+              },
+              {
+                label: "Data",
+                key: "createdat",
+                align: "center",
+                width: "100px",
+                sortable: true,
+                render: (r: any) => {
+                  const date = r.createdat || r.created_at || r.createdAt;
+                  return date ? new Date(date).toLocaleDateString('pt-BR') : '-';
+                }
+              },
+              {
+                label: "Status",
+                key: "status",
+                align: "center",
+                width: "100px",
+                sortable: true,
+                render: (r: any) => {
+                  const status = r.status || 'ativo';
+                  const statusCapitalized = status.charAt(0).toUpperCase() + status.slice(1);
+                  const { icon: StatusIcon, color: statusColor } = getStatusIcon(statusCapitalized);
+                  return (
+                    <div className="flex items-center justify-center space-x-1">
+                      <StatusIcon className={`h-3 w-3 ${statusColor}`} />
+                      <span className={`text-[10px] font-medium ${statusColor}`}>{statusCapitalized}</span>
+                    </div>
+                  );
+                }
+              }
+            ]}
+            actions={[
+              { icon: Eye, color: "text-green-600", title: "Visualizar", onClick: (item: any) => handleView(item, "Outros Relacionamentos") },
+              { icon: Edit, color: "text-blue-600", title: "Editar", onClick: (item: any) => handleEdit(item, "Outros Relacionamentos") },
+              { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: (item: any) => handleDelete(item, "Outros Relacionamentos") }
+            ]}
+          />
         </TabsContent>
+
       </Tabs>
 
       {/* Dialogs de Feedback */}

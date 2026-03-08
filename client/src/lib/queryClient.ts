@@ -29,7 +29,7 @@ export const queryClient = new QueryClient({
     queries: {
       retry: 1, // Uma tentativa adicional em caso de falha
       staleTime: 5 * 60 * 1000, // Dados frescos por 5 minutos
-      
+
       /**
        * Query function padrão para requests GET
        * 
@@ -39,11 +39,11 @@ export const queryClient = new QueryClient({
       queryFn: async ({ queryKey }) => {
         const url = queryKey[0] as string;
         const res = await fetch(url);
-        
+
         if (!res.ok) {
           throw new Error(`Requisição falhou: ${res.status}`);
         }
-        
+
         return res.json();
       },
     },
@@ -82,6 +82,11 @@ export const apiRequest = async (method: string, url: string, data?: any) => {
 
   if (!response.ok) {
     throw new Error(`Requisição da API falhou: ${response.status}`);
+  }
+
+  // Verifica se é 204 No Content para não tentar fazer parse de JSON vazio
+  if (response.status === 204) {
+    return undefined;
   }
 
   return response.json();

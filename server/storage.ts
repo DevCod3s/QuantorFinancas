@@ -39,7 +39,11 @@ import type {
   InsertChartOfAccount,
   InsertBankAccount,
   CustomBank,
-  InsertCustomBank
+  InsertCustomBank,
+  BusinessCategory,
+  InsertBusinessCategory,
+  BusinessSubcategory,
+  InsertBusinessSubcategory
 } from "@shared/schema";
 
 // Configuração da conexão com PostgreSQL já feita em db.ts
@@ -103,6 +107,18 @@ export interface IStorage {
   // Bancos Customizados
   getCustomBanksByUserId(userId: string): Promise<CustomBank[]>;
   createCustomBank(bank: InsertCustomBank): Promise<CustomBank>;
+
+  // Categorias de Negócio
+  getBusinessCategoriesByUserId(userId: string): Promise<BusinessCategory[]>;
+  createBusinessCategory(category: InsertBusinessCategory): Promise<BusinessCategory>;
+  updateBusinessCategory(id: number, userId: string, category: Partial<InsertBusinessCategory>): Promise<BusinessCategory | undefined>;
+  deleteBusinessCategory(id: number, userId: string): Promise<boolean>;
+
+  // Subcategorias de Negócio
+  getBusinessSubcategoriesByUserId(userId: string): Promise<BusinessSubcategory[]>;
+  createBusinessSubcategory(subcategory: InsertBusinessSubcategory): Promise<BusinessSubcategory>;
+  updateBusinessSubcategory(id: number, userId: string, subcategory: Partial<InsertBusinessSubcategory>): Promise<BusinessSubcategory | undefined>;
+  deleteBusinessSubcategory(id: number, userId: string): Promise<boolean>;
 
   // Painel (Dashboard)
   getDashboardStats(userId: string): Promise<{
@@ -402,6 +418,123 @@ export class DatabaseStorage implements IStorage {
       .values(bank)
       .returning();
     return newBank[0];
+  }
+
+  // Business Categories methods
+  async getBusinessCategoriesByUserId(userId: string): Promise<BusinessCategory[]> {
+    return db.select()
+      .from(schema.businessCategories)
+      .where(eq(schema.businessCategories.userId, parseInt(userId)))
+      .orderBy(schema.businessCategories.orderIndex, schema.businessCategories.id);
+  }
+
+  async getBusinessCategoryByName(name: string, userId: number): Promise<BusinessCategory | undefined> {
+    const [category] = await db
+      .select()
+      .from(schema.businessCategories)
+      .where(
+        and(
+          eq(schema.businessCategories.name, name),
+          eq(schema.businessCategories.userId, userId)
+        )
+      )
+      .limit(1);
+    return category;
+  }
+
+  async createBusinessCategory(category: InsertBusinessCategory & { userId: number }): Promise<BusinessCategory> {
+    const [newCategory] = await db.insert(schema.businessCategories)
+      .values(category)
+      .returning();
+    return newCategory;
+  }
+
+  async updateBusinessCategory(id: number, userId: string, category: Partial<InsertBusinessCategory>): Promise<BusinessCategory | undefined> {
+    const [updatedCategory] = await db
+      .update(schema.businessCategories)
+      .set(category)
+      .where(
+        and(
+          eq(schema.businessCategories.id, id),
+          eq(schema.businessCategories.userId, parseInt(userId))
+        )
+      )
+      .returning();
+    return updatedCategory;
+  }
+
+  async deleteBusinessCategory(id: number, userId: string): Promise<boolean> {
+    const [deletedCategory] = await db
+      .delete(schema.businessCategories)
+      .where(
+        and(
+          eq(schema.businessCategories.id, id),
+          eq(schema.businessCategories.userId, parseInt(userId))
+        )
+      )
+      .returning();
+    return !!deletedCategory;
+  }
+
+  // ==========================================
+  // Subcategorias de Negócio
+  // ==========================================
+
+  async getBusinessSubcategoriesByUserId(userId: string): Promise<BusinessSubcategory[]> {
+    return await db
+      .select()
+      .from(schema.businessSubcategories)
+      .where(eq(schema.businessSubcategories.userId, parseInt(userId)))
+      .orderBy(schema.businessSubcategories.orderIndex, schema.businessSubcategories.id);
+  }
+
+  async getBusinessSubcategoryByName(name: string, userId: number): Promise<BusinessSubcategory | undefined> {
+    const [subcategory] = await db
+      .select()
+      .from(schema.businessSubcategories)
+      .where(
+        and(
+          eq(schema.businessSubcategories.name, name),
+          eq(schema.businessSubcategories.userId, userId)
+        )
+      )
+      .limit(1);
+    return subcategory;
+  }
+
+  async createBusinessSubcategory(subcategory: InsertBusinessSubcategory & { userId: number }): Promise<BusinessSubcategory> {
+    const [newSubcategory] = await db
+      .insert(schema.businessSubcategories)
+      .values(subcategory)
+      .returning();
+    return newSubcategory;
+  }
+
+  async updateBusinessSubcategory(id: number, userId: string, subcategory: Partial<InsertBusinessSubcategory>): Promise<BusinessSubcategory | undefined> {
+    const [updatedSubcategory] = await db
+      .update(schema.businessSubcategories)
+      .set(subcategory)
+      .where(
+        and(
+          eq(schema.businessSubcategories.id, id),
+          eq(schema.businessSubcategories.userId, parseInt(userId))
+        )
+      )
+      .returning();
+    return updatedSubcategory;
+  }
+
+  async deleteBusinessSubcategory(id: number, userId: string): Promise<boolean> {
+    const [deletedSubcategory] = await db
+      .delete(schema.businessSubcategories)
+      .where(
+        and(
+          eq(schema.businessSubcategories.id, id),
+          eq(schema.businessSubcategories.userId, parseInt(userId))
+        )
+      )
+      .returning();
+    return !!deletedSubcategory;
   }
 
   async getDashboardStats(userId: string) {
