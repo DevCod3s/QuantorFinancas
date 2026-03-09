@@ -22,12 +22,16 @@ import {
   Box,
   Dialog,
   DialogContent,
+  Checkbox,
+  FormControlLabel,
+  Typography,
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
 import { DateInput } from "./DateInput";
+import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 
 interface TransactionCardProps {
   open: boolean;
@@ -49,10 +53,19 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
   const [categoria, setCategoria] = useState('');
+  const [subcategoria, setSubcategoria] = useState('');
   const [contato, setContato] = useState('');
-  const [numeroDocumento, setNumeroDocumento] = useState('');
   const [observacoes, setObservacoes] = useState('');
-  const [tags, setTags] = useState('');
+  const [planoContas, setPlanoContas] = useState('');
+  
+  // Estados para parcelamento
+  const [numeroParcelas, setNumeroParcelas] = useState('');
+  const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState('');
+  const [aplicarJuros, setAplicarJuros] = useState(false);
+  const [tipoJuros, setTipoJuros] = useState<'percentual' | 'valor'>('percentual');
+  const [valorJuros, setValorJuros] = useState('');
+  const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela'>('total');
+  const [valorParcela, setValorParcela] = useState('0,00');
   
   // Estados para modal de adicionar contato
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -169,6 +182,18 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     queryFn: () => fetch('/api/chart-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
+  // Buscar categorias de negócio
+  const { data: businessCategories = [] } = useQuery({
+    queryKey: ['/api/business-categories'],
+    queryFn: () => fetch('/api/business-categories', { credentials: 'include' }).then(res => res.json())
+  });
+
+  // Buscar subcategorias de negócio
+  const { data: businessSubcategories = [] } = useQuery({
+    queryKey: ['/api/business-subcategories'],
+    queryFn: () => fetch('/api/business-subcategories', { credentials: 'include' }).then(res => res.json())
+  });
+
   // Filtragem de contas por tipo (receita/despesa)
   const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
     if (tipo.includes('receita')) {
@@ -182,6 +207,80 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
     }
     return true;
   });
+
+  // Filtragem de categorias de negócio por tipo
+  const filteredBusinessCategories = businessCategories.filter((cat: any) => {
+    if (tipo.includes('receita')) {
+      return cat.type === 'income';
+    }
+    if (tipo.includes('despesa')) {
+      return cat.type === 'expense';
+    }
+    return true;
+  });
+
+  // Filtragem de subcategorias de negócio por tipo
+  const filteredBusinessSubcategories = businessSubcategories.filter((subcat: any) => {
+    if (tipo.includes('receita')) {
+      return subcat.type === 'income';
+    }
+    if (tipo.includes('despesa')) {
+      return subcat.type === 'expense';
+    }
+    return true;
+  });
+
+  // Cálculo do valor da parcela
+  React.useEffect(() => {
+    if (repeticao !== 'Parcelado' || !valor || !numeroParcelas) {
+      setValorParcela('0,00');
+      return;
+    }
+
+    const valorNumerico = parseFloat(valor.replace(/[R$\s.]/g, '').replace(',', '.'));
+    const parcelas = parseInt(numeroParcelas);
+
+    if (isNaN(valorNumerico) || isNaN(parcelas) || parcelas === 0) {
+      setValorParcela('0,00');
+      return;
+    }
+
+    let valorFinal = valorNumerico;
+
+    // Aplicar juros se necessário
+    if (aplicarJuros && valorJuros) {
+      const juros = parseFloat(valorJuros.replace(/[R$\s.]/g, '').replace(',', '.'));
+      
+      if (tipoJuros === 'percentual') {
+        // Juros em percentual
+        if (aplicarJurosEm === 'total') {
+          // Juros sobre o total
+          valorFinal = valorNumerico * (1 + juros / 100);
+        } else {
+          // Juros em cada parcela
+          const valorPorParcela = valorNumerico / parcelas;
+          const parcelaComJuros = valorPorParcela * (1 + juros / 100);
+          setValorParcela(parcelaComJuros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+          return;
+        }
+      } else {
+        // Juros em valor fixo (R$)
+        if (aplicarJurosEm === 'total') {
+          // Juros fixos sobre o total
+          valorFinal = valorNumerico + juros;
+        } else {
+          // Juros fixos em cada parcela
+          const valorPorParcela = valorNumerico / parcelas;
+          const parcelaComJuros = valorPorParcela + juros;
+          setValorParcela(parcelaComJuros.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+          return;
+        }
+      }
+    }
+
+    const valorPorParcela = valorFinal / parcelas;
+    setValorParcela(valorPorParcela.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  }, [repeticao, valor, numeroParcelas, aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm]);
 
   // Formatação de valor monetário
   const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -310,7 +409,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 onChange={(e) => setRepeticao(e.target.value)}
               >
                 <MenuItem value="Única">Única</MenuItem>
-                <MenuItem value="Fixa">Fixa</MenuItem>
+                <MenuItem value="Parcelado">Parcelado</MenuItem>
                 <MenuItem value="Recorrente">Recorrente</MenuItem>
               </Select>
             </FormControl>
@@ -343,6 +442,109 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               </>
             )}
           </Box>
+
+          {/* Campos para Parcelamento */}
+          {repeticao === 'Parcelado' && (
+            <Box sx={{ mb: 2 }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
+                <TextField
+                  variant="standard"
+                  label="Número de parcelas"
+                  type="number"
+                  value={numeroParcelas}
+                  onChange={(e) => setNumeroParcelas(e.target.value)}
+                  fullWidth
+                  sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+                  inputProps={{ min: 1 }}
+                />
+                <DateInput
+                  label="Data 1ª parcela"
+                  value={dataPrimeiraParcela}
+                  onChange={setDataPrimeiraParcela}
+                />
+              </Box>
+
+              {/* Checkbox de juros */}
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={aplicarJuros}
+                      onChange={(e) => setAplicarJuros(e.target.checked)}
+                      sx={{ color: '#666' }}
+                    />
+                  }
+                  label="Aplicar juros"
+                  sx={{ '& .MuiFormControlLabel-label': { color: '#666', fontSize: '14px' } }}
+                />
+              </Box>
+
+              {/* Campos de juros (aparece só quando checkbox está marcado) */}
+              {aplicarJuros && (
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel sx={{ color: '#666' }} shrink={!!tipoJuros || undefined}>
+                      Tipo de juros
+                    </InputLabel>
+                    <Select
+                      value={tipoJuros}
+                      onChange={(e) => setTipoJuros(e.target.value as 'percentual' | 'valor')}
+                    >
+                      <MenuItem value="percentual">Percentual (%)</MenuItem>
+                      <MenuItem value="valor">Valor fixo (R$)</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  <TextField
+                    variant="standard"
+                    label={tipoJuros === 'percentual' ? 'Taxa (%)' : 'Valor (R$)'}
+                    type="number"
+                    value={valorJuros}
+                    onChange={(e) => setValorJuros(e.target.value)}
+                    fullWidth
+                    sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+                    inputProps={{ min: 0, step: tipoJuros === 'percentual' ? '0.01' : '0.01' }}
+                  />
+
+                  <FormControl variant="standard" fullWidth>
+                    <InputLabel sx={{ color: '#666' }} shrink={!!aplicarJurosEm || undefined}>
+                      Aplicar juros em
+                    </InputLabel>
+                    <Select
+                      value={aplicarJurosEm}
+                      onChange={(e) => setAplicarJurosEm(e.target.value as 'total' | 'parcela')}
+                    >
+                      <MenuItem value="total">Valor total</MenuItem>
+                      <MenuItem value="parcela">Cada parcela</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              )}
+
+              {/* Preview do parcelamento */}
+              {numeroParcelas && valorParcela !== '0,00' && (
+                <Box sx={{ 
+                  p: 2, 
+                  backgroundColor: '#f5f5f5', 
+                  borderRadius: 1,
+                  border: '1px solid #e0e0e0'
+                }}>
+                  <Typography variant="body2" sx={{ color: '#666', fontWeight: 500 }}>
+                    Resumo do parcelamento:
+                  </Typography>
+                  <Typography variant="h6" sx={{ color: '#1976d2', mt: 1 }}>
+                    {numeroParcelas}x de R$ {valorParcela}
+                  </Typography>
+                  {aplicarJuros && valorJuros && (
+                    <Typography variant="caption" sx={{ color: '#666', display: 'block', mt: 0.5 }}>
+                      {tipoJuros === 'percentual' ? `Com juros de ${valorJuros}%` : `Com juros de R$ ${valorJuros}`}
+                      {' '}aplicado {aplicarJurosEm === 'total' ? 'no valor total' : 'em cada parcela'}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </Box>
+          )}
 
           <TextField
             variant="standard"
@@ -383,9 +585,11 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                   value={categoria}
                   onChange={(e) => setCategoria(e.target.value)}
                 >
-                  <MenuItem value="vendas">Vendas</MenuItem>
-                  <MenuItem value="servicos">Serviços</MenuItem>
-                  <MenuItem value="investimentos">Investimentos</MenuItem>
+                  {filteredBusinessCategories.map((cat: any) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
               <IconButton 
@@ -407,7 +611,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 >
                   {relationships.map((rel: any) => (
                     <MenuItem key={rel.id} value={rel.id}>
-                      {rel.name}
+                      {rel.fantasyName || rel.socialName}
                     </MenuItem>
                   ))}
                 </Select>
@@ -421,14 +625,27 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               </IconButton>
             </Box>
 
-            <TextField
-              variant="standard"
-              label="Número do documento"
-              value={numeroDocumento}
-              onChange={(e) => setNumeroDocumento(e.target.value)}
-              fullWidth
-              sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+              <FormControl variant="standard" sx={{ width: '85%' }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!subcategoria || undefined}>Subcategoria</InputLabel>
+                <Select
+                  value={subcategoria}
+                  onChange={(e) => setSubcategoria(e.target.value)}
+                >
+                  {filteredBusinessSubcategories.map((subcat: any) => (
+                    <MenuItem key={subcat.id} value={subcat.id}>
+                      {subcat.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <IconButton 
+                size="small" 
+                sx={{ mb: 0.5, color: '#1976d2' }}
+              >
+                <Tag className="h-4 w-4" />
+              </IconButton>
+            </Box>
           </Box>
 
           <TextField
@@ -444,10 +661,10 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           
           <Box sx={{ display: 'flex', alignItems: 'end', gap: 1, mb: 2 }}>
             <FormControl variant="standard" sx={{ width: '85%' }}>
-              <InputLabel sx={{ color: '#666' }} shrink={!!tags || undefined}>Plano de Contas</InputLabel>
+              <InputLabel sx={{ color: '#666' }} shrink={!!planoContas || undefined}>Plano de Contas</InputLabel>
               <Select
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
+                value={planoContas}
+                onChange={(e) => setPlanoContas(e.target.value)}
                 MenuProps={{
                   PaperProps: {
                     sx: { zIndex: 1400 }
@@ -472,58 +689,30 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           {/* Botões de ação */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2 }}>
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: '#4caf50',
-                  color: 'white',
-                  '&:hover': { backgroundColor: '#45a049' }
-                }}
-                onClick={handleSave}
-              >
-                <Check className="h-4 w-4" />
-              </IconButton>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: '#2196f3',
-                  color: 'white',
-                  '&:hover': { backgroundColor: '#1976d2' }
-                }}
-              >
-                <CheckCheck className="h-4 w-4" />
-              </IconButton>
-              <IconButton 
-                sx={{ 
-                  backgroundColor: '#607d8b',
-                  color: 'white',
-                  '&:hover': { backgroundColor: '#546e7a' }
-                }}
-              >
-                <Paperclip className="h-4 w-4" />
-              </IconButton>
+              <IButtonPrime
+                icon={<Paperclip className="h-4 w-4" />}
+                variant="blue"
+                title="Anexar arquivo"
+                className="!p-2"
+                onClick={() => console.log('Anexos')}
+              />
             </Box>
             
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <Button
-                variant="contained"
+            <Box sx={{ display: 'flex', gap: 1 }}>
+              <IButtonPrime
+                icon={<Save className="h-4 w-4" />}
+                variant="blue"
+                title="Salvar"
+                className="!p-2"
                 onClick={handleSave}
-                sx={{
-                  backgroundColor: '#90a4ae',
-                  color: 'white',
-                  '&:hover': { backgroundColor: '#78909c' },
-                  textTransform: 'none'
-                }}
-              >
-                Salvar
-              </Button>
-              <IconButton
-                sx={{
-                  backgroundColor: '#607d8b',
-                  color: 'white',
-                  '&:hover': { backgroundColor: '#546e7a' }
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </IconButton>
+              />
+              <IButtonPrime
+                icon={<Plus className="h-4 w-4" />}
+                variant="blue"
+                title="Adicionar novo"
+                className="!p-2"
+                onClick={() => console.log('Novo')}
+              />
             </Box>
           </Box>
         </CardContent>

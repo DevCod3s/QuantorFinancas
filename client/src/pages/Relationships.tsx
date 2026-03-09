@@ -296,10 +296,11 @@ export function Relationships() {
             data={clientesDemoData}
             initialPerPage={5}
             columns={[
-              { label: "ID", key: "id", align: "center", width: "60px", sortable: true },
+              { label: "ID", key: "id", align: "center", width: "5%", sortable: true },
               {
                 label: "Razão Social/Nome",
                 key: "socialName",
+                width: "30%",
                 sortable: true,
                 render: (cliente) => {
                   const document = cliente.document;
@@ -325,13 +326,14 @@ export function Relationships() {
               {
                 label: "Nome Fantasia",
                 key: "fantasyName",
+                width: "25%",
                 render: (cliente) => cliente.fantasyname || cliente.fantasy_name || cliente.fantasyName || '-'
               },
               {
                 label: "Tipo",
                 key: "documentType",
                 align: "center",
-                width: "120px",
+                width: "8%",
                 render: (cliente) => {
                   const documentType = cliente.documenttype || cliente.document_type || cliente.documentType;
                   return (
@@ -345,7 +347,7 @@ export function Relationships() {
                 label: "Data",
                 key: "createdat",
                 align: "center",
-                width: "100px",
+                width: "10%",
                 sortable: true,
                 render: (cliente) => {
                   const date = cliente.createdat || cliente.created_at || cliente.createdAt;
@@ -356,7 +358,7 @@ export function Relationships() {
                 label: "Status",
                 key: "status",
                 align: "center",
-                width: "100px",
+                width: "10%",
                 sortable: true,
                 render: (cliente) => {
                   const status = cliente.status || 'ativo';
@@ -384,10 +386,11 @@ export function Relationships() {
             data={fornecedoresDemoData}
             initialPerPage={5}
             columns={[
-              { label: "ID", key: "id", align: "center", width: "60px", sortable: true },
+              { label: "ID", key: "id", align: "center", width: "5%", sortable: true },
               {
                 label: "Razão Social/Nome",
                 key: "socialName",
+                width: "30%",
                 sortable: true,
                 render: (f: any) => {
                   const document = f.document;
@@ -403,13 +406,14 @@ export function Relationships() {
               {
                 label: "Nome Fantasia",
                 key: "fantasyName",
+                width: "25%",
                 render: (f: any) => f.fantasyname || f.fantasy_name || f.fantasyName || '-'
               },
               {
                 label: "Tipo",
                 key: "documentType",
                 align: "center",
-                width: "120px",
+                width: "8%",
                 render: (f: any) => {
                   const documentType = f.documenttype || f.document_type || f.documentType;
                   return (
@@ -423,7 +427,7 @@ export function Relationships() {
                 label: "Data",
                 key: "createdat",
                 align: "center",
-                width: "100px",
+                width: "10%",
                 sortable: true,
                 render: (f: any) => {
                   const date = f.createdat || f.created_at || f.createdAt;
@@ -434,7 +438,7 @@ export function Relationships() {
                 label: "Status",
                 key: "status",
                 align: "center",
-                width: "100px",
+                width: "10%",
                 sortable: true,
                 render: (f: any) => {
                   const status = f.status || 'ativo';
@@ -463,10 +467,11 @@ export function Relationships() {
             data={outrosRelacionamentosDemoData}
             initialPerPage={5}
             columns={[
-              { label: "ID", key: "id", align: "center", width: "60px", sortable: true },
+              { label: "ID", key: "id", align: "center", width: "5%", sortable: true },
               {
                 label: "Razão Social/Nome",
                 key: "socialName",
+                width: "30%",
                 sortable: true,
                 render: (r: any) => {
                   const document = r.document;
@@ -482,13 +487,14 @@ export function Relationships() {
               {
                 label: "Nome Fantasia",
                 key: "fantasyName",
+                width: "25%",
                 render: (r: any) => r.fantasyname || r.fantasy_name || r.fantasyName || '-'
               },
               {
                 label: "Tipo",
                 key: "documentType",
                 align: "center",
-                width: "120px",
+                width: "8%",
                 render: (r: any) => {
                   const documentType = r.documenttype || r.document_type || r.documentType;
                   return (
@@ -502,7 +508,7 @@ export function Relationships() {
                 label: "Data",
                 key: "createdat",
                 align: "center",
-                width: "100px",
+                width: "10%",
                 sortable: true,
                 render: (r: any) => {
                   const date = r.createdat || r.created_at || r.createdAt;
@@ -513,7 +519,7 @@ export function Relationships() {
                 label: "Status",
                 key: "status",
                 align: "center",
-                width: "100px",
+                width: "10%",
                 sortable: true,
                 render: (r: any) => {
                   const status = r.status || 'ativo';

@@ -104,7 +104,7 @@ export function TabelaItens({
                                 {columns.map((col, idx) => (
                                     <col key={idx} style={{ width: col.width || 'auto' }} />
                                 ))}
-                                {actions && <col style={{ width: '120px' }} />}
+                                {actions && <col style={{ width: '180px' }} />}
                             </colgroup>
                             <thead className="bg-gray-50">
                                 <tr>
@@ -141,7 +141,7 @@ export function TabelaItens({
                                 {columns.map((col, idx) => (
                                     <col key={idx} style={{ width: col.width || 'auto' }} />
                                 ))}
-                                {actions && <col style={{ width: '120px' }} />}
+                                {actions && <col style={{ width: '180px' }} />}
                             </colgroup>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {paginatedData.map((item, rowIdx) => (
@@ -152,15 +152,15 @@ export function TabelaItens({
                                             </td>
                                         ))}
                                         {actions && (
-                                            <td className="px-3 py-3 text-center">
-                                                <div className="flex items-center justify-center space-x-2">
+                                            <td className="px-2 py-2 text-center">
+                                                <div className="flex items-center justify-center space-x-0">
                                                     {typeof actions === 'function' ? (
                                                         actions(item)
                                                     ) : (
                                                         actions.map((action, actionIdx) => (
                                                             <button
                                                                 key={actionIdx}
-                                                                className={`${action.color} hover:opacity-80 transition-colors`}
+                                                                className={`${action.color} hover:opacity-80 transition-colors p-2 rounded-full hover:bg-gray-100`}
                                                                 title={action.title}
                                                                 onClick={() => action.onClick(item)}
                                                             >

@@ -1658,147 +1658,119 @@ export function Transactions() {
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent>
-                          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b">
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('company')}>
-                                    <div className="flex items-center gap-1">
-                                      Razão Social
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('dueDate')}>
-                                    <div className="flex items-center gap-1">
-                                      Vencimento
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('product')}>
-                                    <div className="flex items-center gap-1">
-                                      Produto
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('type')}>
-                                    <div className="flex items-center gap-1">
-                                      Tipo
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('status')}>
-                                    <div className="flex items-center gap-1">
-                                      Status
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-right py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handlePayablesSort('value')}>
-                                    <div className="flex items-center justify-end gap-1">
-                                      Valor
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-center py-2 px-3 font-medium text-gray-600 text-xs">Ações</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {paginatedPayables.map((item) => (
-                                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                                    <td className="py-2 px-3">
-                                      <div>
-                                        <div className="font-medium text-xs">{item.company}</div>
-                                        <div className="text-xs text-gray-500">{item.cnpj}</div>
-                                      </div>
-                                    </td>
-                                    <td className="py-2 px-3 text-xs">{item.dueDate}</td>
-                                    <td className="py-2 px-3 text-xs">{item.product}</td>
-                                    <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
-                                        item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
-                                          'bg-gray-100 text-gray-800'
-                                        }`}>
-                                        {item.type}
-                                      </span>
-                                    </td>
-                                    <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
-                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                          item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
-                                            'bg-gray-100 text-gray-800'
-                                        }`}>
-                                        {item.status}
-                                      </span>
-                                    </td>
-                                    <td className={`py-2 px-3 text-right font-medium text-xs ${item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
-                                      }`}>
-                                      R$ {item.value.toFixed(2).replace('.', ',')}
-                                    </td>
-                                    <td className="py-2 px-3">
-                                      <div className="flex items-center justify-center gap-1">
-                                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar" onClick={() => console.log('Edit', item.id)}>
-                                          <Edit className="h-3 w-3" />
-                                        </button>
-                                        <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar" onClick={() => console.log('View', item.id)}>
-                                          <Eye className="h-3 w-3" />
-                                        </button>
-                                        <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento" onClick={() => console.log('Download', item.id)}>
-                                          <Download className="h-3 w-3" />
-                                        </button>
-                                        <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir" onClick={() => console.log('Delete', item.id)}>
-                                          <Trash2 className="h-3 w-3" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Card de paginação separado */}
-                      <Card className="shadow-lg mt-6">
-                        <CardContent className="py-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <span className="text-xs text-gray-600">
-                                Mostrando {((payablesCurrentPage - 1) * payablesItemsPerPage) + 1} a {Math.min(payablesCurrentPage * payablesItemsPerPage, sortedPayables.length)} de {sortedPayables.length} resultados
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-7"
-                                disabled={payablesCurrentPage === 1}
-                                onClick={() => setPayablesCurrentPage(prev => Math.max(1, prev - 1))}
-                              >
-                                Anterior
-                              </Button>
-                              {Array.from({ length: payablesTotalPages }, (_, i) => i + 1).map((page) => (
-                                <Button
-                                  key={page}
-                                  variant={page === payablesCurrentPage ? "default" : "outline"}
-                                  size="sm"
-                                  className={`text-xs h-7 w-7 ${page === payablesCurrentPage ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                                  onClick={() => setPayablesCurrentPage(page)}
-                                >
-                                  {page}
-                                </Button>
-                              ))}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-7"
-                                disabled={payablesCurrentPage === payablesTotalPages}
-                                onClick={() => setPayablesCurrentPage(prev => Math.min(payablesTotalPages, prev + 1))}
-                              >
-                                Próxima
-                              </Button>
-                            </div>
-                          </div>
+                        <CardContent className="pt-4">
+                          <TabelaItens
+                            data={payablesData}
+                            initialPerPage={10}
+                            columns={[
+                              {
+                                label: "Razão Social",
+                                key: "company",
+                                align: "left",
+                                width: "22%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <div>
+                                    <div className="font-medium text-xs">{item.company}</div>
+                                    <div className="text-xs text-gray-500">{item.cnpj}</div>
+                                  </div>
+                                )
+                              },
+                              {
+                                label: "Vencimento",
+                                key: "dueDate",
+                                align: "left",
+                                width: "11%",
+                                sortable: true
+                              },
+                              {
+                                label: "Produto",
+                                key: "product",
+                                align: "left",
+                                width: "16%",
+                                sortable: true
+                              },
+                              {
+                                label: "Tipo",
+                                key: "type",
+                                align: "center",
+                                width: "10%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
+                                    item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                    item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {item.type}
+                                  </span>
+                                )
+                              },
+                              {
+                                label: "Status",
+                                key: "status",
+                                align: "center",
+                                width: "10%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
+                                    item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
+                                    item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+                                    item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                )
+                              },
+                              {
+                                label: "Valor",
+                                key: "value",
+                                align: "right",
+                                width: "11%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <span className={`font-semibold text-xs whitespace-nowrap ${
+                                    item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
+                                  }`}>
+                                    R$ {item.value.toFixed(2).replace('.', ',')}
+                                  </span>
+                                )
+                              }
+                            ]}
+                            actions={(item: any) => (
+                              <div className="flex items-center justify-center gap-2">
+                                <IButtonPrime
+                                  icon={<Edit className="h-3.5 w-3.5" />}
+                                  variant="blue"
+                                  title="Editar"
+                                  className="!p-2"
+                                  onClick={() => console.log('Edit', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Eye className="h-3.5 w-3.5" />}
+                                  variant="blue"
+                                  title="Visualizar"
+                                  className="!p-2"
+                                  onClick={() => console.log('View', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Download className="h-3.5 w-3.5" />}
+                                  variant="blue"
+                                  title="Baixar Documento"
+                                  className="!p-2"
+                                  onClick={() => console.log('Download', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Trash2 className="h-3.5 w-3.5" />}
+                                  variant="red"
+                                  title="Excluir"
+                                  className="!p-2"
+                                  onClick={() => console.log('Delete', item.id)}
+                                />
+                              </div>
+                            )}
+                          />
                         </CardContent>
                       </Card>
                     </div>
@@ -1930,149 +1902,121 @@ export function Transactions() {
                             </div>
                           </div>
                         </CardHeader>
-                        <CardContent>
-                          <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                            <table className="w-full text-sm">
-                              <thead>
-                                <tr className="border-b">
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('company')}>
-                                    <div className="flex items-center gap-1">
-                                      Razão Social
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('dueDate')}>
-                                    <div className="flex items-center gap-1">
-                                      Vencimento
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('product')}>
-                                    <div className="flex items-center gap-1">
-                                      Produto
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('type')}>
-                                    <div className="flex items-center gap-1">
-                                      Tipo
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-left py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('status')}>
-                                    <div className="flex items-center gap-1">
-                                      Status
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-right py-2 px-3 font-medium text-gray-600 cursor-pointer hover:bg-gray-50 text-xs" onClick={() => handleReceivablesSort('value')}>
-                                    <div className="flex items-center justify-end gap-1">
-                                      Valor
-                                      <ArrowUpDown className="h-3 w-3" />
-                                    </div>
-                                  </th>
-                                  <th className="text-center py-2 px-3 font-medium text-gray-600 text-xs">Ações</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {paginatedReceivables.map((item) => (
-                                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                                    <td className="py-2 px-3">
-                                      <div>
-                                        <div className="font-medium text-xs">{item.company}</div>
-                                        <div className="text-xs text-gray-500">{item.cnpj}</div>
-                                      </div>
-                                    </td>
-                                    <td className="py-2 px-3 text-xs">{item.dueDate}</td>
-                                    <td className="py-2 px-3 text-xs">{item.product}</td>
-                                    <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
-                                        item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
-                                          item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
-                                            item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
-                                              'bg-gray-100 text-gray-800'
-                                        }`}>
-                                        {item.type}
-                                      </span>
-                                    </td>
-                                    <td className="py-2 px-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs ${item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
-                                        item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                          item.status === 'Automático' ? 'bg-green-100 text-green-800' :
-                                            'bg-gray-100 text-gray-800'
-                                        }`}>
-                                        {item.status}
-                                      </span>
-                                    </td>
-                                    <td className={`py-2 px-3 text-right font-medium text-xs ${item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
-                                      }`}>
-                                      R$ {item.value.toFixed(2).replace('.', ',')}
-                                    </td>
-                                    <td className="py-2 px-3">
-                                      <div className="flex items-center justify-center gap-1">
-                                        <button className="p-1 text-blue-600 hover:bg-blue-50 rounded" title="Editar" onClick={() => console.log('Edit', item.id)}>
-                                          <Edit className="h-3 w-3" />
-                                        </button>
-                                        <button className="p-1 text-green-600 hover:bg-green-50 rounded" title="Visualizar" onClick={() => console.log('View', item.id)}>
-                                          <Eye className="h-3 w-3" />
-                                        </button>
-                                        <button className="p-1 text-purple-600 hover:bg-purple-50 rounded" title="Baixar Documento" onClick={() => console.log('Download', item.id)}>
-                                          <Download className="h-3 w-3" />
-                                        </button>
-                                        <button className="p-1 text-red-600 hover:bg-red-50 rounded" title="Excluir" onClick={() => console.log('Delete', item.id)}>
-                                          <Trash2 className="h-3 w-3" />
-                                        </button>
-                                      </div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Card de paginação separado */}
-                      <Card className="shadow-lg mt-6">
-                        <CardContent className="py-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <span className="text-xs text-gray-600">
-                                Mostrando {((receivablesCurrentPage - 1) * receivablesItemsPerPage) + 1} a {Math.min(receivablesCurrentPage * receivablesItemsPerPage, sortedReceivables.length)} de {sortedReceivables.length} resultados
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-7"
-                                disabled={receivablesCurrentPage === 1}
-                                onClick={() => setReceivablesCurrentPage(prev => Math.max(1, prev - 1))}
-                              >
-                                Anterior
-                              </Button>
-                              {Array.from({ length: receivablesTotalPages }, (_, i) => i + 1).map((page) => (
-                                <Button
-                                  key={page}
-                                  variant={page === receivablesCurrentPage ? "default" : "outline"}
-                                  size="sm"
-                                  className={`text-xs h-7 w-7 ${page === receivablesCurrentPage ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
-                                  onClick={() => setReceivablesCurrentPage(page)}
-                                >
-                                  {page}
-                                </Button>
-                              ))}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="text-xs h-7"
-                                disabled={receivablesCurrentPage === receivablesTotalPages}
-                                onClick={() => setReceivablesCurrentPage(prev => Math.min(receivablesTotalPages, prev + 1))}
-                              >
-                                Próxima
-                              </Button>
-                            </div>
-                          </div>
+                        <CardContent className="pt-4">
+                          <TabelaItens
+                            data={receivablesData}
+                            initialPerPage={10}
+                            columns={[
+                              {
+                                label: "Razão Social",
+                                key: "company",
+                                align: "left",
+                                width: "22%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <div>
+                                    <div className="font-medium text-xs">{item.company}</div>
+                                    <div className="text-xs text-gray-500">{item.cnpj}</div>
+                                  </div>
+                                )
+                              },
+                              {
+                                label: "Vencimento",
+                                key: "dueDate",
+                                align: "left",
+                                width: "11%",
+                                sortable: true
+                              },
+                              {
+                                label: "Produto",
+                                key: "product",
+                                align: "left",
+                                width: "16%",
+                                sortable: true
+                              },
+                              {
+                                label: "Tipo",
+                                key: "type",
+                                align: "center",
+                                width: "10%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
+                                    item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
+                                    item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                    item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
+                                    item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {item.type}
+                                  </span>
+                                )
+                              },
+                              {
+                                label: "Status",
+                                key: "status",
+                                align: "center",
+                                width: "10%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
+                                    item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
+                                    item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+                                    item.status === 'Automático' ? 'bg-green-100 text-green-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {item.status}
+                                  </span>
+                                )
+                              },
+                              {
+                                label: "Valor",
+                                key: "value",
+                                align: "right",
+                                width: "11%",
+                                sortable: true,
+                                render: (item: any) => (
+                                  <span className={`font-semibold text-xs whitespace-nowrap ${
+                                    item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
+                                  }`}>
+                                    R$ {item.value.toFixed(2).replace('.', ',')}
+                                  </span>
+                                )
+                              }
+                            ]}
+                            actions={(item: any) => (
+                              <div className="flex items-center justify-center gap-2">
+                                <IButtonPrime
+                                  icon={<Edit className="h-3.5 w-3.5" />}
+                                  variant="blue"
+                                  title="Editar"
+                                  className="!p-2"
+                                  onClick={() => console.log('Edit', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Eye className="h-3.5 w-3.5" />}
+                                  variant="blue"
+                                  title="Visualizar"
+                                  className="!p-2"
+                                  onClick={() => console.log('View', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Download className="h-3.5 w-3.5" />}
+                                  variant="blue"
+                                  title="Baixar Documento"
+                                  className="!p-2"
+                                  onClick={() => console.log('Download', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Trash2 className="h-3.5 w-3.5" />}
+                                  variant="red"
+                                  title="Excluir"
+                                  className="!p-2"
+                                  onClick={() => console.log('Delete', item.id)}
+                                />
+                              </div>
+                            )}
+                          />
                         </CardContent>
                       </Card>
                     </div>
@@ -2092,6 +2036,7 @@ export function Transactions() {
               {
                 label: "Banco",
                 key: "bank",
+                width: "20%",
                 render: (account: any) => (
                   <div className="font-medium text-gray-900">
                     {banksList.find(b => b.code === account.bank)?.name ||
@@ -2109,6 +2054,7 @@ export function Transactions() {
               {
                 label: "Nome da Conta Bancária",
                 key: "name",
+                width: "35%",
                 render: (account: any) => (
                   <div>
                     <div className="font-medium text-gray-900">{account.account_name || account.name || 'Nome não informado'}</div>
@@ -2127,6 +2073,7 @@ export function Transactions() {
                 label: "Data da Criação",
                 key: "created_at",
                 align: "center",
+                width: "15%",
                 render: (account: any) => (
                   <span className="text-gray-600">
                     {account.created_at ? new Date(account.created_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR')}
@@ -2137,6 +2084,7 @@ export function Transactions() {
                 label: "Saldo Atual",
                 key: "balance",
                 align: "right",
+                width: "15%",
                 render: (account: any) => {
                   const balance = account.balance || 0;
                   return (
@@ -2148,15 +2096,17 @@ export function Transactions() {
               }
             ]}
             actions={(account) => (
-              <div className="flex items-center justify-center gap-1">
+              <div className="flex items-center justify-center gap-2">
                 <IButtonPrime
-                  icon={<Edit className="h-4 w-4" />}
+                  icon={<Edit className="h-3.5 w-3.5" />}
+                  className="!p-2"
                   onClick={() => console.log('Edit account', account.id)}
                   title="Editar Conta"
                 />
                 <IButtonPrime
-                  icon={<Trash2 className="h-4 w-4" />}
+                  icon={<Trash2 className="h-3.5 w-3.5" />}
                   variant="red"
+                  className="!p-2"
                   onClick={() => console.log('Delete account', account.id)}
                   title="Excluir Conta"
                 />

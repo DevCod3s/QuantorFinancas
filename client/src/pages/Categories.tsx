@@ -458,12 +458,13 @@ export function Categories() {
                 data={businessCategories}
                 initialPerPage={10}
                 columns={[
-                  { label: "ID", key: "id", align: "center", width: "80px", sortable: true, render: (cat) => <span className="font-mono text-gray-500">#{cat.id}</span> },
-                  { label: "Nome da Categoria", key: "name", sortable: true, render: (cat) => <span className="font-medium">{cat.name}</span> },
+                  { label: "ID", key: "id", align: "center", width: "8%", sortable: true, render: (cat) => <span className="font-mono text-gray-500">#{cat.id}</span> },
+                  { label: "Nome da Categoria", key: "name", width: "40%", sortable: true, render: (cat) => <span className="font-medium">{cat.name}</span> },
                   {
                     label: "Tipo",
                     key: "type",
-                    width: "120px",
+                    align: "center",
+                    width: "15%",
                     render: (cat) => (
                       <Badge
                         variant="outline"
@@ -477,7 +478,7 @@ export function Categories() {
                     label: "Data de Criação",
                     key: "createdAt",
                     align: "center",
-                    width: "180px",
+                    width: "20%",
                     sortable: true,
                     render: (cat) => cat.createdAt ? format(new Date(cat.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : <span className="text-gray-400 italic">Sem data</span>
                   }
@@ -496,11 +497,12 @@ export function Categories() {
                 data={businessSubcategories}
                 initialPerPage={10}
                 columns={[
-                  { label: "ID", key: "id", align: "center", width: "80px", sortable: true, render: (sub) => <span className="font-mono text-gray-500">#{sub.id}</span> },
-                  { label: "Nome da Subcategoria", key: "name", sortable: true, render: (sub) => <span className="font-medium">{sub.name}</span> },
+                  { label: "ID", key: "id", align: "center", width: "8%", sortable: true, render: (sub) => <span className="font-mono text-gray-500">#{sub.id}</span> },
+                  { label: "Nome da Subcategoria", key: "name", width: "35%", sortable: true, render: (sub) => <span className="font-medium">{sub.name}</span> },
                   {
                     label: "Categoria Pai",
                     key: "categoryId",
+                    width: "25%",
                     render: (sub) => {
                       const parentCategory = businessCategories.find(c => c.id === sub.categoryId);
                       return parentCategory ? parentCategory.name : 'Desconhecida';
@@ -510,7 +512,7 @@ export function Categories() {
                     label: "Data de Criação",
                     key: "createdAt",
                     align: "center",
-                    width: "180px",
+                    width: "20%",
                     sortable: true,
                     render: (sub) => sub.createdAt ? format(new Date(sub.createdAt), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : <span className="text-gray-400 italic">Sem data</span>
                   }
