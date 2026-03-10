@@ -22,6 +22,7 @@ import CpfCnpjInput from "../CpfCnpjInput";
 import CustomInput, { CustomSelect } from "../CustomInput";
 import AddRelationshipTypeModal from "../AddRelationshipTypeModal";
 import { DateInput } from "../DateInput";
+import { IButtonPrime } from "../ui/i-ButtonPrime";
 
 /**
  * Interface para dados do formulário da Etapa 1
@@ -92,12 +93,12 @@ const brazilianStates = [
  */
 const normalizeStateToUF = (state: string): string => {
   if (!state) return '';
-  
+
   // Se já é uma sigla (2 caracteres), retorna como está
   if (state.length === 2) {
     return state.toUpperCase();
   }
-  
+
   // Mapear nome completo para sigla
   const stateMap: Record<string, string> = {
     'acre': 'AC',
@@ -139,7 +140,7 @@ const normalizeStateToUF = (state: string): string => {
     'sergipe': 'SE',
     'tocantins': 'TO'
   };
-  
+
   const normalized = state.toLowerCase().trim();
   return stateMap[normalized] || state.toUpperCase();
 };
@@ -171,7 +172,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
 
   // Estado para controlar modal e tipos customizados
   const [showModal, setShowModal] = useState(false);
-  const [customTypes, setCustomTypes] = useState<Array<{value: string, text: string}>>([]);
+  const [customTypes, setCustomTypes] = useState<Array<{ value: string, text: string }>>([]);
 
   // Referências para navegação automática entre campos
   const socialNameRef = useRef<HTMLInputElement>(null);
@@ -186,15 +187,15 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
   const updateFormData = (updates: Partial<Step1FormData>) => {
     setFormData(prev => {
       const newData = { ...prev, ...updates };
-      
+
       // Notificar o pai com os novos dados
       const isValid = !!(newData.document && newData.documentType);
-      
+
       // Usar setTimeout para evitar atualização durante render
       setTimeout(() => {
         onDataChange(1, newData, isValid);
       }, 0);
-      
+
       return newData;
     });
   };
@@ -207,7 +208,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
     // Detectar tipo baseado no comprimento dos números (antecipado)
     const numbersOnly = value.replace(/\D/g, '');
     let detectedType: 'CPF' | 'CNPJ' | null = type;
-    
+
     // Se o tipo ainda não foi validado, detectar baseado no comprimento
     if (!type && numbersOnly.length > 0) {
       if (numbersOnly.length <= 11) {
@@ -216,15 +217,15 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
         detectedType = numbersOnly.length === 14 ? 'CNPJ' : null;
       }
     }
-    
+
     // Se mudou de CPF para CNPJ ou vice-versa, limpar campos incompatíveis
     const changedType = formData.documentType !== detectedType;
-    
+
     const updates: Partial<Step1FormData> = {
       document: value,
       documentType: detectedType
     };
-    
+
     // Limpar campos específicos ao trocar tipo
     if (changedType) {
       if (detectedType === 'CPF') {
@@ -238,9 +239,9 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
         updates.stateRegistration = '';
       }
     }
-    
+
     updateFormData(updates);
-    
+
     // Se CNPJ válido, buscar dados automaticamente
     if (isValid && detectedType === 'CNPJ') {
       fetchCNPJData(value);
@@ -265,13 +266,13 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
       if (response.ok) {
         const data = await response.json();
         console.log('Dados CNPJ recebidos:', data); // Debug para ver estrutura
-        
+
         // Processar CEP de todos os campos possíveis
         const cep = data.cep || '';
         const cleanCep = cep.replace(/\D/g, '');
-        const formattedCep = cleanCep.length === 8 ? 
+        const formattedCep = cleanCep.length === 8 ?
           `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
-        
+
         // Mapear todos os possíveis campos da API Brasil API
         updateFormData({
           socialName: data.razao_social || data.nome || '',
@@ -285,13 +286,13 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
           state: normalizeStateToUF(data.uf || data.estado || ''),
           isLoading: false
         });
-        
+
         // Se CEP válido mas dados incompletos, buscar via ViaCEP
         const hasCompleteAddress = data.logradouro && data.bairro && data.municipio;
         if (cleanCep.length === 8 && !hasCompleteAddress) {
           await fetchCEPData(cleanCep);
         }
-        
+
         // Focar próximo campo após preenchimento
         setTimeout(() => {
           if (stateRegistrationRef.current) {
@@ -362,32 +363,32 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
    */
   const handleZipCodeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    
+
     // Permitir até 9 caracteres totais, extrair apenas números
     const numbersOnly = rawValue.replace(/\D/g, '');
-    
+
     // Limitação: máximo 8 dígitos numéricos (resultado = 9 caracteres com hífen)
     const limitedNumbers = numbersOnly.substring(0, 8);
-    
+
     // Formatação XXXXX-XXX
     let formatted = limitedNumbers;
     if (limitedNumbers.length > 5) {
       formatted = `${limitedNumbers.substring(0, 5)}-${limitedNumbers.substring(5)}`;
     }
-    
-    console.log('CEP Debug Corrigido:', { 
-      raw: rawValue, 
+
+    console.log('CEP Debug Corrigido:', {
+      raw: rawValue,
       numbers: numbersOnly,
-      limited: limitedNumbers, 
+      limited: limitedNumbers,
       formatted,
       digitalLength: limitedNumbers.length,
       totalLength: formatted.length
     });
-    
+
     // Atualizar estado com log de confirmação
     console.log('Atualizando zipCode para:', formatted);
     updateFormData({ zipCode: formatted });
-    
+
     // Se CEP completo (8 dígitos), buscar endereço mas NÃO focar próximo campo
     if (limitedNumbers.length === 8) {
       fetchCEPData(limitedNumbers);
@@ -401,7 +402,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
   const handleAddNewType = (newType: { name: string; description: string }) => {
     const typeValue = newType.name.toLowerCase().replace(/\s+/g, '_');
     const newOption = { value: typeValue, text: newType.name };
-    
+
     setCustomTypes(prev => [...prev, newOption]);
     updateFormData({ relationshipType: typeValue });
   };
@@ -416,7 +417,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
       { value: 'fornecedor', text: 'Fornecedor' },
       { value: 'prestador_servicos', text: 'Prestador de Serviços' }
     ];
-    
+
     return [...defaultOptions, ...customTypes];
   };
 
@@ -429,7 +430,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
             Tipo de relacionamento
           </h3>
         </div>
-        
+
         <div className="max-w-md flex items-end gap-2">
           <div className="flex-1">
             <CustomSelect
@@ -445,15 +446,14 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
               ))}
             </CustomSelect>
           </div>
-          
-          <button
-            type="button"
+
+          <IButtonPrime
+            icon={<Plus className="h-5 w-5" />}
             onClick={() => setShowModal(true)}
-            className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center rounded-md"
+            variant="gold"
             title="Adicionar novo tipo"
-          >
-            <Plus className="h-5 w-5" />
-          </button>
+            className="w-10 h-10 border-0"
+          />
         </div>
       </div>
 
@@ -462,7 +462,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Informação básica
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* CPF/CNPJ */}
           <div>
@@ -475,8 +475,8 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
               disabled={readOnly}
             />
             {formData.isLoading && (
-              <div className="mt-1 text-xs text-blue-600 flex items-center">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+              <div className="mt-1 text-xs text-[#B59363] flex items-center">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#B59363] mr-2"></div>
                 Buscando dados...
               </div>
             )}
@@ -529,9 +529,9 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
                   type="checkbox"
                   id="exempt-checkbox"
                   checked={formData.isExempt}
-                  onChange={(e) => updateFormData({ 
-                    isExempt: e.target.checked, 
-                    stateRegistration: e.target.checked ? 'ISENTO' : '' 
+                  onChange={(e) => updateFormData({
+                    isExempt: e.target.checked,
+                    stateRegistration: e.target.checked ? 'ISENTO' : ''
                   })}
                   disabled={readOnly}
                   className="mr-2"
@@ -581,7 +581,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
         <h3 className="text-lg font-medium text-gray-900 mb-4">
           Localização
         </h3>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* CEP */}
           <div>
@@ -602,8 +602,8 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
               }}
             />
             {formData.isLoading && formData.zipCode.replace(/\D/g, '').length === 8 && (
-              <div className="mt-1 text-xs text-blue-600 flex items-center">
-                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-600 mr-2"></div>
+              <div className="mt-1 text-xs text-[#B59363] flex items-center">
+                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-[#B59363] mr-2"></div>
                 Buscando endereço...
               </div>
             )}

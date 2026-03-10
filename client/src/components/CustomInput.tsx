@@ -1,8 +1,8 @@
 /**
  * @fileoverview Componente de Input customizado baseado na imagem de referência
  * 
- * Input clean com label flutuante azul e borda simples, exatamente conforme
- * a imagem de referência fornecida pelo usuário.
+ * Input clean com label flutuante dourada e borda simples, seguindo a paleta de cores
+ * padrão do sistema (Dourado #B59363 e Azul Escuro #1D3557).
  * 
  * @author Equipe Quantor
  * @version 1.0.0
@@ -41,7 +41,7 @@ const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(({
           absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all
           peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:top-2.5
           peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#B59363]
-          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400'}
+          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-[#1D3557]'}
         `}
       >
         {label}
@@ -89,7 +89,7 @@ export function CustomSelect({
         className={`
           absolute left-3 -top-2.5 bg-white px-1 text-sm
           peer-focus:text-[#B59363]
-          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400'}
+          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-[#1D3557]'}
         `}
       >
         {label}
@@ -131,7 +131,7 @@ export function CustomTextarea({
           absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all
           peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:top-2.5
           peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#B59363]
-          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400'}
+          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-[#1D3557]'}
         `}
       >
         {label}

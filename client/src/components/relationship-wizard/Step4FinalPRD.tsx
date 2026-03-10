@@ -17,11 +17,11 @@
  */
 
 import React, { useState } from "react";
-import { 
-  Box, 
-  Card, 
-  CardContent, 
-  Typography, 
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
   Divider,
   TextField,
   FormControlLabel,
@@ -34,11 +34,11 @@ import {
   LinearProgress,
   IconButton
 } from "@mui/material";
-import { 
-  CheckCircle2, 
-  Download, 
-  FileText, 
-  Hash, 
+import {
+  CheckCircle2,
+  Download,
+  FileText,
+  Hash,
   Calendar,
   User,
   Building2,
@@ -80,8 +80,8 @@ interface Step4FinalPRDProps {
 /**
  * Componente Step4FinalPRD
  */
-export default function Step4FinalPRD({ 
-  onDataChange, 
+export default function Step4FinalPRD({
+  onDataChange,
   initialData = {},
   relationshipData,
   contractData,
@@ -114,10 +114,10 @@ export default function Step4FinalPRD({
   const updateFormData = (updates: Partial<Step4FormData>) => {
     const newData = { ...formData, ...updates };
     setFormData(newData);
-    
+
     // Validar se etapa está completa
     const isValid = newData.finalConfirmation && newData.relationshipCode.length > 0;
-    
+
     onDataChange(newData, isValid);
   };
 
@@ -155,7 +155,7 @@ export default function Step4FinalPRD({
             Finalização do Cadastro
           </h3>
         </div>
-        
+
         <div className="flex items-center space-x-2 text-sm text-gray-500">
           <Calendar className="h-4 w-4" />
           <span>{stats.completionDate}</span>
@@ -166,42 +166,44 @@ export default function Step4FinalPRD({
         {/* Coluna 1 - Resumo do Relacionamento */}
         <div className="lg:col-span-2 space-y-6">
           {/* Card de Progresso */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="font-medium text-blue-900">Progresso do Cadastro</h4>
-              <span className="text-sm font-medium text-blue-600">
+          <div className="bg-[#1D3557]/5 rounded-lg p-6 border border-[#B59363]/20 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#B59363]/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+
+            <div className="flex items-center justify-between mb-4 relative z-10">
+              <h4 className="font-bold text-[#1D3557]">Progresso do Cadastro</h4>
+              <span className="text-sm font-bold text-[#B59363]">
                 {stats.completedSteps}/{stats.totalSteps} etapas
               </span>
             </div>
-            
-            <div className="w-full bg-blue-200 rounded-full h-2 mb-3">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+
+            <div className="w-full bg-gray-200/50 rounded-full h-2.5 mb-5 relative z-10">
+              <div
+                className="bg-[#B59363] h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(181,147,99,0.3)]"
                 style={{ width: `${(stats.completedSteps / stats.totalSteps) * 100}%` }}
               />
             </div>
-            
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="flex items-center space-x-2">
-                <User className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-700">Dados Básicos</span>
+
+            <div className="grid grid-cols-2 gap-4 text-sm relative z-10">
+              <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-white/50 transition-colors">
+                <User className="h-4 w-4 text-[#B59363]" />
+                <span className="text-[#1D3557] font-medium">Dados Básicos</span>
                 <CheckCircle2 className="h-3 w-3 text-green-600" />
               </div>
-              <div className="flex items-center space-x-2">
-                <FileText className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-700">
+              <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-white/50 transition-colors">
+                <FileText className="h-4 w-4 text-[#B59363]" />
+                <span className="text-[#1D3557] font-medium">
                   {stats.hasContract ? 'Contrato Gerado' : 'Sem Contrato'}
                 </span>
                 <CheckCircle2 className="h-3 w-3 text-green-600" />
               </div>
-              <div className="flex items-center space-x-2">
-                <Building2 className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-700">Revisão Concluída</span>
+              <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-white/50 transition-colors">
+                <Building2 className="h-4 w-4 text-[#B59363]" />
+                <span className="text-[#1D3557] font-medium">Revisão Concluída</span>
                 <CheckCircle2 className="h-3 w-3 text-green-600" />
               </div>
-              <div className="flex items-center space-x-2">
-                <Save className="h-4 w-4 text-blue-600" />
-                <span className="text-blue-700">
+              <div className="flex items-center space-x-2 p-2 rounded-md hover:bg-white/50 transition-colors">
+                <Save className="h-4 w-4 text-[#B59363]" />
+                <span className="text-[#1D3557] font-medium">
                   {formData.finalConfirmation ? 'Finalizado' : 'Pendente'}
                 </span>
                 {formData.finalConfirmation ? (
@@ -216,7 +218,7 @@ export default function Step4FinalPRD({
           {/* Informações Consolidadas */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-4">Informações Consolidadas</h4>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -235,7 +237,7 @@ export default function Step4FinalPRD({
                   <span className="font-medium">{relationshipData?.document}</span>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
                   <MapPin className="h-4 w-4 text-gray-500" />
@@ -265,12 +267,12 @@ export default function Step4FinalPRD({
               value={formData.observations}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateFormData({ observations: e.target.value })}
               placeholder=" "
-              className="w-full px-3 py-2 rounded-md shadow-md border-0 focus:outline-none focus:border-2 focus:border-blue-500 peer placeholder-transparent resize-none"
+              className="w-full px-3 py-2 rounded-md shadow-md border-0 focus:outline-none focus:border-2 focus:border-[#B59363] peer placeholder-transparent resize-none"
               data-testid="textarea-observations"
             />
-            <label 
+            <label
               htmlFor="observations"
-              className="absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-600"
+              className="absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#B59363] text-[#1D3557]"
             >
               Observações Finais
             </label>
@@ -307,7 +309,7 @@ export default function Step4FinalPRD({
           {/* Configurações de Notificação */}
           <div className="bg-gray-50 rounded-lg p-4">
             <h4 className="font-medium text-gray-900 mb-3">Notificações</h4>
-            
+
             <div className="space-y-3">
               <label className="flex items-center space-x-2">
                 <input
@@ -320,7 +322,7 @@ export default function Step4FinalPRD({
                 <Mail className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">Notificar por email</span>
               </label>
-              
+
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -332,7 +334,7 @@ export default function Step4FinalPRD({
                 <Phone className="h-4 w-4 text-gray-500" />
                 <span className="text-sm text-gray-700">Notificar por SMS</span>
               </label>
-              
+
               <label className="flex items-center space-x-2">
                 <input
                   type="checkbox"
@@ -351,20 +353,20 @@ export default function Step4FinalPRD({
           {stats.hasContract && (
             <div className="bg-gray-50 rounded-lg p-4">
               <h4 className="font-medium text-gray-900 mb-3">Downloads</h4>
-              
+
               <div className="space-y-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full justify-start"
                   data-testid="button-download-contract"
                 >
                   <Download className="h-4 w-4 mr-2" />
                   Contrato PDF
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   className="w-full justify-start"
                   data-testid="button-download-registration"
                 >

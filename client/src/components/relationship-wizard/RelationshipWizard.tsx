@@ -58,7 +58,7 @@ const wizardSteps = [
   },
   {
     id: 2,
-    title: "Contrato Gerado", 
+    title: "Contrato Gerado",
     subtitle: "Upcoming"
   },
   {
@@ -76,25 +76,25 @@ const wizardSteps = [
 /**
  * Componente RelationshipWizard
  */
-export default function RelationshipWizard({ 
-  isOpen, 
-  onClose, 
+export default function RelationshipWizard({
+  isOpen,
+  onClose,
   relationshipType = 'cliente',
   initialData,
   mode = 'create'
 }: RelationshipWizardProps) {
   // Estado atual da etapa
   const [currentStep, setCurrentStep] = useState(1);
-  
+
   // Dados acumulados do wizard
   const [wizardData, setWizardData] = useState<RelationshipWizardData>({});
-  
+
   // Estado de validação da etapa atual
   const [currentStepValid, setCurrentStepValid] = useState(false);
 
   // Hook para gerenciamento de relacionamentos
   const { saveRelationship, updateRelationship, isLoading: isSaving, error, clearError } = useRelationshipManager();
-  
+
   // Estado para controle de sucesso
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
@@ -104,7 +104,7 @@ export default function RelationshipWizard({
   React.useEffect(() => {
     if (isOpen && initialData && (mode === 'edit' || mode === 'view')) {
       console.log('Inicializando wizard com dados:', initialData);
-      
+
       // Mapear dados do banco para formato do wizard
       const mappedData = {
         step1: {
@@ -124,7 +124,7 @@ export default function RelationshipWizard({
           state: initialData.state || ''
         }
       };
-      
+
       setWizardData(mappedData);
       setCurrentStepValid(true); // Dados já validados anteriormente
     }
@@ -147,12 +147,12 @@ export default function RelationshipWizard({
    */
   const updateStepData = useCallback((stepNumber: number, data: any, isValid: boolean) => {
     console.log(`Step ${stepNumber} atualizado - isValid: ${isValid}`);
-    
+
     setWizardData(prev => ({
       ...prev,
       [`step${stepNumber}`]: data
     }));
-    
+
     setCurrentStepValid(isValid);
   }, []);
 
@@ -183,12 +183,12 @@ export default function RelationshipWizard({
    */
   const handleFinish = async () => {
     if (!wizardData.step1) return;
-    
+
     const step1Data = wizardData.step1;
-    
+
     // Mapear tipo selecionado para os tipos aceitos pelo sistema
     let selectedType: 'cliente' | 'fornecedor' | 'outros';
-    
+
     if (step1Data.relationshipType === 'cliente') {
       selectedType = 'cliente';
     } else if (step1Data.relationshipType === 'fornecedor') {
@@ -197,10 +197,10 @@ export default function RelationshipWizard({
       // Qualquer outro tipo (prestador_servicos, tipos customizados, etc.) vai para "outros"
       selectedType = 'outros';
     }
-    
+
     try {
       let success;
-      
+
       if (mode === 'edit' && initialData?.id) {
         // Modo edição - atualizar relacionamento existente
         success = await updateRelationship(initialData.id, {
@@ -236,7 +236,7 @@ export default function RelationshipWizard({
           state: step1Data.state
         }, selectedType);
       }
-      
+
       if (success) {
         setShowSuccessDialog(true);
         // Fechar após 3 segundos ou quando usuário clicar
@@ -332,16 +332,15 @@ export default function RelationshipWizard({
           >
             <ArrowLeft className="h-5 w-5 text-gray-600" />
           </button>
-          
+
           {currentStep < wizardSteps.length ? (
             <button
               onClick={handleNext}
               disabled={!currentStepValid}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${
-                currentStepValid 
-                  ? 'bg-blue-600 hover:bg-blue-700 hover:scale-105 active:scale-95 cursor-pointer' 
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${currentStepValid
+                  ? 'bg-[#B59363] hover:bg-[#B59363]/80 hover:scale-105 active:scale-95 cursor-pointer'
                   : 'bg-gray-300 cursor-not-allowed'
-              }`}
+                }`}
               title={currentStepValid ? "Próximo" : "Preencha o CPF/CNPJ"}
             >
               <ArrowRight className="h-5 w-5 text-white" />
@@ -350,11 +349,10 @@ export default function RelationshipWizard({
             <button
               onClick={handleFinish}
               disabled={!currentStepValid || isSaving}
-              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${
-                (currentStepValid && !isSaving)
+              className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${(currentStepValid && !isSaving)
                   ? 'bg-green-600 hover:bg-green-700 hover:scale-105 active:scale-95 cursor-pointer'
                   : 'bg-gray-300 cursor-not-allowed'
-              }`}
+                }`}
             >
               {isSaving ? (
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
@@ -365,7 +363,7 @@ export default function RelationshipWizard({
           )}
         </div>
       </div>
-      
+
       {/* Dialog de sucesso */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
         <DialogContent className="sm:max-w-md">
@@ -381,7 +379,7 @@ export default function RelationshipWizard({
               Esta janela será fechada automaticamente em 3 segundos.
             </p>
             <div className="mt-4 flex justify-end">
-              <Button 
+              <Button
                 onClick={() => {
                   setShowSuccessDialog(false);
                   onClose();
@@ -394,14 +392,14 @@ export default function RelationshipWizard({
           </div>
         </DialogContent>
       </Dialog>
-      
+
       {/* Exibir erro se houver */}
       {error && (
         <div className="fixed bottom-4 right-4 p-4 bg-red-50 border border-red-200 rounded-md shadow-lg max-w-md">
           <p className="text-sm text-red-600 mb-2">{error}</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={clearError}
           >
             Tentar novamente
