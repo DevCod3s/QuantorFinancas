@@ -75,7 +75,7 @@ export default function DashboardOverview() {
   };
 
   const getVariationColor = (value: number) => {
-    return value >= 0 ? 'text-secondary' : 'text-destructive';
+    return value >= 0 ? 'text-[#B59363]' : 'text-destructive';
   };
 
   const expenseChartData = {
@@ -95,16 +95,16 @@ export default function DashboardOverview() {
       {
         label: 'Receitas',
         data: dashboardData?.monthlyTrends?.map(item => item.income) || [],
-        borderColor: 'hsl(158, 64%, 40%)',
-        backgroundColor: 'hsla(158, 64%, 40%, 0.1)',
+        borderColor: '#B59363', // Dourado da Marca (era verde)
+        backgroundColor: 'rgba(181, 147, 99, 0.1)',
         tension: 0.4,
         fill: true,
       },
       {
         label: 'Despesas',
         data: dashboardData?.monthlyTrends?.map(item => item.expenses) || [],
-        borderColor: 'hsl(0, 84%, 60%)',
-        backgroundColor: 'hsla(0, 84%, 60%, 0.1)',
+        borderColor: '#ef4444', // Vermelho (era hsl(0, 84%, 60%))
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
         tension: 0.4,
         fill: true,
       },
@@ -123,7 +123,7 @@ export default function DashboardOverview() {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value: any) {
+          callback: function (value: any) {
             return formatCurrency(value);
           },
         },
@@ -313,12 +313,10 @@ export default function DashboardOverview() {
                   className="flex items-center justify-between p-4 hover:bg-muted/50 rounded-lg transition-colors"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      transaction.type === 'receita' ? 'bg-secondary/10' : 'bg-destructive/10'
-                    }`}>
-                      <i className={`fas ${
-                        transaction.category?.icon || 'fa-circle'
-                      } ${transaction.type === 'receita' ? 'text-secondary' : 'text-destructive'}`}></i>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${transaction.type === 'receita' ? 'bg-secondary/10' : 'bg-destructive/10'
+                      }`}>
+                      <i className={`fas ${transaction.category?.icon || 'fa-circle'
+                        } ${transaction.type === 'receita' ? 'text-secondary' : 'text-destructive'}`}></i>
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{transaction.description}</p>
@@ -328,9 +326,8 @@ export default function DashboardOverview() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`font-semibold ${
-                      transaction.type === 'receita' ? 'text-secondary' : 'text-destructive'
-                    }`}>
+                    <p className={`font-semibold ${transaction.type === 'receita' ? 'text-secondary' : 'text-destructive'
+                      }`}>
                       {transaction.type === 'receita' ? '+' : '-'}{formatCurrency(parseFloat(transaction.amount))}
                     </p>
                     <p className="text-sm text-muted-foreground">

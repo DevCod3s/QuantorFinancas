@@ -225,11 +225,11 @@ export function Relationships() {
         </div>
         <div className="relative">
           <button
-            className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
+            className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
             title="Novo Relacionamento"
             onClick={() => setIsAddingRelationship(true)}
             style={{
-              boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+              boxShadow: '0 6px 20px -6px rgba(77, 78, 72, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
           >
             {/* Efeito de brilho interno */}
@@ -257,21 +257,21 @@ export function Relationships() {
           <TabsList className="grid w-full grid-cols-3 lg:w-fit lg:grid-cols-3 bg-gray-100 p-1 rounded-lg relative">
             <TabsTrigger
               value="clientes"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <User className="h-4 w-4 mr-2" />
               Clientes
             </TabsTrigger>
             <TabsTrigger
               value="fornecedores"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Building className="h-4 w-4 mr-2" />
               Fornecedores
             </TabsTrigger>
             <TabsTrigger
               value="outros"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Users className="h-4 w-4 mr-2" />
               Outros
@@ -281,7 +281,7 @@ export function Relationships() {
           {/* Barra de progressão inteligente e animada */}
           <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
             <div
-              className="progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
+              className="progress-bar absolute bottom-0 h-full bg-[#B59363] rounded-full"
               style={{
                 left: 'var(--progress-left, 0px)',
                 width: '0px',
@@ -337,7 +337,7 @@ export function Relationships() {
                 render: (cliente) => {
                   const documentType = cliente.documenttype || cliente.document_type || cliente.documentType;
                   return (
-                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-[#4D4E48]/10 text-[#4D4E48]' : 'bg-purple-100 text-purple-800'}`}>
                       {documentType === 'CPF' ? 'PF' : 'PJ'}
                     </span>
                   );
@@ -375,7 +375,7 @@ export function Relationships() {
             ]}
             actions={[
               { icon: Eye, color: "text-green-600", title: "Visualizar", onClick: (item) => handleView(item, "Clientes") },
-              { icon: Edit, color: "text-blue-600", title: "Editar", onClick: (item) => handleEdit(item, "Clientes") },
+              { icon: Edit, color: "text-[#B59363]", title: "Editar", onClick: (item: any) => handleEdit(item, "Fornecedores") },
               { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: (item) => handleDelete(item, "Clientes") }
             ]}
           />
@@ -417,7 +417,7 @@ export function Relationships() {
                 render: (f: any) => {
                   const documentType = f.documenttype || f.document_type || f.documentType;
                   return (
-                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-[#4D4E48]/10 text-[#4D4E48]' : 'bg-purple-100 text-purple-800'}`}>
                       {documentType === 'CPF' ? 'PF' : 'PJ'}
                     </span>
                   );
@@ -455,7 +455,7 @@ export function Relationships() {
             ]}
             actions={[
               { icon: Eye, color: "text-green-600", title: "Visualizar", onClick: (item: any) => handleView(item, "Fornecedores") },
-              { icon: Edit, color: "text-blue-600", title: "Editar", onClick: (item: any) => handleEdit(item, "Fornecedores") },
+              { icon: Edit, color: "text-[#B59363]", title: "Editar", onClick: (item: any) => handleEdit(item, "Fornecedores") },
               { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: (item: any) => handleDelete(item, "Fornecedores") }
             ]}
           />
@@ -498,7 +498,7 @@ export function Relationships() {
                 render: (r: any) => {
                   const documentType = r.documenttype || r.document_type || r.documentType;
                   return (
-                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'}`}>
+                    <span className={`inline-flex px-2 py-0.5 text-[10px] font-semibold rounded-full ${documentType === 'CPF' ? 'bg-[#4D4E48]/10 text-[#4D4E48]' : 'bg-purple-100 text-purple-800'}`}>
                       {documentType === 'CPF' ? 'PF' : 'PJ'}
                     </span>
                   );
@@ -536,7 +536,7 @@ export function Relationships() {
             ]}
             actions={[
               { icon: Eye, color: "text-green-600", title: "Visualizar", onClick: (item: any) => handleView(item, "Outros Relacionamentos") },
-              { icon: Edit, color: "text-blue-600", title: "Editar", onClick: (item: any) => handleEdit(item, "Outros Relacionamentos") },
+              { icon: Edit, color: "text-[#B59363]", title: "Editar", onClick: (item: any) => handleEdit(item, "Outros Relacionamentos") },
               { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: (item: any) => handleDelete(item, "Outros Relacionamentos") }
             ]}
           />

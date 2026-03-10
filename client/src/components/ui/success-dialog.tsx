@@ -21,7 +21,8 @@
  */
 
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { MessageCircle, Check } from "lucide-react";
+import { MessageCircle, Check, LogOut } from "lucide-react";
+import { IButtonPrime } from "./i-ButtonPrime";
 import { useEffect, useState } from "react";
 
 /**
@@ -36,13 +37,13 @@ interface SuccessDialogProps {
   autoCloseDelay?: number; // Delay em ms para auto-close (padrão: 3000)
 }
 
-export function SuccessDialog({ 
-  isOpen, 
-  onClose, 
-  title, 
-  message, 
-  autoClose = true, 
-  autoCloseDelay = 3000 
+export function SuccessDialog({
+  isOpen,
+  onClose,
+  title,
+  message,
+  autoClose = true,
+  autoCloseDelay = 3000
 }: SuccessDialogProps) {
   const [timeLeft, setTimeLeft] = useState(autoCloseDelay / 1000);
 
@@ -74,7 +75,7 @@ export function SuccessDialog({
         {/* Elementos de acessibilidade (invisíveis) */}
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">{message}</DialogDescription>
-        
+
         {/* Header verde com ícone */}
         <div className="bg-gradient-to-br from-green-400 to-green-500 px-6 py-8 text-center relative">
           {/* Ícone de balão de mensagem com check */}
@@ -91,10 +92,10 @@ export function SuccessDialog({
         {/* Conteúdo branco */}
         <div className="bg-white px-6 py-6 text-center">
           {/* Título */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">
+          <h2 className="text-lg font-semibold text-[#1D3557] mb-2">
             {title}
           </h2>
-          
+
           {/* Mensagem */}
           <p className="text-sm text-gray-600 mb-6 leading-relaxed">
             {message}
@@ -105,15 +106,13 @@ export function SuccessDialog({
 
           {/* Botão OK */}
           <div className="flex justify-center">
-            <button
+            <IButtonPrime
+              icon={<LogOut className="h-5 w-5" />}
+              variant="red"
+              title={autoClose && timeLeft > 0 ? `Sair (${timeLeft}s)` : 'Sair'}
               onClick={onClose}
-              className="px-8 py-2 text-blue-600 font-medium text-sm hover:text-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 rounded"
-            >
-              OK
-              {autoClose && timeLeft > 0 && (
-                <span className="ml-2 text-gray-400">({timeLeft}s)</span>
-              )}
-            </button>
+              className="px-8"
+            />
           </div>
         </div>
       </DialogContent>

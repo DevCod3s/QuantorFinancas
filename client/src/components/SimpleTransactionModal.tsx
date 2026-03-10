@@ -37,7 +37,7 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
 
     onSave(transactionData);
     onClose();
-    
+
     // Limpar formulário
     setTipo('');
     setValor('');
@@ -50,28 +50,25 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogTitle className="flex items-center justify-between">
-          <span>Novo Lançamento</span>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
-            <X className="h-4 w-4" />
-          </button>
+        <DialogTitle>
+          <span className="text-xl font-bold text-[#1D3557]">Novo Lançamento</span>
         </DialogTitle>
-        
+
         <div className="space-y-4 mt-4">
           <div className="grid grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium">Tipo *</label>
-              <select 
-                value={tipo} 
+              <select
+                value={tipo}
                 onChange={(e) => setTipo(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B59363]"
               >
                 <option value="">Selecione...</option>
                 <option value="Receita">Receita</option>
                 <option value="Despesa">Despesa</option>
               </select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Valor (R$) *</label>
               <Input
@@ -80,7 +77,7 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
                 placeholder="0,00"
               />
             </div>
-            
+
             <div>
               <DateInput
                 label="Data"
@@ -89,27 +86,27 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
               />
             </div>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">Repetição</label>
-              <select 
-                value={repeticao} 
+              <select
+                value={repeticao}
                 onChange={(e) => setRepeticao(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B59363]"
               >
                 <option value="Única">Única</option>
                 <option value="Parcelada">Parcelada</option>
                 <option value="Recorrente">Recorrente</option>
               </select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium">Conta *</label>
-              <select 
-                value={conta} 
+              <select
+                value={conta}
                 onChange={(e) => setConta(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#B59363]"
               >
                 <option value="">Selecione...</option>
                 <option value="Banco Inter">Banco Inter</option>
@@ -120,7 +117,7 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
               </select>
             </div>
           </div>
-          
+
           <div>
             <label className="text-sm font-medium">Descrição</label>
             <Input
@@ -131,19 +128,19 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
             />
             <div className="text-xs text-gray-500 mt-1">{descricao.length}/30</div>
           </div>
-          
+
           <div className="flex justify-end gap-2 pt-4">
+            <IButtonPrime
+              icon={<Save className="h-4 w-4" />}
+              variant="gold"
+              title="Salvar"
+              onClick={handleSave}
+            />
             <IButtonPrime
               icon={<LogOut className="h-4 w-4" />}
               variant="red"
-              title="Cancelar"
+              title="Sair"
               onClick={onClose}
-            />
-            <IButtonPrime
-              icon={<Save className="h-4 w-4" />}
-              variant="blue"
-              title="Salvar"
-              onClick={handleSave}
             />
           </div>
         </div>

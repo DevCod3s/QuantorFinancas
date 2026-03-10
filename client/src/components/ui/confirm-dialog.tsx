@@ -20,7 +20,8 @@
 
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useState } from "react";
-import { X, HelpCircle } from "lucide-react";
+import { X, HelpCircle, Check, LogOut } from "lucide-react";
+import { IButtonPrime } from "./i-ButtonPrime";
 
 /**
  * Props do componente ConfirmDialog
@@ -63,24 +64,16 @@ export function ConfirmDialog({
         <DialogDescription className="sr-only">{message}</DialogDescription>
 
         {/* Header Colorido com Ícone de Alerta/Info */}
-        <div className="bg-blue-600 px-6 py-4 rounded-t-xl flex items-center justify-center relative">
+        <div className="bg-[#4D4E48] px-6 py-4 rounded-t-xl flex items-center justify-center relative">
           <div className="bg-white rounded-full p-2 shadow-sm">
-            <HelpCircle className="h-6 w-6 text-blue-600" />
+            <HelpCircle className="h-6 w-6 text-[#B59363]" />
           </div>
-
-          {/* Botão de fechar no canto superior direito */}
-          <button
-            onClick={onClose}
-            className="absolute top-3 right-3 text-white hover:text-blue-100 transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
         </div>
 
         {/* Corpo do Dialog */}
         <div className="bg-white px-6 py-6 space-y-4 rounded-b-xl text-center">
           {/* Título */}
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-[#1D3557]">
             {title}
           </h3>
 
@@ -91,18 +84,20 @@ export function ConfirmDialog({
 
           {/* Footer com botões divididos */}
           <div className="border-t border-gray-100 pt-5 mt-5 flex justify-center gap-3">
-            <button
-              onClick={onClose}
-              className="px-5 py-2.5 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200 w-full"
-            >
-              {cancelText}
-            </button>
-            <button
+            <IButtonPrime
+              icon={<Check className="h-4 w-4" />}
+              variant="gold"
+              title={confirmText}
               onClick={handleConfirm}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors duration-200 w-full shadow-sm"
-            >
-              {confirmText}
-            </button>
+              className="w-full"
+            />
+            <IButtonPrime
+              icon={<LogOut className="h-4 w-4" />}
+              variant="red"
+              title={cancelText}
+              onClick={onClose}
+              className="w-full"
+            />
           </div>
         </div>
       </DialogContent>

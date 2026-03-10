@@ -16,7 +16,7 @@ interface BudgetWithUsage extends Budget {
 export function Budgets() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  
+
   const { data: budgets = [], isLoading } = useQuery<BudgetWithUsage[]>({
     queryKey: ["/api/budgets"],
   });
@@ -53,12 +53,12 @@ export function Budgets() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orçamentos</h1>
+          <h1 className="text-3xl font-bold text-[#1D3557]">Orçamentos</h1>
           <p className="mt-1 text-sm text-gray-600">
             Controle seus gastos por categoria
           </p>
         </div>
-        <Button>
+        <Button className="bg-[#B59363] hover:bg-[#B59363]/90 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Novo Orçamento
         </Button>
@@ -117,77 +117,77 @@ export function Budgets() {
         </CardHeader>
         <CardContent>
           <div className="max-h-[500px] overflow-y-auto">
-          {isLoading ? (
-            <div className="space-y-4">
-              {[...Array(4)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="h-20 bg-gray-200 rounded-lg"></div>
-                </div>
-              ))}
-            </div>
-          ) : budgets.length === 0 ? (
-            <div className="text-center py-8">
-              <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Nenhum orçamento definido</p>
-              <p className="text-sm text-gray-400">
-                Crie seu primeiro orçamento para começar a controlar seus gastos
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {paginatedBudgets.map((budget: BudgetWithUsage) => {
-                const status = getBudgetStatus(budget.percentage);
-                const StatusIcon = status.icon;
-                
-                return (
-                  <div
-                    key={budget.id}
-                    className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <h3 className="font-medium">{budget.categoryName}</h3>
-                        <Badge 
-                          variant={status.color === 'red' ? 'destructive' : 'secondary'}
-                          className="text-xs"
-                        >
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {status.text}
-                        </Badge>
+            {isLoading ? (
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="h-20 bg-gray-200 rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+            ) : budgets.length === 0 ? (
+              <div className="text-center py-8">
+                <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Nenhum orçamento definido</p>
+                <p className="text-sm text-gray-400">
+                  Crie seu primeiro orçamento para começar a controlar seus gastos
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {paginatedBudgets.map((budget: BudgetWithUsage) => {
+                  const status = getBudgetStatus(budget.percentage);
+                  const StatusIcon = status.icon;
+
+                  return (
+                    <div
+                      key={budget.id}
+                      className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <h3 className="font-medium">{budget.categoryName}</h3>
+                          <Badge
+                            variant={status.color === 'red' ? 'destructive' : 'secondary'}
+                            className="text-xs"
+                          >
+                            <StatusIcon className="h-3 w-3 mr-1" />
+                            {status.text}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">
+                            {formatCurrency(budget.used.toString())} / {formatCurrency(budget.budgetedAmount)}
+                          </span>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">
-                          {formatCurrency(budget.used.toString())} / {formatCurrency(budget.budgetedAmount)}
-                        </span>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+
+                      <div className="space-y-2">
+                        <Progress
+                          value={Math.min(budget.percentage, 100)}
+                          className="h-2"
+                        />
+                        <div className="flex justify-between text-sm text-gray-500">
+                          <span>{budget.percentage.toFixed(1)}% utilizado</span>
+                          <span>
+                            {budget.period === 'monthly' ? 'Mensal' : 'Anual'} •
+                            {new Date(budget.startDate).getFullYear()}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    
-                    <div className="space-y-2">
-                      <Progress 
-                        value={Math.min(budget.percentage, 100)} 
-                        className="h-2"
-                      />
-                      <div className="flex justify-between text-sm text-gray-500">
-                        <span>{budget.percentage.toFixed(1)}% utilizado</span>
-                        <span>
-                          {budget.period === 'monthly' ? 'Mensal' : 'Anual'} • 
-                          {new Date(budget.startDate).getFullYear()}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -214,7 +214,7 @@ export function Budgets() {
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
                 </Button>
-                <span className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded font-medium">
+                <span className="px-3 py-1 text-sm bg-[#B59363]/10 text-[#B59363] rounded font-medium">
                   {currentPage}
                 </span>
                 <Button

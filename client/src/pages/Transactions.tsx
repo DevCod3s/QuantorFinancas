@@ -22,7 +22,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown, LogOut } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -473,7 +473,7 @@ export function Transactions() {
         date: transactionData.data ? new Date(transactionData.data.split('/').reverse().join('-')).toISOString() : new Date().toISOString(),
         categoryId: transactionData.categoria ? parseInt(transactionData.categoria) : null,
         chartAccountId: transactionData.planoContas ? parseInt(transactionData.planoContas) : null,
-        
+
         // Campos de repetição e parcelamento
         repeticao: transactionData.repeticao || 'Única',
         numeroParcelas: transactionData.numeroParcelas ? parseInt(transactionData.numeroParcelas) : null,
@@ -483,7 +483,7 @@ export function Transactions() {
         valorJuros: transactionData.valorJuros ? parseFloat(transactionData.valorJuros) : null,
         aplicarJurosEm: transactionData.aplicarJurosEm || null,
         periodicidade: transactionData.periodicidade || null,
-        
+
         // Outros campos
         observacoes: transactionData.observacoes || null,
       };
@@ -498,7 +498,7 @@ export function Transactions() {
   const handleBatchPayment = async (paymentData: any) => {
     try {
       const selectedItems = batchPaymentType === 'payable' ? selectedPayables : selectedReceivables;
-      
+
       // Calcular total com juros e descontos
       const totalOriginal = selectedItems.reduce((sum, item) => sum + item.value, 0);
       const jurosMulta = parseFloat(paymentData.jurosMulta?.replace(/\D/g, '') || '0') / 100;
@@ -529,7 +529,7 @@ export function Transactions() {
       }
 
       setBatchPaymentModalOpen(false);
-      
+
       showSuccess(
         'Baixa em lote realizada',
         `${selectedItems.length} ${selectedItems.length === 1 ? 'lançamento processado' : 'lançamentos processados'} com sucesso!`
@@ -736,6 +736,11 @@ export function Transactions() {
         // Aplica a posição através de CSS custom properties
         const progressBar = tabListRef.current.querySelector('.progress-bar') as HTMLElement;
         if (progressBar) {
+          // Aplica a cor do texto ativo e ícone
+          activeTabElement.style.color = '#4D4E48';
+          const icon = activeTabElement.querySelector('svg');
+          if (icon) icon.style.color = '#4D4E48';
+
           // Define a posição e largura final
           progressBar.style.setProperty('--progress-left', `${leftOffset}px`);
           progressBar.style.setProperty('--progress-width', `${width}px`);
@@ -746,6 +751,7 @@ export function Transactions() {
 
           // Aplica nova animação
           progressBar.style.animation = 'progressFill 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+          progressBar.style.backgroundColor = '#B59363';
         }
       }
     };
@@ -830,7 +836,7 @@ export function Transactions() {
                 console.log("Bank account modal state set to true");
               }
             }}
-            className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
+            className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
             title={
               activeTab === "centro-custo"
                 ? "Nova Conta - Plano de Contas"
@@ -877,28 +883,28 @@ export function Transactions() {
           <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4 bg-gray-100 p-1 rounded-lg relative">
             <TabsTrigger
               value="visao-geral"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Eye className="h-4 w-4 mr-2" />
               Visão Geral
             </TabsTrigger>
             <TabsTrigger
               value="movimentacoes"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <TrendingUp className="h-4 w-4 mr-2" />
               Movimentações
             </TabsTrigger>
             <TabsTrigger
               value="contas"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Building className="h-4 w-4 mr-2" />
               Contas
             </TabsTrigger>
             <TabsTrigger
               value="centro-custo"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Target className="h-4 w-4 mr-2" />
               Centro de Custo
@@ -908,7 +914,7 @@ export function Transactions() {
           {/* Barra de progressão inteligente e animada */}
           <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
             <div
-              className="progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
+              className="progress-bar absolute bottom-0 h-full bg-[#B59363] rounded-full"
               style={{
                 left: 'var(--progress-left, 0px)',
                 width: '0px',
@@ -931,7 +937,7 @@ export function Transactions() {
                     {/* Grid de cards com gráficos */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       {/* Card Fluxo de Caixa */}
-                      <Card className="col-span-1 lg:col-span-2">
+                      <Card className="col-span-1 lg:col-span-2 shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div>
@@ -985,37 +991,37 @@ export function Transactions() {
                                 <DropdownMenuContent align="end" className="w-40">
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Semanal')}
-                                    className={filterPeriod === 'Semanal' ? 'bg-blue-50 text-blue-600' : ''}
+                                    className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Semanal
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Mensal')}
-                                    className={filterPeriod === 'Mensal' ? 'bg-blue-50 text-blue-600' : ''}
+                                    className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Mensal
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Trimestral')}
-                                    className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                    className={filterPeriod === 'Trimestral' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Trimestral
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Semestral')}
-                                    className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                    className={filterPeriod === 'Semestral' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Semestral
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Anual')}
-                                    className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
+                                    className={filterPeriod === 'Anual' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Anual
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Personalizar')}
-                                    className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
+                                    className={filterPeriod === 'Personalizar' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Personalizar
                                   </DropdownMenuItem>
@@ -1097,7 +1103,7 @@ export function Transactions() {
                       </Card>
 
                       {/* Card Saldos de Caixa */}
-                      <Card>
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                         <CardHeader>
                           <CardTitle className="text-lg font-semibold">Saldos de caixa</CardTitle>
                         </CardHeader>
@@ -1105,7 +1111,7 @@ export function Transactions() {
                           <div className="space-y-4">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-blue-600" readOnly />
+                                <input type="checkbox" checked className="accent-[#B59363]" readOnly />
                                 <span className="text-sm">Banco Inter</span>
                               </div>
                               <div className="text-right">
@@ -1192,7 +1198,7 @@ export function Transactions() {
                       </Card>
 
                       {/* Card Despesas por Categoria */}
-                      <Card>
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                         <CardHeader>
                           <CardTitle className="text-lg font-semibold">Despesas por categoria</CardTitle>
                           <CardDescription className="text-sm text-gray-500">Gastos projetados</CardDescription>
@@ -1281,7 +1287,7 @@ export function Transactions() {
                       </Card>
 
                       {/* Card Receitas por Categoria */}
-                      <Card>
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                         <CardHeader>
                           <CardTitle className="text-lg font-semibold">Receitas por Categoria</CardTitle>
                           <CardDescription className="text-sm text-gray-500">Entradas projetadas</CardDescription>
@@ -1370,7 +1376,7 @@ export function Transactions() {
                 content: (
                   <div className="space-y-6">
                     {/* Card Demonstrativo Diário com controles temporais */}
-                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                    <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <div>
@@ -1424,13 +1430,13 @@ export function Transactions() {
                               <DropdownMenuContent align="end" className="w-40">
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Semanal')}
-                                  className={filterPeriod === 'Semanal' ? 'bg-blue-50 text-blue-600' : ''}
+                                  className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                 >
                                   Semanal
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Mensal')}
-                                  className={filterPeriod === 'Mensal' ? 'bg-blue-50 text-blue-600' : ''}
+                                  className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                 >
                                   Mensal
                                 </DropdownMenuItem>
@@ -1741,9 +1747,9 @@ export function Transactions() {
                           <div className="mb-4 flex justify-end">
                             <IButtonPrime
                               icon={<FolderDown className="h-4 w-4" />}
-                              variant="blue"
+                              variant="gold"
                               title={batchModePayables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
-                              className={`!px-4 !py-2 ${batchModePayables ? 'ring-2 ring-blue-400' : ''}`}
+                              className={`!px-4 !py-2 ${batchModePayables ? 'ring-2 ring-[#B59363]' : ''}`}
                               onClick={() => {
                                 setBatchModePayables(!batchModePayables);
                                 if (batchModePayables) {
@@ -1755,13 +1761,13 @@ export function Transactions() {
                           </div>
 
                           {batchModePayables && selectedPayables.length > 0 && (
-                            <div className="mb-4 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
-                              <span className="text-sm font-medium text-blue-900">
+                            <div className="mb-4 flex items-center justify-between bg-[#B59363]/5 border border-[#B59363]/20 rounded-lg p-3">
+                              <span className="text-sm font-medium text-[#4D4E48]">
                                 {selectedPayables.length} {selectedPayables.length === 1 ? 'item selecionado' : 'itens selecionados'}
                               </span>
                               <IButtonPrime
                                 icon={<CheckCheck className="h-4 w-4" />}
-                                variant="blue"
+                                variant="gold"
                                 title="Baixa em Lote"
                                 className="!px-4 !py-2"
                                 onClick={() => {
@@ -1812,11 +1818,10 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
-                                    item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
                                     item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                      'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {item.type}
                                   </span>
                                 )
@@ -1828,12 +1833,11 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
-                                    item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                    item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                      item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {item.status}
                                   </span>
                                 )
@@ -1845,9 +1849,8 @@ export function Transactions() {
                                 width: "11%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`font-semibold text-xs whitespace-nowrap ${
-                                    item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
-                                  }`}>
+                                  <span className={`font-semibold text-xs whitespace-nowrap ${item.status === 'Vencida' ? 'text-red-600' : 'text-gray-900'
+                                    }`}>
                                     R$ {item.value.toFixed(2).replace('.', ',')}
                                   </span>
                                 )
@@ -1857,21 +1860,21 @@ export function Transactions() {
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
-                                  variant="blue"
+                                  variant="gold"
                                   title="Editar"
                                   className="!p-2"
                                   onClick={() => console.log('Edit', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
-                                  variant="blue"
+                                  variant="gold"
                                   title="Visualizar"
                                   className="!p-2"
                                   onClick={() => console.log('View', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Download className="h-3.5 w-3.5" />}
-                                  variant="blue"
+                                  variant="gold"
                                   title="Baixar Documento"
                                   className="!p-2"
                                   onClick={() => console.log('Download', item.id)}
@@ -2022,9 +2025,9 @@ export function Transactions() {
                           <div className="mb-4 flex justify-end">
                             <IButtonPrime
                               icon={<FolderDown className="h-4 w-4" />}
-                              variant="blue"
+                              variant="gold"
                               title={batchModeReceivables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
-                              className={`!px-4 !py-2 ${batchModeReceivables ? 'ring-2 ring-green-400' : ''}`}
+                              className={`!px-4 !py-2 ${batchModeReceivables ? 'ring-2 ring-[#B59363]' : ''}`}
                               onClick={() => {
                                 setBatchModeReceivables(!batchModeReceivables);
                                 if (batchModeReceivables) {
@@ -2042,7 +2045,7 @@ export function Transactions() {
                               </span>
                               <IButtonPrime
                                 icon={<CheckCheck className="h-4 w-4" />}
-                                variant="blue"
+                                variant="gold"
                                 title="Baixa em Lote"
                                 className="!px-4 !py-2"
                                 onClick={() => {
@@ -2093,13 +2096,12 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
-                                    item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
                                     item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
-                                    item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
-                                    item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                      item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
+                                        item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
+                                          'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {item.type}
                                   </span>
                                 )
@@ -2111,12 +2113,11 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${
-                                    item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                    item.status === 'Automático' ? 'bg-green-100 text-green-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                      item.status === 'Automático' ? 'bg-green-100 text-green-800' :
+                                        'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {item.status}
                                   </span>
                                 )
@@ -2128,9 +2129,8 @@ export function Transactions() {
                                 width: "11%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`font-semibold text-xs whitespace-nowrap ${
-                                    item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
-                                  }`}>
+                                  <span className={`font-semibold text-xs whitespace-nowrap ${item.status === 'Confirmado' ? 'text-green-600' : 'text-gray-900'
+                                    }`}>
                                     R$ {item.value.toFixed(2).replace('.', ',')}
                                   </span>
                                 )
@@ -2140,21 +2140,21 @@ export function Transactions() {
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
-                                  variant="blue"
+                                  variant="gold"
                                   title="Editar"
                                   className="!p-2"
                                   onClick={() => console.log('Edit', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
-                                  variant="blue"
+                                  variant="gold"
                                   title="Visualizar"
                                   className="!p-2"
                                   onClick={() => console.log('View', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Download className="h-3.5 w-3.5" />}
-                                  variant="blue"
+                                  variant="gold"
                                   title="Baixar Documento"
                                   className="!p-2"
                                   onClick={() => console.log('Download', item.id)}
@@ -2375,7 +2375,7 @@ export function Transactions() {
                 { value: 'conta_investimento', label: 'Conta de Investimento' }
               ],
               iconAction: {
-                icon: <CreditCard className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />,
+                icon: <CreditCard className="h-5 w-5 mb-1 text-[#4D4E48] hover:text-[#B59363] transition-colors" />,
                 onClick: () => {/* TODO: Implementar modal de novo tipo */ },
                 title: "Cadastrar novo tipo de conta"
               }
@@ -2389,7 +2389,7 @@ export function Transactions() {
               getOptionLabel: (opt: any) => `${opt.code} - ${opt.name}`,
               getOptionValue: (opt: any) => opt.code,
               iconAction: {
-                icon: <Building2 className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />,
+                icon: <Building2 className="h-5 w-5 mb-1 text-[#4D4E48] hover:text-[#B59363] transition-colors" />,
                 onClick: () => setNewBankModalOpen(true),
                 title: "Cadastrar novo banco"
               }
@@ -2527,7 +2527,7 @@ export function Transactions() {
                 label: `${account.bank} - ${account.accountNumber}`
               })),
               iconAction: {
-                icon: <Plus className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />,
+                icon: <Plus className="h-5 w-5 mb-1 text-[#B59363] hover:text-[#4D4E48] transition-colors" />,
                 onClick: () => setBankAccountModalOpen(true),
                 title: "Adicionar nova conta"
               }
@@ -3353,7 +3353,7 @@ function ChartOfAccountsContent({
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => openEditModal(account)}
-                          className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-100 rounded transition-colors"
+                          className="text-[#B59363] hover:text-[#1D3557] p-1.5 hover:bg-[#B59363]/10 rounded transition-colors"
                           title="Editar conta"
                         >
                           <Edit className="h-4 w-4" />
@@ -3406,7 +3406,7 @@ function ChartOfAccountsContent({
                 <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50" disabled>
                   Anterior
                 </button>
-                <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded">
+                <button className="px-3 py-1 text-sm bg-[#B59363] text-white rounded">
                   1
                 </button>
                 <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
@@ -3428,14 +3428,8 @@ function ChartOfAccountsContent({
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}>
             {/* Cabeçalho */}
-            <div className="flex items-center justify-between p-6 pb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Nova categoria</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
+            <div className="flex items-center justify-between p-6 pb-2">
+              <h2 className="text-xl font-bold text-[#1D3557]">Nova categoria</h2>
             </div>
 
             {/* Campos do formulário */}
@@ -3472,6 +3466,10 @@ function ChartOfAccountsContent({
                   onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                   fullWidth
                   required
+                  sx={{
+                    '& .MuiInputLabel-root': { color: '#1D3557' },
+                    '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+                  }}
                 />
               </div>
 
@@ -3522,24 +3520,21 @@ function ChartOfAccountsContent({
               </FormControl>
             </div>
 
-            {/* Botões - posicionados conforme a imagem */}
-            <div className="flex justify-end items-center gap-2 p-6 pt-8">
-              <button
+            {/* Botões - posicionados conforme a nova diretiva */}
+            <div className="flex justify-end items-center gap-3 p-6 pt-8">
+              <IButtonPrime
+                icon={<Save className="h-4 w-4" />}
+                variant="gold"
+                title="Salvar"
                 onClick={() => handleSave(false)}
                 disabled={!formData.nome || createAccountMutation.isPending}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                Salvar
-              </button>
-              <button
-                onClick={() => handleSave(true)}
-                disabled={!formData.nome || createAccountMutation.isPending}
-                className="px-3 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors flex items-center justify-center"
-                title="Salvar e continuar adicionando"
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              />
+              <IButtonPrime
+                icon={<LogOut className="h-4 w-4" />}
+                variant="red"
+                title="Sair"
+                onClick={() => setIsModalOpen(false)}
+              />
             </div>
           </div>
         </div>

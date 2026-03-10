@@ -355,17 +355,17 @@ export function Login() {
 
           {/* Barra progressiva na borda absoluta esquerda do card alinhada com ícones */}
           {activeSection === 'login' && (
-            <div className="absolute left-0 top-[165px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[165px] w-1 h-6 bg-[#E6E7E8] rounded-r overflow-hidden">
               <div className="w-full h-full animate-[slideUp_0.8s_ease-out] origin-bottom" style={{ backgroundColor: '#B59363' }}></div>
             </div>
           )}
           {activeSection === 'signup' && (
-            <div className="absolute left-0 top-[237px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[237px] w-1 h-6 bg-[#E6E7E8] rounded-r overflow-hidden">
               <div className="w-full h-full animate-[slideUp_0.8s_ease-out] origin-bottom" style={{ backgroundColor: '#B59363' }}></div>
             </div>
           )}
           {activeSection === 'about' && (
-            <div className="absolute left-0 top-[309px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
+            <div className="absolute left-0 top-[309px] w-1 h-6 bg-[#E6E7E8] rounded-r overflow-hidden">
               <div className="w-full h-full animate-[slideUp_0.8s_ease-out] origin-bottom" style={{ backgroundColor: '#B59363' }}></div>
             </div>
           )}

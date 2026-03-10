@@ -46,7 +46,7 @@ export default function StepperWizard({ steps, currentStep, className = "" }: St
         const isCurrentStep = index + 1 === currentStep;
         const isCompletedStep = index + 1 < currentStep;
         const isFutureStep = index + 1 > currentStep;
-        
+
         return (
           <div key={step.id} className="flex items-center">
             {/* Container da etapa */}
@@ -56,10 +56,10 @@ export default function StepperWizard({ steps, currentStep, className = "" }: St
                 className={`
                   relative w-12 h-12 rounded-full border-2 flex items-center justify-center text-sm font-semibold
                   ${isCurrentStep
-                    ? 'bg-blue-500 border-blue-500 text-white' // Etapa atual - azul ativo
+                    ? 'bg-[#B59363] border-[#B59363] text-white' // Etapa atual - dourado ativo
                     : isCompletedStep
-                    ? 'bg-green-500 border-green-500 text-white' // Etapa concluída - verde
-                    : 'bg-gray-100 border-gray-300 text-gray-500' // Etapa futura - cinza
+                      ? 'bg-green-500 border-green-500 text-white' // Etapa concluída - verde
+                      : 'bg-gray-100 border-gray-300 text-gray-500' // Etapa futura - cinza
                   }
                 `}
               >
@@ -73,13 +73,13 @@ export default function StepperWizard({ steps, currentStep, className = "" }: St
                   step.id
                 )}
               </div>
-              
+
               {/* Título e subtítulo */}
               <div className="mt-3 min-w-0 max-w-[120px]">
-                <h3 className={`text-xs font-medium ${isCurrentStep ? 'text-blue-600' : isCompletedStep ? 'text-green-600' : 'text-gray-500'}`}>
+                <h3 className={`text-xs font-semibold ${isCurrentStep ? 'text-[#1D3557]' : isCompletedStep ? 'text-green-600' : 'text-gray-500'}`}>
                   {step.title}
                 </h3>
-                <p className={`text-xs mt-1 ${isCurrentStep ? 'text-blue-500' : isCompletedStep ? 'text-green-500' : 'text-gray-400'}`}>
+                <p className={`text-xs mt-1 ${isCurrentStep ? 'text-[#B59363]' : isCompletedStep ? 'text-green-500' : 'text-gray-400'}`}>
                   {step.subtitle}
                 </p>
               </div>

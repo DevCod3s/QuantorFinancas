@@ -114,7 +114,7 @@ export default function ReportsCharts() {
 
     const currentYear = new Date().getFullYear();
     const lastYear = currentYear - 1;
-    
+
     const months = [
       'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun',
       'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'
@@ -144,15 +144,15 @@ export default function ReportsCharts() {
         {
           label: lastYear.toString(),
           data: lastYearData,
-          borderColor: 'hsl(215, 16%, 47%)',
-          backgroundColor: 'hsla(215, 16%, 47%, 0.1)',
+          borderColor: '#4D4E48', // Cinza da Marca
+          backgroundColor: 'rgba(77, 78, 72, 0.1)',
           tension: 0.4,
         },
         {
           label: currentYear.toString(),
           data: currentYearData,
-          borderColor: 'hsl(210, 65%, 23%)',
-          backgroundColor: 'hsla(210, 65%, 23%, 0.1)',
+          borderColor: '#B59363', // Dourado da Marca
+          backgroundColor: 'rgba(181, 147, 99, 0.1)',
           tension: 0.4,
         },
       ],
@@ -234,12 +234,12 @@ export default function ReportsCharts() {
       {
         label: 'Receitas',
         data: dashboardData?.monthlyTrends?.map(item => item.income) || [],
-        backgroundColor: 'hsl(158, 64%, 40%)',
+        backgroundColor: '#B59363', // Dourado da Marca
       },
       {
         label: 'Despesas',
         data: dashboardData?.monthlyTrends?.map(item => item.expenses) || [],
-        backgroundColor: 'hsl(0, 84%, 60%)',
+        backgroundColor: '#ef4444', // Vermelho para despesas
       },
     ],
   };
@@ -270,7 +270,7 @@ export default function ReportsCharts() {
       y: {
         beginAtZero: true,
         ticks: {
-          callback: function(value: any) {
+          callback: function (value: any) {
             return formatCurrency(value);
           },
         },
@@ -295,7 +295,7 @@ export default function ReportsCharts() {
           <Skeleton className="h-8 w-48 mb-2" />
           <Skeleton className="h-4 w-64" />
         </div>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -352,7 +352,7 @@ export default function ReportsCharts() {
               <option value="year">Este ano</option>
               <option value="custom">Período customizado</option>
             </FloatingSelect>
-            
+
             <FloatingSelect
               label="Tipo de Relatório"
               value={reportType}
@@ -363,7 +363,7 @@ export default function ReportsCharts() {
               <option value="trends">Tendências</option>
               <option value="comparison">Comparativo</option>
             </FloatingSelect>
-            
+
             <Button className="bg-primary hover:bg-primary/90 h-12">
               <i className="fas fa-download mr-2"></i>
               Exportar PDF

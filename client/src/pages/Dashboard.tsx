@@ -1,21 +1,10 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import Sidebar from "@/components/layout/sidebar";
-import Header from "@/components/layout/header";
-import { TABS } from "@/types";
-import DashboardOverview from "@/components/dashboard/dashboard-overview";
-import TransactionList from "@/components/transactions/transaction-list";
-import BudgetCards from "@/components/budgets/budget-cards";
-import ReportsCharts from "@/components/reports/charts";
-import ChatInterface from "@/components/ai/chat-interface";
 
 export default function Dashboard() {
   const { toast } = useToast();
   const { isAuthenticated, isLoading } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -36,8 +25,8 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <i className="fas fa-chart-line text-white text-2xl animate-pulse"></i>
+          <div className="w-16 h-16 bg-[#B59363]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <i className="fas fa-chart-line text-[#B59363] text-2xl animate-pulse"></i>
           </div>
           <p className="text-muted-foreground">Carregando...</p>
         </div>
@@ -49,59 +38,41 @@ export default function Dashboard() {
     return null;
   }
 
-  const getPageTitle = (tabId: string) => {
-    const tab = TABS.find(t => t.id === tabId);
-    return tab?.label || 'Dashboard';
-  };
-
-  const getPageDescription = (tabId: string) => {
-    const descriptions = {
-      'dashboard': 'Bem-vindo de volta! Aqui está seu resumo financeiro.',
-      'transactions': 'Adicione, edite e organize suas receitas e despesas',
-      'budgets': 'Defina e acompanhe seus orçamentos mensais e anuais',
-      'reports': 'Análises detalhadas do seu comportamento financeiro',
-      'ai-assistant': 'Seu consultor financeiro pessoal com inteligência artificial'
-    };
-    return descriptions[tabId as keyof typeof descriptions] || '';
-  };
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <DashboardOverview />;
-      case 'transactions':
-        return <TransactionList />;
-      case 'budgets':
-        return <BudgetCards />;
-      case 'reports':
-        return <ReportsCharts />;
-      case 'ai-assistant':
-        return <ChatInterface />;
-      default:
-        return <DashboardOverview />;
-    }
-  };
-
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab}
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-      />
-      
-      <main className="flex-1 overflow-y-auto">
-        <Header 
-          title={getPageTitle(activeTab)}
-          description={getPageDescription(activeTab)}
-          onMenuClick={() => setSidebarOpen(true)}
-        />
-        
-        <div className="p-6">
-          {renderTabContent()}
-        </div>
-      </main>
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-8 bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="w-24 h-24 bg-[#B59363]/10 rounded-full flex items-center justify-center mb-8">
+        <i className="fas fa-tools text-[#B59363] text-4xl"></i>
+      </div>
+
+      <h2 className="text-3xl font-bold text-[#4D4E48] mb-4">Dashboard em Desenvolvimento</h2>
+
+      <p className="text-gray-500 max-w-lg mx-auto text-lg leading-relaxed">
+        Estamos preparando um painel de indicadores completo, elegante e profissional para você.
+        Em breve, todas as suas métricas, gráficos e insights financeiros estarão disponíveis nesta central.
+      </p>
+
+      <div className="mt-10 flex flex-col sm:flex-row gap-4">
+        <button
+          onClick={() => window.location.href = "/transactions"}
+          className="px-8 py-3 bg-[#B59363] text-white rounded-xl hover:bg-[#a38459] transition-all shadow-lg shadow-[#B59363]/20 font-semibold text-lg"
+        >
+          <i className="fas fa-receipt mr-2"></i>
+          Ver Minhas Finanças
+        </button>
+
+        <button
+          onClick={() => window.location.href = "/relationships"}
+          className="px-8 py-3 bg-white text-[#4D4E48] border-2 border-gray-100 rounded-xl hover:bg-gray-50 transition-all font-semibold text-lg"
+        >
+          <i className="fas fa-users mr-2"></i>
+          Relacionamentos
+        </button>
+      </div>
+
+      <div className="mt-12 flex items-center gap-2 text-sm text-gray-400">
+        <div className="w-2 h-2 bg-[#B59363] rounded-full animate-ping"></div>
+        Novidades chegando em breve
+      </div>
     </div>
   );
 }

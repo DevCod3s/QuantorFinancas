@@ -12,17 +12,17 @@ import { cn } from "@/lib/utils";
  */
 interface IButtonPrimeProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     icon: React.ReactNode;
-    variant?: 'blue' | 'red';
+    variant?: 'gold' | 'red';
 }
 
 export function IButtonPrime({
     icon,
-    variant = 'blue',
+    variant = 'gold',
     className,
     ...props
 }: IButtonPrimeProps) {
     const variantClasses = {
-        blue: "text-blue-600 hover:bg-blue-50/50",
+        gold: "text-[#B59363] hover:bg-[#B59363]/10",
         red: "text-red-600 hover:bg-red-50/50"
     };
 

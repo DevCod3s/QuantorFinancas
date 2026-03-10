@@ -85,7 +85,7 @@ export function Reports() {
             <CardTitle className="text-sm font-medium">Categoria Principal</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">Moradia</div>
+            <div className="text-2xl font-bold text-[#B59363]">Moradia</div>
             <p className="text-xs text-muted-foreground">
               32% do total de despesas
             </p>
@@ -145,7 +145,7 @@ export function Reports() {
               { name: "Alimentação", amount: "R$ 980", percentage: 18, color: "#f97316" },
               { name: "Transporte", amount: "R$ 650", percentage: 12, color: "#eab308" },
               { name: "Lazer", amount: "R$ 420", percentage: 8, color: "#22c55e" },
-              { name: "Saúde", amount: "R$ 350", percentage: 6, color: "#3b82f6" },
+              { name: "Saúde", amount: "R$ 350", percentage: 6, color: "#4D4E48" },
             ].map((category) => (
               <div key={category.name} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

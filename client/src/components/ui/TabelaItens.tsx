@@ -40,7 +40,7 @@ export function TabelaItens({
     initialPerPage = 5,
     selectable = false,
     selectedItems = [],
-    onSelectionChange = () => {}
+    onSelectionChange = () => { }
 }: TabelaItensProps) {
     // Estados de paginação
     const [currentPage, setCurrentPage] = useState(1);
@@ -141,7 +141,8 @@ export function TabelaItens({
                                                 type="checkbox"
                                                 checked={isAllSelected}
                                                 onChange={(e) => handleSelectAll(e.target.checked)}
-                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                                                className="h-4 w-4 rounded border-gray-300 cursor-pointer"
+                                                style={{ color: '#B59363', accentColor: '#B59363' }}
                                             />
                                         </th>
                                     )}
@@ -190,7 +191,8 @@ export function TabelaItens({
                                                     type="checkbox"
                                                     checked={isSelected(item)}
                                                     onChange={(e) => handleSelectItem(item, e.target.checked)}
-                                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                                                    className="h-4 w-4 rounded border-gray-300 cursor-pointer"
+                                                    style={{ color: '#B59363', accentColor: '#B59363' }}
                                                 />
                                             </td>
                                         )}
@@ -265,10 +267,13 @@ export function TabelaItens({
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                                 <button
                                     key={page}
-                                    className={`px-3 py-1 text-sm rounded transition-colors ${page === currentPage
-                                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                        : 'text-gray-500 hover:text-gray-700'
+                                    className={`px-3 py-1 text-sm rounded transition-all duration-200 ${page === currentPage
+                                        ? 'text-white shadow-md'
+                                        : 'text-[#4D4E48] hover:bg-gray-100'
                                         }`}
+                                    style={{
+                                        backgroundColor: page === currentPage ? '#B59363' : 'transparent'
+                                    }}
                                     onClick={() => setCurrentPage(page)}
                                 >
                                     {page}

@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from "react";
-import { X, Save, LogOut } from "lucide-react";
+import { X, Save, LogOut, ArrowLeft } from "lucide-react";
 import CustomInput, { CustomTextarea } from "./CustomInput";
 import { IButtonPrime } from "./ui/i-ButtonPrime";
 
@@ -34,10 +34,10 @@ interface AddRelationshipTypeModalProps {
 /**
  * Modal para adicionar novo tipo de relacionamento
  */
-export default function AddRelationshipTypeModal({ 
-  isOpen, 
-  onClose, 
-  onSave 
+export default function AddRelationshipTypeModal({
+  isOpen,
+  onClose,
+  onSave
 }: AddRelationshipTypeModalProps) {
   const [formData, setFormData] = useState<NewRelationshipType>({
     name: '',
@@ -78,21 +78,15 @@ export default function AddRelationshipTypeModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100" 
-           style={{
-             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
-           }}>
+      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md transform transition-all duration-300 scale-100"
+        style={{
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2)'
+        }}>
         {/* Cabeçalho do modal */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-[#1D3557]">
             Novo Tipo de Relacionamento
           </h2>
-          <button
-            onClick={handleClose}
-            className="w-8 h-8 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 flex items-center justify-center"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
         </div>
 
         {/* Conteúdo do modal */}
@@ -124,17 +118,17 @@ export default function AddRelationshipTypeModal({
         {/* Rodapé do modal */}
         <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-200">
           <IButtonPrime
-            icon={<LogOut className="h-4 w-4" />}
-            variant="red"
-            title="Voltar"
-            onClick={handleClose}
-          />
-          <IButtonPrime
             icon={<Save className="h-4 w-4" />}
-            variant="blue"
+            variant="gold"
             title="Salvar"
             onClick={handleSave}
             disabled={!formData.name.trim()}
+          />
+          <IButtonPrime
+            icon={<LogOut className="h-4 w-4" />}
+            variant="red"
+            title="Sair"
+            onClick={handleClose}
           />
         </div>
       </div>

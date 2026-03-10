@@ -59,6 +59,21 @@ const navigation = [
   { name: "Assistente IA", href: "/ai-chat", icon: MessageSquare },
 ];
 
+/**
+ * Estilo de fundo compartilhado (Preto com Textura)
+ */
+const sidebarBackgroundStyle: React.CSSProperties = {
+  backgroundColor: '#1a1a1a',
+  backgroundImage: `
+    linear-gradient(45deg, #222 25%, transparent 25%), 
+    linear-gradient(-45deg, #222 25%, transparent 25%), 
+    linear-gradient(45deg, transparent 75%, #222 75%), 
+    linear-gradient(-45deg, transparent 75%, #222 75%)
+  `,
+  backgroundSize: '20px 20px',
+  backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+};
+
 export function Layout({ children }: LayoutProps) {
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -73,7 +88,7 @@ export function Layout({ children }: LayoutProps) {
   const mainMargin = sidebarCollapsed ? "lg:ml-16" : "lg:ml-64";
 
   return (
-    <div className="min-h-screen bg-[#F9FAFA]">
+    <div className="min-h-screen relative" style={sidebarBackgroundStyle}>
       {/* Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
@@ -93,17 +108,7 @@ export function Layout({ children }: LayoutProps) {
       {/* Sidebar */}
       <div
         className={`fixed inset-y-0 left-0 z-40 ${sidebarWidth} shadow-xl transform transition-all duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        style={{
-          backgroundColor: '#1D3557',
-          backgroundImage: `
-            linear-gradient(45deg, #152640 25%, transparent 25%), 
-            linear-gradient(-45deg, #152640 25%, transparent 25%), 
-            linear-gradient(45deg, transparent 75%, #152640 75%), 
-            linear-gradient(-45deg, transparent 75%, #152640 75%)
-          `,
-          backgroundSize: '20px 20px',
-          backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
-        }}
+        style={sidebarBackgroundStyle}
       >
         <div className="flex flex-col h-full relative">
           {/* Collapse button */}
@@ -238,8 +243,8 @@ export function Layout({ children }: LayoutProps) {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className={`${mainMargin} flex flex-col min-h-screen transition-all duration-300`}>
+      {/* Main content - A "Folha" Branca Arredondada */}
+      <div className={`${mainMargin} flex flex-col min-h-screen transition-all duration-300 bg-white lg:rounded-tl-[40px] lg:rounded-bl-[40px] shadow-2xl relative z-10 overflow-hidden`}>
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
@@ -249,7 +254,7 @@ export function Layout({ children }: LayoutProps) {
         )}
 
         {/* Content */}
-        <main className="flex-1 px-4 py-6 lg:px-8">
+        <main className="flex-1 px-4 py-8 lg:px-10 overflow-y-auto">
           {children}
         </main>
       </div>

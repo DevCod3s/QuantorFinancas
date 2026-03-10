@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save } from 'lucide-react';
+import { X, Save, LogOut } from 'lucide-react';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -158,8 +158,13 @@ export function DynamicModal({
                             )
                         } : undefined}
                         sx={{
-                            input: {
-                                color: field.textColorCondition ? field.textColorCondition(formData) : 'inherit'
+                            '& .MuiInputLabel-root': { color: '#1D3557' },
+                            '& .MuiInputLabel-root.Mui-focused': { color: '#B59363' },
+                            '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
+                            '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottomColor: '#1D3557' },
+                            '& .MuiInputBase-input': {
+                                color: field.textColorCondition ? field.textColorCondition(formData) : '#1D3557',
+                                fontWeight: 500
                             }
                         }}
                     />
@@ -179,11 +184,16 @@ export function DynamicModal({
             case 'select':
                 content = (
                     <FormControl variant="standard" fullWidth disabled={field.disabled}>
-                        <InputLabel>{label as React.ReactNode}</InputLabel>
+                        <InputLabel sx={{ color: '#1D3557', '&.Mui-focused': { color: '#B59363' } }}>{label as React.ReactNode}</InputLabel>
                         <Select
                             value={safeValue}
                             label={typeof label === 'string' ? label : undefined}
                             onChange={(e) => handleChange(field.name, e.target.value, field)}
+                            sx={{
+                                color: '#1D3557',
+                                '&:after': { borderBottomColor: '#B59363' },
+                                '& .MuiSelect-select': { fontWeight: 500 }
+                            }}
                         >
                             {field.options?.map((opt, i) => {
                                 const optValue = field.getOptionValue ? field.getOptionValue(opt) : opt.value;
@@ -223,6 +233,12 @@ export function DynamicModal({
                                 label={label as React.ReactNode}
                                 variant="standard"
                                 fullWidth
+                                sx={{
+                                    '& .MuiInputLabel-root': { color: '#1D3557' },
+                                    '& .MuiInputLabel-root.Mui-focused': { color: '#B59363' },
+                                    '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
+                                    '& .MuiInputBase-input': { color: '#1D3557', fontWeight: 500 }
+                                }}
                             />
                         )}
                         noOptionsText="Nenhum banco encontrado"
@@ -236,8 +252,8 @@ export function DynamicModal({
                             const optValue = field.getOptionValue ? field.getOptionValue(opt) : opt.value;
                             const optLabel = field.getOptionLabel ? field.getOptionLabel(opt) : opt.label;
                             const optColor = field.radioStyle === 'colored'
-                                ? (optValue === 'credor' ? 'text-blue-500 accent-blue-500' : 'text-red-500 accent-red-500')
-                                : 'text-blue-500 accent-blue-500';
+                                ? (optValue === 'credor' ? 'text-[#B59363] accent-[#B59363]' : 'text-red-500 accent-red-500')
+                                : 'text-[#B59363] accent-[#B59363]';
 
                             return (
                                 <label key={i} className="flex items-center gap-2 cursor-pointer">
@@ -249,7 +265,7 @@ export function DynamicModal({
                                         onChange={(e) => handleChange(field.name, e.target.value, field)}
                                         className={`w-4 h-4 ${optColor}`}
                                     />
-                                    <span className="text-sm text-gray-700">{optLabel}</span>
+                                    <span className="text-sm text-[#1D3557]">{optLabel}</span>
                                 </label>
                             );
                         })}
@@ -273,7 +289,7 @@ export function DynamicModal({
                     <div className="col-span-1 flex items-end justify-center">
                         <div
                             onClick={field.iconAction?.onClick}
-                            className="text-blue-600 hover:text-blue-800 cursor-pointer pb-2"
+                            className="text-[#B59363] hover:text-[#1D3557] cursor-pointer pb-2"
                             title={field.iconAction?.title}
                         >
                             {field.iconAction?.icon}
@@ -298,16 +314,10 @@ export function DynamicModal({
                 <div className="flex items-center justify-between p-6 pb-2 border-b border-gray-200">
                     <div className="flex items-center gap-3">
                         {icon && <div>{icon}</div>}
-                        <h2 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                        <h2 className="text-xl font-bold text-[#1D3557]">
                             {title}
                         </h2>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="w-6 h-6 text-gray-500 hover:text-gray-700 transition-colors flex items-center justify-center"
-                    >
-                        <X className="h-4 w-4" />
-                    </button>
                 </div>
                 <div className="p-6 relative">
                     {fields.map((row, rowIndex) => (
@@ -341,7 +351,7 @@ export function DynamicModal({
                         )}
 
                         <IButtonPrime
-                            icon={cancelButtonIcon || <X className="h-5 w-5" />}
+                            icon={cancelButtonIcon || <LogOut className="h-5 w-5" />}
                             onClick={onClose}
                             variant="red"
                             title={cancelButtonText}

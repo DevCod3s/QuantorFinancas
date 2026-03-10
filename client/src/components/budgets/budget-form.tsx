@@ -10,6 +10,8 @@ import { useCreateBudget, useUpdateBudget } from "@/hooks/use-budgets";
 import { useQuery } from "@tanstack/react-query";
 import { Budget, Category } from "@/types";
 import { DateInput } from "../DateInput";
+import { Save, LogOut } from "lucide-react";
+import { IButtonPrime } from "../ui/i-ButtonPrime";
 
 const budgetSchema = z.object({
   categoryId: z.number().min(1, 'Categoria é obrigatória'),
@@ -92,13 +94,13 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
     if (startDate) {
       const start = new Date(startDate);
       let endDate: Date;
-      
+
       if (period === 'mensal') {
         endDate = new Date(start.getFullYear(), start.getMonth() + 1, 0);
       } else {
         endDate = new Date(start.getFullYear(), 11, 31);
       }
-      
+
       form.setValue('endDate', endDate.toISOString().split('T')[0]);
     }
   };
@@ -107,11 +109,11 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-xl font-bold text-[#1D3557]">
             {budget ? 'Editar Orçamento' : 'Novo Orçamento'}
           </DialogTitle>
         </DialogHeader>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -139,7 +141,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="budgetedAmount"
@@ -158,7 +160,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="period"
@@ -183,7 +185,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 </FormItem>
               )}
             />
-            
+
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -208,7 +210,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="endDate"
@@ -227,23 +229,21 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
                 )}
               />
             </div>
-            
-            <div className="flex space-x-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1"
-                onClick={onClose}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1 bg-primary hover:bg-primary/90"
+
+            <div className="flex space-x-3 pt-4 justify-end">
+              <IButtonPrime
+                icon={<Save className="h-4 w-4" />}
+                variant="gold"
+                title={isSubmitting ? 'Salvando...' : budget ? 'Atualizar' : 'Criar Orçamento'}
                 disabled={isSubmitting}
-              >
-                {isSubmitting ? 'Salvando...' : budget ? 'Atualizar' : 'Criar Orçamento'}
-              </Button>
+                type="submit"
+              />
+              <IButtonPrime
+                icon={<LogOut className="h-4 w-4" />}
+                variant="red"
+                title="Sair"
+                onClick={onClose}
+              />
             </div>
           </form>
         </Form>

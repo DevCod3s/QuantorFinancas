@@ -45,20 +45,20 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       if (!brDate) return '';
       const cleaned = brDate.replace(/\D/g, '');
       if (cleaned.length !== 8) return '';
-      
+
       const day = cleaned.substring(0, 2);
       const month = cleaned.substring(2, 4);
       const year = cleaned.substring(4, 8);
-      
+
       // Validação básica
       const dayNum = parseInt(day);
       const monthNum = parseInt(month);
       const yearNum = parseInt(year);
-      
+
       if (dayNum < 1 || dayNum > 31) return '';
       if (monthNum < 1 || monthNum > 12) return '';
       if (yearNum < 1900 || yearNum > 2100) return '';
-      
+
       return `${year}-${month}-${day}`;
     };
 
@@ -81,10 +81,10 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const formatDateInput = (input: string): string => {
       // Remove tudo que não é número
       const numbers = input.replace(/\D/g, '');
-      
+
       // Limita a 8 dígitos
       const limited = numbers.substring(0, 8);
-      
+
       // Adiciona as barras automaticamente
       let formatted = limited;
       if (limited.length >= 3) {
@@ -93,7 +93,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
       if (limited.length >= 5) {
         formatted = `${limited.substring(0, 2)}/${limited.substring(2, 4)}/${limited.substring(4)}`;
       }
-      
+
       return formatted;
     };
 
@@ -109,11 +109,11 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const inputValue = e.target.value;
       const formatted = formatDateInput(inputValue);
-      
+
       console.log('Input:', inputValue, 'Formatted:', formatted);
-      
+
       setLocalValue(formatted);
-      
+
       // Tenta converter para ISO se tiver 8 dígitos
       const numbers = formatted.replace(/\D/g, '');
       if (numbers.length === 8) {
@@ -128,7 +128,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
 
     const handleBlur = () => {
       setIsFocused(false);
-      
+
       // Validação ao sair do campo
       if (localValue) {
         const isoDate = brazilianToISO(localValue);
@@ -163,14 +163,15 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
     return (
       <div className={className} style={{ position: 'relative', paddingTop: '16px' }}>
         {label && (
-          <label 
+          <label
             className="block text-xs absolute top-0 left-0 transition-all"
-            style={{ 
-              color: '#666',
+            style={{
+              color: '#1D3557',
               fontSize: '12px',
               lineHeight: '1',
               transform: 'translate(0, 0) scale(0.75)',
-              transformOrigin: 'top left'
+              transformOrigin: 'top left',
+              fontWeight: 500
             }}
           >
             {label}
@@ -187,8 +188,8 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             placeholder={placeholder}
             disabled={disabled}
             maxLength={10}
-            className="w-full border-0 border-b border-gray-300 focus:outline-none focus:border-blue-500 bg-transparent"
-            style={{ 
+            className="w-full border-0 border-b border-gray-300 focus:outline-none focus:border-[#B59363] bg-transparent text-[#1D3557] font-medium"
+            style={{
               fontSize: '16px',
               padding: '4px 0 5px',
               paddingRight: '32px',
@@ -211,8 +212,8 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
                 <CalendarIcon className="h-4 w-4 text-gray-500" />
               </button>
             </PopoverTrigger>
-            <PopoverContent 
-              className="w-auto p-0" 
+            <PopoverContent
+              className="w-auto p-0"
               align="start"
               sideOffset={5}
               style={{ zIndex: 9999 }}

@@ -126,12 +126,16 @@ export interface IStorage {
     totalExpenses: number;
     balance: number;
     budgetUsage: number;
-    recentTransactions: Array<{
-      id: number;
-      description: string;
-      amount: string;
-      type: string;
-      date: string;
+    recentTransactions: Array<any>;
+    expensesByCategory: Array<{
+      category: string;
+      amount: number;
+      color: string;
+    }>;
+    monthlyTrends: Array<{
+      month: string;
+      income: number;
+      expenses: number;
     }>;
   }>;
 }
@@ -538,44 +542,109 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getDashboardStats(userId: string) {
-    // Obter transações do mês atual
-    const currentMonth = new Date();
-    const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-    const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    const userIdNum = parseInt(userId);
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-    // Calcular totais
-    const transactions = await db
-      .select()
+    // 1. Fetch current month transactions for totals and categories
+    const currentMonthTransactions = await db
+      .select({
+        id: schema.transactions.id,
+        amount: schema.transactions.amount,
+        type: schema.transactions.type,
+        date: schema.transactions.date,
+        description: schema.transactions.description,
+        categoryName: schema.categories.name,
+        categoryColor: schema.categories.color,
+      })
       .from(schema.transactions)
+      .leftJoin(schema.categories, eq(schema.transactions.categoryId, schema.categories.id))
       .where(
         and(
-          eq(schema.transactions.userId, parseInt(userId)),
+          eq(schema.transactions.userId, userIdNum),
           sql`${schema.transactions.date} >= ${startOfMonth}`,
           sql`${schema.transactions.date} <= ${endOfMonth}`
         )
       );
 
-    const totalIncome = transactions
+    const totalIncome = currentMonthTransactions
       .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      .reduce((sum, t) => sum + parseFloat(t.amount || "0"), 0);
 
-    const totalExpenses = transactions
+    const totalExpenses = currentMonthTransactions
       .filter(t => t.type === 'expense')
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+      .reduce((sum, t) => sum + parseFloat(t.amount || "0"), 0);
 
     const balance = totalIncome - totalExpenses;
 
-    // Obter transações recentes
-    const recentTransactions = await db
+    // 2. Expenses by Category (Current Month)
+    const categoryMap = new Map();
+    currentMonthTransactions
+      .filter(t => t.type === 'expense')
+      .forEach(t => {
+        const name = t.categoryName || 'Outros';
+        const color = t.categoryColor || '#4D4E48';
+        if (!categoryMap.has(name)) {
+          categoryMap.set(name, { category: name, amount: 0, color });
+        }
+        categoryMap.get(name).amount += parseFloat(t.amount || "0");
+      });
+    const expensesByCategory = Array.from(categoryMap.values())
+      .map(item => ({
+        category: item.category,
+        amount: item.amount,
+        color: item.color
+      }));
+
+    // 3. Monthly Trends (Last 6 Months)
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
+    const trendDataRaw = await db
       .select({
-        id: schema.transactions.id,
-        description: schema.transactions.description,
         amount: schema.transactions.amount,
         type: schema.transactions.type,
         date: schema.transactions.date,
       })
       .from(schema.transactions)
-      .where(eq(schema.transactions.userId, parseInt(userId)))
+      .where(
+        and(
+          eq(schema.transactions.userId, userIdNum),
+          sql`${schema.transactions.date} >= ${sixMonthsAgo}`
+        )
+      );
+
+    const monthNames = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const trendsMap = new Map();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${monthNames[d.getMonth()]}/${d.getFullYear().toString().slice(-2)}`;
+      trendsMap.set(key, { month: key, income: 0, expenses: 0 });
+    }
+
+    trendDataRaw.forEach(t => {
+      const d = new Date(t.date);
+      const key = `${monthNames[d.getMonth()]}/${d.getFullYear().toString().slice(-2)}`;
+      if (trendsMap.has(key)) {
+        const trend = trendsMap.get(key);
+        const amount = parseFloat(t.amount || "0");
+        if (t.type === 'income') trend.income += amount;
+        else trend.expenses += amount;
+      }
+    });
+
+    // 4. Recent Transactions
+    const lastTransactions = await db
+      .select({
+        id: schema.transactions.id,
+        amount: schema.transactions.amount,
+        type: schema.transactions.type,
+        date: schema.transactions.date,
+        description: schema.transactions.description,
+        categoryName: schema.categories.name,
+      })
+      .from(schema.transactions)
+      .leftJoin(schema.categories, eq(schema.transactions.categoryId, schema.categories.id))
+      .where(eq(schema.transactions.userId, userIdNum))
       .orderBy(desc(schema.transactions.date))
       .limit(5);
 
@@ -583,14 +652,20 @@ export class DatabaseStorage implements IStorage {
       totalIncome,
       totalExpenses,
       balance,
-      budgetUsage: 75, // Placeholder for now
-      recentTransactions: recentTransactions.map(t => ({
+      budgetUsage: 0,
+      recentTransactions: lastTransactions.map(t => ({
         id: t.id,
         description: t.description,
         amount: t.amount,
-        type: t.type,
-        date: "2024-12-01",
+        type: t.type === 'income' ? 'receita' : 'despesa',
+        date: t.date.toISOString(),
+        category: {
+          name: t.categoryName || 'Sem Categoria',
+          icon: 'fa-circle'
+        }
       })),
+      expensesByCategory,
+      monthlyTrends: Array.from(trendsMap.values()),
     };
   }
 }

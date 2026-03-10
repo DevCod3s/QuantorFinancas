@@ -45,7 +45,7 @@ interface SubTabsProps {
 
 export function SubTabs({ tabs, defaultValue, className = "", onValueChange }: SubTabsProps) {
   const [activeSubTab, setActiveSubTab] = useState(defaultValue);
-  
+
   // Função para atualizar a aba ativa e notificar o componente pai
   const handleValueChange = (value: string) => {
     setActiveSubTab(value);
@@ -59,26 +59,26 @@ export function SubTabs({ tabs, defaultValue, className = "", onValueChange }: S
   useEffect(() => {
     const updateSubProgressBar = () => {
       if (!subTabListRef.current) return;
-      
+
       const activeTabElement = subTabListRef.current.querySelector(`[data-state="active"]`) as HTMLElement;
       if (activeTabElement) {
         const tabListRect = subTabListRef.current.getBoundingClientRect();
         const activeTabRect = activeTabElement.getBoundingClientRect();
-        
+
         const leftOffset = activeTabRect.left - tabListRect.left;
         const width = activeTabRect.width;
-        
+
         // Aplica a posição através de CSS custom properties
         const progressBar = subTabListRef.current.querySelector('.sub-progress-bar') as HTMLElement;
         if (progressBar) {
           // Define a posição e largura final
           progressBar.style.setProperty('--sub-progress-left', `${leftOffset}px`);
           progressBar.style.setProperty('--sub-progress-width', `${width}px`);
-          
+
           // Remove animação anterior e força reset
           progressBar.style.animation = 'none';
           progressBar.offsetHeight; // Força repaint
-          
+
           // Aplica nova animação
           progressBar.style.animation = 'subProgressFill 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards';
         }
@@ -102,18 +102,18 @@ export function SubTabs({ tabs, defaultValue, className = "", onValueChange }: S
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-4 py-2 transition-all relative overflow-hidden text-sm"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-4 py-2 transition-all relative overflow-hidden text-sm"
             >
-              {tab.icon && <span className="mr-2">{tab.icon}</span>}
+              {tab.icon && <span className="mr-2 text-[#4D4E48]">{tab.icon}</span>}
               {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
-        
+
         {/* Barra de progressão inteligente para sub-abas */}
         <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
-          <div 
-            className="sub-progress-bar absolute bottom-0 h-full bg-blue-500 rounded-full"
+          <div
+            className="sub-progress-bar absolute bottom-0 h-full bg-[#B59363] rounded-full"
             style={{
               left: 'var(--sub-progress-left, 0px)',
               width: '0px',

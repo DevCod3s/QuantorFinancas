@@ -68,7 +68,7 @@ export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
-  color: text("color").notNull().default("#0ea5e9"), // Azul padrão
+  color: text("color").notNull().default("#4D4E48"), // Cinza da Marca (era #0ea5e9)
   type: text("type").notNull(), // 'income' | 'expense'
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

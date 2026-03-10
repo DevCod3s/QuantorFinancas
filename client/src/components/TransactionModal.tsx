@@ -18,7 +18,7 @@ import {
   MenuItem,
   IconButton
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, Save } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
 import { IButtonPrime } from './ui/i-ButtonPrime';
 
@@ -83,7 +83,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       observacoes,
       tags
     };
-    
+
     onSave(transaction);
     onClose();
   };
@@ -94,7 +94,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      sx={{ 
+      sx={{
         zIndex: 1300,
         '& .MuiBackdrop-root': {
           backgroundColor: 'rgba(0, 0, 0, 0.5)'
@@ -111,11 +111,14 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
     >
       {/* Cabeçalho */}
       <div className="flex items-center justify-between p-4 border-b">
-        <FormControl variant="standard" sx={{ minWidth: 150 }}>
+        <FormControl variant="standard" sx={{
+          minWidth: 150,
+          '& .MuiSelect-select': { color: '#1D3557', fontWeight: 'bold' }
+        }}>
           <Select
             value={tipo}
             onChange={(e) => setTipo(e.target.value)}
-            sx={{ 
+            sx={{
               fontSize: '16px',
               fontWeight: 500,
               '&:before': { borderBottom: 'none' },
@@ -142,10 +145,6 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             <MenuItem value="Nova despesa">Nova despesa</MenuItem>
           </Select>
         </FormControl>
-        
-        <IconButton onClick={onClose} size="small">
-          <X className="h-5 w-5 text-gray-400" />
-        </IconButton>
       </div>
 
       {/* Conteúdo do modal */}
@@ -163,20 +162,23 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
             />
           </div>
-          
+
           <DateInput
             label="Data"
             value={data}
             onChange={setData}
             required
           />
-          
+
           <div className="flex items-end gap-2">
             <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
+              <InputLabel sx={{ color: '#1D3557' }} shrink={!!repeticao || undefined}>Repetição</InputLabel>
               <Select
                 value={repeticao}
                 onChange={(e) => setRepeticao(e.target.value)}
+                sx={{
+                  '&:after': { borderBottomColor: '#B59363' }
+                }}
                 MenuProps={{
                   PaperProps: {
                     sx: {
@@ -209,12 +211,15 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           <div className="grid grid-cols-3 gap-4">
             <div>
               <FormControl variant="standard" fullWidth>
-                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
+                <InputLabel sx={{ color: '#1D3557' }} shrink={!!periodicidade || undefined}>
                   Periodicidade *
                 </InputLabel>
                 <Select
                   value={periodicidade}
                   onChange={(e) => setPeriodicidade(e.target.value)}
+                  sx={{
+                    '&:after': { borderBottomColor: '#B59363' }
+                  }}
                   MenuProps={{
                     PaperProps: {
                       sx: {
@@ -240,7 +245,7 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 </Select>
               </FormControl>
             </div>
-            
+
             <div>
               <TextField
                 variant="standard"
@@ -251,14 +256,17 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
                 fullWidth
                 required
                 inputProps={{ min: 1, max: 99 }}
-                sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+                sx={{
+                  '& .MuiInputLabel-root': { color: '#1D3557' },
+                  '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+                }}
               />
             </div>
-            
+
             <div className="flex items-end">
               <button
                 type="button"
-                className="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors border border-blue-200 hover:border-blue-300"
+                className="px-4 py-2 text-sm text-[#B59363] hover:text-white hover:bg-[#B59363] rounded transition-colors border border-[#B59363] hover:border-[#B59363]"
               >
                 Personalizar ⚙
               </button>
@@ -274,9 +282,12 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             fullWidth
-            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            sx={{
+              '& .MuiInputLabel-root': { color: '#1D3557' },
+              '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+            }}
           />
-          
+
           <TextField
             variant="standard"
             label="Conta"
@@ -284,7 +295,10 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             onChange={(e) => setConta(e.target.value)}
             fullWidth
             required
-            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            sx={{
+              '& .MuiInputLabel-root': { color: '#1D3557' },
+              '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+            }}
           />
         </div>
 
@@ -297,16 +311,22 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             onChange={(e) => setCategoria(e.target.value)}
             fullWidth
             required
-            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            sx={{
+              '& .MuiInputLabel-root': { color: '#1D3557' },
+              '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+            }}
           />
-          
+
           <TextField
             variant="standard"
             label="Contato"
             value={contato}
             onChange={(e) => setContato(e.target.value)}
             fullWidth
-            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            sx={{
+              '& .MuiInputLabel-root': { color: '#1D3557' },
+              '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+            }}
           />
         </div>
 
@@ -318,7 +338,10 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
             value={numeroDocumento}
             onChange={(e) => setNumeroDocumento(e.target.value)}
             fullWidth
-            sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+            sx={{
+              '& .MuiInputLabel-root': { color: '#1D3557' },
+              '& .MuiInput-underline:after': { borderBottomColor: '#B59363' }
+            }}
           />
           <div className="absolute right-0 bottom-0 text-xs text-gray-400">
             {numeroDocumento.length} / 60
@@ -356,10 +379,10 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
       {/* Botões inferiores */}
       <div className="flex items-center justify-between p-4 border-t bg-gray-50">
         <div className="flex items-center gap-2">
-          <IconButton 
-            size="small" 
-            sx={{ 
-              backgroundColor: '#22c55e', 
+          <IconButton
+            size="small"
+            sx={{
+              backgroundColor: '#22c55e',
               color: 'white',
               '&:hover': { backgroundColor: '#16a34a' },
               width: 32,
@@ -368,11 +391,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           >
             <Check className="h-4 w-4" />
           </IconButton>
-          
-          <IconButton 
+
+          <IconButton
             size="small"
-            sx={{ 
-              backgroundColor: '#64748b', 
+            sx={{
+              backgroundColor: '#64748b',
               color: 'white',
               '&:hover': { backgroundColor: '#475569' },
               width: 32,
@@ -381,11 +404,11 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
           >
             <CheckCheck className="h-4 w-4" />
           </IconButton>
-          
-          <IconButton 
+
+          <IconButton
             size="small"
-            sx={{ 
-              backgroundColor: '#64748b', 
+            sx={{
+              backgroundColor: '#64748b',
               color: 'white',
               '&:hover': { backgroundColor: '#475569' },
               width: 32,
@@ -399,24 +422,18 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
         <div className="flex items-center gap-3">
           <IButtonPrime
             icon={<Save className="h-4 w-4" />}
-            variant="blue"
+            variant="gold"
             title="Salvar"
             onClick={handleSave}
             disabled={!valor || !conta || !categoria}
           />
-          
-          <IconButton 
-            size="small"
-            sx={{ 
-              backgroundColor: '#64748b', 
-              color: 'white',
-              '&:hover': { backgroundColor: '#475569' },
-              width: 32,
-              height: 32
-            }}
-          >
-            <Plus className="h-4 w-4" />
-          </IconButton>
+
+          <IButtonPrime
+            icon={<LogOut className="h-4 w-4" />}
+            variant="red"
+            title="Sair"
+            onClick={onClose}
+          />
         </div>
       </div>
     </Dialog>

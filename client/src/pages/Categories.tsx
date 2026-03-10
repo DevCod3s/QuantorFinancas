@@ -342,7 +342,7 @@ export function Categories() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Negócios</h1>
+          <h1 className="text-3xl font-bold text-[#1D3557]">Negócios</h1>
           <p className="mt-1 text-sm text-gray-600">
             Gerencie e organize todas as áreas do seu negócio de forma eficiente
           </p>
@@ -362,10 +362,10 @@ export function Categories() {
                 }
               }
             }}
-            className="group relative w-11 h-11 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
+            className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
             title="Novo Item de Negócio"
             style={{
-              boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+              boxShadow: '0 6px 20px -6px rgba(77, 78, 72, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
             }}
           >
             {/* Efeito de brilho interno */}
@@ -393,14 +393,14 @@ export function Categories() {
           <TabsList className="grid w-full grid-cols-2 lg:w-fit lg:grid-cols-2 bg-gray-100 p-1 rounded-lg relative">
             <TabsTrigger
               value="unidade-negocios"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Building2 className="h-4 w-4 mr-2" />
               Unidade de Negócios
             </TabsTrigger>
             <TabsTrigger
               value="produtos-servicos"
-              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-medium px-6 py-2 transition-all relative overflow-hidden"
+              className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Package className="h-4 w-4 mr-2" />
               Produtos & Serviços
@@ -410,7 +410,7 @@ export function Categories() {
           {/* Barra de progressão inteligente e animada */}
           <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
             <div
-              className="progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
+              className="progress-bar absolute bottom-0 h-full bg-[#B59363] rounded-full"
               style={{
                 left: 'var(--progress-left, 0px)',
                 width: '0px',
@@ -426,14 +426,14 @@ export function Categories() {
               <TabsList className="grid w-full grid-cols-2 lg:w-fit lg:grid-cols-2 bg-gray-100 p-1 rounded-lg relative">
                 <TabsTrigger
                   value="categoria"
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 border-none font-medium px-6 py-2 transition-all relative overflow-hidden"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] border-none font-medium px-6 py-2 transition-all relative overflow-hidden"
                 >
-                  <Layers className="h-4 w-4 mr-2" />
+                  <Building2 className="h-4 w-4 mr-2" />
                   Categorias
                 </TabsTrigger>
                 <TabsTrigger
                   value="subcategoria"
-                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 border-none font-medium px-6 py-2 transition-all relative overflow-hidden"
+                  className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] border-none font-medium px-6 py-2 transition-all relative overflow-hidden"
                 >
                   <Tag className="h-4 w-4 mr-2" />
                   Subcategorias
@@ -443,7 +443,7 @@ export function Categories() {
               {/* Barra de progressão animada da SubAba */}
               <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
                 <div
-                  className="sub-progress-bar absolute bottom-0 h-full bg-blue-600 rounded-full"
+                  className="sub-progress-bar absolute bottom-0 h-full bg-[#B59363] rounded-full"
                   style={{
                     left: 'var(--progress-left, 0px)',
                     width: '0px',
@@ -484,7 +484,7 @@ export function Categories() {
                   }
                 ]}
                 actions={[
-                  { icon: Edit, color: "text-blue-600", title: "Editar", onClick: handleEditCategory },
+                  { icon: Edit, color: "text-[#B59363]", title: "Editar", onClick: handleEditCategory },
                   { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: handleDeleteCategory }
                 ]}
                 emptyMessage="Você ainda não cadastrou nenhuma Categoria de Negócio. Clique no botão de adição acima para começar."
@@ -518,7 +518,7 @@ export function Categories() {
                   }
                 ]}
                 actions={[
-                  { icon: Edit, color: "text-blue-600", title: "Editar", onClick: handleEditSubcategory },
+                  { icon: Edit, color: "text-[#B59363]", title: "Editar", onClick: handleEditSubcategory },
                   { icon: Trash2, color: "text-red-600", title: "Excluir", onClick: handleDeleteSubcategory }
                 ]}
                 emptyMessage="Você ainda não cadastrou nenhuma Subcategoria. Lembre-se, elas precisam ser associadas a uma Categoria pai."
@@ -531,7 +531,7 @@ export function Categories() {
         <TabsContent value="produtos-servicos" className="space-y-6">
           <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
             <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Produtos & Serviços</h3>
+            <h3 className="text-lg font-medium text-[#1D3557] mb-2">Produtos & Serviços</h3>
             <p className="text-sm text-gray-500 max-w-md mx-auto">
               Esta seção será desenvolvida em breve. Aqui você poderá cadastrar e gerenciar todos os seus produtos e serviços.
             </p>
@@ -544,7 +544,7 @@ export function Categories() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         title={editingCategoryId ? "Editar Categoria" : "Nova Categoria"}
-        icon={<Layers className="w-5 h-5 text-blue-600" />}
+        icon={<Building2 className="w-5 h-5 text-[#B59363]" />}
         data={editingCategoryId ? { ...categoryData, id: `#${editingCategoryId}` } : { ...categoryData, id: 'Gerado Auto' }}
         fields={[
           [
@@ -597,7 +597,7 @@ export function Categories() {
           setSubcategoryData({} as any);
         }}
         title={editingSubcategoryId ? "Editar Subcategoria" : "Nova Subcategoria"}
-        icon={<Tag className="w-5 h-5 text-blue-600" />}
+        icon={<Tag className="w-5 h-5 text-[#B59363]" />}
         data={editingSubcategoryId ? { ...subcategoryData, id: `#${editingSubcategoryId}` } : { ...subcategoryData, id: 'Gerado Auto' }}
         fields={[
           [
