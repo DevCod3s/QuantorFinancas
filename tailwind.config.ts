@@ -61,6 +61,12 @@ export default {
           border: "var(--sidebar-border)",
           ring: "var(--sidebar-ring)",
         },
+        brand: {
+          dark: "#4D4E48",
+          gold: "#B59363",
+          navy: "#1D3557",
+          silver: "#E6E7E8",
+        },
       },
       keyframes: {
         "accordion-down": {

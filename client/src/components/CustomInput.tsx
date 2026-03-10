@@ -15,11 +15,11 @@ interface CustomInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(({ 
-  label, 
-  error, 
-  className = "", 
-  ...props 
+const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(({
+  label,
+  error,
+  className = "",
+  ...props
 }, ref) => {
   return (
     <div className="relative">
@@ -28,20 +28,20 @@ const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(({
         {...props}
         className={`
           w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
+          border-0 focus:outline-none focus:border-2 
           peer placeholder-transparent
-          ${error ? 'focus:border-red-500' : 'focus:border-blue-500'}
+          ${error ? 'focus:border-red-500' : 'focus:border-[#B59363]'}
           ${className}
         `}
         placeholder=" "
       />
-      <label 
+      <label
         htmlFor={props.id}
         className={`
           absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all
-          peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base
-          peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-600
-          ${error ? 'text-red-500' : 'text-blue-600'}
+          peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:top-2.5
+          peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#B59363]
+          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400'}
         `}
       >
         {label}
@@ -63,12 +63,12 @@ interface CustomSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement
   children: React.ReactNode;
 }
 
-export function CustomSelect({ 
-  label, 
-  error, 
+export function CustomSelect({
+  label,
+  error,
   children,
-  className = "", 
-  ...props 
+  className = "",
+  ...props
 }: CustomSelectProps) {
   return (
     <div className="relative">
@@ -76,19 +76,20 @@ export function CustomSelect({
         {...props}
         className={`
           w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
+          border-0 focus:outline-none focus:border-2 
           peer bg-white
-          ${error ? 'focus:border-red-500' : 'focus:border-blue-500'}
+          ${error ? 'focus:border-red-500' : 'focus:border-[#B59363]'}
           ${className}
         `}
       >
         {children}
       </select>
-      <label 
+      <label
         htmlFor={props.id}
         className={`
           absolute left-3 -top-2.5 bg-white px-1 text-sm
-          ${error ? 'text-red-500' : 'text-blue-600'}
+          peer-focus:text-[#B59363]
+          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400'}
         `}
       >
         {label}
@@ -105,11 +106,11 @@ interface CustomTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaE
   error?: string;
 }
 
-export function CustomTextarea({ 
-  label, 
-  error, 
-  className = "", 
-  ...props 
+export function CustomTextarea({
+  label,
+  error,
+  className = "",
+  ...props
 }: CustomTextareaProps) {
   return (
     <div className="relative">
@@ -117,20 +118,20 @@ export function CustomTextarea({
         {...props}
         className={`
           w-full px-3 py-2 rounded-md shadow-md
-          border-0 focus:outline-none focus:border-2 focus:border-blue-500 
+          border-0 focus:outline-none focus:border-2 
           peer placeholder-transparent resize-vertical
-          ${error ? 'focus:border-red-500' : 'focus:border-blue-500'}
+          ${error ? 'focus:border-red-500' : 'focus:border-[#B59363]'}
           ${className}
         `}
         placeholder=" "
       />
-      <label 
+      <label
         htmlFor={props.id}
         className={`
           absolute left-3 -top-2.5 bg-white px-1 text-sm transition-all
-          peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base
-          peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-blue-600
-          ${error ? 'text-red-500' : 'text-blue-600'}
+          peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-placeholder-shown:top-2.5
+          peer-focus:-top-2.5 peer-focus:text-sm peer-focus:text-[#B59363]
+          ${error ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400'}
         `}
       >
         {label}

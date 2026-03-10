@@ -20,7 +20,7 @@ import CustomInput from "@/components/CustomInput";
 import { ArrowRight, User, UserPlus, Info, Facebook, Instagram, Twitter, Linkedin } from "lucide-react";
 import quantorLogo from "@assets/Simbolo_New_1752793618491.png";
 
-import SLogo from "@assets/SLogo_1753038928995.png";
+import logoOfficial from "@/assets/images/logo.svg";
 
 // Tipos para controle das seções ativas
 type ActiveSection = 'login' | 'signup' | 'about';
@@ -51,7 +51,7 @@ export function Login() {
     if (activeSection === 'login') {
       setIsLoading(true);
       setError('');
-      
+
       try {
         const response = await fetch('/api/auth/login', {
           method: 'POST',
@@ -127,10 +127,10 @@ export function Login() {
         return (
           <div className="w-full max-w-sm">
             <div className="mb-6">
-              <h3 className="text-blue-600 font-semibold mb-2">Entrar</h3>
-              <p className="text-gray-500 text-sm">na sua conta para acessar o sistema e explorar as ferramentas.</p>
+              <h3 className="font-semibold mb-2" style={{ color: '#B59363' }}>Entrar</h3>
+              <p className="text-sm" style={{ color: '#4D4E48' }}>na sua conta para acessar o sistema e explorar as ferramentas.</p>
             </div>
-            
+
             <div className="space-y-4">
               <CustomInput
                 ref={usernameLoginRef}
@@ -146,7 +146,7 @@ export function Login() {
                   }
                 }}
               />
-              
+
               <CustomInput
                 ref={passwordLoginRef}
                 type="password"
@@ -161,23 +161,24 @@ export function Login() {
                   }
                 }}
               />
-              
+
               {error && (
                 <div className="text-red-500 text-sm text-center">
                   {error}
                 </div>
               )}
-              
+
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
                   disabled={isLoading}
-                  className="w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                  className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105 disabled:opacity-50"
+                  style={{ backgroundColor: '#B59363' }}
                 >
-                  <svg 
-                    className="w-5 h-5 text-white" 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                     strokeWidth={2}
                   >
@@ -186,27 +187,28 @@ export function Login() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="mt-6 text-center">
-              <span className="text-gray-500 text-sm">Não tem uma conta? </span>
-              <button 
+              <span className="text-sm" style={{ color: '#4D4E48' }}>Não tem uma conta? </span>
+              <button
                 onClick={() => setActiveSection('signup')}
-                className="text-blue-600 text-sm font-medium hover:underline"
+                className="text-sm font-medium hover:underline"
+                style={{ color: '#B59363' }}
               >
                 Cadastrar-se
               </button>
             </div>
           </div>
         );
-        
+
       case 'signup':
         return (
           <div className="w-full max-w-sm">
             <div className="mb-6">
-              <h3 className="text-blue-600 font-semibold mb-2">Cadastrar</h3>
-              <p className="text-gray-500 text-sm">Crie sua conta para começar a usar a gestão financeira.</p>
+              <h3 className="font-semibold mb-2" style={{ color: '#B59363' }}>Cadastrar</h3>
+              <p className="text-sm" style={{ color: '#4D4E48' }}>Crie sua conta para começar a usar a gestão financeira.</p>
             </div>
-            
+
             <div className="space-y-4">
               <CustomInput
                 ref={usernameSignupRef}
@@ -222,7 +224,7 @@ export function Login() {
                   }
                 }}
               />
-              
+
               <CustomInput
                 ref={emailSignupRef}
                 type="email"
@@ -237,7 +239,7 @@ export function Login() {
                   }
                 }}
               />
-              
+
               <CustomInput
                 ref={passwordSignupRef}
                 type="password"
@@ -252,7 +254,7 @@ export function Login() {
                   }
                 }}
               />
-              
+
               <CustomInput
                 ref={confirmPasswordRef}
                 type="password"
@@ -267,16 +269,17 @@ export function Login() {
                   }
                 }}
               />
-              
+
               <div className="flex justify-center mt-6">
                 <Button
                   onClick={handleLogin}
-                  className="gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-primary-foreground px-4 py-2 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-700 flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105 pt-[4px] pb-[4px] mt-[6px] mb-[6px]"
+                  className="gap-2 whitespace-nowrap text-sm font-medium ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 text-primary-foreground px-4 py-2 w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-all duration-200 hover:scale-105 pt-[4px] pb-[4px] mt-[6px] mb-[6px]"
+                  style={{ backgroundColor: '#B59363' }}
                 >
-                  <svg 
-                    className="w-5 h-5 text-white" 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                     strokeWidth={2}
                   >
@@ -285,48 +288,50 @@ export function Login() {
                 </Button>
               </div>
             </div>
-            
+
             <div className="mt-6 text-center">
-              <span className="text-gray-500 text-sm">Já tem uma conta? </span>
-              <button 
+              <span className="text-sm" style={{ color: '#4D4E48' }}>Já tem uma conta? </span>
+              <button
                 onClick={() => setActiveSection('login')}
-                className="text-blue-600 text-sm font-medium hover:underline"
+                className="text-sm font-medium hover:underline"
+                style={{ color: '#B59363' }}
               >
                 Entrar
               </button>
             </div>
           </div>
         );
-        
+
       case 'about':
         return (
           <div className="w-full max-w-sm">
             <div className="mb-6">
-              <h3 className="text-blue-600 font-semibold mb-2">Sobre</h3>
-              <p className="text-gray-500 text-sm">Saiba mais sobre nosso sistema de gestão financeira.</p>
+              <h3 className="font-semibold mb-2" style={{ color: '#B59363' }}>Sobre</h3>
+              <p className="text-sm" style={{ color: '#4D4E48' }}>Saiba mais sobre nosso sistema de gestão financeira.</p>
             </div>
-            
-            <div className="space-y-4 text-sm text-gray-600">
+
+            <div className="space-y-4 text-sm" style={{ color: '#4D4E48' }}>
               <p>
-                O Quantor é um sistema inteligente de gestão financeira projetado para 
+                O Quantor é um sistema inteligente de gestão financeira projetado para
                 simplificar o controle das suas finanças pessoais e empresariais.
               </p>
-              
+
               <p>
-                Com recursos avançados de categorização, relatórios detalhados e 
+                Com recursos avançados de categorização, relatórios detalhados e
                 assistente IA, você terá total controle sobre receitas, despesas e orçamentos.
               </p>
-              
+
               <p>
-                Nossa plataforma oferece insights valiosos para tomada de decisões 
+                Nossa plataforma oferece insights valiosos para tomada de decisões
                 financeiras mais inteligentes e eficazes.
               </p>
             </div>
-            
+
             <div className="mt-6 text-center">
-              <button 
+              <button
                 onClick={() => setActiveSection('login')}
-                className="text-blue-600 text-sm font-medium hover:underline"
+                className="text-sm font-medium hover:underline"
+                style={{ color: '#B59363' }}
               >
                 Começar agora
               </button>
@@ -339,89 +344,96 @@ export function Login() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
       <div className="flex items-center relative">
-        
+
         {/* Card esquerdo com barra progressiva */}
         <div className="w-32 h-[480px] bg-gray-50 rounded-l-3xl shadow-lg flex flex-col items-center py-8 relative">
-          
+
           {/* Logo */}
-          <div className="flex flex-col items-center mb-10">
-            <img src={SLogo} alt="Quantor" className="w-10 h-10 mt-[-5px] mb-[-5px]" />
-            <span className="text-gray-700 text-xs tracking-wide mt-[8px] mb-[8px] font-extrabold pt-[8px] pb-[8px]">
-              QUANTOR
-            </span>
+          <div className="flex flex-col items-center mb-12">
+            <img src={logoOfficial} alt="Quantor" className="w-24 h-auto" />
           </div>
-          
+
           {/* Barra progressiva na borda absoluta esquerda do card alinhada com ícones */}
           {activeSection === 'login' && (
             <div className="absolute left-0 top-[165px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-              <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
+              <div className="w-full h-full animate-[slideUp_0.8s_ease-out] origin-bottom" style={{ backgroundColor: '#B59363' }}></div>
             </div>
           )}
           {activeSection === 'signup' && (
             <div className="absolute left-0 top-[237px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-              <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
+              <div className="w-full h-full animate-[slideUp_0.8s_ease-out] origin-bottom" style={{ backgroundColor: '#B59363' }}></div>
             </div>
           )}
           {activeSection === 'about' && (
             <div className="absolute left-0 top-[309px] w-1 h-6 bg-gray-300 rounded-r overflow-hidden">
-              <div className="w-full bg-blue-600 h-full animate-[slideUp_0.8s_ease-out] origin-bottom"></div>
+              <div className="w-full h-full animate-[slideUp_0.8s_ease-out] origin-bottom" style={{ backgroundColor: '#B59363' }}></div>
             </div>
           )}
 
           {/* Container dos ícones */}
           <div className="flex flex-col space-y-8 relative">
-            
+
             <button
               onClick={() => setActiveSection('login')}
-              className={`p-3 rounded-lg transition-colors ${
-                activeSection === 'login' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
-              }`}
+              className="p-3 rounded-lg transition-colors"
+              style={{ color: activeSection === 'login' ? '#B59363' : '#d1d5db' }}
             >
               <User className="w-6 h-6" />
             </button>
-            
+
             <button
               onClick={() => setActiveSection('signup')}
-              className={`p-3 rounded-lg transition-colors pt-[10px] pb-[10px] mt-[23px] mb-[23px] ${
-                activeSection === 'signup' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
-              }`}
+              className="p-3 rounded-lg transition-colors pt-[10px] pb-[10px] mt-[23px] mb-[23px]"
+              style={{ color: activeSection === 'signup' ? '#B59363' : '#d1d5db' }}
             >
               <UserPlus className="w-6 h-6" />
             </button>
-            
+
             <button
               onClick={() => setActiveSection('about')}
-              className={`p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] mt-[22px] mb-[22px] ${
-                activeSection === 'about' ? 'text-blue-600' : 'text-gray-300 hover:text-gray-400'
-              }`}
+              className="p-3 rounded-lg transition-colors pt-[12px] pb-[12px] pl-[10px] pr-[10px] mt-[22px] mb-[22px]"
+              style={{ color: activeSection === 'about' ? '#B59363' : '#d1d5db' }}
             >
               <Info className="w-6 h-6" />
             </button>
           </div>
         </div>
-        
-        {/* Card central azul - SUSPENSO com sombreamento */}
-        <div className="w-[500px] h-[520px] bg-gradient-to-br from-blue-600 to-blue-700 flex flex-col justify-center items-center text-white shadow-2xl z-10 relative -mx-4">
-          <div className="text-center mb-16">
-            <h1 className="text-4xl font-light mb-4">Bem-vindo ao Quantor.</h1>
-            <p className="text-blue-200 text-lg mb-2">Sistema inteligente de</p>
-            <p className="text-blue-200 text-lg">gestão financeira</p>
+
+        {/* Card central com textura - SUSPENSO com sombreamento */}
+        <div
+          className="w-[500px] h-[520px] flex flex-col justify-center items-center text-white shadow-2xl z-10 relative -mx-4 overflow-hidden"
+          style={{
+            backgroundColor: '#1a1a1a',
+            backgroundImage: `
+              linear-gradient(45deg, #222 25%, transparent 25%), 
+              linear-gradient(-45deg, #222 25%, transparent 25%), 
+              linear-gradient(45deg, transparent 75%, #222 75%), 
+              linear-gradient(-45deg, transparent 75%, #222 75%)
+            `,
+            backgroundSize: '20px 20px',
+            backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+          }}
+        >
+          <div className="text-center mb-16 relative z-10">
+            <h1 className="text-4xl font-light mb-4" style={{ color: '#B59363' }}>Bem-vindo ao Quantor.</h1>
+            <p className="text-lg mb-1" style={{ color: '#E6E7E8' }}>Sistema inteligente de</p>
+            <p className="text-lg" style={{ color: '#E6E7E8' }}>gestão financeira</p>
           </div>
-          
+
           {/* Ícones sociais */}
-          <div className="flex space-x-6 absolute bottom-8">
-            <Facebook className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
-            <Instagram className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
-            <Twitter className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
-            <Linkedin className="w-5 h-5 text-blue-200 hover:text-white cursor-pointer transition-colors" />
+          <div className="flex space-x-6 absolute bottom-8 z-10">
+            <Facebook className="w-5 h-5 cursor-pointer transition-all duration-200 hover:scale-110" style={{ color: '#B59363' }} />
+            <Instagram className="w-5 h-5 cursor-pointer transition-all duration-200 hover:scale-110" style={{ color: '#B59363' }} />
+            <Twitter className="w-5 h-5 cursor-pointer transition-all duration-200 hover:scale-110" style={{ color: '#B59363' }} />
+            <Linkedin className="w-5 h-5 cursor-pointer transition-all duration-200 hover:scale-110" style={{ color: '#B59363' }} />
           </div>
         </div>
-        
+
         {/* Card direito */}
         <div className="w-96 h-[480px] bg-white rounded-r-3xl shadow-lg flex flex-col justify-center items-center p-12">
           {renderRightCard()}
         </div>
-        
+
         {/* CSS para animação de preenchimento */}
         <style>{`
           @keyframes slideUp {
@@ -433,7 +445,7 @@ export function Login() {
             }
           }
         `}</style>
-        
+
       </div>
     </div>
   );

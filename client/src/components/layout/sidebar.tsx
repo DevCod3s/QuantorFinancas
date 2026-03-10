@@ -19,14 +19,9 @@ export default function Sidebar({ activeTab, setActiveTab, sidebarOpen, setSideb
   return (
     <aside className={`sidebar bg-sidebar shadow-lg w-64 flex-shrink-0 sidebar-transition ${sidebarOpen ? 'active' : ''}`}>
       <div className="p-6 border-b border-sidebar-border">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center">
-            <i className="fas fa-chart-line text-white text-lg"></i>
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-sidebar-foreground">Quantor</h1>
-            <p className="text-sm text-muted-foreground">Gestão Inteligente</p>
-          </div>
+        <div className="flex items-center gap-3">
+          <i className="i-mdi-finance text-3xl text-sidebar-primary"></i>
+          <h1 className="text-xl font-bold text-sidebar-foreground">Quantor Finanças</h1>
         </div>
       </div>
       

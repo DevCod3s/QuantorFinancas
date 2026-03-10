@@ -17,11 +17,11 @@
 import { Link, useLocation } from "wouter";
 
 // Importações de ícones Lucide
-import { 
-  LayoutDashboard, 
-  Receipt, 
-  Building2, 
-  Users, 
+import {
+  LayoutDashboard,
+  Receipt,
+  Building2,
+  Users,
   MessageSquare,
   LogOut,
   Menu,
@@ -36,6 +36,9 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import logoFull from "@/assets/images/logo-full.svg";
+import logoIcon from "@/assets/images/logo-icon.svg";
+
 
 /**
  * Props do componente Layout
@@ -70,7 +73,7 @@ export function Layout({ children }: LayoutProps) {
   const mainMargin = sidebarCollapsed ? "lg:ml-16" : "lg:ml-64";
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F9FAFA]">
       {/* Mobile menu button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
@@ -88,11 +91,20 @@ export function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-40 ${sidebarWidth} bg-gradient-to-b from-blue-600 via-blue-700 to-blue-800 shadow-xl transform transition-all duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0
-      `}>
+      <div
+        className={`fixed inset-y-0 left-0 z-40 ${sidebarWidth} shadow-xl transform transition-all duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        style={{
+          backgroundColor: '#1D3557',
+          backgroundImage: `
+            linear-gradient(45deg, #152640 25%, transparent 25%), 
+            linear-gradient(-45deg, #152640 25%, transparent 25%), 
+            linear-gradient(45deg, transparent 75%, #152640 75%), 
+            linear-gradient(-45deg, transparent 75%, #152640 75%)
+          `,
+          backgroundSize: '20px 20px',
+          backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+        }}
+      >
         <div className="flex flex-col h-full relative">
           {/* Collapse button */}
           <div className="absolute -right-3 top-80 z-50">
@@ -111,18 +123,23 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Header com logo */}
-          <div className="p-6 border-b border-blue-500/30">
-            <div className="flex items-center space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-orange-500 rounded flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">Q</span>
-                </div>
+          <div className="p-4 border-b border-white/5">
+            <div className={`flex items-center transition-all duration-300 ${sidebarCollapsed ? 'justify-center overflow-hidden' : 'px-2'}`}>
+              <div className="flex-shrink-0 transition-all duration-500">
+                {sidebarCollapsed ? (
+                  <img
+                    src={logoIcon}
+                    alt="Quantor Icon"
+                    className="w-12 h-12 object-contain"
+                  />
+                ) : (
+                  <img
+                    src={logoFull}
+                    alt="Quantor Logo"
+                    className="h-16 w-auto object-contain max-w-[200px]"
+                  />
+                )}
               </div>
-              {!sidebarCollapsed && (
-                <div>
-                  <h1 className="text-xl font-bold text-white">Quantor</h1>
-                </div>
-              )}
             </div>
           </div>
 
@@ -131,22 +148,26 @@ export function Layout({ children }: LayoutProps) {
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.href;
-              
+
               return (
                 <Link key={item.name} href={item.href}>
                   <div
                     className={`
                       flex items-center px-3 py-3 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer group
-                      ${isActive 
-                        ? 'bg-blue-500/20 text-white border-r-2 border-white' 
-                        : 'text-blue-100 hover:bg-blue-500/10 hover:text-white'
+                      ${isActive
+                        ? 'bg-white/5 border-r-2 border-[#B59363]'
+                        : 'hover:bg-white/5'
                       }
                       ${sidebarCollapsed ? 'justify-center' : ''}
                     `}
+                    style={{ color: isActive ? '#B59363' : '#E6E7E8' }}
                     onClick={() => setSidebarOpen(false)}
                     title={sidebarCollapsed ? item.name : ''}
                   >
-                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    <Icon
+                      className="h-5 w-5 flex-shrink-0"
+                      style={{ color: isActive ? '#B59363' : '#E6E7E8' }}
+                    />
                     {!sidebarCollapsed && (
                       <span className="ml-3 truncate">{item.name}</span>
                     )}
@@ -161,7 +182,13 @@ export function Layout({ children }: LayoutProps) {
             <div className="p-3">
               <Button
                 onClick={handleLogout}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-md transition-colors duration-200"
+                className="w-full text-white py-3 rounded-md transition-all duration-200 border-none shadow-lg"
+                style={{
+                  backgroundColor: '#B59363',
+                  boxShadow: '0 4px 14px 0 rgba(181, 147, 99, 0.39)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c4a475'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#B59363'}
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sair
@@ -170,21 +197,21 @@ export function Layout({ children }: LayoutProps) {
           )}
 
           {/* User info */}
-          <div className="p-4 border-t border-blue-500/30">
+          <div className="p-4 border-t border-white/5">
             <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center border-2 border-blue-300">
-                <span className="text-white text-sm font-medium">
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white/5 flex items-center justify-center border-2 border-[#B59363]/30">
+                <span className="text-[#B59363] text-sm font-medium">
                   {(user as any)?.name?.charAt(0).toUpperCase() || (user as any)?.firstName?.charAt(0).toUpperCase() || 'U'}
                 </span>
               </div>
               {!sidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{(user as any)?.name || (user as any)?.firstName}</p>
-                  <p className="text-xs text-blue-200 truncate">Administrador</p>
+                  <p className="text-sm font-medium text-[#E6E7E8] truncate">{(user as any)?.name || (user as any)?.firstName}</p>
+                  <p className="text-xs text-[#E6E7E8]/60 truncate">Administrador</p>
                 </div>
               )}
               {!sidebarCollapsed && (
-                <ChevronRight className="h-4 w-4 text-blue-300" />
+                <ChevronRight className="h-4 w-4 text-[#E6E7E8]/40" />
               )}
             </div>
           </div>
@@ -195,7 +222,13 @@ export function Layout({ children }: LayoutProps) {
               <Button
                 onClick={handleLogout}
                 size="icon"
-                className="w-full bg-red-600 hover:bg-red-700 text-white aspect-square rounded-md"
+                className="w-full text-white aspect-square rounded-md transition-all duration-200 border-none shadow-lg"
+                style={{
+                  backgroundColor: '#B59363',
+                  boxShadow: '0 4px 14px 0 rgba(181, 147, 99, 0.39)'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#c4a475'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#B59363'}
                 title="Sair"
               >
                 <LogOut className="h-4 w-4" />
@@ -209,7 +242,7 @@ export function Layout({ children }: LayoutProps) {
       <div className={`${mainMargin} flex flex-col min-h-screen transition-all duration-300`}>
         {/* Mobile overlay */}
         {sidebarOpen && (
-          <div 
+          <div
             className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
             onClick={() => setSidebarOpen(false)}
           />
