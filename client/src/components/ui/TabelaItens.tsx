@@ -26,6 +26,9 @@ interface TabelaItensProps {
     emptyMessage?: string;
     emptyIcon?: any;
     initialPerPage?: number;
+    selectable?: boolean;
+    selectedItems?: any[];
+    onSelectionChange?: (selectedItems: any[]) => void;
 }
 
 export function TabelaItens({
@@ -34,7 +37,10 @@ export function TabelaItens({
     actions = [],
     emptyMessage = "Nenhum item encontrado.",
     emptyIcon: EmptyIcon,
-    initialPerPage = 5
+    initialPerPage = 5,
+    selectable = false,
+    selectedItems = [],
+    onSelectionChange = () => {}
 }: TabelaItensProps) {
     // Estados de paginação
     const [currentPage, setCurrentPage] = useState(1);
@@ -84,6 +90,26 @@ export function TabelaItens({
     const rangeStart = totalItems === 0 ? 0 : startIndex + 1;
     const rangeEnd = Math.min(endIndex, totalItems);
 
+    // Funções de seleção
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            onSelectionChange(paginatedData);
+        } else {
+            onSelectionChange([]);
+        }
+    };
+
+    const handleSelectItem = (item: any, checked: boolean) => {
+        if (checked) {
+            onSelectionChange([...selectedItems, item]);
+        } else {
+            onSelectionChange(selectedItems.filter(i => i.id !== item.id));
+        }
+    };
+
+    const isSelected = (item: any) => selectedItems.some(i => i.id === item.id);
+    const isAllSelected = paginatedData.length > 0 && paginatedData.every(item => isSelected(item));
+
     if (totalItems === 0) {
         return (
             <div className="text-center py-12 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg m-4">
@@ -101,6 +127,7 @@ export function TabelaItens({
                     <div className="overflow-x-auto">
                         <table className="w-full table-fixed">
                             <colgroup>
+                                {selectable && <col style={{ width: '50px' }} />}
                                 {columns.map((col, idx) => (
                                     <col key={idx} style={{ width: col.width || 'auto' }} />
                                 ))}
@@ -108,6 +135,16 @@ export function TabelaItens({
                             </colgroup>
                             <thead className="bg-gray-50">
                                 <tr>
+                                    {selectable && (
+                                        <th className="px-3 py-3 text-center">
+                                            <input
+                                                type="checkbox"
+                                                checked={isAllSelected}
+                                                onChange={(e) => handleSelectAll(e.target.checked)}
+                                                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                                            />
+                                        </th>
+                                    )}
                                     {columns.map((col, idx) => (
                                         <th
                                             key={idx}
@@ -138,6 +175,7 @@ export function TabelaItens({
                     <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
                         <table className="w-full table-fixed">
                             <colgroup>
+                                {selectable && <col style={{ width: '50px' }} />}
                                 {columns.map((col, idx) => (
                                     <col key={idx} style={{ width: col.width || 'auto' }} />
                                 ))}
@@ -146,6 +184,16 @@ export function TabelaItens({
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {paginatedData.map((item, rowIdx) => (
                                     <tr key={item.id || rowIdx} className="hover:bg-gray-50 transition-colors duration-150">
+                                        {selectable && (
+                                            <td className="px-3 py-3 text-center">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected(item)}
+                                                    onChange={(e) => handleSelectItem(item, e.target.checked)}
+                                                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                                                />
+                                            </td>
+                                        )}
                                         {columns.map((col, colIdx) => (
                                             <td key={colIdx} className={`px-3 py-3 text-${col.align || 'left'} text-xs text-gray-900 truncate`}>
                                                 {col.render ? col.render(item) : (item[col.key] || '-')}

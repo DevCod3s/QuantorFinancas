@@ -22,7 +22,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2 } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -326,6 +326,12 @@ export function Transactions() {
   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
+  // Estados para seleção múltipla (Baixa em Lote)
+  const [selectedPayables, setSelectedPayables] = useState<any[]>([]);
+  const [selectedReceivables, setSelectedReceivables] = useState<any[]>([]);
+  const [batchPaymentModalOpen, setBatchPaymentModalOpen] = useState(false);
+  const [batchPaymentType, setBatchPaymentType] = useState<'payable' | 'receivable'>('payable');
+
   // Dados mockados para À Pagar
   const payablesData = [
     { id: 1, company: 'Banco Santander', cnpj: '90.400.888/0001-42', dueDate: '10/01/2025', product: 'Cartão de Crédito', type: 'Parcela', status: 'Vencida', value: 280.00 },
@@ -483,6 +489,50 @@ export function Transactions() {
       await createTransactionMutation.mutateAsync(transactionPayload);
     } catch (error) {
       console.error('Erro ao salvar transação:', error);
+    }
+  };
+
+  // Função para processar baixa em lote
+  const handleBatchPayment = async (paymentData: any) => {
+    try {
+      const selectedItems = batchPaymentType === 'payable' ? selectedPayables : selectedReceivables;
+      
+      // Calcular total com juros e descontos
+      const totalOriginal = selectedItems.reduce((sum, item) => sum + item.value, 0);
+      const jurosMulta = parseFloat(paymentData.jurosMulta?.replace(/\D/g, '') || '0') / 100;
+      const desconto = parseFloat(paymentData.desconto?.replace(/\D/g, '') || '0') / 100;
+      const totalFinal = totalOriginal + jurosMulta - desconto;
+
+      // Aqui você processaria a baixa no backend
+      console.log('Processando baixa em lote:', {
+        tipo: batchPaymentType,
+        contaBancariaId: paymentData.contaBancaria,
+        dataBaixa: paymentData.dataBaixa,
+        formaPagamento: paymentData.formaPagamento,
+        jurosMulta,
+        desconto,
+        totalOriginal,
+        totalFinal,
+        observacoes: paymentData.observacoes,
+        itens: selectedItems
+      });
+
+      // Limpar seleção após processar
+      if (batchPaymentType === 'payable') {
+        setSelectedPayables([]);
+      } else {
+        setSelectedReceivables([]);
+      }
+
+      setBatchPaymentModalOpen(false);
+      
+      showSuccess(
+        'Baixa em lote realizada',
+        `${selectedItems.length} ${selectedItems.length === 1 ? 'lançamento processado' : 'lançamentos processados'} com sucesso!`
+      );
+    } catch (error) {
+      console.error('Erro ao processar baixa em lote:', error);
+      showError('Erro ao processar baixa', 'Ocorreu um erro ao processar a baixa em lote. Tente novamente.');
     }
   };
 
@@ -1683,9 +1733,29 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4">
+                          {selectedPayables.length > 0 && (
+                            <div className="mb-4 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
+                              <span className="text-sm font-medium text-blue-900">
+                                {selectedPayables.length} {selectedPayables.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                              </span>
+                              <IButtonPrime
+                                icon={<CheckCheck className="h-4 w-4" />}
+                                variant="blue"
+                                title="Baixa em Lote"
+                                className="!px-4 !py-2"
+                                onClick={() => {
+                                  setBatchPaymentType('payable');
+                                  setBatchPaymentModalOpen(true);
+                                }}
+                              />
+                            </div>
+                          )}
                           <TabelaItens
                             data={payablesData}
                             initialPerPage={10}
+                            selectable={true}
+                            selectedItems={selectedPayables}
+                            onSelectionChange={setSelectedPayables}
                             columns={[
                               {
                                 label: "Razão Social",
@@ -1927,9 +1997,29 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4">
+                          {selectedReceivables.length > 0 && (
+                            <div className="mb-4 flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
+                              <span className="text-sm font-medium text-green-900">
+                                {selectedReceivables.length} {selectedReceivables.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                              </span>
+                              <IButtonPrime
+                                icon={<CheckCheck className="h-4 w-4" />}
+                                variant="blue"
+                                title="Baixa em Lote"
+                                className="!px-4 !py-2"
+                                onClick={() => {
+                                  setBatchPaymentType('receivable');
+                                  setBatchPaymentModalOpen(true);
+                                }}
+                              />
+                            </div>
+                          )}
                           <TabelaItens
                             data={receivablesData}
                             initialPerPage={10}
+                            selectable={true}
+                            selectedItems={selectedReceivables}
+                            onSelectionChange={setSelectedReceivables}
                             columns={[
                               {
                                 label: "Razão Social",
@@ -2351,6 +2441,109 @@ export function Transactions() {
               type: 'text',
               colSpan: 6,
               placeholder: 'Ex: Banco do Brasil S.A.'
+            }
+          ]
+        ]}
+      />
+
+      {/* Modal de Baixa em Lote */}
+      <DynamicModal
+        isOpen={batchPaymentModalOpen}
+        onClose={() => {
+          setBatchPaymentModalOpen(false);
+          if (batchPaymentType === 'payable') {
+            setSelectedPayables([]);
+          } else {
+            setSelectedReceivables([]);
+          }
+        }}
+        title={(() => {
+          const selectedItems = batchPaymentType === 'payable' ? selectedPayables : selectedReceivables;
+          const total = selectedItems.reduce((sum, item) => sum + item.value, 0);
+          const itemText = selectedItems.length === 1 ? 'item' : 'itens';
+          const totalFormatted = `R$ ${total.toFixed(2).replace('.', ',')}`;
+          const type = batchPaymentType === 'payable' ? 'Contas à Pagar' : 'Valores à Receber';
+          return `Baixa em Lote - ${type} (${selectedItems.length} ${itemText} - ${totalFormatted})`;
+        })()}
+        initialData={{
+          contaBancaria: '',
+          dataBaixa: new Date().toISOString().split('T')[0],
+          formaPagamento: 'transferencia',
+          jurosMulta: '0,00',
+          desconto: '0,00',
+          observacoes: ''
+        }}
+        onSave={handleBatchPayment}
+        isSaveDisabled={(data) => !data.contaBancaria || !data.dataBaixa}
+        maxWidth="lg"
+        fields={[
+          // Primeira linha - Conta e Data
+          [
+            {
+              name: 'contaBancaria',
+              label: 'Conta Bancária *',
+              type: 'select',
+              colSpan: 6,
+              options: bankAccounts.map((account: any) => ({
+                value: account.id,
+                label: `${account.bank} - ${account.accountNumber}`
+              })),
+              iconAction: {
+                icon: <Plus className="h-5 w-5 mb-1 text-blue-600 hover:text-blue-700 transition-colors" />,
+                onClick: () => setBankAccountModalOpen(true),
+                title: "Adicionar nova conta"
+              }
+            },
+            {
+              name: 'dataBaixa',
+              label: 'Data da Baixa *',
+              type: 'date',
+              colSpan: 6
+            }
+          ],
+          // Segunda linha - Forma de Pagamento
+          [
+            {
+              name: 'formaPagamento',
+              label: 'Forma de Pagamento/Recebimento',
+              type: 'select',
+              colSpan: 12,
+              options: [
+                { value: 'dinheiro', label: 'Dinheiro' },
+                { value: 'transferencia', label: 'Transferência Bancária' },
+                { value: 'boleto', label: 'Boleto' },
+                { value: 'pix', label: 'PIX' },
+                { value: 'cartao_credito', label: 'Cartão de Crédito' },
+                { value: 'cartao_debito', label: 'Cartão de Débito' },
+                { value: 'cheque', label: 'Cheque' }
+              ]
+            }
+          ],
+          // Terceira linha - Juros/Multa e Desconto
+          [
+            {
+              name: 'jurosMulta',
+              label: 'Juros/Multa',
+              type: 'currency',
+              colSpan: 6,
+              placeholder: 'R$ 0,00'
+            },
+            {
+              name: 'desconto',
+              label: 'Desconto',
+              type: 'currency',
+              colSpan: 6,
+              placeholder: 'R$ 0,00'
+            }
+          ],
+          // Quarta linha - Observações
+          [
+            {
+              name: 'observacoes',
+              label: 'Observações',
+              type: 'text',
+              colSpan: 12,
+              placeholder: 'Informações adicionais sobre esta baixa em lote...'
             }
           ]
         ]}
