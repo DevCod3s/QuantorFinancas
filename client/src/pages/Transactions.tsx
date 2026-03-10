@@ -22,7 +22,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -331,6 +331,8 @@ export function Transactions() {
   const [selectedReceivables, setSelectedReceivables] = useState<any[]>([]);
   const [batchPaymentModalOpen, setBatchPaymentModalOpen] = useState(false);
   const [batchPaymentType, setBatchPaymentType] = useState<'payable' | 'receivable'>('payable');
+  const [batchModePayables, setBatchModePayables] = useState(false);
+  const [batchModeReceivables, setBatchModeReceivables] = useState(false);
 
   // Dados mockados para À Pagar
   const payablesData = [
@@ -517,11 +519,13 @@ export function Transactions() {
         itens: selectedItems
       });
 
-      // Limpar seleção após processar
+      // Limpar seleção e desativar modo após processar
       if (batchPaymentType === 'payable') {
         setSelectedPayables([]);
+        setBatchModePayables(false);
       } else {
         setSelectedReceivables([]);
+        setBatchModeReceivables(false);
       }
 
       setBatchPaymentModalOpen(false);
@@ -1733,7 +1737,24 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4">
-                          {selectedPayables.length > 0 && (
+                          {/* Botão para ativar modo de baixa em lote */}
+                          <div className="mb-4 flex justify-end">
+                            <IButtonPrime
+                              icon={<FolderDown className="h-4 w-4" />}
+                              variant="blue"
+                              title={batchModePayables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
+                              className={`!px-4 !py-2 ${batchModePayables ? 'ring-2 ring-blue-400' : ''}`}
+                              onClick={() => {
+                                setBatchModePayables(!batchModePayables);
+                                if (batchModePayables) {
+                                  // Ao desativar, limpa seleção
+                                  setSelectedPayables([]);
+                                }
+                              }}
+                            />
+                          </div>
+
+                          {batchModePayables && selectedPayables.length > 0 && (
                             <div className="mb-4 flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-3">
                               <span className="text-sm font-medium text-blue-900">
                                 {selectedPayables.length} {selectedPayables.length === 1 ? 'item selecionado' : 'itens selecionados'}
@@ -1753,7 +1774,7 @@ export function Transactions() {
                           <TabelaItens
                             data={payablesData}
                             initialPerPage={10}
-                            selectable={true}
+                            selectable={batchModePayables}
                             selectedItems={selectedPayables}
                             onSelectionChange={setSelectedPayables}
                             columns={[
@@ -1997,7 +2018,24 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4">
-                          {selectedReceivables.length > 0 && (
+                          {/* Botão para ativar modo de baixa em lote */}
+                          <div className="mb-4 flex justify-end">
+                            <IButtonPrime
+                              icon={<FolderDown className="h-4 w-4" />}
+                              variant="blue"
+                              title={batchModeReceivables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
+                              className={`!px-4 !py-2 ${batchModeReceivables ? 'ring-2 ring-green-400' : ''}`}
+                              onClick={() => {
+                                setBatchModeReceivables(!batchModeReceivables);
+                                if (batchModeReceivables) {
+                                  // Ao desativar, limpa seleção
+                                  setSelectedReceivables([]);
+                                }
+                              }}
+                            />
+                          </div>
+
+                          {batchModeReceivables && selectedReceivables.length > 0 && (
                             <div className="mb-4 flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
                               <span className="text-sm font-medium text-green-900">
                                 {selectedReceivables.length} {selectedReceivables.length === 1 ? 'item selecionado' : 'itens selecionados'}
@@ -2017,7 +2055,7 @@ export function Transactions() {
                           <TabelaItens
                             data={receivablesData}
                             initialPerPage={10}
-                            selectable={true}
+                            selectable={batchModeReceivables}
                             selectedItems={selectedReceivables}
                             onSelectionChange={setSelectedReceivables}
                             columns={[
