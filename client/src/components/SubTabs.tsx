@@ -40,10 +40,19 @@ interface SubTabsProps {
   tabs: SubTab[]; // Array de sub-abas
   defaultValue: string; // Valor da aba ativa por padrão
   className?: string; // Classes CSS adicionais
+  onValueChange?: (value: string) => void; // Callback quando a aba muda
 }
 
-export function SubTabs({ tabs, defaultValue, className = "" }: SubTabsProps) {
+export function SubTabs({ tabs, defaultValue, className = "", onValueChange }: SubTabsProps) {
   const [activeSubTab, setActiveSubTab] = useState(defaultValue);
+  
+  // Função para atualizar a aba ativa e notificar o componente pai
+  const handleValueChange = (value: string) => {
+    setActiveSubTab(value);
+    if (onValueChange) {
+      onValueChange(value);
+    }
+  };
   const subTabListRef = useRef<HTMLDivElement>(null);
 
   // Calcula a posição e largura da barra de progressão das sub-abas
@@ -84,7 +93,7 @@ export function SubTabs({ tabs, defaultValue, className = "" }: SubTabsProps) {
   return (
     <Tabs
       value={activeSubTab}
-      onValueChange={setActiveSubTab}
+      onValueChange={handleValueChange}
       className={`w-full ${className}`}
     >
       <div className="relative bg-gray-50 rounded-lg p-1" ref={subTabListRef}>

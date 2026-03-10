@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X } from 'lucide-react';
+import { X, Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
+import { IButtonPrime } from './ui/i-ButtonPrime';
 
 interface SimpleTransactionModalProps {
   open: boolean;
@@ -132,13 +132,19 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
             <div className="text-xs text-gray-500 mt-1">{descricao.length}/30</div>
           </div>
           
-          <div className="flex justify-start gap-2 pt-4">
-            <Button onClick={handleSave} className="bg-green-600 hover:bg-green-700">
-              Salvar
-            </Button>
-            <Button variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
+          <div className="flex justify-end gap-2 pt-4">
+            <IButtonPrime
+              icon={<LogOut className="h-4 w-4" />}
+              variant="red"
+              title="Cancelar"
+              onClick={onClose}
+            />
+            <IButtonPrime
+              icon={<Save className="h-4 w-4" />}
+              variant="blue"
+              title="Salvar"
+              onClick={handleSave}
+            />
           </div>
         </div>
       </DialogContent>

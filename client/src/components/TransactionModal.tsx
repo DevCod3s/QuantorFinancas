@@ -18,8 +18,9 @@ import {
   MenuItem,
   IconButton
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, Save } from 'lucide-react';
 import { DateInput } from './DateInput';
+import { IButtonPrime } from './ui/i-ButtonPrime';
 
 interface TransactionModalProps {
   open: boolean;
@@ -396,13 +397,13 @@ export function TransactionModal({ open, onClose, onSave }: TransactionModalProp
         </div>
 
         <div className="flex items-center gap-3">
-          <button
+          <IButtonPrime
+            icon={<Save className="h-4 w-4" />}
+            variant="blue"
+            title="Salvar"
             onClick={handleSave}
             disabled={!valor || !conta || !categoria}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white rounded text-sm transition-colors"
-          >
-            Salvar
-          </button>
+          />
           
           <IconButton 
             size="small"

@@ -10,8 +10,9 @@
  */
 
 import React, { useState } from "react";
-import { X, Save, ArrowLeft } from "lucide-react";
+import { X, Save, LogOut } from "lucide-react";
 import CustomInput, { CustomTextarea } from "./CustomInput";
+import { IButtonPrime } from "./ui/i-ButtonPrime";
 
 /**
  * Interface para novo tipo de relacionamento
@@ -122,21 +123,19 @@ export default function AddRelationshipTypeModal({
 
         {/* Rodapé do modal */}
         <div className="flex items-center justify-center gap-4 p-6 border-t border-gray-200">
-          <button
-            onClick={handleClose}
-            className="w-12 h-12 text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
+          <IButtonPrime
+            icon={<LogOut className="h-4 w-4" />}
+            variant="red"
             title="Voltar"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <button
+            onClick={handleClose}
+          />
+          <IButtonPrime
+            icon={<Save className="h-4 w-4" />}
+            variant="blue"
+            title="Salvar"
             onClick={handleSave}
             disabled={!formData.name.trim()}
-            className="w-12 h-12 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 active:scale-95 shadow-md hover:shadow-lg flex items-center justify-center"
-            title="Salvar"
-          >
-            <Save className="h-5 w-5" />
-          </button>
+          />
         </div>
       </div>
     </div>

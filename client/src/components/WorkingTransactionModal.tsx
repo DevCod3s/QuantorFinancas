@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
+import { IButtonPrime } from './ui/i-ButtonPrime';
 
 interface WorkingTransactionModalProps {
   open: boolean;
@@ -163,19 +164,19 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
           </div>
           
           {/* Footer */}
-          <div className="flex justify-start gap-3 p-6 pt-4 border-t bg-gray-50">
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded transition-colors font-medium"
-            >
-              Salvar
-            </button>
-            <button
+          <div className="flex justify-end gap-2 p-6 pt-4 border-t bg-gray-50">
+            <IButtonPrime
+              icon={<LogOut className="h-4 w-4" />}
+              variant="red"
+              title="Cancelar"
               onClick={onClose}
-              className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors font-medium"
-            >
-              Cancelar
-            </button>
+            />
+            <IButtonPrime
+              icon={<Save className="h-4 w-4" />}
+              variant="blue"
+              title="Salvar"
+              onClick={handleSave}
+            />
           </div>
         </div>
       </div>

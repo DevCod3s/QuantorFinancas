@@ -26,25 +26,36 @@ import {
   FormControlLabel,
   Typography,
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
 import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
 import { DateInput } from "./DateInput";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
+import { ParcelamentoModal } from "./ParcelamentoModal";
 
 interface TransactionCardProps {
   open: boolean;
   onClose: () => void;
   onSave: (transaction: any) => void;
+  entryType?: 'payable' | 'receivable'; // Novo prop para definir tipo de lançamento
 }
 
 /**
  * Card para criação de novas transações financeiras
  * Layout baseado na imagem de referência com campos organizados em grid
  */
-export function TransactionCard({ open, onClose, onSave }: TransactionCardProps) {
-  const [tipo, setTipo] = useState('Nova receita');
+export function TransactionCard({ open, onClose, onSave, entryType }: TransactionCardProps) {
+  // Define o tipo inicial baseado no entryType
+  const tipoInicial = entryType === 'payable' ? 'Nova despesa' : entryType === 'receivable' ? 'Nova receita' : 'Nova receita';
+  const [tipo, setTipo] = useState(tipoInicial);
+  
+  // Atualiza tipo quando entryType muda
+  React.useEffect(() => {
+    if (entryType) {
+      setTipo(entryType === 'payable' ? 'Nova despesa' : 'Nova receita');
+    }
+  }, [entryType]);
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState(new Date().toISOString().split('T')[0]);
   const [repeticao, setRepeticao] = useState('Única');
@@ -59,12 +70,13 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
   const [planoContas, setPlanoContas] = useState('');
   
   // Estados para parcelamento
+  const [parcelamentoModalOpen, setParcelamentoModalOpen] = useState(false);
   const [numeroParcelas, setNumeroParcelas] = useState('');
   const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState('');
   const [aplicarJuros, setAplicarJuros] = useState(false);
   const [tipoJuros, setTipoJuros] = useState<'percentual' | 'valor'>('percentual');
   const [valorJuros, setValorJuros] = useState('');
-  const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela'>('total');
+  const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela' | 'atraso'>('total');
   const [valorParcela, setValorParcela] = useState('0,00');
   
   // Estados para modal de adicionar contato
@@ -374,9 +386,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               <MenuItem value="Transferência">Transferência</MenuItem>
             </Select>
           </FormControl>
-          <IconButton onClick={onClose} sx={{ color: '#666' }}>
-            <X className="h-5 w-5" />
-          </IconButton>
         </Box>
 
         <CardContent sx={{ p: 3 }}>
@@ -400,19 +409,31 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
           </Box>
 
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
-            <FormControl variant="standard" fullWidth>
-              <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>
-                Repetição
-              </InputLabel>
-              <Select
-                value={repeticao}
-                onChange={(e) => setRepeticao(e.target.value)}
-              >
-                <MenuItem value="Única">Única</MenuItem>
-                <MenuItem value="Parcelado">Parcelado</MenuItem>
-                <MenuItem value="Recorrente">Recorrente</MenuItem>
-              </Select>
-            </FormControl>
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+              <FormControl variant="standard" sx={{ width: repeticao === 'Parcelado' ? '85%' : '100%' }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>
+                  Repetição
+                </InputLabel>
+                <Select
+                  value={repeticao}
+                  onChange={(e) => setRepeticao(e.target.value)}
+                >
+                  <MenuItem value="Única">Única</MenuItem>
+                  <MenuItem value="Parcelado">Parcelado</MenuItem>
+                  <MenuItem value="Recorrente">Recorrente</MenuItem>
+                </Select>
+              </FormControl>
+              {repeticao === 'Parcelado' && (
+                <IconButton 
+                  size="small" 
+                  sx={{ mb: 0.5, color: '#1976d2' }}
+                  title="Configurar parcelamento"
+                  onClick={() => setParcelamentoModalOpen(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </IconButton>
+              )}
+            </Box>
             
             {repeticao === 'Recorrente' && (
               <>
@@ -442,109 +463,6 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
               </>
             )}
           </Box>
-
-          {/* Campos para Parcelamento */}
-          {repeticao === 'Parcelado' && (
-            <Box sx={{ mb: 2 }}>
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 2 }}>
-                <TextField
-                  variant="standard"
-                  label="Número de parcelas"
-                  type="number"
-                  value={numeroParcelas}
-                  onChange={(e) => setNumeroParcelas(e.target.value)}
-                  fullWidth
-                  sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-                  inputProps={{ min: 1 }}
-                />
-                <DateInput
-                  label="Data 1ª parcela"
-                  value={dataPrimeiraParcela}
-                  onChange={setDataPrimeiraParcela}
-                />
-              </Box>
-
-              {/* Checkbox de juros */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={aplicarJuros}
-                      onChange={(e) => setAplicarJuros(e.target.checked)}
-                      sx={{ color: '#666' }}
-                    />
-                  }
-                  label="Aplicar juros"
-                  sx={{ '& .MuiFormControlLabel-label': { color: '#666', fontSize: '14px' } }}
-                />
-              </Box>
-
-              {/* Campos de juros (aparece só quando checkbox está marcado) */}
-              {aplicarJuros && (
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel sx={{ color: '#666' }} shrink={!!tipoJuros || undefined}>
-                      Tipo de juros
-                    </InputLabel>
-                    <Select
-                      value={tipoJuros}
-                      onChange={(e) => setTipoJuros(e.target.value as 'percentual' | 'valor')}
-                    >
-                      <MenuItem value="percentual">Percentual (%)</MenuItem>
-                      <MenuItem value="valor">Valor fixo (R$)</MenuItem>
-                    </Select>
-                  </FormControl>
-
-                  <TextField
-                    variant="standard"
-                    label={tipoJuros === 'percentual' ? 'Taxa (%)' : 'Valor (R$)'}
-                    type="number"
-                    value={valorJuros}
-                    onChange={(e) => setValorJuros(e.target.value)}
-                    fullWidth
-                    sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-                    inputProps={{ min: 0, step: tipoJuros === 'percentual' ? '0.01' : '0.01' }}
-                  />
-
-                  <FormControl variant="standard" fullWidth>
-                    <InputLabel sx={{ color: '#666' }} shrink={!!aplicarJurosEm || undefined}>
-                      Aplicar juros em
-                    </InputLabel>
-                    <Select
-                      value={aplicarJurosEm}
-                      onChange={(e) => setAplicarJurosEm(e.target.value as 'total' | 'parcela')}
-                    >
-                      <MenuItem value="total">Valor total</MenuItem>
-                      <MenuItem value="parcela">Cada parcela</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              )}
-
-              {/* Preview do parcelamento */}
-              {numeroParcelas && valorParcela !== '0,00' && (
-                <Box sx={{ 
-                  p: 2, 
-                  backgroundColor: '#f5f5f5', 
-                  borderRadius: 1,
-                  border: '1px solid #e0e0e0'
-                }}>
-                  <Typography variant="body2" sx={{ color: '#666', fontWeight: 500 }}>
-                    Resumo do parcelamento:
-                  </Typography>
-                  <Typography variant="h6" sx={{ color: '#1976d2', mt: 1 }}>
-                    {numeroParcelas}x de R$ {valorParcela}
-                  </Typography>
-                  {aplicarJuros && valorJuros && (
-                    <Typography variant="caption" sx={{ color: '#666', display: 'block', mt: 0.5 }}>
-                      {tipoJuros === 'percentual' ? `Com juros de ${valorJuros}%` : `Com juros de R$ ${valorJuros}`}
-                      {' '}aplicado {aplicarJurosEm === 'total' ? 'no valor total' : 'em cada parcela'}
-                    </Typography>
-                  )}
-                </Box>
-              )}
-            </Box>
-          )}
 
           <TextField
             variant="standard"
@@ -596,7 +514,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 size="small" 
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
-                <Settings className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               </IconButton>
             </Box>
           </Box>
@@ -643,7 +561,7 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                 size="small" 
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
-                <Tag className="h-4 w-4" />
+                <Plus className="h-4 w-4" />
               </IconButton>
             </Box>
           </Box>
@@ -699,6 +617,13 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
             </Box>
             
             <Box sx={{ display: 'flex', gap: 1 }}>
+              <IButtonPrime
+                icon={<LogOut className="h-4 w-4" />}
+                variant="red"
+                title="Sair"
+                className="!p-2"
+                onClick={onClose}
+              />
               <IButtonPrime
                 icon={<Save className="h-4 w-4" />}
                 variant="blue"
@@ -890,15 +815,16 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
 
                 {/* Botões de ação */}
                 <div className="flex justify-end gap-2 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
+                  <IButtonPrime
+                    icon={<LogOut className="h-4 w-4" />}
+                    variant="red"
+                    title="Cancelar"
                     onClick={() => setContactModalOpen(false)}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
+                  />
+                  <IButtonPrime
+                    icon={<Save className="h-4 w-4" />}
+                    variant="blue"
+                    title="Salvar"
                     onClick={() => {
                       console.log('Salvando contato:', contactFormData);
                       setContactFormData({
@@ -916,16 +842,36 @@ export function TransactionCard({ open, onClose, onSave }: TransactionCardProps)
                       });
                       setContactModalOpen(false);
                     }}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors font-medium"
-                  >
-                    Salvar Contato
-                  </button>
+                  />
                 </div>
               </div>
             </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Configuração de Parcelamento */}
+      <ParcelamentoModal
+        open={parcelamentoModalOpen}
+        onClose={() => setParcelamentoModalOpen(false)}
+        onSave={(config) => {
+          setNumeroParcelas(config.numeroParcelas);
+          setDataPrimeiraParcela(config.dataPrimeiraParcela);
+          setAplicarJuros(config.aplicarJuros);
+          setTipoJuros(config.tipoJuros);
+          setValorJuros(config.valorJuros);
+          setAplicarJurosEm(config.aplicarJurosEm);
+        }}
+        initialConfig={{
+          numeroParcelas,
+          dataPrimeiraParcela,
+          aplicarJuros,
+          tipoJuros,
+          valorJuros,
+          aplicarJurosEm,
+        }}
+        valorTotal={valor}
+      />
     </Box>
   );
 }

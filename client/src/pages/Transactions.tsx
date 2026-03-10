@@ -323,6 +323,7 @@ export function Transactions() {
 
   // Estado para modal de transação
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
   // Dados mockados para À Pagar
@@ -444,17 +445,39 @@ export function Transactions() {
     }
   });
 
-  // Função para salvar nova transação
+  // Função para salvar nova transação (À Pagar e À Receber)
   const handleSaveTransaction = async (transactionData: any) => {
     try {
+      // Converter valor de string formatada para número
+      const valorNumerico = parseFloat(
+        transactionData.valor.toString()
+          .replace('R$', '')
+          .replace(/\s/g, '')
+          .replace(/\./g, '')
+          .replace(',', '.')
+      );
+
       // Mapear os dados do formulário para o formato esperado pelo backend
       const transactionPayload = {
-        amount: parseFloat(transactionData.valor.toString().replace(/[R$\s.,]/g, '')) / 100,
+        amount: valorNumerico,
         description: transactionData.descricao || 'Lançamento',
         type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
         date: transactionData.data ? new Date(transactionData.data.split('/').reverse().join('-')).toISOString() : new Date().toISOString(),
         categoryId: transactionData.categoria ? parseInt(transactionData.categoria) : null,
-        chartAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
+        chartAccountId: transactionData.planoContas ? parseInt(transactionData.planoContas) : null,
+        
+        // Campos de repetição e parcelamento
+        repeticao: transactionData.repeticao || 'Única',
+        numeroParcelas: transactionData.numeroParcelas ? parseInt(transactionData.numeroParcelas) : null,
+        dataPrimeiraParcela: transactionData.dataPrimeiraParcela || null,
+        aplicarJuros: transactionData.aplicarJuros || false,
+        tipoJuros: transactionData.tipoJuros || null,
+        valorJuros: transactionData.valorJuros ? parseFloat(transactionData.valorJuros) : null,
+        aplicarJurosEm: transactionData.aplicarJurosEm || null,
+        periodicidade: transactionData.periodicidade || null,
+        
+        // Outros campos
+        observacoes: transactionData.observacoes || null,
       };
 
       await createTransactionMutation.mutateAsync(transactionPayload);
@@ -1521,6 +1544,7 @@ export function Transactions() {
         <TabsContent value="movimentacoes" className="space-y-6">
           <SubTabs
             defaultValue="a-pagar"
+            onValueChange={(value) => setActiveMovimentacoesSubTab(value as 'a-pagar' | 'a-receber')}
             tabs={[
               {
                 value: "a-pagar",
@@ -2168,6 +2192,7 @@ export function Transactions() {
           setTransactionModalOpen(false);
         }}
         onSave={handleSaveTransaction}
+        entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
       />
 
       <DynamicModal
