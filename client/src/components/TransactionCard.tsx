@@ -9,6 +9,7 @@
  */
 
 import React, { useState } from 'react';
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -49,7 +50,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
   // Define o tipo inicial baseado no entryType
   const tipoInicial = entryType === 'payable' ? 'Nova despesa' : entryType === 'receivable' ? 'Nova receita' : 'Nova receita';
   const [tipo, setTipo] = useState(tipoInicial);
-  
+
   // Atualiza tipo quando entryType muda
   React.useEffect(() => {
     if (entryType) {
@@ -67,8 +68,10 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
   const [subcategoria, setSubcategoria] = useState('');
   const [contato, setContato] = useState('');
   const [observacoes, setObservacoes] = useState('');
-  const [planoContas, setPlanoContas] = useState('');
-  
+  const [isPaid, setIsPaid] = useState(false); // Inicia como pendente (false)
+  const [numeroDocumento, setNumeroDocumento] = useState('');
+  const [tags, setTags] = useState('');
+
   // Estados para parcelamento
   const [parcelamentoModalOpen, setParcelamentoModalOpen] = useState(false);
   const [numeroParcelas, setNumeroParcelas] = useState('');
@@ -78,7 +81,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
   const [valorJuros, setValorJuros] = useState('');
   const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela' | 'atraso'>('total');
   const [valorParcela, setValorParcela] = useState('0,00');
-  
+
   // Estados para modal de adicionar contato
   const [contactModalOpen, setContactModalOpen] = useState(false);
   const [contactFormData, setContactFormData] = useState({
@@ -98,17 +101,17 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
   // Função para buscar dados de CNPJ
   const fetchCNPJData = async (cnpj: string) => {
     const cleanCnpj = cnpj.replace(/\D/g, '');
-    
+
     try {
       const response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
       if (response.ok) {
         const data = await response.json();
-        
+
         const cep = data.cep || '';
         const cleanCep = cep.replace(/\D/g, '');
-        const formattedCep = cleanCep.length === 8 ? 
+        const formattedCep = cleanCep.length === 8 ?
           `${cleanCep.slice(0, 5)}-${cleanCep.slice(5)}` : '';
-        
+
         setContactFormData(prev => ({
           ...prev,
           razaoSocial: data.razao_social || data.nome || '',
@@ -120,7 +123,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
           cidade: data.municipio || data.cidade || '',
           estado: data.uf || data.estado || ''
         }));
-        
+
         const hasCompleteAddress = data.logradouro && data.bairro && data.municipio;
         if (cleanCep.length === 8 && !hasCompleteAddress) {
           await fetchCEPData(cleanCep);
@@ -160,17 +163,17 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
     const rawValue = event.target.value;
     const numbersOnly = rawValue.replace(/\D/g, '');
     const limitedNumbers = numbersOnly.substring(0, 8);
-    
+
     let formatted = limitedNumbers;
     if (limitedNumbers.length > 5) {
       formatted = `${limitedNumbers.substring(0, 5)}-${limitedNumbers.substring(5)}`;
     }
-    
+
     setContactFormData(prev => ({
       ...prev,
       cep: formatted
     }));
-    
+
     if (limitedNumbers.length === 8) {
       fetchCEPData(limitedNumbers);
     }
@@ -194,22 +197,11 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
     queryFn: () => fetch('/api/chart-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
-  // Buscar categorias de negócio
-  const { data: businessCategories = [] } = useQuery({
-    queryKey: ['/api/business-categories'],
-    queryFn: () => fetch('/api/business-categories', { credentials: 'include' }).then(res => res.json())
-  });
+  // Filtragem de categorias (Nível 1) do Plano de Contas por tipo
+  const filteredCategories = chartOfAccounts.filter((account: any) => {
+    if (account.level !== 1) return false;
 
-  // Buscar subcategorias de negócio
-  const { data: businessSubcategories = [] } = useQuery({
-    queryKey: ['/api/business-subcategories'],
-    queryFn: () => fetch('/api/business-subcategories', { credentials: 'include' }).then(res => res.json())
-  });
-
-  // Filtragem de contas por tipo (receita/despesa)
-  const filteredChartOfAccounts = chartOfAccounts.filter((account: any) => {
     if (tipo.includes('receita')) {
-      // Normalizar para comparação case-insensitive
       const accountType = account.type?.toLowerCase();
       return accountType === 'receita' || accountType === 'receitas';
     }
@@ -220,26 +212,9 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
     return true;
   });
 
-  // Filtragem de categorias de negócio por tipo
-  const filteredBusinessCategories = businessCategories.filter((cat: any) => {
-    if (tipo.includes('receita')) {
-      return cat.type === 'income';
-    }
-    if (tipo.includes('despesa')) {
-      return cat.type === 'expense';
-    }
-    return true;
-  });
-
-  // Filtragem de subcategorias de negócio por tipo
-  const filteredBusinessSubcategories = businessSubcategories.filter((subcat: any) => {
-    if (tipo.includes('receita')) {
-      return subcat.type === 'income';
-    }
-    if (tipo.includes('despesa')) {
-      return subcat.type === 'expense';
-    }
-    return true;
+  // Filtragem de subcategorias (Nível 2) do Plano de Contas
+  const filteredSubcategories = chartOfAccounts.filter((account: any) => {
+    return account.level === 2 && account.parentId === parseInt(categoria);
   });
 
   // Cálculo do valor da parcela
@@ -262,7 +237,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
     // Aplicar juros se necessário
     if (aplicarJuros && valorJuros) {
       const juros = parseFloat(valorJuros.replace(/[R$\s.]/g, '').replace(',', '.'));
-      
+
       if (tipoJuros === 'percentual') {
         // Juros em percentual
         if (aplicarJurosEm === 'total') {
@@ -312,6 +287,23 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
   };
 
   const handleSave = () => {
+    // Lógica inteligente de status
+    let finalStatus = 'pendente';
+    if (isPaid) {
+      finalStatus = 'pago';
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const transactionDate = new Date(data);
+      transactionDate.setHours(0, 0, 0, 0);
+
+      if (transactionDate < today) {
+        finalStatus = 'vencido';
+      } else {
+        finalStatus = 'pendente';
+      }
+    }
+
     const transaction = {
       tipo,
       valor: parseFloat(valor.replace(/[R$\s.,]/g, '').replace(',', '.')) / 100,
@@ -321,13 +313,14 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
       intervaloRepeticao: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
       descricao,
       conta,
-      categoria,
+      chartAccountId: subcategoria || categoria, // Salva o ID da subcategoria se houver, senão o da categoria
       contato,
       numeroDocumento,
       observacoes,
-      tags
+      tags,
+      status: finalStatus
     };
-    
+
     onSave(transaction);
     onClose();
   };
@@ -373,7 +366,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
             <Select
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
-              sx={{ 
+              sx={{
                 fontSize: '16px',
                 fontWeight: 500,
                 '&:before': { borderBottom: 'none' },
@@ -396,7 +389,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
               value={valor}
               onChange={handleValorChange}
               fullWidth
-              sx={{ 
+              sx={{
                 '& .MuiInput-root': { fontSize: '16px' },
                 '& .MuiInputLabel-root': { color: '#666' }
               }}
@@ -407,6 +400,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
               onChange={setData}
             />
           </Box>
+
 
           <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
@@ -424,8 +418,8 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                 </Select>
               </FormControl>
               {repeticao === 'Parcelado' && (
-                <IconButton 
-                  size="small" 
+                <IconButton
+                  size="small"
                   sx={{ mb: 0.5, color: '#1976d2' }}
                   title="Configurar parcelamento"
                   onClick={() => setParcelamentoModalOpen(true)}
@@ -434,7 +428,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                 </IconButton>
               )}
             </Box>
-            
+
             {repeticao === 'Recorrente' && (
               <>
                 <FormControl variant="standard" fullWidth>
@@ -451,7 +445,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                     <MenuItem value="Anual">Anual</MenuItem>
                   </Select>
                 </FormControl>
-                
+
                 <TextField
                   variant="standard"
                   label="Intervalo"
@@ -488,8 +482,8 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   ))}
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
                 <CreditCard className="h-4 w-4" />
@@ -501,17 +495,20 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                 <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>Categoria</InputLabel>
                 <Select
                   value={categoria}
-                  onChange={(e) => setCategoria(e.target.value)}
+                  onChange={(e) => {
+                    setCategoria(e.target.value);
+                    setSubcategoria('');
+                  }}
                 >
-                  {filteredBusinessCategories.map((cat: any) => (
+                  {filteredCategories.map((cat: any) => (
                     <MenuItem key={cat.id} value={cat.id}>
-                      {cat.name}
+                      {cat.code} - {cat.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
                 <Plus className="h-4 w-4" />
@@ -534,8 +531,8 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   ))}
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
                 onClick={() => setContactModalOpen(true)}
               >
@@ -550,15 +547,15 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   value={subcategoria}
                   onChange={(e) => setSubcategoria(e.target.value)}
                 >
-                  {filteredBusinessSubcategories.map((subcat: any) => (
+                  {filteredSubcategories.map((subcat: any) => (
                     <MenuItem key={subcat.id} value={subcat.id}>
-                      {subcat.name}
+                      {subcat.code} - {subcat.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <IconButton 
-                size="small" 
+              <IconButton
+                size="small"
                 sx={{ mb: 0.5, color: '#1976d2' }}
               >
                 <Plus className="h-4 w-4" />
@@ -576,46 +573,30 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
             maxRows={5}
             sx={{ '& .MuiInputLabel-root': { color: '#666' }, mb: 2 }}
           />
-          
-          <Box sx={{ display: 'flex', alignItems: 'end', gap: 1, mb: 2 }}>
-            <FormControl variant="standard" sx={{ width: '85%' }}>
-              <InputLabel sx={{ color: '#666' }} shrink={!!planoContas || undefined}>Plano de Contas</InputLabel>
-              <Select
-                value={planoContas}
-                onChange={(e) => setPlanoContas(e.target.value)}
-                MenuProps={{
-                  PaperProps: {
-                    sx: { zIndex: 1400 }
-                  }
-                }}
-              >
-                {filteredChartOfAccounts.map((account: any) => (
-                  <MenuItem key={account.id} value={account.id}>
-                    {account.code} - {account.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <IconButton 
-              size="small" 
-              sx={{ mb: 0.5, color: '#1976d2' }}
-            >
-              <BookOpen className="h-4 w-4" />
-            </IconButton>
-          </Box>
+
 
           {/* Botões de ação */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pt: 2 }}>
             <Box sx={{ display: 'flex', gap: 1 }}>
               <IButtonPrime
                 icon={<Paperclip className="h-4 w-4" />}
-                variant="blue"
+                variant="gold"
                 title="Anexar arquivo"
                 className="!p-2"
                 onClick={() => console.log('Anexos')}
               />
+              <IButtonPrime
+                icon={isPaid ? <CheckCheck className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                variant="gold"
+                title={isPaid ? "Marcado como Pago" : "Marcar como Pago"}
+                className={cn(
+                  "!p-2",
+                  isPaid ? "text-green-600 hover:bg-green-50/50" : ""
+                )}
+                onClick={() => setIsPaid(!isPaid)}
+              />
             </Box>
-            
+
             <Box sx={{ display: 'flex', gap: 1 }}>
               <IButtonPrime
                 icon={<LogOut className="h-4 w-4" />}
@@ -626,14 +607,14 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
               />
               <IButtonPrime
                 icon={<Save className="h-4 w-4" />}
-                variant="blue"
+                variant="gold"
                 title="Salvar"
                 className="!p-2"
                 onClick={handleSave}
               />
               <IButtonPrime
                 icon={<Plus className="h-4 w-4" />}
-                variant="blue"
+                variant="gold"
                 title="Adicionar novo"
                 className="!p-2"
                 onClick={() => console.log('Novo')}
@@ -642,9 +623,9 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
           </Box>
         </CardContent>
       </Card>
-      
+
       {/* Modal de Adicionar Contato */}
-      <Dialog 
+      <Dialog
         open={contactModalOpen}
         onClose={() => setContactModalOpen(false)}
         maxWidth="lg"
@@ -659,7 +640,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Tipo de relacionamento
                   </h3>
-                  
+
                   <div className="max-w-md flex items-end gap-2">
                     <div className="flex-1">
                       <CustomSelect
@@ -679,7 +660,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                         <option value="outros">Outros</option>
                       </CustomSelect>
                     </div>
-                    
+
                     <button
                       type="button"
                       className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center rounded-md"
@@ -695,7 +676,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Informação básica
                   </h3>
-                  
+
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <CpfCnpjInput
                       value={contactFormData.cpfCnpj}
@@ -704,7 +685,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                           ...prev,
                           cpfCnpj: value
                         }));
-                        
+
                         if (isValid && type === 'CNPJ') {
                           fetchCNPJData(value);
                         }
@@ -735,7 +716,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Localização
                   </h3>
-                  
+
                   <div className="grid grid-cols-3 gap-4 mb-4">
                     <CustomInput
                       label="CEP *"
@@ -823,7 +804,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   />
                   <IButtonPrime
                     icon={<Save className="h-4 w-4" />}
-                    variant="blue"
+                    variant="gold"
                     title="Salvar"
                     onClick={() => {
                       console.log('Salvando contato:', contactFormData);
@@ -872,6 +853,6 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
         }}
         valorTotal={valor}
       />
-    </Box>
+    </Box >
   );
 }

@@ -25,7 +25,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 // Importações de ícones
-import { Plus, Edit, Trash2, Palette, Building2, Package, Users, Save, LogOut, Lock, Layers, Tag } from "lucide-react";
+import { Plus, Edit, Trash2, Palette, Building2, Package, Users, Save, LogOut, Lock, Layers, Tag, Wrench, Search, Box } from "lucide-react";
 
 // Importações de componentes UI
 import { Button } from "@/components/ui/button";
@@ -34,10 +34,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TabelaItens } from "@/components/ui/TabelaItens";
+import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 
 // Importações de tipos e modais
-import { Category, BusinessCategory, BusinessSubcategory } from "@shared/schema";
-import { DynamicModal } from "@/components/DynamicModal";
+import { Category, BusinessCategory, BusinessSubcategory, ProductUnit, ProductService } from "@shared/schema";
+import { DynamicModal, DynamicField, FieldType } from "@/components/DynamicModal";
 
 export function Categories() {
   const queryClient = useQueryClient();
@@ -62,12 +63,30 @@ export function Categories() {
   const [subcategoryData, setSubcategoryData] = useState({ name: '', categoryId: '', type: 'expense', orderIndex: '' });
   const [editingSubcategoryId, setEditingSubcategoryId] = useState<number | null>(null);
 
+  // Estados de Produtos e Serviços
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [productModalMode, setProductModalMode] = useState<'create' | 'edit'>('create');
+  const [editingProduct, setEditingProduct] = useState<ProductService | null>(null);
+
+  // Estados de Unidades
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
+  const [unitData, setUnitData] = useState({ name: '', abbreviation: '' });
+
   const { data: categories = [], isLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
   const { data: businessCategories = [] } = useQuery<BusinessCategory[]>({
     queryKey: ["/api/business-categories"],
+  });
+
+  const { data: products = [], isLoading: isLoadingProducts } = useQuery<ProductService[]>({
+    queryKey: ["/api/products-services"],
+  });
+
+  const { data: productUnits = [] } = useQuery<ProductUnit[]>({
+    queryKey: ["/api/product-units"],
   });
 
   useEffect(() => {
@@ -84,8 +103,8 @@ export function Categories() {
       queryClient.invalidateQueries({ queryKey: ['/api/business-categories'] });
       showSuccess('Categoria salva!', 'A categoria foi criada com sucesso.');
     },
-    onError: () => {
-      showError('Erro', 'Não foi possível salvar a categoria.');
+    onError: (error: any) => {
+      showError('Erro ao Salvar', typeof error === 'string' ? error : (error.message || 'Não foi possível salvar a categoria.'));
     }
   });
 
@@ -122,6 +141,7 @@ export function Categories() {
     const payload = {
       name: data.name,
       type: data.type,
+      appliedTo: data.appliedTo || 'both',
       orderIndex: data.orderIndex ? parseInt(data.orderIndex) : 0
     };
 
@@ -263,6 +283,286 @@ export function Categories() {
     );
   };
 
+  // Mutações de Produtos e Serviços
+  const saveProductMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const method = productModalMode === 'edit' ? 'PUT' : 'POST';
+      const url = productModalMode === 'edit' ? `/api/products-services/${editingProduct?.id}` : '/api/products-services';
+      return apiRequest(method, url, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products-services"] });
+      showSuccess(
+        productModalMode === 'edit' ? "Item atualizado!" : "Item cadastrado!",
+        "O catálogo foi atualizado com sucesso."
+      );
+      setIsProductModalOpen(false);
+    },
+    onError: (error: any) => {
+      showError("Erro ao salvar", error.message || "Ocorreu um problema ao salvar o item.");
+    }
+  });
+
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest('DELETE', `/api/products-services/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/products-services"] });
+      showSuccess("Excluído!", "O item foi removido do catálogo.");
+    },
+    onError: (error: any) => {
+      showError("Erro ao excluir", error.message || "Ocorreu um problema ao excluir o item.");
+    }
+  });
+
+  const handleEditProduct = (item: ProductService) => {
+    setProductModalMode('edit');
+    setEditingProduct(item);
+    setIsProductModalOpen(true);
+  };
+
+  const handleDeleteProduct = (item: ProductService) => {
+    showConfirm(
+      "Confirmar Exclusão",
+      `Tem certeza que deseja excluir "${item.name}"? Esta ação não pode ser desfeita.`,
+      () => deleteProductMutation.mutate(item.id)
+    );
+  };
+
+  const createUnitMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest('POST', '/api/product-units', data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/product-units'] });
+      showSuccess('Unidade salva!', 'A nova unidade de medida foi cadastrada.');
+      setIsUnitModalOpen(false);
+    },
+    onError: (error: any) => {
+      console.error("DEBUG: Erro na mutação de unidades:", error);
+      showError('Erro', error.message || 'Não foi possível salvar a unidade.');
+    }
+  });
+
+  const handleSaveUnit = (data: any) => {
+    if (!data.name || !data.abbreviation) return;
+    createUnitMutation.mutate(data);
+  };
+
+  const filteredProducts = products.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.sku && item.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  // Definição dos campos do modal de produtos
+  const productModalFields: DynamicField[][] = [
+    [
+      {
+        name: 'type',
+        label: 'Tipo de Cadastro',
+        type: 'radio' as FieldType,
+        colSpan: 12,
+        options: [
+          { value: 'product', label: 'Produto' },
+          { value: 'service', label: 'Serviço' }
+        ],
+        onChangeOverride: (val, currentData, setFormData) => {
+          setFormData({
+            ...currentData,
+            type: val,
+            unit: val === 'product' ? 'un' : 'hora',
+            sku: val === 'service' ? '' : currentData.sku,
+            ncm: val === 'service' ? '' : currentData.ncm,
+          });
+        }
+      }
+    ],
+    [
+      {
+        name: 'name',
+        label: 'Nome do Item',
+        type: 'text' as FieldType,
+        colSpan: 8,
+        required: true,
+        placeholder: 'Ex: Camiseta Branca G ou Consultoria Técnica'
+      },
+      {
+        name: 'status',
+        label: 'Status',
+        type: 'select' as FieldType,
+        colSpan: 4,
+        options: [
+          { value: 'active', label: 'Ativo' },
+          { value: 'inactive', label: 'Inativo' }
+        ]
+      }
+    ],
+    [
+      {
+        name: 'description',
+        label: 'Descrição Detalhada',
+        type: 'text' as FieldType,
+        colSpan: 12,
+        placeholder: 'Opcional: Detalhes adicionais sobre o produto ou serviço'
+      }
+    ],
+    [
+      {
+        name: 'sku',
+        label: 'SKU / Código',
+        type: 'text' as FieldType,
+        colSpan: 6,
+        placeholder: 'Código interno',
+        hidden: (data) => data.type === 'service'
+      },
+      {
+        name: 'ncm',
+        label: 'NCM/SH',
+        type: 'text' as FieldType,
+        colSpan: 6,
+        placeholder: '8 dígitos',
+        hidden: (data) => data.type === 'service'
+      }
+    ],
+    [
+      {
+        name: 'unit',
+        label: 'Unidade',
+        type: 'select' as FieldType,
+        colSpan: 4,
+        options: productUnits || [],
+        getOptionLabel: (opt: any) => `${opt.abbreviation} - ${opt.name}`,
+        getOptionValue: (opt: any) => opt.abbreviation,
+        iconAction: {
+          icon: <Plus size={18} />,
+          title: 'Cadastrar nova unidade',
+          onClick: () => {
+            setUnitData({ name: '', abbreviation: '' });
+            setIsUnitModalOpen(true);
+          }
+        }
+      },
+      {
+        name: 'salePrice',
+        label: 'Preço de Venda',
+        type: 'currency' as FieldType,
+        colSpan: 4,
+        required: true
+      },
+      {
+        name: 'costPrice',
+        label: 'Preço de Custo',
+        type: 'currency' as FieldType,
+        colSpan: 4
+      }
+    ],
+    [
+      {
+        name: 'categoryId',
+        label: 'Categoria',
+        type: 'select' as FieldType,
+        colSpan: 6,
+        options: (currentData: any) => {
+          const itemType = currentData.type === 'product' ? 'products' : 'services';
+          return businessCategories
+            .filter(cat => cat.appliedTo === itemType || cat.appliedTo === 'both')
+            .map(cat => ({ value: cat.id.toString(), label: cat.name }));
+        },
+        onChangeOverride: (val, currentData, setFormData) => {
+          setFormData({
+            ...currentData,
+            categoryId: val,
+            subcategoryId: '' // Limpa subcategoria ao trocar categoria
+          });
+        }
+      },
+      {
+        name: 'subcategoryId',
+        label: 'Subcategoria',
+        type: 'select' as FieldType,
+        colSpan: 6,
+        options: (currentData: any) => {
+          if (!currentData.categoryId) return [];
+          return businessSubcategories
+            .filter(sub => sub.categoryId === parseInt(currentData.categoryId))
+            .map(sub => ({ value: sub.id.toString(), label: sub.name }));
+        },
+        disabled: (data) => !data.categoryId
+      }
+    ]
+  ];
+
+  const productTableColumns = [
+    {
+      label: 'Item',
+      key: 'name',
+      render: (item: ProductService) => (
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gray-100 rounded-lg text-[#B59363]">
+            {item.type === 'product' ? <Package size={18} /> : <Wrench size={18} />}
+          </div>
+          <div>
+            <div className="font-semibold text-[#1D3557]">{item.name}</div>
+            <div className="text-xs text-gray-500">{item.sku || 'Sem Código'}</div>
+          </div>
+        </div>
+      )
+    },
+    {
+      label: 'Tipo',
+      key: 'type',
+      render: (item: ProductService) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.type === 'product' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+          }`}>
+          {item.type === 'product' ? 'Produto' : 'Serviço'}
+        </span>
+      )
+    },
+    {
+      label: 'Unidade',
+      key: 'unit',
+      render: (item: ProductService) => (
+        <span className="text-gray-600">{item.unit}</span>
+      )
+    },
+    {
+      label: 'Categoria',
+      key: 'categoryId',
+      render: (item: ProductService) => {
+        const cat = businessCategories.find(c => c.id === item.categoryId);
+        return <span className="text-gray-600">{cat?.name || '-'}</span>;
+      }
+    },
+    {
+      label: 'Subcategoria',
+      key: 'subcategoryId',
+      render: (item: ProductService) => {
+        const sub = businessSubcategories.find(s => s.id === item.subcategoryId);
+        return <span className="text-gray-600">{sub?.name || '-'}</span>;
+      }
+    },
+    {
+      label: 'Preço Venda',
+      key: 'salePrice',
+      render: (item: ProductService) => (
+        <span className="font-semibold text-[#1D3557]">
+          {item.salePrice ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(item.salePrice)) : 'R$ 0,00'}
+        </span>
+      )
+    },
+    {
+      label: 'Status',
+      key: 'status',
+      render: (item: ProductService) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }`}>
+          {item.status === 'active' ? 'Ativo' : 'Inativo'}
+        </span>
+      )
+    }
+  ];
+
   // Calcula a posição e largura da barra de progressão
   useEffect(() => {
     const updateProgressBar = () => {
@@ -360,6 +660,10 @@ export function Categories() {
                   setSubcategoryData({ name: '', categoryId: '', type: 'expense', orderIndex: '' });
                   setIsSubcategoryModalOpen(true);
                 }
+              } else if (activeTab === 'produtos-servicos') {
+                setProductModalMode('create');
+                setEditingProduct(null);
+                setIsProductModalOpen(true);
               }
             }}
             className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
@@ -529,12 +833,55 @@ export function Categories() {
         </TabsContent>
 
         <TabsContent value="produtos-servicos" className="space-y-6">
-          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-            <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-[#1D3557] mb-2">Produtos & Serviços</h3>
-            <p className="text-sm text-gray-500 max-w-md mx-auto">
-              Esta seção será desenvolvida em breve. Aqui você poderá cadastrar e gerenciar todos os seus produtos e serviços.
-            </p>
+          {/* Busca e Resumo de Produtos */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="md:col-span-3 bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3">
+              <Search className="text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Pesquisar por nome ou código..."
+                className="w-full outline-none text-[#1D3557] font-medium bg-transparent"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="bg-[#1D3557] p-4 rounded-xl shadow-sm text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Tag size={20} />
+                <span className="font-medium">Total de Itens</span>
+              </div>
+              <span className="text-2xl font-bold">{products.length}</span>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {isLoadingProducts ? (
+              <div className="flex items-center justify-center py-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B59363]"></div>
+              </div>
+            ) : (
+              <TabelaItens
+                data={filteredProducts}
+                columns={productTableColumns}
+                emptyMessage="Nenhum item encontrado no catálogo."
+                actions={(item) => (
+                  <div className="flex justify-end gap-2 pr-4">
+                    <IButtonPrime
+                      variant="gold"
+                      icon={<Edit className="h-4 w-4" />}
+                      onClick={() => handleEditProduct(item)}
+                      title="Editar"
+                    />
+                    <IButtonPrime
+                      variant="red"
+                      icon={<Trash2 className="h-4 w-4" />}
+                      onClick={() => handleDeleteProduct(item)}
+                      title="Excluir"
+                    />
+                  </div>
+                )}
+              />
+            )}
           </div>
         </TabsContent>
       </Tabs>
@@ -577,15 +924,27 @@ export function Categories() {
               name: 'type',
               label: 'Tipo',
               type: 'select',
-              colSpan: 8,
+              colSpan: 4,
               options: [
                 { value: 'income', label: 'Receita' },
                 { value: 'expense', label: 'Despesa' }
+              ]
+            },
+            {
+              name: 'appliedTo',
+              label: 'Aplicar em',
+              type: 'select',
+              colSpan: 4,
+              options: [
+                { value: 'products', label: 'Produtos' },
+                { value: 'services', label: 'Serviços' },
+                { value: 'both', label: 'Ambos' }
               ]
             }
           ]
         ]}
         onSave={handleSaveCategory}
+        hideCloseButton={true}
       />
 
       {/* Modal de Subcategorias */}
@@ -620,7 +979,7 @@ export function Categories() {
           [
             {
               name: 'categoryId',
-              label: 'Categoria Pai *',
+              label: 'Categoria *',
               type: 'select',
               colSpan: 4,
               options: businessCategories.map((c) => ({ value: c.id.toString(), label: c.name })),
@@ -637,6 +996,65 @@ export function Categories() {
           ]
         ]}
         onSave={handleSaveSubcategory}
+        hideCloseButton={true}
+      />
+
+      {/* Modal de Produtos e Serviços */}
+      <DynamicModal
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+        title={productModalMode === 'create' ? "Novo Item do Catálogo" : "Editar Item"}
+        icon={editingProduct?.type === 'service' ? <Wrench className="h-6 w-6 text-[#1D3557]" /> : <Package className="h-6 w-6 text-[#1D3557]" />}
+        initialData={editingProduct || { type: 'product', status: 'active', unit: 'un', salePrice: '0', costPrice: '0' }}
+        fields={productModalFields}
+        onSave={(data) => {
+          const cleanPrice = (val: any) => {
+            if (!val) return '0';
+            if (typeof val === 'number') return val.toString();
+            return val.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.').trim();
+          };
+
+          saveProductMutation.mutate({
+            ...data,
+            salePrice: cleanPrice(data.salePrice),
+            costPrice: cleanPrice(data.costPrice)
+          });
+        }}
+        hideCloseButton={true}
+      />
+
+      {/* Modal de Cadastro de Unidades */}
+      <DynamicModal
+        isOpen={isUnitModalOpen}
+        onClose={() => setIsUnitModalOpen(false)}
+        title="Nova Unidade de Medida"
+        icon={<Box className="h-6 w-6 text-[#1D3557]" />}
+        initialData={unitData}
+        fields={[
+          [
+            {
+              name: 'name',
+              label: 'Descrição da Unidade',
+              type: 'text',
+              colSpan: 8,
+              placeholder: 'Ex: Pacote, Fardo, Caixa',
+              required: true,
+              autoFocus: true
+            },
+            {
+              name: 'abbreviation',
+              label: 'Sigla',
+              type: 'text',
+              colSpan: 4,
+              placeholder: 'Ex: PCT, FD, CX',
+              required: true,
+              transform: (val) => val.toUpperCase()
+            }
+          ]
+        ]}
+        onSave={handleSaveUnit}
+        saveButtonText="Salvar Unidade"
+        hideCloseButton={true}
       />
 
       {/* Dialogs de Sistema */}

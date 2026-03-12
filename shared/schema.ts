@@ -94,9 +94,12 @@ export const transactions = pgTable("transactions", {
   userId: integer("user_id").notNull().references(() => users.id),
   categoryId: integer("category_id").references(() => categories.id),
   chartAccountId: integer("chart_account_id").references(() => chartOfAccounts.id),
+  bankAccountId: integer("bank_account_id").references(() => bankAccounts.id),
+  relationshipId: integer("relationship_id").references(() => relationships.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Máx: 99.999.999,99
   description: text("description").notNull(),
   type: text("type").notNull(), // 'income' | 'expense'
+  status: text("status").notNull().default("pago"), // 'pago' | 'pendente'
   date: timestamp("date").notNull(), // Data da transação
   // Campos de repetição/parcelamento
   repeticao: text("repeticao").default("Única"), // 'Única' | 'Parcelado' | 'Recorrente'
@@ -406,6 +409,7 @@ export const businessCategories = pgTable("business_categories", {
   userId: integer("user_id").notNull().references(() => users.id),
   name: text("name").notNull(),
   type: text("type").notNull().default("income"), // 'income' ou 'expense'
+  appliedTo: text("applied_to").notNull().default("both"), // 'products' | 'services' | 'both'
   orderIndex: integer("order_index").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
@@ -453,3 +457,59 @@ export type InsertBusinessCategory = z.infer<typeof insertBusinessCategorySchema
 
 export type BusinessSubcategory = typeof businessSubcategories.$inferSelect;
 export type InsertBusinessSubcategory = z.infer<typeof insertBusinessSubcategorySchema>;
+
+/**
+ * Tabela de Produtos e Serviços
+ * 
+ * Permite o cadastro e gestão do catálogo de itens do negócio.
+ * Suporta precificação, controle básico e categorização fiscal (NCM).
+ */
+export const productsServices = pgTable("products_services", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  description: text("description"),
+  sku: text("sku"), // Código interno do produto
+  type: text("type").notNull().default("product"), // 'product' | 'service'
+  unit: text("unit").notNull().default("un"), // 'un', 'kg', 'm', 'hora', etc.
+  categoryId: integer("category_id").references(() => businessCategories.id), // Categoria da Unidade de Negócio
+  subcategoryId: integer("subcategory_id").references(() => businessSubcategories.id), // Subcategoria da Unidade de Negócio
+  salePrice: decimal("sale_price", { precision: 15, scale: 2 }).notNull().default("0"),
+  costPrice: decimal("cost_price", { precision: 15, scale: 2 }).default("0"),
+  ncm: text("ncm"), // Código NCM para produtos
+  status: text("status").notNull().default("active"), // 'active' | 'inactive'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema de inserção para produtos e serviços
+export const insertProductServiceSchema = createInsertSchema(productsServices).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Tipos para produtos e serviços
+export type ProductService = typeof productsServices.$inferSelect;
+export type InsertProductService = z.infer<typeof insertProductServiceSchema>;
+
+/**
+ * Tabela de Unidades de Produto
+ * 
+ * Permite cadastrar siglas e descrições para unidades de medida (ex: UN, KG, PCT).
+ */
+export const productUnits = pgTable("product_units", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(), // Descrição (ex: Pacote)
+  abbreviation: text("abbreviation").notNull(), // Sigla (ex: PCT)
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Schema de inserção para unidades
+export const insertProductUnitSchema = createInsertSchema(productUnits).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Tipos para unidades
+export type ProductUnit = typeof productUnits.$inferSelect;
+export type InsertProductUnit = z.infer<typeof insertProductUnitSchema>;

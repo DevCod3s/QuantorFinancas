@@ -31,7 +31,7 @@ declare global {
 import { storage } from "./storage";
 
 // Schemas de validação
-import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema, insertChartOfAccountsSchema } from "@shared/schema";
+import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema, insertChartOfAccountsSchema, insertProductServiceSchema, insertProductUnitSchema } from "@shared/schema";
 import * as schema from "@shared/schema";
 import { z } from "zod";
 
@@ -211,6 +211,42 @@ router.post("/auth/register", async (req: any, res) => {
  * =============================================================================
  */
 
+// ==========================================
+// PRODUCT UNITS ROUTES
+// ==========================================
+router.get("/product-units", requireAuth, async (req, res) => {
+  console.log("TESTE: GET /api/product-units atingido");
+  try {
+    const userId = req.user?.id?.toString();
+    const units = await storage.getProductUnitsByUserId(userId);
+    res.json(units);
+  } catch (error) {
+    console.error("Erro ao buscar unidades de produto:", error);
+    res.status(500).json({ error: "Erro ao buscar unidades de produto" });
+  }
+});
+
+router.post("/product-units", requireAuth, async (req, res) => {
+  console.log("TESTE: POST /api/product-units atingido com:", req.body);
+  try {
+    const userId = req.user?.id;
+    const validatedData = schema.insertProductUnitSchema.parse({
+      ...req.body,
+      userId,
+    });
+    const unit = await storage.createProductUnit(validatedData);
+    res.status(201).json(unit);
+  } catch (error: any) {
+    console.error("Erro ao criar unidade de produto:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    } else {
+      res.status(500).json({ error: "Falhou ao criar unidade de produto" });
+    }
+  }
+});
+
+
 /**
  * GET /api/dashboard
  * 
@@ -226,6 +262,16 @@ router.get("/dashboard", requireAuth, async (req: any, res) => {
   } catch (error) {
     console.error("Erro do painel:", error);
     res.status(500).json({ error: "Falhou ao buscar dados do painel" });
+  }
+});
+
+router.get("/dashboard/geographic", requireAuth, async (req: any, res) => {
+  try {
+    const stats = await storage.getGeographicStats(req.user.id);
+    res.json(stats);
+  } catch (error) {
+    console.error("Erro ao buscar estatísticas geográficas:", error);
+    res.status(500).json({ error: "Falhou ao buscar dados geográficos" });
   }
 });
 
@@ -522,16 +568,15 @@ router.post("/generate-contract", requireAuth, async (req, res) => {
  * GET /api/bank-accounts
  * Retorna contas bancárias mock do usuário
  */
-router.get("/bank-accounts", requireAuth, async (req, res) => {
+router.get("/bank-accounts", requireAuth, async (req: any, res) => {
   try {
-    // Mock de contas bancárias para desenvolvimento
-    const mockBankAccounts = [
-      { id: 1, bank: 'Banco do Brasil', accountNumber: '12345-6', accountType: 'Corrente' },
-      { id: 2, bank: 'Itaú', accountNumber: '98765-4', accountType: 'Poupança' },
-      { id: 3, bank: 'Bradesco', accountNumber: '55555-1', accountType: 'Corrente' }
-    ];
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
 
-    res.json(mockBankAccounts);
+    const bankAccounts = await storage.getBankAccountsByUserId(userId);
+    res.json(bankAccounts);
   } catch (error) {
     console.error("Erro ao buscar contas bancárias:", error);
     res.status(500).json({ error: "Erro interno do servidor" });
@@ -994,7 +1039,7 @@ router.get("/chart-accounts/:id", requireAuth, async (req, res) => {
     }
 
     const account = await storage.getChartOfAccountById(id);
-    if (!account || account.userId !== userId) {
+    if (!account || account.userId !== parseInt(userId)) {
       return res.status(404).json({ error: "Conta não encontrada" });
     }
 
@@ -1019,7 +1064,7 @@ router.post("/chart-accounts", requireAuth, async (req, res) => {
     // Validar dados de entrada
     const validatedData = insertChartOfAccountsSchema.parse({
       ...req.body,
-      userId: userId
+      userId: parseInt(userId)
     });
 
     const newAccount = await storage.createChartOfAccount(validatedData);
@@ -1054,14 +1099,14 @@ router.put("/chart-accounts/:id", requireAuth, async (req, res) => {
 
     // Verificar se a conta existe e pertence ao usuário
     const existing = await storage.getChartOfAccountById(id);
-    if (!existing || existing.userId !== userId) {
+    if (!existing || existing.userId !== parseInt(userId)) {
       return res.status(404).json({ error: "Conta não encontrada" });
     }
 
     // Validar dados de entrada
     const validatedData = insertChartOfAccountsSchema.parse({
       ...req.body,
-      userId: userId
+      userId: parseInt(userId)
     });
 
     const updatedAccount = await storage.updateChartOfAccount(id, validatedData);
@@ -1096,7 +1141,7 @@ router.delete("/chart-accounts/:id", requireAuth, async (req, res) => {
 
     // Verificar se a conta existe e pertence ao usuário
     const existing = await storage.getChartOfAccountById(id);
-    if (!existing || existing.userId !== userId) {
+    if (!existing || existing.userId !== parseInt(userId)) {
       return res.status(404).json({ error: "Conta não encontrada" });
     }
 
@@ -1294,5 +1339,86 @@ router.patch("/api/relationships/:id/type", requireAuth, async (req, res) => {
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
+
+
+// ==========================================
+// PRODUCTS & SERVICES ROUTES
+// ==========================================
+
+/**
+ * GET /api/products-services
+ * Retorna todos os produtos e serviços do usuário
+ */
+router.get("/products-services", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    const items = await storage.getProductsServicesByUserId(userId);
+    res.json(items);
+  } catch (error) {
+    console.error("Erro ao buscar produtos/serviços:", error);
+    res.status(500).json({ error: "Erro ao buscar produtos e serviços" });
+  }
+});
+
+/**
+ * POST /api/products-services
+ * Cria um novo produto ou serviço
+ */
+router.post("/products-services", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    const validatedData = schema.insertProductServiceSchema.parse({
+      ...req.body,
+      userId,
+    });
+    const item = await storage.createProductService(validatedData);
+    res.status(201).json(item);
+  } catch (error: any) {
+    console.error("Erro ao criar produto/serviço:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    } else {
+      res.status(500).json({ error: "Falhou ao criar produto/serviço" });
+    }
+  }
+});
+
+/**
+ * PUT /api/products-services/:id
+ * Atualiza um produto ou serviço existente
+ */
+router.put("/products-services/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const validatedData = schema.insertProductServiceSchema.partial().parse(req.body);
+    const item = await storage.updateProductService(id, validatedData);
+    res.json(item);
+  } catch (error: any) {
+    console.error("Erro ao atualizar produto/serviço:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    } else {
+      res.status(500).json({ error: "Falhou ao atualizar produto/serviço" });
+    }
+  }
+});
+
+/**
+ * DELETE /api/products-services/:id
+ * Remove um produto ou serviço
+ */
+router.delete("/products-services/:id", requireAuth, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    await storage.deleteProductService(id);
+    res.status(204).send();
+  } catch (error) {
+    console.error("Erro ao excluir produto/serviço:", error);
+    res.status(500).json({ error: "Falhou ao excluir produto/serviço" });
+  }
+});
+
+// Unidades removidas daqui e movidas para o topo das rotas de dados
+
 
 export default router;

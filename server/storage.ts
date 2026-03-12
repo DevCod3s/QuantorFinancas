@@ -43,7 +43,11 @@ import type {
   BusinessCategory,
   InsertBusinessCategory,
   BusinessSubcategory,
-  InsertBusinessSubcategory
+  InsertBusinessSubcategory,
+  ProductService,
+  InsertProductService,
+  ProductUnit,
+  InsertProductUnit
 } from "@shared/schema";
 
 // Configuração da conexão com PostgreSQL já feita em db.ts
@@ -65,7 +69,7 @@ export interface IStorage {
   deleteCategory(id: number): Promise<void>;
 
   // Transações
-  getTransactionsByUserId(userId: string): Promise<Transaction[]>;
+  getTransactionsByUserId(userId: string): Promise<any[]>;
   getTransactionById(id: number): Promise<Transaction | null>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction>;
@@ -98,7 +102,7 @@ export interface IStorage {
   deleteChartOfAccount(id: number): Promise<void>;
 
   // Contas bancárias
-  getBankAccountsByUserId(userId: string): Promise<BankAccount[]>;
+  getBankAccountsByUserId(userId: string): Promise<any[]>;
   getBankAccountById(id: number): Promise<BankAccount | null>;
   createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount>;
   updateBankAccount(id: number, bankAccount: Partial<InsertBankAccount>): Promise<BankAccount>;
@@ -138,6 +142,21 @@ export interface IStorage {
       expenses: number;
     }>;
   }>;
+
+  // Produtos e Serviços
+  getProductsServicesByUserId(userId: string): Promise<ProductService[]>;
+  getProductServiceById(id: number): Promise<ProductService | null>;
+  createProductService(productService: InsertProductService): Promise<ProductService>;
+  updateProductService(id: number, productService: Partial<InsertProductService>): Promise<ProductService>;
+  deleteProductService(id: number): Promise<void>;
+
+  // Unidades de Produto
+  getProductUnitsByUserId(userId: string): Promise<ProductUnit[]>;
+  createProductUnit(unit: InsertProductUnit): Promise<ProductUnit>;
+  deleteProductUnit(id: number): Promise<void>;
+
+  // Estatísticas Geográficas
+  getGeographicStats(userId: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -207,10 +226,31 @@ export class DatabaseStorage implements IStorage {
     await db.delete(schema.categories).where(eq(schema.categories.id, id));
   }
 
-  async getTransactionsByUserId(userId: string): Promise<Transaction[]> {
+  async getTransactionsByUserId(userId: string): Promise<any[]> {
     return await db
-      .select()
+      .select({
+        id: schema.transactions.id,
+        amount: schema.transactions.amount,
+        type: schema.transactions.type,
+        status: schema.transactions.status,
+        date: schema.transactions.date,
+        description: schema.transactions.description,
+        repeticao: schema.transactions.repeticao,
+        numeroParcelas: schema.transactions.numeroParcelas,
+        parcelaAtual: schema.transactions.parcelaAtual,
+        categoryId: schema.transactions.categoryId,
+        chartAccountId: schema.transactions.chartAccountId,
+        bankAccountId: schema.transactions.bankAccountId,
+        relationshipId: schema.transactions.relationshipId,
+        relationship: {
+          id: schema.relationships.id,
+          socialName: schema.relationships.socialName,
+          document: schema.relationships.document,
+          type: schema.relationships.type,
+        }
+      })
       .from(schema.transactions)
+      .leftJoin(schema.relationships, eq(schema.transactions.relationshipId, schema.relationships.id))
       .where(eq(schema.transactions.userId, parseInt(userId)))
       .orderBy(desc(schema.transactions.date));
   }
@@ -375,11 +415,47 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Bank Accounts methods
-  async getBankAccountsByUserId(userId: string): Promise<BankAccount[]> {
-    return db.select()
+  async getBankAccountsByUserId(userId: string): Promise<any[]> {
+    const userIdNum = parseInt(userId);
+    const userBankAccounts = await db
+      .select()
       .from(schema.bankAccounts)
-      .where(eq(schema.bankAccounts.userId, parseInt(userId)))
+      .where(eq(schema.bankAccounts.userId, userIdNum))
       .orderBy(schema.bankAccounts.name);
+
+    const bankBalances = await Promise.all(userBankAccounts.map(async (account) => {
+      const accountTransactions = await db
+        .select({
+          amount: schema.transactions.amount,
+          type: schema.transactions.type,
+          status: schema.transactions.status,
+        })
+        .from(schema.transactions)
+        .where(eq(schema.transactions.bankAccountId, account.id));
+
+      const initialBalance = parseFloat(account.currentBalance || "0");
+
+      const realChange = accountTransactions
+        .filter(t => t.status === 'pago')
+        .reduce((sum, t) => {
+          const val = parseFloat(t.amount || "0");
+          return t.type === 'income' ? sum + val : sum - val;
+        }, 0);
+
+      const projectedChange = accountTransactions
+        .reduce((sum, t) => {
+          const val = parseFloat(t.amount || "0");
+          return t.type === 'income' ? sum + val : sum - val;
+        }, 0);
+
+      return {
+        ...account,
+        realBalance: initialBalance + realChange,
+        projectedBalance: initialBalance + projectedChange,
+      };
+    }));
+
+    return bankBalances;
   }
 
   async getBankAccountById(id: number): Promise<BankAccount | null> {
@@ -648,6 +724,47 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(schema.transactions.date))
       .limit(5);
 
+    // 5. Real Bank Accounts with Balances
+    const userBankAccounts = await db
+      .select()
+      .from(schema.bankAccounts)
+      .where(eq(schema.bankAccounts.userId, userIdNum));
+
+    const bankBalances = await Promise.all(userBankAccounts.map(async (account) => {
+      const accountTransactions = await db
+        .select({
+          amount: schema.transactions.amount,
+          type: schema.transactions.type,
+          status: schema.transactions.status,
+        })
+        .from(schema.transactions)
+        .where(eq(schema.transactions.bankAccountId, account.id));
+
+      const initialBalance = parseFloat(account.currentBalance || "0");
+
+      const realChange = accountTransactions
+        .filter(t => t.status === 'pago')
+        .reduce((sum, t) => {
+          const val = parseFloat(t.amount || "0");
+          return t.type === 'income' ? sum + val : sum - val;
+        }, 0);
+
+      const projectedChange = accountTransactions
+        .reduce((sum, t) => {
+          const val = parseFloat(t.amount || "0");
+          return t.type === 'income' ? sum + val : sum - val;
+        }, 0);
+
+      return {
+        id: account.id,
+        name: account.name,
+        bank: account.bank,
+        realBalance: initialBalance + realChange,
+        projectedBalance: initialBalance + projectedChange,
+        accountType: account.accountType
+      };
+    }));
+
     return {
       totalIncome,
       totalExpenses,
@@ -666,6 +783,164 @@ export class DatabaseStorage implements IStorage {
       })),
       expensesByCategory,
       monthlyTrends: Array.from(trendsMap.values()),
+      bankAccounts: bankBalances, // Adicionado para dados reais
+    };
+  }
+
+  // ==========================================
+  // Produtos e Serviços
+  // ==========================================
+
+  async getProductsServicesByUserId(userId: string): Promise<ProductService[]> {
+    return db.select()
+      .from(schema.productsServices)
+      .where(eq(schema.productsServices.userId, parseInt(userId)))
+      .orderBy(schema.productsServices.name);
+  }
+
+  async getProductServiceById(id: number): Promise<ProductService | null> {
+    const result = await db.select()
+      .from(schema.productsServices)
+      .where(eq(schema.productsServices.id, id))
+      .limit(1);
+    return result[0] || null;
+  }
+
+  async createProductService(productService: InsertProductService): Promise<ProductService> {
+    const [newProductService] = await db.insert(schema.productsServices)
+      .values(productService)
+      .returning();
+    return newProductService;
+  }
+
+  async updateProductService(id: number, productService: Partial<InsertProductService>): Promise<ProductService> {
+    const [updated] = await db.update(schema.productsServices)
+      .set(productService)
+      .where(eq(schema.productsServices.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProductService(id: number): Promise<void> {
+    await db.delete(schema.productsServices).where(eq(schema.productsServices.id, id));
+  }
+
+  // ==========================================
+  // Unidades de Produto
+  // ==========================================
+
+  async getProductUnitsByUserId(userId: string): Promise<ProductUnit[]> {
+    return db.select()
+      .from(schema.productUnits)
+      .where(eq(schema.productUnits.userId, parseInt(userId)))
+      .orderBy(schema.productUnits.name);
+  }
+
+  async createProductUnit(unit: InsertProductUnit): Promise<ProductUnit> {
+    const [newUnit] = await db.insert(schema.productUnits)
+      .values(unit)
+      .returning();
+    return newUnit;
+  }
+
+  async deleteProductUnit(id: number): Promise<void> {
+    await db.delete(schema.productUnits).where(eq(schema.productUnits.id, id));
+  }
+
+  async getGeographicStats(userId: any): Promise<any> {
+    // Garantir que temos um número, lidando com IDs em string ou objetos
+    const userIdNum = typeof userId === 'number' ? userId : parseInt(String(userId));
+    
+    // Fallback de segurança: se o ID for inválido (como "test-user-1"), 
+    // tenta encontrar o primeiro usuário do sistema para não retornar vazio durante testes
+    if (isNaN(userIdNum)) {
+      const allUsers = await db.select().from(schema.users).limit(1);
+      return { clients: [], locationRanking: [], stateRanking: [] }; // Retorna vazio se não houver usuário
+    }
+
+    console.log(`[GEOGRAPHIC DEBUG] Iniciando busca para UserID: ${userIdNum}`);
+
+    // 1. Buscar relacionamentos do usuário
+    const clientsRaw = await db
+      .select()
+      .from(schema.relationships)
+      .where(eq(schema.relationships.userId, userIdNum));
+
+    console.log(`[GEOGRAPHIC DEBUG] Registros brutos encontrados: ${clientsRaw.length}`);
+
+    const clients = clientsRaw.map(c => ({
+      ...c,
+      city: String(c.city || "").trim(),
+      state: String(c.state || "").trim()
+    }));
+
+    // 2. Buscar todas as transações de receita deste usuário para calcular faturamento por cliente
+    const incomes = await db
+      .select({
+        relationshipId: schema.transactions.relationshipId,
+        amount: schema.transactions.amount,
+        description: schema.transactions.description
+      })
+      .from(schema.transactions)
+      .where(
+        and(
+          eq(schema.transactions.userId, userIdNum),
+          eq(schema.transactions.type, "income"),
+          eq(schema.transactions.status, "pago")
+        )
+      );
+
+    // 3. Processar estatísticas por cliente
+    const clientStats = clients.map(client => {
+      const clientIncomes = incomes.filter(inc => inc.relationshipId === client.id);
+      const totalFaturado = clientIncomes.reduce((sum, inc) => sum + parseFloat(inc.amount || "0"), 0);
+      
+      const produtos = Array.from(new Set(clientIncomes.map(inc => inc.description)));
+
+      return {
+        id: client.id,
+        name: client.socialName,
+        city: client.city,
+        state: client.state,
+        zipCode: client.zipCode,
+        totalFaturado,
+        produtos
+      };
+    });
+
+    // 4. Agrupar rankings para o Dashboard
+    const locationRankingMap = new Map();
+    const stateRankingMap = new Map();
+
+    clientStats.forEach(client => {
+      // Ranking por Cidade
+      const locKey = `${client.city || 'Desconhecida'} - ${client.state || 'XX'}`;
+      if (!locationRankingMap.has(locKey)) {
+        locationRankingMap.set(locKey, { location: locKey, count: 0, totalRevenue: 0 });
+      }
+      const locData = locationRankingMap.get(locKey);
+      locData.count += 1;
+      locData.totalRevenue += client.totalFaturado;
+
+      // Ranking por Estado
+      const stKey = client.state || 'XX';
+      if (!stateRankingMap.has(stKey)) {
+        stateRankingMap.set(stKey, { state: stKey, count: 0 });
+      }
+      const stData = stateRankingMap.get(stKey);
+      stData.count += 1;
+    });
+
+    const locationRanking = Array.from(locationRankingMap.values())
+      .sort((a, b) => b.count - a.count);
+
+    const stateRanking = Array.from(stateRankingMap.values())
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      clients: clientStats,
+      locationRanking,
+      stateRanking
     };
   }
 }

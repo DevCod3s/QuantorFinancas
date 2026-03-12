@@ -81,7 +81,18 @@ export const apiRequest = async (method: string, url: string, data?: any) => {
   const response = await fetch(url, options);
 
   if (!response.ok) {
-    throw new Error(`Requisição da API falhou: ${response.status}`);
+    let errorMessage = `Requisição da API falhou: ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData.error) {
+        errorMessage = errorData.error;
+      } else if (errorData.message) {
+        errorMessage = errorData.message;
+      }
+    } catch (e) {
+      // Falha ao fazer parse do JSON, usar erro padrão
+    }
+    throw new Error(errorMessage);
   }
 
   // Verifica se é 204 No Content para não tentar fazer parse de JSON vazio

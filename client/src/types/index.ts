@@ -73,6 +73,7 @@ export interface DashboardData {
   monthlyIncome: number;
   monthlyExpenses: number;
   monthlySavings: number;
+  balance?: number;
   recentTransactions: Transaction[];
   expensesByCategory: Array<{
     category: string;
@@ -84,6 +85,14 @@ export interface DashboardData {
     income: number;
     expenses: number;
   }>;
+  bankAccounts?: Array<{
+    id: number;
+    name: string;
+    bank: string;
+    realBalance: number;
+    projectedBalance: number;
+    accountType: string;
+  }>;
 }
 
 export interface TabType {
@@ -92,9 +101,24 @@ export interface TabType {
   icon: string;
 }
 
+export interface ProductService {
+  id: number;
+  name: string;
+  description?: string;
+  sku?: string;
+  type: 'product' | 'service';
+  unit: string;
+  salePrice: string;
+  costPrice?: string;
+  ncm?: string;
+  status: 'active' | 'inactive';
+  createdAt?: string;
+}
+
 export const TABS: TabType[] = [
   { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-home' },
   { id: 'transactions', label: 'Transações', icon: 'fas fa-exchange-alt' },
+  { id: 'products', label: 'Produtos e Serviços', icon: 'fas fa-box' },
   { id: 'budgets', label: 'Orçamentos', icon: 'fas fa-wallet' },
   { id: 'reports', label: 'Relatórios', icon: 'fas fa-chart-bar' },
   { id: 'ai-assistant', label: 'Assistente IA', icon: 'fas fa-robot' },

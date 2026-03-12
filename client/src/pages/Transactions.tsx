@@ -44,6 +44,7 @@ import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
+import { DashboardData } from "@/types";
 import { ChartOfAccountsTree, ChartOfAccountNode, SAMPLE_CHART_OF_ACCOUNTS } from "@/types/ChartOfAccountsTree";
 import {
   DropdownMenu,
@@ -106,6 +107,21 @@ const formatCurrencyValue = (value: string, currencyCode: string) => {
     style: 'currency',
     currency: currencyCode,
   }).format(numberValue);
+};
+
+const formatCurrencyNumber = (value: number) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+};
+
+const formatCurrency = (amount: string | number) => {
+  const value = typeof amount === 'string' ? parseFloat(amount) : amount;
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
 };
 
 const BRAZILIAN_BANKS = [
@@ -178,15 +194,6 @@ export function Transactions() {
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
-  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
-  const [editingAccount, setEditingAccount] = useState<any>(null);
-  const [formData, setFormData] = useState({
-    tipo: '',
-    nome: '',
-    categoria: '',
-    subcategoria: '',
-    incluirComo: ''
-  });
   const [bankAccountData, setBankAccountData] = useState({
     initialBalanceDate: new Date().toISOString().split('T')[0],
     currentBalance: '',
@@ -200,6 +207,14 @@ export function Transactions() {
     creditLimit: '',
     contactName: '',
     contactPhone: ''
+  });
+
+  const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery<any[]>({
+    queryKey: ["/api/transactions"],
+  });
+
+  const { data: bankAccounts = [], isLoading: isLoadingBankAccounts, refetch: refetchBankAccounts } = useQuery<any[]>({
+    queryKey: ["/api/bank-accounts"],
   });
 
   // Mutation para criar conta bancária
@@ -334,22 +349,117 @@ export function Transactions() {
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
 
-  // Dados mockados para À Pagar
-  const payablesData = [
-    { id: 1, company: 'Banco Santander', cnpj: '90.400.888/0001-42', dueDate: '10/01/2025', product: 'Cartão de Crédito', type: 'Parcela', status: 'Vencida', value: 280.00 },
-    { id: 2, company: 'Imobiliária Santos', cnpj: '12.345.678/0001-90', dueDate: '05/02/2025', product: 'Aluguel Comercial', type: 'Mensal', status: 'Pendente', value: 1200.00 },
-    { id: 3, company: 'Caixa Econômica Federal', cnpj: '00.360.305/0001-04', dueDate: '15/02/2025', product: 'Financiamento Imóvel', type: 'Parcela', status: 'Em dia', value: 485.00 },
-    { id: 4, company: 'Companhia Energética de GO', cnpj: '01.628.539/0001-73', dueDate: '20/02/2025', product: 'Energia Elétrica', type: 'Mensal', status: 'Em dia', value: 125.00 },
-    { id: 5, company: 'Telefonia Ltda', cnpj: '98.765.432/0001-10', dueDate: '22/02/2025', product: 'Telefone Comercial', type: 'Mensal', status: 'Em dia', value: 75.00 }
-  ];
+  // Filtrar transações por mês, busca e tipo
+  const filteredTransactions = transactions.filter(t => {
+    const tDate = new Date(t.date);
+    const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const tMonthYear = `${monthNames[tDate.getMonth()]} ${tDate.getFullYear()}`;
+    const matchesMonth = tMonthYear === currentMonth;
 
-  // Dados mockados para À Receber
-  const receivablesData = [
-    { id: 1, company: 'Empresa ABC Ltda', cnpj: '33.222.111/0001-55', dueDate: '15/01/2025', product: 'Salário', type: 'Mensal', status: 'Confirmado', value: 3500.00 },
-    { id: 2, company: 'Cliente XYZ Ltda', cnpj: '44.555.666/0001-77', dueDate: '22/01/2025', product: 'Projeto Freelance', type: 'Parcela', status: 'Pendente', value: 450.00 },
-    { id: 3, company: 'Banco do Brasil', cnpj: '00.000.000/0001-91', dueDate: '30/01/2025', product: 'Rendimento Poupança', type: 'Rendimento', status: 'Automático', value: 25.30 },
-    { id: 4, company: 'Nubank', cnpj: '18.236.120/0001-58', dueDate: '05/02/2025', product: 'Cashback Cartão', type: 'Cashback', status: 'Automático', value: 28.40 }
-  ];
+    const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterType === "all" || t.type === filterType;
+
+    return matchesMonth && matchesSearch && matchesFilter;
+  });
+
+  // Dados reais para À Pagar
+  const payablesData = filteredTransactions
+    .filter(t => t.type === 'expense' && t.status !== 'pago')
+    .map(t => ({
+      id: t.id,
+      company: t.relationship?.socialName || 'Diversos',
+      cnpj: t.relationship?.document || '-',
+      dueDate: format(new Date(t.date), 'dd/MM/yyyy'),
+      product: t.description,
+      type: t.repeticao,
+      status: new Date(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      value: parseFloat(t.amount)
+    }));
+
+  // Dados reais para À Receber
+  const receivablesData = filteredTransactions
+    .filter(t => t.type === 'income' && t.status !== 'pago')
+    .map(t => ({
+      id: t.id,
+      company: t.relationship?.socialName || 'Diversos',
+      cnpj: t.relationship?.document || '-',
+      dueDate: format(new Date(t.date), 'dd/MM/yyyy'),
+      product: t.description,
+      type: t.repeticao,
+      status: new Date(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      value: parseFloat(t.amount)
+    }));
+
+  // Totais para os cards de resumo
+  const totalPayablesMonth = payablesData.reduce((sum, t) => sum + t.value, 0);
+  const totalReceivablesMonth = receivablesData.reduce((sum, t) => sum + t.value, 0);
+  const resultMonth = totalReceivablesMonth - totalPayablesMonth;
+
+  // AGREGAÇÕES DINÂMICAS PARA CARDS E GRÁFICOS
+  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras)
+  const dailySummary = filteredTransactions.reduce((acc: any[], t) => {
+    const dateStr = format(new Date(t.date), 'dd/MM/yyyy');
+    let day = acc.find(d => d.date === dateStr);
+
+    if (!day) {
+      day = {
+        date: dateStr,
+        dateLabel: format(new Date(t.date), 'dd/MM'),
+        entrada: 0,
+        saida: 0,
+        resultado: 0,
+        saldo: 0
+      };
+      acc.push(day);
+    }
+
+    const amount = parseFloat(t.amount || '0');
+    if (t.type === 'income') {
+      day.entrada += amount;
+    } else {
+      day.saida += amount;
+    }
+    day.resultado = day.entrada - day.saida;
+
+    return acc;
+  }, []).sort((a, b) => {
+    const parseDate = (d: string) => {
+      const [day, month, year] = d.split('/').map(Number);
+      return new Date(year, month - 1, day).getTime();
+    };
+    return parseDate(a.date) - parseDate(b.date);
+  });
+
+  // Cálculo de Saldo Acumulado (Simulado no período)
+  let runningBalance = 0;
+  dailySummary.forEach(day => {
+    runningBalance += day.resultado;
+    day.saldo = runningBalance;
+  });
+
+  // 2. Agregação por Categoria (para Gráficos de Rosca)
+  const getStatsByCategory = (type: 'income' | 'expense') => {
+    const data = filteredTransactions.filter(t => t.type === type);
+    const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
+
+    const categories = data.reduce((acc: any, t) => {
+      const cat = t.category || 'Geral';
+      acc[cat] = (acc[cat] || 0) + parseFloat(t.amount || '0');
+      return acc;
+    }, {});
+
+    return Object.entries(categories).map(([name, value]: [string, any]) => ({
+      name,
+      value,
+      percent: total > 0 ? (value / total) * 100 : 0
+    })).sort((a, b) => b.value - a.value);
+  };
+
+  const incomeStats = getStatsByCategory('income');
+  const expenseStats = getStatsByCategory('expense');
+
+  // Cores para os gráficos
+  const chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#6b7280', '#ec4899', '#06b6d4'];
 
   // Funções de ordenação
   const handlePayablesSort = (field: string) => {
@@ -413,16 +523,17 @@ export function Transactions() {
     queryFn: () => fetch('/api/chart-accounts').then(res => res.json()),
   });
 
-  // Query para buscar contas bancárias
-  const { data: bankAccounts = [], isLoading: isLoadingBankAccounts, refetch: refetchBankAccounts } = useQuery({
-    queryKey: ['/api/bank-accounts'],
-    queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
-  });
+  // As queries bankAccounts e transactions foram movidas para o topo
 
   // Query para buscar bancos customizados
   const { data: customBanks = [] } = useQuery({
     queryKey: ['/api/custom-banks'],
     queryFn: () => fetch('/api/custom-banks', { credentials: 'include' }).then(res => res.json()),
+  });
+
+  const { data: dashboardData, isLoading: isLoadingDashboard } = useQuery<DashboardData>({
+    queryKey: ["/api/dashboard"],
+    queryFn: () => fetch('/api/dashboard', { credentials: 'include' }).then(res => res.json()),
   });
 
   const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...customBanks].map(item => [item.code, item])).values())
@@ -471,8 +582,11 @@ export function Transactions() {
         description: transactionData.descricao || 'Lançamento',
         type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
         date: transactionData.data ? new Date(transactionData.data.split('/').reverse().join('-')).toISOString() : new Date().toISOString(),
-        categoryId: transactionData.categoria ? parseInt(transactionData.categoria) : null,
-        chartAccountId: transactionData.planoContas ? parseInt(transactionData.planoContas) : null,
+        categoryId: null, // Desativado em favor do Plano de Contas (chartAccountId)
+        chartAccountId: transactionData.chartAccountId ? parseInt(transactionData.chartAccountId) : null,
+        bankAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
+        relationshipId: transactionData.contato ? parseInt(transactionData.contato) : null,
+        status: transactionData.status || 'pago',
 
         // Campos de repetição e parcelamento
         repeticao: transactionData.repeticao || 'Única',
@@ -540,182 +654,9 @@ export function Transactions() {
     }
   };
 
-  // Mutation para criar conta
-  const createAccountMutation = useMutation({
-    mutationFn: (accountData: any) =>
-      fetch('/api/chart-accounts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(accountData)
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta criada com sucesso!', "");
-      setChartAccountModalOpen(false);
-      resetForm();
-    },
-    onError: (error: any) => {
-      showError('Erro ao criar conta', error.message || 'Erro ao criar conta');
-    }
-  });
-
-  // Mutation para atualizar conta
-  const updateAccountMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
-      fetch(`/api/chart-accounts/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-      showSuccess('Conta atualizada com sucesso!', "");
-      setChartAccountModalOpen(false);
-      resetForm();
-    },
-    onError: (error: any) => {
-      showError('Erro ao atualizar conta', error.message || 'Erro ao atualizar conta');
-    }
-  });
-
-  // Mutation para excluir conta
-  const deleteAccountMutation = useMutation({
-    mutationFn: (id: number) =>
-      fetch(`/api/chart-accounts/${id}`, { method: 'DELETE' }),
-    onSuccess: (data, variables, context) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-    }
-  });
 
 
 
-  // Funções auxiliares para gerenciar o modal
-  const resetForm = () => {
-    setFormData({
-      tipo: '',
-      nome: '',
-      categoria: '',
-      subcategoria: '',
-      incluirComo: ''
-    });
-    setEditingAccount(null);
-    setModalMode('create');
-  };
-
-  const openCreateModal = () => {
-    resetForm();
-    setModalMode('create');
-    setChartAccountModalOpen(true);
-  };
-
-  const openEditModal = (account: any) => {
-    setFormData({
-      tipo: account.type || '',
-      nome: account.name || '',
-      categoria: account.category || '',
-      subcategoria: account.subcategory || '',
-      incluirComo: account.parentId ? account.parentId.toString() : ''
-    });
-    setEditingAccount(account);
-    setModalMode('edit');
-    setChartAccountModalOpen(true);
-  };
-
-  const openViewModal = (account: any) => {
-    setFormData({
-      tipo: account.type || '',
-      nome: account.name || '',
-      categoria: account.category || '',
-      subcategoria: account.subcategory || '',
-      incluirComo: account.parentId ? account.parentId.toString() : ''
-    });
-    setEditingAccount(account);
-    setModalMode('view');
-    setChartAccountModalOpen(true);
-  };
-
-
-  // Função para salvar conta (criar ou editar)
-  const handleSaveAccount = () => {
-    // Validação básica
-    if (!formData.nome.trim()) {
-      showError('Nome da conta é obrigatório', "");
-      return;
-    }
-    if (!formData.categoria) {
-      showError('Tipo da conta é obrigatório', "");
-      return;
-    }
-
-    const accountData = {
-      name: formData.nome,
-      type: formData.categoria,
-      category: formData.categoria || null,
-      subcategory: formData.subcategoria || null,
-      parentId: formData.incluirComo ? parseInt(formData.incluirComo) : null,
-      level: 1, // Será calculado pelo backend
-      code: '', // Será gerado pelo backend
-    };
-
-    if (modalMode === 'edit' && editingAccount) {
-      updateAccountMutation.mutate({
-        id: editingAccount.id,
-        data: accountData
-      });
-    } else {
-      createAccountMutation.mutate(accountData);
-    }
-  };
-
-  // Função para salvar e continuar (criar mais uma conta)
-  const handleSaveAndContinue = () => {
-    // Validação básica
-    if (!formData.nome.trim()) {
-      showError('Nome da conta é obrigatório', "");
-      return;
-    }
-    if (!formData.categoria) {
-      showError('Tipo da conta é obrigatório', "");
-      return;
-    }
-
-    const accountData = {
-      name: formData.nome,
-      type: formData.categoria,
-      category: formData.categoria || null,
-      subcategory: formData.subcategoria || null,
-      parentId: formData.incluirComo ? parseInt(formData.incluirComo) : null,
-      level: 1, // Será calculado pelo backend
-      code: '', // Será gerado pelo backend
-    };
-
-    // Criar mutation que não fecha o modal
-    const createAndContinueMutation = {
-      mutationFn: (data: any) =>
-        fetch('/api/chart-accounts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        }).then(res => res.json()),
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
-        showSuccess('Conta criada com sucesso! Você pode continuar criando mais contas.', "");
-        // Limpar apenas o nome, manter outras seleções
-        setFormData({
-          ...formData,
-          nome: ''
-        });
-      },
-      onError: (error: any) => {
-        showError(error.message || 'Erro ao criar conta', "");
-      }
-    };
-
-    // Simular a mutation
-    createAndContinueMutation.mutationFn(accountData)
-      .then(createAndContinueMutation.onSuccess)
-      .catch(createAndContinueMutation.onError);
-  };
 
   // Calcula a posição e largura da barra de progressão
   useEffect(() => {
@@ -761,22 +702,7 @@ export function Transactions() {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  const { data: transactions = [], isLoading } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions"],
-  });
-
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === "all" || transaction.type === filterType;
-    return matchesSearch && matchesFilter;
-  });
-
-  const formatCurrency = (amount: string) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(parseFloat(amount));
-  };
+  // Lógica de transactions e filteredTransactions consolidada no topo
 
   // Funções para navegação temporal
   const navigateMonth = (direction: 'prev' | 'next') => {
@@ -826,7 +752,12 @@ export function Transactions() {
             onClick={() => {
               console.log("Active tab:", activeTab);
               if (activeTab === "centro-custo") {
-                openCreateModal();
+                // Dispara o modal do Plano de Contas que agora é controlado pelo estado local de ChartOfAccountsContent
+                // mas como o botão está no pai, precisamos de um mecanismo.
+                // Vou redefinir o setIsModalOpen ou usar o estado que já existe se possível.
+                // Como não tenho acesso direto ao estado interno, vou usar uma solução comum:
+                // O pai controla o estado de abertura e passa para o filho.
+                setChartAccountModalOpen(true);
               } else if (activeTab === "movimentacoes") {
                 console.log("Opening transaction modal");
                 setTransactionModalOpen(true);
@@ -1034,20 +965,20 @@ export function Transactions() {
                           <div className="h-64">
                             <Line
                               data={{
-                                labels: ['04 Jul', '06 Jul', '08 Jul', '10 Jul', '12 Jul', '14 Jul', '16 Jul', '18 Jul', '20 Jul', '22 Jul', '24 Jul', '26 Jul', '28 Jul', '30 Jul'],
+                                labels: dashboardData?.monthlyTrends?.map(item => item.month) || ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
                                 datasets: [
                                   {
-                                    label: 'Banco Inter',
-                                    data: [1000, 2500, 2800, 1500, 2200, 2800, 3500, 3200, 2800, 3200, 3500, 3800, 2500, 2264.77],
-                                    borderColor: '#3b82f6',
+                                    label: 'Receitas',
+                                    data: dashboardData?.monthlyTrends?.map(item => item.income) || [0, 0, 0, 0, 0, 0],
+                                    borderColor: '#B59363',
                                     backgroundColor: 'transparent',
                                     tension: 0.4,
                                     pointRadius: 3,
                                   },
                                   {
-                                    label: 'Bancos | Pessoa Física',
-                                    data: [500, 800, 600, 900, 750, 650, 850, 700, 950, 800, 900, 850, 750, 59.88],
-                                    borderColor: '#10b981',
+                                    label: 'Despesas',
+                                    data: dashboardData?.monthlyTrends?.map(item => item.expenses) || [0, 0, 0, 0, 0, 0],
+                                    borderColor: '#ef4444',
                                     backgroundColor: 'transparent',
                                     tension: 0.4,
                                     pointRadius: 3,
@@ -1082,21 +1013,23 @@ export function Transactions() {
                           <div className="mt-4 space-y-2">
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span>Banco Inter</span>
+                                <div className="w-3 h-3 bg-[#B59363] rounded-full"></div>
+                                <span>Receitas</span>
                               </div>
-                              <span className="font-medium">2.264,77</span>
+                              <span className="font-medium text-[#B59363]">{formatCurrency((dashboardData?.monthlyIncome || 0).toString())}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <span>Bancos | Pessoa Física</span>
+                                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                                <span>Despesas</span>
                               </div>
-                              <span className="font-medium">59,88</span>
+                              <span className="font-medium text-red-500">{formatCurrency((dashboardData?.monthlyExpenses || 0).toString())}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
-                              <span>Total</span>
-                              <span>R$ 2.324,65</span>
+                              <span>Saldo Acumulado</span>
+                              <span className={dashboardData?.balance && dashboardData.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {formatCurrency((dashboardData?.balance || 0).toString())}
+                              </span>
                             </div>
                           </div>
                         </CardContent>
@@ -1109,32 +1042,38 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent>
                           <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="accent-[#B59363]" readOnly />
-                                <span className="text-sm">Banco Inter</span>
+                            {dashboardData?.bankAccounts && dashboardData.bankAccounts.length > 0 ? (
+                              dashboardData.bankAccounts.map((account) => (
+                                <div key={account.id} className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 bg-[#B59363] rounded-full"></div>
+                                    <span className="text-sm">{account.name}</span>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className={`text-sm font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                      {formatCurrency(account.realBalance.toString())}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {formatCurrency(account.projectedBalance.toString())}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-4 text-sm text-gray-500">
+                                Nenhuma conta bancária cadastrada
                               </div>
-                              <div className="text-right">
-                                <div className="text-sm font-medium">640,00</div>
-                                <div className="text-xs text-gray-500">2.264,77</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" checked className="text-orange-600" readOnly />
-                                <span className="text-sm">Bancos | Pessoa Física</span>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm font-medium">59,88</div>
-                                <div className="text-xs text-gray-500">-</div>
-                              </div>
-                            </div>
+                            )}
                             <div className="border-t pt-3">
                               <div className="flex items-center justify-between font-semibold">
                                 <span>Total</span>
                                 <div className="text-right">
-                                  <div>699,88</div>
-                                  <div className="text-xs font-normal text-gray-500">2.264,65</div>
+                                  <div className={(dashboardData?.totalBalance || 0) >= 0 ? 'text-gray-900' : 'text-red-600'}>
+                                    {formatCurrency((dashboardData?.totalBalance || 0).toString())}
+                                  </div>
+                                  <div className="text-xs font-normal text-gray-500">
+                                    Projetado: {formatCurrency((dashboardData?.bankAccounts?.reduce((sum, acc) => sum + acc.projectedBalance, 0) || 0).toString())}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -1148,7 +1087,7 @@ export function Transactions() {
                                   data={{
                                     labels: ['Receitas', 'Despesas'],
                                     datasets: [{
-                                      data: [11105.00, 9242.27],
+                                      data: [dashboardData?.monthlyIncome || 0, dashboardData?.monthlyExpenses || 0],
                                       backgroundColor: ['#10b981', '#ef4444'],
                                       borderRadius: 4,
                                     }]
@@ -1178,18 +1117,20 @@ export function Transactions() {
                                     <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                                     <span>Receitas</span>
                                   </div>
-                                  <span className="font-medium">11.105,00</span>
+                                  <span className="font-medium">{formatCurrency((dashboardData?.monthlyIncome || 0).toString())}</span>
                                 </div>
                                 <div className="flex items-center justify-between text-sm">
                                   <div className="flex items-center gap-2">
                                     <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                                     <span>Despesas</span>
                                   </div>
-                                  <span className="font-medium">9.242,27</span>
+                                  <span className="font-medium">{formatCurrency((dashboardData?.monthlyExpenses || 0).toString())}</span>
                                 </div>
                                 <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
                                   <span>Resultado</span>
-                                  <span className="text-green-600">R$ 1.862,73</span>
+                                  <span className={(dashboardData?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                    {formatCurrency((dashboardData?.balance || 0).toString())}
+                                  </span>
                                 </div>
                               </div>
                             </div>
@@ -1207,17 +1148,10 @@ export function Transactions() {
                           <div className="h-48">
                             <Doughnut
                               data={{
-                                labels: ['Fornecedores', 'Pessoas', 'Prestador de Serviço', 'Residencial', 'Pessoal/Saúde e Bem-estar', 'Diversos'],
+                                labels: expenseStats.length > 0 ? expenseStats.map(s => s.name) : ['Nenhuma'],
                                 datasets: [{
-                                  data: [73.24, 10.84, 7.97, 5.06, 1.93, 0.97],
-                                  backgroundColor: [
-                                    '#3b82f6',
-                                    '#10b981',
-                                    '#f59e0b',
-                                    '#ef4444',
-                                    '#8b5cf6',
-                                    '#6b7280'
-                                  ],
+                                  data: expenseStats.length > 0 ? expenseStats.map(s => s.percent) : [100],
+                                  backgroundColor: expenseStats.length > 0 ? chartColors.slice(0, expenseStats.length) : ['#f3f4f6'],
                                   borderWidth: 0,
                                 }]
                               }}
@@ -1234,54 +1168,18 @@ export function Transactions() {
                             />
                           </div>
                           <div className="mt-4 space-y-2 text-sm">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span>Fornecedores</span>
-                                <span className="text-gray-500">73,24%</span>
+                            {expenseStats.length > 0 ? expenseStats.map((stat, idx) => (
+                              <div key={idx} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                  <span>{stat.name}</span>
+                                  <span className="text-gray-500">{stat.percent.toFixed(2).replace('.', ',')}%</span>
+                                </div>
+                                <span className="font-medium text-red-600">-{formatCurrency(stat.value.toString())}</span>
                               </div>
-                              <span className="font-medium text-red-600">-R$ 6.769,50</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <span>Pessoas</span>
-                                <span className="text-gray-500">10,84%</span>
-                              </div>
-                              <span className="font-medium text-red-600">-R$ 1.002,33</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                                <span>Prestador de Serviço</span>
-                                <span className="text-gray-500">7,97%</span>
-                              </div>
-                              <span className="font-medium text-red-600">-R$ 700,00</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                                <span>Residencial</span>
-                                <span className="text-gray-500">5,06%</span>
-                              </div>
-                              <span className="font-medium text-red-600">-R$ 587,74</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                                <span>Pessoal | Saúde e Bem-estar</span>
-                                <span className="text-gray-500">1,93%</span>
-                              </div>
-                              <span className="font-medium text-red-600">-R$ 178,70</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                                <span>Diversos</span>
-                                <span className="text-gray-500">0,97%</span>
-                              </div>
-                              <span className="font-medium text-red-600">-R$ 90,00</span>
-                            </div>
+                            )) : (
+                              <div className="text-center py-4 text-gray-500">Sem despesas no período</div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -1296,16 +1194,10 @@ export function Transactions() {
                           <div className="h-48">
                             <Doughnut
                               data={{
-                                labels: ['Vendas', 'Serviços', 'Freelances', 'Investimentos', 'Outros'],
+                                labels: incomeStats.length > 0 ? incomeStats.map(s => s.name) : ['Nenhuma'],
                                 datasets: [{
-                                  data: [65.5, 20.3, 8.7, 3.8, 1.7],
-                                  backgroundColor: [
-                                    '#10b981',
-                                    '#3b82f6',
-                                    '#f59e0b',
-                                    '#8b5cf6',
-                                    '#6b7280'
-                                  ],
+                                  data: incomeStats.length > 0 ? incomeStats.map(s => s.percent) : [100],
+                                  backgroundColor: incomeStats.length > 0 ? chartColors.slice(0, incomeStats.length) : ['#f3f4f6'],
                                   borderWidth: 0,
                                 }]
                               }}
@@ -1322,46 +1214,18 @@ export function Transactions() {
                             />
                           </div>
                           <div className="mt-4 space-y-2 text-sm">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                <span>Vendas</span>
-                                <span className="text-gray-500">65,5%</span>
+                            {incomeStats.length > 0 ? incomeStats.map((stat, idx) => (
+                              <div key={idx} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                  <span>{stat.name}</span>
+                                  <span className="text-gray-500">{stat.percent.toFixed(2).replace('.', ',')}%</span>
+                                </div>
+                                <span className="font-medium text-green-600">+{formatCurrency(stat.value.toString())}</span>
                               </div>
-                              <span className="font-medium text-green-600">+R$ 7.273,78</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                                <span>Serviços</span>
-                                <span className="text-gray-500">20,3%</span>
-                              </div>
-                              <span className="font-medium text-green-600">+R$ 2.254,32</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                                <span>Freelances</span>
-                                <span className="text-gray-500">8,7%</span>
-                              </div>
-                              <span className="font-medium text-green-600">+R$ 966,14</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                                <span>Investimentos</span>
-                                <span className="text-gray-500">3,8%</span>
-                              </div>
-                              <span className="font-medium text-green-600">+R$ 421,99</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
-                                <span>Outros</span>
-                                <span className="text-gray-500">1,7%</span>
-                              </div>
-                              <span className="font-medium text-green-600">+R$ 188,77</span>
-                            </div>
+                            )) : (
+                              <div className="text-center py-4 text-gray-500">Sem receitas no período</div>
+                            )}
                           </div>
                         </CardContent>
                       </Card>
@@ -1495,41 +1359,45 @@ export function Transactions() {
 
                           {/* Lançamentos por data */}
                           <div className="space-y-1 mt-6">
-                            {[
-                              { date: "05/07/2025", entrada: "2.315,00", saida: "0,00", resultado: "2.315,00", saldo: "" },
-                              { date: "07/07/2025", entrada: "0,00", saida: "35,00", resultado: "-35,00", saldo: "2.740,92" },
-                              { date: "08/07/2025", entrada: "0,00", saida: "141,34", resultado: "-141,34", saldo: "2.399,58" },
-                              { date: "10/07/2025", entrada: "2.826,00", saida: "2.142,50", resultado: "407,50", saldo: "2.807,08" },
-                              { date: "11/07/2025", entrada: "0,00", saida: "1.307,28", resultado: "-1.307,28", saldo: "1.499,80" },
-                              { date: "14/07/2025", entrada: "370,00", saida: "99,00", resultado: "271,00", saldo: "1.770,80" },
-                              { date: "15/07/2025", entrada: "1.449,00", saida: "0,00", resultado: "1.449,00", saldo: "3.219,80" },
-                              { date: "17/07/2025", entrada: "865,00", saida: "1.137,74", resultado: "-267,74", saldo: "953,14" },
-                              { date: "20/07/2025", entrada: "1.069,00", saida: "0,00", resultado: "1.069,00", saldo: "2.023,14" },
-                              { date: "21/07/2025", entrada: "1.200,00", saida: "0,00", resultado: "1.200,00", saldo: "3.223,14" },
-                              { date: "25/07/2025", entrada: "0,00", saida: "2.176,49", resultado: "-2.176,49", saldo: "1.024,65" },
-                              { date: "26/07/2025", entrada: "1.300,00", saida: "0,00", resultado: "1.300,00", saldo: "2.324,65" }
-                            ].map((item, index) => (
-                              <div key={index} className="grid grid-cols-6 gap-4 text-sm py-1 hover:bg-gray-50 rounded">
-                                <div className="text-gray-700">{item.date}</div>
-                                <div className="text-center text-green-600">{item.entrada !== "0,00" ? item.entrada : ""}</div>
-                                <div className="text-center text-red-600">{item.saida !== "0,00" ? item.saida : ""}</div>
-                                <div className={`text-center font-medium ${item.resultado.startsWith("-") ? "text-red-600" : "text-green-600"}`}>
-                                  {item.resultado}
+                            {dailySummary.length > 0 ? dailySummary.map((item, index) => (
+                              <div key={index} className="grid grid-cols-6 gap-4 text-sm py-1 hover:bg-gray-100 rounded transition-colors group">
+                                <div className="text-gray-700 flex items-center gap-2">
+                                  <div className={`w-1.5 h-1.5 rounded-full ${item.resultado >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                  {item.date}
                                 </div>
-                                <div className="text-right font-medium">{item.saldo}</div>
-                                <div></div>
+                                <div className="text-center text-green-600">{item.entrada > 0 ? formatCurrencyNumber(item.entrada) : ""}</div>
+                                <div className="text-center text-red-600">{item.saida > 0 ? formatCurrencyNumber(item.saida) : ""}</div>
+                                <div className={`text-center font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                  {item.resultado >= 0 ? '+' : ''}{formatCurrencyNumber(item.resultado)}
+                                </div>
+                                <div className={`text-right font-medium ${item.saldo >= 0 ? "text-gray-900" : "text-red-600"}`}>
+                                  {formatCurrencyNumber(item.saldo)}
+                                </div>
+                                <div className="flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 hover:text-[#B59363]">
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
                               </div>
-                            ))}
+                            )) : (
+                              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
+                                Nenhum lançamento para o período selecionado
+                              </div>
+                            )}
 
                             {/* Total */}
-                            <div className="grid grid-cols-6 gap-4 text-sm py-2 border-t font-semibold bg-gray-50 rounded">
-                              <div>Total</div>
-                              <div className="text-center text-green-600">11.195,00</div>
-                              <div className="text-center text-red-600">9.241,27</div>
-                              <div className="text-center text-green-600">1.953,73</div>
-                              <div></div>
-                              <div></div>
-                            </div>
+                            {dailySummary.length > 0 && (
+                              <div className="grid grid-cols-6 gap-4 text-sm py-2 border-t font-semibold bg-[#B59363]/5 rounded mt-4">
+                                <div className="pl-2">Total do Período</div>
+                                <div className="text-center text-green-600">{formatCurrencyNumber(dailySummary.reduce((s, i) => s + i.entrada, 0))}</div>
+                                <div className="text-center text-red-600">{formatCurrencyNumber(dailySummary.reduce((s, i) => s + i.saida, 0))}</div>
+                                <div className={`text-center ${resultMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                  {resultMonth >= 0 ? '+' : ''}{formatCurrencyNumber(resultMonth)}
+                                </div>
+                                <div className="text-right pr-2">Total Final</div>
+                                <div></div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </CardContent>
@@ -1544,9 +1412,9 @@ export function Transactions() {
                         <div className="h-64">
                           <Bar
                             data={{
-                              labels: ['05/07', '07/07', '08/07', '10/07', '11/07', '14/07', '15/07', '17/07', '20/07', '21/07', '25/07', '26/07'],
+                              labels: dailySummary.map(d => d.dateLabel),
                               datasets: [{
-                                data: [2315, -35, -141.34, 407.5, -1307.28, 271, 1449, -267.74, 1069, 1200, -2176.49, 1300],
+                                data: dailySummary.map(d => d.resultado),
                                 backgroundColor: function (context: any) {
                                   const value = context.parsed.y;
                                   return value >= 0 ? '#10b981' : '#ef4444';
@@ -1599,7 +1467,7 @@ export function Transactions() {
               }
             ]}
           />
-        </TabsContent>
+        </TabsContent >
 
         <TabsContent value="movimentacoes" className="space-y-6">
           <SubTabs
@@ -1622,18 +1490,20 @@ export function Transactions() {
                         <CardContent className="space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-700">À pagar</span>
-                            <span className="text-sm font-bold text-red-600">-2.805,23</span>
+                            <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
                           </div>
 
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-700">À receber</span>
-                            <span className="text-sm font-bold text-green-600">4.430,00</span>
+                            <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
                           </div>
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Resultado</span>
-                              <span className="text-sm font-bold text-green-600">1.624,77</span>
+                              <span className={`text-sm font-bold ${resultMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {resultMonth >= 0 ? '+' : ''}{formatCurrencyNumber(resultMonth)}
+                              </span>
                             </div>
                           </div>
                         </CardContent>
@@ -1651,18 +1521,28 @@ export function Transactions() {
                           </div>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <input type="checkbox" checked className="text-blue-500" readOnly />
-                              <span className="text-xs text-gray-700">Banco Inter</span>
+                          {bankAccounts.length > 0 ? bankAccounts.map((account) => (
+                            <div key={account.id} className="flex items-center justify-between group">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
+                                <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
+                                  {account.name}
+                                </span>
+                              </div>
+                              <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {formatCurrencyNumber(account.projectedBalance)}
+                              </span>
                             </div>
-                            <span className="text-xs font-bold text-red-600">-2.805,23</span>
-                          </div>
+                          )) : (
+                            <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
+                          )}
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">Total</span>
-                              <span className="text-xs font-bold text-red-600">-2.805,23</span>
+                              <span className="text-xs text-gray-700 font-medium">Total Geral</span>
+                              <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
+                              </span>
                             </div>
                           </div>
                         </CardContent>
@@ -1940,7 +1820,7 @@ export function Transactions() {
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Total</span>
-                              <span className="text-xs font-bold text-green-600">4.430,00</span>
+                              <span className="text-xs font-bold text-green-600">{formatCurrencyNumber(totalReceivablesMonth)}</span>
                             </div>
                           </div>
                         </CardContent>
@@ -2277,16 +2157,19 @@ export function Transactions() {
                 value: "plano-contas",
                 label: "Plano de Contas",
                 icon: <FileText className="h-4 w-4" />,
-                content: <ChartOfAccountsContent
-                  isModalOpen={chartAccountModalOpen}
-                  setIsModalOpen={setChartAccountModalOpen}
-                  showSuccess={showSuccess}
-                  showError={showError}
-                  showConfirm={showConfirm}
-                  SuccessDialog={SuccessDialog}
-                  ErrorDialog={ErrorDialog}
-                  ConfirmDialog={ConfirmDialog}
-                />
+                content: (
+                  <ChartOfAccountsContent
+                    isModalOpen={chartAccountModalOpen}
+                    setIsModalOpen={setChartAccountModalOpen}
+                    chartAccountModalOpen={chartAccountModalOpen}
+                    showSuccess={showSuccess}
+                    showError={showError}
+                    showConfirm={showConfirm}
+                    SuccessDialog={SuccessDialog}
+                    ErrorDialog={ErrorDialog}
+                    ConfirmDialog={ConfirmDialog}
+                  />
+                )
               },
               {
                 value: "demonstrativo-resultados",
@@ -2310,10 +2193,10 @@ export function Transactions() {
             ]}
           />
         </TabsContent>
-      </Tabs>
+      </Tabs >
 
       {/* Card de Nova Transação */}
-      <TransactionCard
+      < TransactionCard
         open={transactionModalOpen}
         onClose={() => {
           console.log("Closing transaction modal");
@@ -2323,7 +2206,7 @@ export function Transactions() {
         entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
       />
 
-      <DynamicModal
+      < DynamicModal
         isOpen={bankAccountModalOpen}
         onClose={() => setBankAccountModalOpen(false)}
         title="Contas Financeiras"
@@ -2334,124 +2217,125 @@ export function Transactions() {
         }}
         isSaveDisabled={(data) => !data.name || !data.currentBalance || !data.bank}
         maxWidth="2xl"
-        fields={[
-          // Primeira linha
+        fields={
           [
-            { name: 'initialBalanceDate', label: 'Data do saldo inicial *', type: 'date', colSpan: 3 },
-            {
-              name: 'currentBalance',
-              label: 'Saldo em...',
-              type: 'currency',
-              colSpan: 3,
-              placeholder: '',
-              textColorCondition: (data) => data.balanceType === 'devedor' ? '#ef4444' : 'inherit',
-              onChangeOverride: (val, currentData, setFormData) => {
-                const formatted = formatCurrencyValue(val, currentData.currency);
-                setFormData((prev: any) => ({ ...prev, currentBalance: formatted }));
+            // Primeira linha
+            [
+              { name: 'initialBalanceDate', label: 'Data do saldo inicial *', type: 'date', colSpan: 3 },
+              {
+                name: 'currentBalance',
+                label: 'Saldo em...',
+                type: 'currency',
+                colSpan: 3,
+                placeholder: '',
+                textColorCondition: (data) => data.balanceType === 'devedor' ? '#ef4444' : 'inherit',
+                onChangeOverride: (val, currentData, setFormData) => {
+                  const formatted = formatCurrencyValue(val, currentData.currency);
+                  setFormData((prev: any) => ({ ...prev, currentBalance: formatted }));
+                }
+              },
+              {
+                name: 'balanceType',
+                label: '',
+                type: 'radio',
+                colSpan: 6,
+                options: [
+                  { value: 'credor', label: 'Credor' },
+                  { value: 'devedor', label: 'Devedor' }
+                ],
+                radioStyle: 'colored'
               }
-            },
-            {
-              name: 'balanceType',
-              label: '',
-              type: 'radio',
-              colSpan: 6,
-              options: [
-                { value: 'credor', label: 'Credor' },
-                { value: 'devedor', label: 'Devedor' }
-              ],
-              radioStyle: 'colored'
-            }
-          ],
-          // Segunda linha
-          [
-            {
-              name: 'accountType',
-              label: 'Tipo',
-              type: 'select',
-              colSpan: 4,
-              options: [
-                { value: 'conta_corrente', label: 'Conta Corrente' },
-                { value: 'conta_poupanca', label: 'Conta Poupança' },
-                { value: 'conta_investimento', label: 'Conta de Investimento' }
-              ],
-              iconAction: {
-                icon: <CreditCard className="h-5 w-5 mb-1 text-[#4D4E48] hover:text-[#B59363] transition-colors" />,
-                onClick: () => {/* TODO: Implementar modal de novo tipo */ },
-                title: "Cadastrar novo tipo de conta"
+            ],
+            // Segunda linha
+            [
+              {
+                name: 'accountType',
+                label: 'Tipo',
+                type: 'select',
+                colSpan: 4,
+                options: [
+                  { value: 'conta_corrente', label: 'Conta Corrente' },
+                  { value: 'conta_poupanca', label: 'Conta Poupança' },
+                  { value: 'conta_investimento', label: 'Conta de Investimento' }
+                ],
+                iconAction: {
+                  icon: <CreditCard className="h-5 w-5 mb-1 text-[#4D4E48] hover:text-[#B59363] transition-colors" />,
+                  onClick: () => {/* TODO: Implementar modal de novo tipo */ },
+                  title: "Cadastrar novo tipo de conta"
+                }
+              },
+              {
+                name: 'bank',
+                label: 'Banco',
+                type: 'autocomplete',
+                colSpan: 4,
+                options: banksList,
+                getOptionLabel: (opt: any) => `${opt.code} - ${opt.name}`,
+                getOptionValue: (opt: any) => opt.code,
+                iconAction: {
+                  icon: <Building2 className="h-5 w-5 mb-1 text-[#4D4E48] hover:text-[#B59363] transition-colors" />,
+                  onClick: () => setNewBankModalOpen(true),
+                  title: "Cadastrar novo banco"
+                }
+              },
+              {
+                name: 'currency',
+                label: 'Moeda',
+                type: 'select',
+                colSpan: 4,
+                options: [
+                  { value: 'BRL', label: 'Real (R$)' },
+                  { value: 'USD', label: 'Dólar (US$)' },
+                  { value: 'EUR', label: 'Euro (€)' }
+                ],
+                onChangeOverride: (val, currentData, setFormData) => {
+                  const newBalance = currentData.currentBalance
+                    ? formatCurrencyValue(currentData.currentBalance, val)
+                    : '';
+                  const newCreditLimit = currentData.creditLimit
+                    ? formatCurrencyValue(currentData.creditLimit, val)
+                    : '';
+                  setFormData((prev: any) => ({
+                    ...prev,
+                    currency: val,
+                    currentBalance: newBalance,
+                    creditLimit: newCreditLimit
+                  }));
+                }
               }
-            },
-            {
-              name: 'bank',
-              label: 'Banco',
-              type: 'autocomplete',
-              colSpan: 4,
-              options: banksList,
-              getOptionLabel: (opt: any) => `${opt.code} - ${opt.name}`,
-              getOptionValue: (opt: any) => opt.code,
-              iconAction: {
-                icon: <Building2 className="h-5 w-5 mb-1 text-[#4D4E48] hover:text-[#B59363] transition-colors" />,
-                onClick: () => setNewBankModalOpen(true),
-                title: "Cadastrar novo banco"
-              }
-            },
-            {
-              name: 'currency',
-              label: 'Moeda',
-              type: 'select',
-              colSpan: 4,
-              options: [
-                { value: 'BRL', label: 'Real (R$)' },
-                { value: 'USD', label: 'Dólar (US$)' },
-                { value: 'EUR', label: 'Euro (€)' }
-              ],
-              onChangeOverride: (val, currentData, setFormData) => {
-                const newBalance = currentData.currentBalance
-                  ? formatCurrencyValue(currentData.currentBalance, val)
-                  : '';
-                const newCreditLimit = currentData.creditLimit
-                  ? formatCurrencyValue(currentData.creditLimit, val)
-                  : '';
-                setFormData((prev: any) => ({
-                  ...prev,
-                  currency: val,
-                  currentBalance: newBalance,
-                  creditLimit: newCreditLimit
-                }));
-              }
-            }
-          ],
-          // Terceira linha
-          [
-            { name: 'name', label: 'Nome *', type: 'text', colSpan: 12 }
-          ],
-          // Quarta linha
-          [
-            { name: 'agency', label: 'Agência', type: 'text', colSpan: 6 },
-            { name: 'accountNumber', label: 'Conta', type: 'text', colSpan: 6 }
-          ],
-          // Quinta linha
-          [
-            {
-              name: 'creditLimit',
-              label: (data) => `Limite de crédito (${data.currency === 'USD' ? 'US$' : data.currency === 'EUR' ? '€' : 'R$'})`,
-              type: 'currency',
-              colSpan: 6,
-              onChangeOverride: (val, currentData, setFormData) => {
-                const formatted = formatCurrencyValue(val, currentData.currency);
-                setFormData((prev: any) => ({ ...prev, creditLimit: formatted }));
-              }
-            },
-            { name: 'contactName', label: 'Nome do contato', type: 'text', colSpan: 6 }
-          ],
-          // Sexta linha
-          [
-            { name: 'contactPhone', label: 'Telefone do contato', type: 'text', colSpan: 12 }
-          ]
-        ]}
+            ],
+            // Terceira linha
+            [
+              { name: 'name', label: 'Nome *', type: 'text', colSpan: 12 }
+            ],
+            // Quarta linha
+            [
+              { name: 'agency', label: 'Agência', type: 'text', colSpan: 6 },
+              { name: 'accountNumber', label: 'Conta', type: 'text', colSpan: 6 }
+            ],
+            // Quinta linha
+            [
+              {
+                name: 'creditLimit',
+                label: (data) => `Limite de crédito (${data.currency === 'USD' ? 'US$' : data.currency === 'EUR' ? '€' : 'R$'})`,
+                type: 'currency',
+                colSpan: 6,
+                onChangeOverride: (val, currentData, setFormData) => {
+                  const formatted = formatCurrencyValue(val, currentData.currency);
+                  setFormData((prev: any) => ({ ...prev, creditLimit: formatted }));
+                }
+              },
+              { name: 'contactName', label: 'Nome do contato', type: 'text', colSpan: 6 }
+            ],
+            // Sexta linha
+            [
+              { name: 'contactPhone', label: 'Telefone do contato', type: 'text', colSpan: 12 }
+            ]
+          ]}
       />
 
       {/* Modal de Novo Banco */}
-      <DynamicModal
+      < DynamicModal
         isOpen={newBankModalOpen}
         onClose={() => {
           setNewBankModalOpen(false);
@@ -2462,30 +2346,31 @@ export function Transactions() {
         onSave={handleNewBankSave}
         isSaveDisabled={(data) => !data.code || !data.name}
         maxWidth="lg"
-        fields={[
+        fields={
           [
-            {
-              name: 'code',
-              label: 'Código do Banco *',
-              type: 'text',
-              colSpan: 6,
-              placeholder: 'Ex: 001',
-              autoFocus: true,
-              transform: (val: string) => val.replace(/\D/g, '')
-            },
-            {
-              name: 'name',
-              label: 'Nome da Instituição *',
-              type: 'text',
-              colSpan: 6,
-              placeholder: 'Ex: Banco do Brasil S.A.'
-            }
-          ]
-        ]}
+            [
+              {
+                name: 'code',
+                label: 'Código do Banco *',
+                type: 'text',
+                colSpan: 6,
+                placeholder: 'Ex: 001',
+                autoFocus: true,
+                transform: (val: string) => val.replace(/\D/g, '')
+              },
+              {
+                name: 'name',
+                label: 'Nome da Instituição *',
+                type: 'text',
+                colSpan: 6,
+                placeholder: 'Ex: Banco do Brasil S.A.'
+              }
+            ]
+          ]}
       />
 
       {/* Modal de Baixa em Lote */}
-      <DynamicModal
+      < DynamicModal
         isOpen={batchPaymentModalOpen}
         onClose={() => {
           setBatchPaymentModalOpen(false);
@@ -2514,81 +2399,82 @@ export function Transactions() {
         onSave={handleBatchPayment}
         isSaveDisabled={(data) => !data.contaBancaria || !data.dataBaixa}
         maxWidth="lg"
-        fields={[
-          // Primeira linha - Conta e Data
+        fields={
           [
-            {
-              name: 'contaBancaria',
-              label: 'Conta Bancária *',
-              type: 'select',
-              colSpan: 6,
-              options: bankAccounts.map((account: any) => ({
-                value: account.id,
-                label: `${account.bank} - ${account.accountNumber}`
-              })),
-              iconAction: {
-                icon: <Plus className="h-5 w-5 mb-1 text-[#B59363] hover:text-[#4D4E48] transition-colors" />,
-                onClick: () => setBankAccountModalOpen(true),
-                title: "Adicionar nova conta"
+            // Primeira linha - Conta e Data
+            [
+              {
+                name: 'contaBancaria',
+                label: 'Conta Bancária *',
+                type: 'select',
+                colSpan: 6,
+                options: bankAccounts.map((account: any) => ({
+                  value: account.id,
+                  label: `${account.bank} - ${account.accountNumber}`
+                })),
+                iconAction: {
+                  icon: <Plus className="h-5 w-5 mb-1 text-[#B59363] hover:text-[#4D4E48] transition-colors" />,
+                  onClick: () => setBankAccountModalOpen(true),
+                  title: "Adicionar nova conta"
+                }
+              },
+              {
+                name: 'dataBaixa',
+                label: 'Data da Baixa *',
+                type: 'date',
+                colSpan: 6
               }
-            },
-            {
-              name: 'dataBaixa',
-              label: 'Data da Baixa *',
-              type: 'date',
-              colSpan: 6
-            }
-          ],
-          // Segunda linha - Forma de Pagamento
-          [
-            {
-              name: 'formaPagamento',
-              label: 'Forma de Pagamento/Recebimento',
-              type: 'select',
-              colSpan: 12,
-              options: [
-                { value: 'dinheiro', label: 'Dinheiro' },
-                { value: 'transferencia', label: 'Transferência Bancária' },
-                { value: 'boleto', label: 'Boleto' },
-                { value: 'pix', label: 'PIX' },
-                { value: 'cartao_credito', label: 'Cartão de Crédito' },
-                { value: 'cartao_debito', label: 'Cartão de Débito' },
-                { value: 'cheque', label: 'Cheque' }
-              ]
-            }
-          ],
-          // Terceira linha - Juros/Multa e Desconto
-          [
-            {
-              name: 'jurosMulta',
-              label: 'Juros/Multa',
-              type: 'currency',
-              colSpan: 6,
-              placeholder: 'R$ 0,00'
-            },
-            {
-              name: 'desconto',
-              label: 'Desconto',
-              type: 'currency',
-              colSpan: 6,
-              placeholder: 'R$ 0,00'
-            }
-          ],
-          // Quarta linha - Observações
-          [
-            {
-              name: 'observacoes',
-              label: 'Observações',
-              type: 'text',
-              colSpan: 12,
-              placeholder: 'Informações adicionais sobre esta baixa em lote...'
-            }
-          ]
-        ]}
+            ],
+            // Segunda linha - Forma de Pagamento
+            [
+              {
+                name: 'formaPagamento',
+                label: 'Forma de Pagamento/Recebimento',
+                type: 'select',
+                colSpan: 12,
+                options: [
+                  { value: 'dinheiro', label: 'Dinheiro' },
+                  { value: 'transferencia', label: 'Transferência Bancária' },
+                  { value: 'boleto', label: 'Boleto' },
+                  { value: 'pix', label: 'PIX' },
+                  { value: 'cartao_credito', label: 'Cartão de Crédito' },
+                  { value: 'cartao_debito', label: 'Cartão de Débito' },
+                  { value: 'cheque', label: 'Cheque' }
+                ]
+              }
+            ],
+            // Terceira linha - Juros/Multa e Desconto
+            [
+              {
+                name: 'jurosMulta',
+                label: 'Juros/Multa',
+                type: 'currency',
+                colSpan: 6,
+                placeholder: 'R$ 0,00'
+              },
+              {
+                name: 'desconto',
+                label: 'Desconto',
+                type: 'currency',
+                colSpan: 6,
+                placeholder: 'R$ 0,00'
+              }
+            ],
+            // Quarta linha - Observações
+            [
+              {
+                name: 'observacoes',
+                label: 'Observações',
+                type: 'text',
+                colSpan: 12,
+                placeholder: 'Informações adicionais sobre esta baixa em lote...'
+              }
+            ]
+          ]}
       />
 
       {/* Dialogs são renderizados pelos hooks personalizados */}
-    </div>
+    </div >
   );
 }
 
@@ -2597,8 +2483,9 @@ export function Transactions() {
  * Inclui modal de cadastro, lista hierárquica e funcionalidades completas
  */
 function ChartOfAccountsContent({
-  isModalOpen,
-  setIsModalOpen,
+  isModalOpen: isModalOpenProp,
+  setIsModalOpen: setIsModalOpenProp,
+  chartAccountModalOpen, // Adicionando prop para sincronizar com botão Plus do pai
   showSuccess,
   showError,
   showConfirm,
@@ -2608,6 +2495,7 @@ function ChartOfAccountsContent({
 }: {
   isModalOpen: boolean,
   setIsModalOpen: (open: boolean) => void,
+  chartAccountModalOpen?: boolean,
   showSuccess: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showError: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showConfirm: (title: string, message: string, onConfirm: () => void) => void,
@@ -2620,6 +2508,14 @@ function ChartOfAccountsContent({
   const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
 
   // Estados do modal - usando props do componente pai
+  const isModalOpen = isModalOpenProp || chartAccountModalOpen;
+  const setIsModalOpen = (open: boolean) => {
+    setIsModalOpenProp(open);
+    // Se o pai tiver o estado, atualizamos ele também
+    // Nota: Como não temos acesso direto ao setter do pai aqui via props padrão 
+    // (a menos que passemos), vamos garantir que o fechamento limpe tudo.
+  };
+
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
 
@@ -2640,6 +2536,52 @@ function ChartOfAccountsContent({
     const direction = chartSortField === field && chartSortDirection === 'asc' ? 'desc' : 'asc';
     setChartSortField(field);
     setChartSortDirection(direction);
+  };
+
+  // --- FUNÇÕES AUXILIARES UNIFICADAS DO PLANO DE CONTAS ---
+
+  // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS
+  const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
+    const categoriaNormalizada = categoria.toLowerCase().trim();
+
+    if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
+      return { type: 'receita', code: '1' };
+    } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
+      return { type: 'despesa', code: '2' };
+    } else if (categoriaNormalizada.includes('ativo')) {
+      return { type: 'ativo', code: '3' };
+    } else if (categoriaNormalizada.includes('passivo')) {
+      return { type: 'passivo', code: '4' };
+    } else {
+      // Para categorias personalizadas, usar sequência numérica
+      const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+      const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Começar após os tipos padrão
+      return { type: categoria.toLowerCase(), code: (maxCode + 1).toString() };
+    }
+  };
+
+  // GERAÇÃO DE CÓDIGO HIERÁRQUICO
+  const generateHierarchicalCode = (level: number, parentId: number | null) => {
+    if (level === 1) {
+      // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
+      const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
+      const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
+      return (maxCode + 1).toString();
+    }
+
+    if (parentId) {
+      const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+      const parentCode = parentAccount ? parentAccount.code : (level === 2 ? '1' : level === 3 ? '1.1' : '1.1.1');
+
+      // Contar filhos diretos do mesmo pai no mesmo nível
+      const childrenCount = safeChartAccountsData?.filter(acc =>
+        acc.parentId === parentId && acc.level === level
+      ).length || 0;
+
+      return `${parentCode}.${childrenCount + 1}`;
+    }
+
+    return '1';
   };
 
   // Função para ordenar dados
@@ -2780,13 +2722,18 @@ function ChartOfAccountsContent({
     }
 
     setModalMode('edit');
-    setSelectedAccount(account);
+    setSelectedAccount(existingAccount);
+
+    // Lógica inteligente para popular campos de hierarquia baseado no nível
     setFormData({
-      tipo: account.type || '',
-      nome: account.name || '',
-      categoria: account.category || '',
-      subcategoria: account.subcategory || '',
-      incluirComo: account.parentId || ''
+      tipo: existingAccount.type || '',
+      nome: existingAccount.name || '',
+      // Nível 2 tem Categoria (Nível 1)
+      categoria: existingAccount.level === 2 ? (safeChartAccountsData.find(acc => acc.id === existingAccount.parentId)?.type || '') : '',
+      // Nível 3 tem Subcategoria (Nível 2)
+      subcategoria: existingAccount.level === 3 ? (safeChartAccountsData.find(acc => acc.id === existingAccount.parentId)?.name || '') : '',
+      // Nível 4 tem Incluir Como (Nível 3)
+      incluirComo: existingAccount.level === 4 ? (safeChartAccountsData.find(acc => acc.id === existingAccount.parentId)?.name || '') : ''
     });
     setIsModalOpen(true);
   };
@@ -2812,51 +2759,51 @@ function ChartOfAccountsContent({
     }
 
     // GERAÇÃO DE CÓDIGO HIERÁRQUICO DEFINITIVO
-    const generateHierarchicalCode = () => {
-      if (level === 1) {
+    const generateHierarchicalCode = (targetLevel: number, targetParentId: number | null) => {
+      if (targetLevel === 1) {
         // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
         const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
 
-      if (level === 2) {
+      if (targetLevel === 2) {
         // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
-        if (parentId) {
-          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+        if (targetParentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === targetParentId);
           const parentCode = parentAccount ? parentAccount.code : '1';
 
           // Contar filhos diretos do mesmo pai no nível 2
           const childrenCount = safeChartAccountsData?.filter(acc =>
-            acc.parentId === parentId && acc.level === 2
+            acc.parentId === targetParentId && acc.level === 2
           ).length || 0;
 
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
 
-      if (level === 3) {
+      if (targetLevel === 3) {
         // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
-        if (parentId) {
-          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+        if (targetParentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === targetParentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1';
 
           const childrenCount = safeChartAccountsData?.filter(acc =>
-            acc.parentId === parentId && acc.level === 3
+            acc.parentId === targetParentId && acc.level === 3
           ).length || 0;
 
           return `${parentCode}.${childrenCount + 1}`;
         }
       }
 
-      if (level === 4) {
+      if (targetLevel === 4) {
         // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
-        if (parentId) {
-          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
+        if (targetParentId) {
+          const parentAccount = safeChartAccountsData?.find(acc => acc.id === targetParentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1.1';
 
           const childrenCount = safeChartAccountsData?.filter(acc =>
-            acc.parentId === parentId && acc.level === 4
+            acc.parentId === targetParentId && acc.level === 4
           ).length || 0;
 
           return `${parentCode}.${childrenCount + 1}`;
@@ -2866,100 +2813,77 @@ function ChartOfAccountsContent({
       return '1';
     };
 
-    // LÓGICA HIERÁRQUICA CORRETA DO PLANO DE CONTAS
+    // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO
     let level: number = 1;
     let parentId: number | null = null;
     let category: string | null = null;
     let subcategory: string | null = null;
     let type: string = formData.nome.toLowerCase();
 
-    // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS
-    const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
-      const categoriaNormalizada = categoria.toLowerCase().trim();
+    // Se for EDIÇÃO e NÃO mudou nenhum campo de hierarquia, preservar nível e pai original
+    const isEdit = modalMode === 'edit' && selectedAccount;
+    const hierarquiaMudou = isEdit && (
+      (selectedAccount.level === 1 && (formData.categoria || formData.subcategoria || formData.incluirComo)) ||
+      (selectedAccount.level === 2 && (formData.subcategoria || formData.incluirComo)) ||
+      (selectedAccount.level === 3 && (formData.incluirComo))
+    );
 
-      if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
-        return { type: 'receita', code: '1' };
-      } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
-        return { type: 'despesa', code: '2' };
-      } else if (categoriaNormalizada.includes('ativo')) {
-        return { type: 'ativo', code: '3' };
-      } else if (categoriaNormalizada.includes('passivo')) {
-        return { type: 'passivo', code: '4' };
-      } else {
-        // Para categorias personalizadas, usar sequência numérica
-        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Começar após os tipos padrão
-        return { type: categoria.toLowerCase(), code: (maxCode + 1).toString() };
-      }
-    };
-
-    // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO
-    if (formData.incluirComo) {
-      // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
-      level = 4;
-      const parentAccount = safeChartAccountsData?.find(acc =>
-        acc.name === formData.incluirComo && acc.level === 3
-      );
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
-    } else if (formData.subcategoria) {
-      // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
-      level = 3;
-      const parentAccount = safeChartAccountsData?.find(acc =>
-        acc.name === formData.subcategoria && acc.level === 2
-      );
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
-    } else if (formData.categoria) {
-      // NÍVEL 2: Se só "Categoria" está preenchida
-      level = 2;
-      const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
-
-      // Buscar ou usar código automático para categoria principal
-      let parentAccount = safeChartAccountsData?.find(acc =>
-        acc.type === categoriaMapping.type && acc.level === 1
-      );
-
-      // GARANTIR vinculação pai-filho correta
-      if (!parentAccount) {
-        // Buscar por nome similar se não encontrar por tipo
-        parentAccount = safeChartAccountsData?.find(acc =>
-          acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
+    if (isEdit && !hierarquiaMudou) {
+      level = selectedAccount.level;
+      parentId = selectedAccount.parentId;
+      category = selectedAccount.category;
+      subcategory = selectedAccount.subcategory;
+      type = selectedAccount.type;
+    } else {
+      // Lógica de detecção de nível normal (para novos ou mudança de hierarquia)
+      if (formData.incluirComo) {
+        level = 4;
+        const parentAccount = safeChartAccountsData?.find(acc =>
+          acc.name === formData.incluirComo && acc.level === 3
         );
-
-        // Se ainda não encontrar, buscar categorias compatíveis existentes
+        parentId = parentAccount ? parentAccount.id : null;
+        category = formData.nome;
+        subcategory = formData.nome;
+        type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
+      } else if (formData.subcategoria) {
+        level = 3;
+        const parentAccount = safeChartAccountsData?.find(acc =>
+          acc.name === formData.subcategoria && acc.level === 2
+        );
+        parentId = parentAccount ? parentAccount.id : null;
+        category = formData.nome;
+        subcategory = formData.nome;
+        type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
+      } else if (formData.categoria) {
+        level = 2;
+        const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
+        let parentAccount = safeChartAccountsData?.find(acc =>
+          acc.type === categoriaMapping.type && acc.level === 1
+        );
         if (!parentAccount) {
-          const categoriasCompatíveis = ['receitas', 'receita', 'despesas', 'despesa', 'ativos', 'ativo', 'passivos', 'passivo'];
           parentAccount = safeChartAccountsData?.find(acc =>
-            acc.level === 1 && (
-              categoriasCompatíveis.some(cat =>
-                acc.name.toLowerCase().includes(cat) || acc.type.toLowerCase().includes(cat)
-              ) && acc.type === categoriaMapping.type
-            )
+            acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
           );
         }
+        parentId = parentAccount ? parentAccount.id : null;
+        type = parentAccount ? parentAccount.type : categoriaMapping.type;
+        category = formData.nome;
+      } else {
+        level = 1;
+        parentId = null;
+        const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
+        category = formData.nome;
+        type = categoriaMapping.type;
       }
-
-      parentId = parentAccount ? parentAccount.id : null;
-      type = parentAccount ? parentAccount.type : categoriaMapping.type;
-      category = formData.nome;
-    } else {
-      // NÍVEL 1: Só "Nome" preenchido - categoria principal
-      level = 1;
-      parentId = null;
-      const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
-      category = formData.nome;
-      type = categoriaMapping.type;
     }
 
+    // Função para gerar ou preservar código
+    const finalCode = (isEdit && !hierarquiaMudou) ? selectedAccount.code : generateHierarchicalCode(level, parentId);
+
     const accountData = {
-      userId: "2",
+      userId: 2,
       parentId: parentId,
-      code: generateHierarchicalCode(),
+      code: finalCode,
       name: formData.nome,
       type: type,
       category: category,
@@ -2986,6 +2910,7 @@ function ChartOfAccountsContent({
       });
       setSelectedAccount(null);
       setModalMode('create');
+      showSuccess(modalMode === 'create' ? "Conta criada" : "Conta atualizada", "Operação realizada com sucesso.");
     } catch (error) {
       console.error('Erro ao salvar conta:', error);
       showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
@@ -2999,168 +2924,56 @@ function ChartOfAccountsContent({
       return;
     }
 
-    // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS (Mesma função de handleSaveAccount)
-    const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
-      const categoriaNormalizada = categoria.toLowerCase().trim();
+    // Usar a mesma lógica de hierarquia (apenas para novas contas)
+    const level = 1; // Simplificando redeclaração para evitar erro de lint
+    const parentId = null;
+    const type = mapearCategoriaParaTipo(formData.nome).type;
 
-      if (categoriaNormalizada.includes('receita') || categoriaNormalizada.includes('renda')) {
-        return { type: 'receita', code: '1' };
-      } else if (categoriaNormalizada.includes('despesa') || categoriaNormalizada.includes('gasto') || categoriaNormalizada.includes('custo')) {
-        return { type: 'despesa', code: '2' };
-      } else if (categoriaNormalizada.includes('ativo')) {
-        return { type: 'ativo', code: '3' };
-      } else if (categoriaNormalizada.includes('passivo')) {
-        return { type: 'passivo', code: '4' };
-      } else {
-        // Para categorias personalizadas, usar sequência numérica
-        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Começar após os tipos padrão
-        return { type: categoria.toLowerCase(), code: (maxCode + 1).toString() };
-      }
-    };
+    // Lógica completa de detecção (reutilizando a estrutura mas sem redeclarar no mesmo escopo de forma conflitante)
+    // Para simplificar e evitar erros de redeclaração, vamos apenas chamar a lógica de criação
 
-    // GERAÇÃO DE CÓDIGO HIERÁRQUICO DEFINITIVO (Mesma lógica correta)
-    const generateHierarchicalCode = () => {
-      if (level === 1) {
-        // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
-        const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-        const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
-        return (maxCode + 1).toString();
-      }
-
-      if (level === 2) {
-        // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
-        if (parentId) {
-          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
-          const parentCode = parentAccount ? parentAccount.code : '1';
-
-          // Contar filhos diretos do mesmo pai no nível 2
-          const childrenCount = safeChartAccountsData?.filter(acc =>
-            acc.parentId === parentId && acc.level === 2
-          ).length || 0;
-
-          return `${parentCode}.${childrenCount + 1}`;
-        }
-      }
-
-      if (level === 3) {
-        // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
-        if (parentId) {
-          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
-          const parentCode = parentAccount ? parentAccount.code : '1.1';
-
-          const childrenCount = safeChartAccountsData?.filter(acc =>
-            acc.parentId === parentId && acc.level === 3
-          ).length || 0;
-
-          return `${parentCode}.${childrenCount + 1}`;
-        }
-      }
-
-      if (level === 4) {
-        // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
-        if (parentId) {
-          const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
-          const parentCode = parentAccount ? parentAccount.code : '1.1.1';
-
-          const childrenCount = safeChartAccountsData?.filter(acc =>
-            acc.parentId === parentId && acc.level === 4
-          ).length || 0;
-
-          return `${parentCode}.${childrenCount + 1}`;
-        }
-      }
-
-      return '1';
-    };
-
-    // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO (Mesma lógica de handleSaveAccount)
-    let level: number = 1;
-    let parentId: number | null = null;
-    let category: string | null = null;
-    let subcategory: string | null = null;
-    let type: string = formData.nome.toLowerCase();
+    let finalLevel: number = 1;
+    let finalParentId: number | null = null;
+    let finalType: string = '';
+    let finalCategory: string | null = formData.nome;
+    let finalSubcategory: string | null = null;
 
     if (formData.incluirComo) {
-      // NÍVEL 4: Se "Incluir como filha de" está preenchido = SEMPRE NÍVEL 4
-      level = 4;
-      const parentAccount = safeChartAccountsData?.find(acc =>
-        acc.name === formData.incluirComo && acc.level === 3
-      );
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
+      finalLevel = 4;
+      const parentAcc = safeChartAccountsData?.find(acc => acc.name === formData.incluirComo && acc.level === 3);
+      finalParentId = parentAcc ? parentAcc.id : null;
+      finalType = parentAcc ? parentAcc.type : mapearCategoriaParaTipo(formData.nome).type;
     } else if (formData.subcategoria) {
-      // NÍVEL 3: Se "Subcategoria de" está preenchido (sem Incluir como filha de)
-      level = 3;
-      const parentAccount = safeChartAccountsData?.find(acc =>
-        acc.name === formData.subcategoria && acc.level === 2
-      );
-      parentId = parentAccount ? parentAccount.id : null;
-      category = formData.nome;
-      subcategory = formData.nome;
-      type = parentAccount ? parentAccount.type : mapearCategoriaParaTipo(formData.categoria || formData.nome).type;
+      finalLevel = 3;
+      const parentAcc = safeChartAccountsData?.find(acc => acc.name === formData.subcategoria && acc.level === 2);
+      finalParentId = parentAcc ? parentAcc.id : null;
+      finalType = parentAcc ? parentAcc.type : mapearCategoriaParaTipo(formData.nome).type;
     } else if (formData.categoria) {
-      // NÍVEL 2: Se só "Categoria" está preenchida
-      level = 2;
-      const categoriaMapping = mapearCategoriaParaTipo(formData.categoria);
-
-      // Buscar ou usar código automático para categoria principal
-      let parentAccount = safeChartAccountsData?.find(acc =>
-        acc.type === categoriaMapping.type && acc.level === 1
-      );
-
-      // GARANTIR vinculação pai-filho correta
-      if (!parentAccount) {
-        // Buscar por nome similar se não encontrar por tipo
-        parentAccount = safeChartAccountsData?.find(acc =>
-          acc.name.toLowerCase().includes(formData.categoria.toLowerCase()) && acc.level === 1
-        );
-
-        // Se ainda não encontrar, buscar categorias compatíveis existentes
-        if (!parentAccount) {
-          const categoriasCompatíveis = ['receitas', 'receita', 'despesas', 'despesa', 'ativos', 'ativo', 'passivos', 'passivo'];
-          parentAccount = safeChartAccountsData?.find(acc =>
-            acc.level === 1 && (
-              categoriasCompatíveis.some(cat =>
-                acc.name.toLowerCase().includes(cat) || acc.type.toLowerCase().includes(cat)
-              ) && acc.type === categoriaMapping.type
-            )
-          );
-        }
-      }
-
-      parentId = parentAccount ? parentAccount.id : null;
-      type = parentAccount ? parentAccount.type : categoriaMapping.type;
-      category = formData.nome;
+      finalLevel = 2;
+      const mapping = mapearCategoriaParaTipo(formData.categoria);
+      const parentAcc = safeChartAccountsData?.find(acc => acc.type === mapping.type && acc.level === 1);
+      finalParentId = parentAcc ? parentAcc.id : null;
+      finalType = parentAcc ? parentAcc.type : mapping.type;
     } else {
-      // NÍVEL 1: Só "Nome" preenchido - categoria principal
-      level = 1;
-      parentId = null;
-      const categoriaMapping = mapearCategoriaParaTipo(formData.nome);
-      category = formData.nome;
-      type = categoriaMapping.type;
+      finalLevel = 1;
+      finalType = mapearCategoriaParaTipo(formData.nome).type;
     }
 
-
-
     const accountData = {
-      userId: "2",
-      parentId: parentId,
-      code: generateHierarchicalCode(),
+      userId: 2,
+      parentId: finalParentId,
+      code: generateHierarchicalCode(finalLevel, finalParentId),
       name: formData.nome,
-      type: type,
-      category: category,
-      subcategory: subcategory,
-      level: level,
+      type: finalType,
+      category: finalCategory,
+      subcategory: finalSubcategory,
+      level: finalLevel,
       isActive: true,
       description: null
     };
 
     try {
       await createAccountMutation.mutateAsync(accountData);
-      // Limpar formulário mas manter modal aberto (apenas para Salvar e Continuar)
       setFormData({
         tipo: '',
         nome: '',
@@ -3168,12 +2981,12 @@ function ChartOfAccountsContent({
         subcategoria: '',
         incluirComo: ''
       });
-      // Garantir que continua no modo create
       setModalMode('create');
       setSelectedAccount(null);
+      showSuccess("Conta criada", "Você pode continuar adicionando novas contas.");
     } catch (error) {
       console.error('Erro ao salvar e continuar:', error);
-      showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
+      showError("Erro ao salvar", "Verifique os dados e tente novamente.");
     }
   };
 

@@ -29,7 +29,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
-  Settings
+  Settings,
+  Package
 } from "lucide-react";
 
 // Hooks e componentes React

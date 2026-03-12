@@ -62,16 +62,16 @@ function AppContent() {
         <Switch>
           {/* Rota principal - Dashboard com métricas financeiras */}
           <Route path="/" component={Dashboard} />
-          
+
           {/* Página de gestão de relacionamentos (clientes, fornecedores) */}
           <Route path="/relationships" component={Relationships} />
-          
+
           {/* Página de gestão financeira (transações, fluxo de caixa) */}
           <Route path="/transactions" component={Transactions} />
-          
+
           {/* Página de gestão de negócios (categorias empresariais) */}
           <Route path="/categories" component={Categories} />
-          
+
           {/* Rota padrão para páginas não encontradas */}
           <Route>
             <div className="flex items-center justify-center h-96">
@@ -98,7 +98,7 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       {/* Componente principal com lógica de autenticação */}
       <AppContent />
-      
+
       {/* Sistema global de notificações toast */}
       <Toaster />
     </QueryClientProvider>

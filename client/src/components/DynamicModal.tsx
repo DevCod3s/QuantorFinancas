@@ -17,11 +17,11 @@ export interface DynamicField {
     label: React.ReactNode | ((data: any) => React.ReactNode);
     type: FieldType;
     colSpan?: number; // 1 to 12. Padrão: 12 (linha inteira)
-    options?: any[]; // para select, autocomplete, radio
+    options?: any[] | ((data: any) => any[]); // para select, autocomplete, radio
     getOptionLabel?: (option: any) => string; // para autocomplete ou labels customizadas
     getOptionValue?: (option: any) => any; // para select/radio
     required?: boolean;
-    disabled?: boolean;
+    disabled?: boolean | ((data: any) => boolean);
     autoFocus?: boolean;
     placeholder?: string;
     iconAction?: {
@@ -31,11 +31,12 @@ export interface DynamicField {
     };
     endIcon?: React.ReactNode; // Ícone dentro do campo (MUI Adornment)
     transform?: (val: string, currentData: any) => string; // Transformação simples ao digitar
-    onChangeOverride?: (val: any, currentData: any, setFormData: React.Dispatch<React.SetStateAction<any>>) => void; // Para efeitos colaterais complexos (ex: mudar moeda e recalcular saldo)
+    onChangeOverride?: (val: any, currentData: any, setFormData: React.Dispatch<React.SetStateAction<any>>) => void; // Para efeitos colaterais complexos
     textColorCondition?: (data: any) => string; // Alterar cor do texto dinamicamente
-    radioStyle?: 'default' | 'colored'; // Estilos específicos de rádio (ex: azul/vermelho)
+    radioStyle?: 'default' | 'colored'; // Estilos específicos de rádio
     errorCondition?: (data: any) => boolean;
     helperText?: string | ((data: any) => string);
+    hidden?: (data: any) => boolean; // Ocultar campos dinamicamente
 }
 
 interface DynamicModalProps {
@@ -44,10 +45,10 @@ interface DynamicModalProps {
     title: string;
     icon?: React.ReactNode;
     initialData?: any;
-    data?: any; // To support migrating from initialData -> data
+    data?: any;
     onSave: (data: any) => void;
-    onSaveAndContinue?: (data: any, resetForm: () => void) => void; // Para salvar sem fechar a janela
-    fields: DynamicField[][]; // Array de Arrays para representar as Linhas e Colunas
+    onSaveAndContinue?: (data: any, resetForm: () => void) => void;
+    fields: DynamicField[][];
     saveButtonText?: string;
     cancelButtonText?: string;
     saveButtonClassName?: string;
@@ -56,6 +57,7 @@ interface DynamicModalProps {
     cancelButtonClassName?: string;
     isSaveDisabled?: (data: any) => boolean;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
+    hideCloseButton?: boolean;
 }
 
 export function DynamicModal({
@@ -69,17 +71,17 @@ export function DynamicModal({
     onSaveAndContinue,
     fields,
     saveButtonText = 'Salvar',
-    cancelButtonText = 'Cancelar',
+    cancelButtonText = 'Sair',
     saveButtonClassName,
     saveButtonIcon,
     cancelButtonIcon,
     cancelButtonClassName,
     isSaveDisabled,
-    maxWidth = '2xl'
+    maxWidth = '2xl',
+    hideCloseButton = false
 }: DynamicModalProps) {
     const [formData, setFormData] = useState(data || initialData || {});
 
-    // Sincronizar dados iniciais quando o modal abre
     useEffect(() => {
         if (isOpen) {
             setFormData(data || initialData || {});
@@ -87,30 +89,23 @@ export function DynamicModal({
     }, [isOpen, initialData, data]);
 
     const handleResetForm = () => {
-        setFormData(initialData);
+        setFormData(initialData || {});
     };
 
     if (!isOpen) return null;
 
     const handleChange = (name: string, value: any, field: DynamicField) => {
-        // Se o campo fornecer um override, ele tem controle total sobre o que acontece no estado
         if (field.onChangeOverride) {
             field.onChangeOverride(value, formData, setFormData);
             return;
         }
 
         let finalValue = value;
-
-        // Aplicar transformações simples (ex: replace de caracteres)
         if (field.transform) {
             finalValue = field.transform(value, formData);
         }
 
         setFormData((prev: any) => ({ ...prev, [name]: finalValue }));
-    };
-
-    const getLabel = (field: DynamicField) => {
-        return typeof field.label === 'function' ? field.label(formData || {}) : field.label;
     };
 
     const maxWidthClass = {
@@ -122,157 +117,180 @@ export function DynamicModal({
         '3xl': 'max-w-3xl',
     }[maxWidth] || 'max-w-2xl';
 
-    const renderField = (field: DynamicField) => {
-        if (!field) return null;
+    const renderFieldContent = (field: DynamicField) => {
+        const isFieldDisabled = typeof field.disabled === 'function' ? field.disabled(formData) : !!field.disabled;
+        const currentOptions = typeof field.options === 'function' ? field.options(formData) : (field.options || []);
+        const label = typeof field.label === 'function' ? field.label(formData) : field.label;
+        const helperText = typeof field.helperText === 'function' ? field.helperText(formData) : field.helperText;
 
-        const safeFormData = formData || {};
-        const value = safeFormData[field.name];
-        const safeValue = value !== undefined && value !== null ? value : '';
-        const label = getLabel(field);
-        const hasIcon = !!field.iconAction;
-        const isError = field.errorCondition ? field.errorCondition(safeFormData) : false;
-        const helperTextStr = typeof field.helperText === 'function' ? field.helperText(safeFormData) : field.helperText;
-
-        let content = null;
+        const commonStyles = {
+            '& .MuiInputLabel-root': { color: '#1D3557' },
+            '& .MuiInputLabel-root.Mui-focused': { color: '#B59363' },
+            '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
+            '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottomColor: '#1D3557' },
+            '& .MuiInputBase-input': {
+                color: field.textColorCondition ? field.textColorCondition(formData) : '#1D3557',
+                fontWeight: 500
+            }
+        };
 
         switch (field.type) {
             case 'text':
             case 'currency':
-                content = (
+                return (
                     <TextField
-                        label={label as React.ReactNode}
-                        variant="standard"
-                        value={safeValue}
-                        onChange={(e) => handleChange(field.name, e.target.value, field)}
                         fullWidth
-                        placeholder={field.placeholder || ''}
-                        disabled={field.disabled}
+                        label={label}
+                        value={formData[field.name] || ''}
+                        onChange={(e) => handleChange(field.name, e.target.value, field)}
+                        disabled={isFieldDisabled}
+                        variant="standard"
+                        placeholder={field.placeholder}
                         autoFocus={field.autoFocus}
-                        error={isError}
-                        helperText={isError ? helperTextStr : ''}
-                        InputProps={field.endIcon ? {
-                            endAdornment: (
+                        sx={commonStyles}
+                        InputLabelProps={{ shrink: true }}
+                        helperText={helperText}
+                        InputProps={{
+                            endAdornment: field.endIcon ? (
+                                <InputAdornment position="end">{field.endIcon}</InputAdornment>
+                            ) : field.iconAction ? (
                                 <InputAdornment position="end">
-                                    {field.endIcon}
+                                    <button
+                                        type="button"
+                                        onClick={field.iconAction.onClick}
+                                        title={field.iconAction.title}
+                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                    >
+                                        {field.iconAction.icon}
+                                    </button>
                                 </InputAdornment>
-                            )
-                        } : undefined}
-                        sx={{
-                            '& .MuiInputLabel-root': { color: '#1D3557' },
-                            '& .MuiInputLabel-root.Mui-focused': { color: '#B59363' },
-                            '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
-                            '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottomColor: '#1D3557' },
-                            '& .MuiInputBase-input': {
-                                color: field.textColorCondition ? field.textColorCondition(formData) : '#1D3557',
-                                fontWeight: 500
-                            }
+                            ) : null
                         }}
                     />
                 );
-                break;
             case 'date':
-                content = (
+                return (
                     <DateInput
                         label={typeof label === 'string' ? label : undefined}
-                        value={safeValue}
+                        value={formData[field.name] || ''}
                         onChange={(val) => handleChange(field.name, val, field)}
-                        disabled={field.disabled}
+                        disabled={isFieldDisabled}
                         required={field.required}
                     />
                 );
-                break;
             case 'select':
-                content = (
-                    <FormControl variant="standard" fullWidth disabled={field.disabled}>
-                        <InputLabel sx={{ color: '#1D3557', '&.Mui-focused': { color: '#B59363' } }}>{label as React.ReactNode}</InputLabel>
+                return (
+                    <FormControl variant="standard" fullWidth sx={commonStyles} disabled={isFieldDisabled}>
+                        <InputLabel shrink={true}>{label}</InputLabel>
                         <Select
-                            value={safeValue}
-                            label={typeof label === 'string' ? label : undefined}
+                            value={formData[field.name] || ''}
                             onChange={(e) => handleChange(field.name, e.target.value, field)}
-                            sx={{
-                                color: '#1D3557',
-                                '&:after': { borderBottomColor: '#B59363' },
-                                '& .MuiSelect-select': { fontWeight: 500 }
-                            }}
+                            displayEmpty
                         >
-                            {field.options?.map((opt, i) => {
-                                const optValue = field.getOptionValue ? field.getOptionValue(opt) : opt.value;
-                                const optLabel = field.getOptionLabel ? field.getOptionLabel(opt) : opt.label;
-                                return (
-                                    <MenuItem key={i} value={optValue}>{optLabel}</MenuItem>
-                                );
-                            })}
+                            {currentOptions.map((opt: any, i: number) => (
+                                <MenuItem
+                                    key={i}
+                                    value={field.getOptionValue ? field.getOptionValue(opt) : opt.value}
+                                >
+                                    {field.getOptionLabel ? field.getOptionLabel(opt) : opt.label}
+                                </MenuItem>
+                            ))}
                         </Select>
+                        {helperText && (
+                            <div className="text-[10px] mt-1 text-gray-400">{helperText}</div>
+                        )}
+                        {field.iconAction && (
+                            <div className="absolute right-0 top-0 mt-[-20px]">
+                                <button
+                                    type="button"
+                                    onClick={field.iconAction.onClick}
+                                    title={field.iconAction.title}
+                                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                                >
+                                    {field.iconAction.icon}
+                                </button>
+                            </div>
+                        )}
                     </FormControl>
                 );
-                break;
             case 'autocomplete':
-                const selectedOption = (field.options || []).find(opt => {
-                    const optVal = field.getOptionValue ? field.getOptionValue(opt) : opt.code;
-                    return optVal === safeValue;
-                }) || null;
-
-                content = (
+                return (
                     <Autocomplete
-                        options={field.options || []}
-                        getOptionLabel={(opt) => field.getOptionLabel ? field.getOptionLabel(opt) : String(opt)}
-                        value={selectedOption}
+                        options={currentOptions}
+                        disabled={isFieldDisabled}
+                        getOptionLabel={field.getOptionLabel || ((opt: any) => opt.label || '')}
+                        value={currentOptions.find((opt: any) => (field.getOptionValue ? field.getOptionValue(opt) : opt.value) === formData[field.name]) || null}
                         onChange={(_, newValue) => {
-                            const newOptVal = newValue ? (field.getOptionValue ? field.getOptionValue(newValue) : newValue.code) : '';
-                            handleChange(field.name, newOptVal, field);
-                        }}
-                        disabled={field.disabled}
-                        slotProps={{
-                            paper: {
-                                sx: { width: 'max-content', minWidth: '100%' }
-                            }
+                            const val = newValue ? (field.getOptionValue ? field.getOptionValue(newValue) : newValue.value) : '';
+                            handleChange(field.name, val, field);
                         }}
                         renderInput={(params) => (
                             <TextField
                                 {...params}
-                                label={label as React.ReactNode}
                                 variant="standard"
-                                fullWidth
-                                sx={{
-                                    '& .MuiInputLabel-root': { color: '#1D3557' },
-                                    '& .MuiInputLabel-root.Mui-focused': { color: '#B59363' },
-                                    '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
-                                    '& .MuiInputBase-input': { color: '#1D3557', fontWeight: 500 }
+                                label={label}
+                                placeholder={field.placeholder}
+                                sx={commonStyles}
+                                InputLabelProps={{ ...params.InputLabelProps, shrink: true }}
+                                InputProps={{
+                                    ...params.InputProps,
+                                    endAdornment: (
+                                        <>
+                                            {field.iconAction && (
+                                                <InputAdornment position="end">
+                                                    <button
+                                                        type="button"
+                                                        onClick={field.iconAction.onClick}
+                                                        title={field.iconAction.title}
+                                                        className="p-1 hover:bg-gray-100 rounded-full transition-colors mr-2"
+                                                    >
+                                                        {field.iconAction.icon}
+                                                    </button>
+                                                </InputAdornment>
+                                            )}
+                                            {params.InputProps.endAdornment}
+                                        </>
+                                    )
                                 }}
                             />
                         )}
-                        noOptionsText="Nenhum banco encontrado"
                     />
                 );
-                break;
             case 'radio':
-                content = (
-                    <div className="flex items-center gap-6 justify-center h-full pb-2">
-                        {field.options?.map((opt, i) => {
-                            const optValue = field.getOptionValue ? field.getOptionValue(opt) : opt.value;
-                            const optLabel = field.getOptionLabel ? field.getOptionLabel(opt) : opt.label;
-                            const optColor = field.radioStyle === 'colored'
-                                ? (optValue === 'credor' ? 'text-[#B59363] accent-[#B59363]' : 'text-red-500 accent-red-500')
-                                : 'text-[#B59363] accent-[#B59363]';
-
-                            return (
-                                <label key={i} className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name={field.name}
-                                        value={optValue}
-                                        checked={safeValue === optValue}
-                                        onChange={(e) => handleChange(field.name, e.target.value, field)}
-                                        className={`w-4 h-4 ${optColor}`}
-                                    />
-                                    <span className="text-sm text-[#1D3557]">{optLabel}</span>
-                                </label>
-                            );
-                        })}
+                return (
+                    <div className="space-y-2">
+                        <label className="text-xs text-gray-500">{label}</label>
+                        <div className="flex flex-wrap gap-4">
+                            {currentOptions.map((opt: any, i: number) => {
+                                const val = field.getOptionValue ? field.getOptionValue(opt) : opt.value;
+                                const isSelected = formData[field.name] === val;
+                                return (
+                                    <label key={i} className={`flex items-center gap-2 cursor-pointer ${isFieldDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                        <input
+                                            type="radio"
+                                            name={field.name}
+                                            value={val}
+                                            checked={isSelected}
+                                            disabled={isFieldDisabled}
+                                            onChange={() => handleChange(field.name, val, field)}
+                                            className="w-4 h-4 accent-[#B59363]"
+                                        />
+                                        <span className={`text-sm ${isSelected ? 'font-medium text-[#1D3557]' : 'text-gray-600'}`}>
+                                            {field.getOptionLabel ? field.getOptionLabel(opt) : opt.label}
+                                        </span>
+                                    </label>
+                                );
+                            })}
+                        </div>
                     </div>
                 );
-                break;
+            default:
+                return null;
         }
+    };
+
+    const renderField = (field: DynamicField) => {
+        if (!field || (field.hidden && field.hidden(formData))) return null;
 
         const colSpanClass = {
             1: 'col-span-1', 2: 'col-span-2', 3: 'col-span-3', 4: 'col-span-4',
@@ -280,28 +298,9 @@ export function DynamicModal({
             9: 'col-span-9', 10: 'col-span-10', 11: 'col-span-11', 12: 'col-span-12'
         }[field.colSpan || 12] || 'col-span-12';
 
-        if (hasIcon) {
-            return (
-                <div className={`${colSpanClass} grid grid-cols-4 gap-2`}>
-                    <div className="col-span-3">
-                        {content}
-                    </div>
-                    <div className="col-span-1 flex items-end justify-center">
-                        <div
-                            onClick={field.iconAction?.onClick}
-                            className="text-[#B59363] hover:text-[#1D3557] cursor-pointer pb-2"
-                            title={field.iconAction?.title}
-                        >
-                            {field.iconAction?.icon}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
         return (
-            <div className={`${colSpanClass}`}>
-                {content}
+            <div key={field.name} className={colSpanClass}>
+                {renderFieldContent(field)}
             </div>
         );
     };
@@ -310,27 +309,27 @@ export function DynamicModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className={`bg-gray-100 rounded-lg w-full ${maxWidthClass} mx-4`}>
-                <div className="flex items-center justify-between p-6 pb-2 border-b border-gray-200">
+            <div className={`bg-gray-100 rounded-lg w-full ${maxWidthClass} mx-4 overflow-hidden`}>
+                <div className="flex items-center justify-between p-6 pb-2 border-b border-gray-200 bg-white">
                     <div className="flex items-center gap-3">
                         {icon && <div>{icon}</div>}
                         <h2 className="text-xl font-bold text-[#1D3557]">
                             {title}
                         </h2>
                     </div>
+                    {!hideCloseButton && (
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+                            <X size={24} />
+                        </button>
+                    )}
                 </div>
-                <div className="p-6 relative">
+                <div className="p-6 relative max-h-[85vh] overflow-y-auto">
                     {fields.map((row, rowIndex) => (
                         <div key={rowIndex} className="grid grid-cols-12 gap-6 items-end mb-6">
-                            {row.map((field, fieldIndex) => (
-                                <React.Fragment key={fieldIndex}>
-                                    {renderField(field)}
-                                </React.Fragment>
-                            ))}
+                            {row.map((field) => renderField(field))}
                         </div>
                     ))}
 
-                    {/* Botões de Ação no Rodapé */}
                     <div className="flex justify-end items-center gap-4 pt-4 mt-8 border-t border-gray-100">
                         {onSaveAndContinue ? (
                             <IButtonPrime
