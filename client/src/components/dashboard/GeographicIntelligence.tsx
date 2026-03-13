@@ -275,7 +275,7 @@ export function GeographicIntelligence({ clients = [] }: GeographicIntelligenceP
         </div>
 
         {/* Right Column: Ranking */}
-        <div className="w-full lg:w-[280px] flex flex-col">
+        <div className="w-full lg:w-[280px] flex flex-col lg:pr-4">
           <div className="flex items-center gap-2 mb-3">
             <Users size={16} className="text-[#1d3557]" />
             <h3 className="text-[11px] font-black text-[#1d3557] tracking-widest uppercase">Ranking de Clientes</h3>
@@ -285,7 +285,7 @@ export function GeographicIntelligence({ clients = [] }: GeographicIntelligenceP
             {cityRanking.map((item, idx) => (
               <div 
                 key={idx}
-                className="flex items-center justify-between p-2 pl-4 pr-3 bg-gray-50 border border-[#1d3557]/5 rounded-xl hover:bg-[#1d3557]/5 hover:border-[#1d3557]/20 transition-all group"
+                className="flex items-center justify-between p-2 pl-4 pr-3 bg-gray-50/50 rounded-xl hover:bg-[#1d3557]/5 transition-all group"
               >
                 <div className="flex flex-col">
                   <span className="text-[9px] font-black text-[#1d3557] uppercase truncate max-w-[130px]">{item.name}</span>
@@ -302,7 +302,7 @@ export function GeographicIntelligence({ clients = [] }: GeographicIntelligenceP
               </div>
             ))}
             {cityRanking.length === 0 && (
-              <div className="py-6 text-center text-gray-400 italic text-[9px] font-medium bg-gray-50 rounded-xl border border-dashed border-[#1d3557]/10">
+              <div className="py-6 text-center text-gray-400 italic text-[9px] font-medium bg-gray-50/30 rounded-xl border border-dashed border-[#1d3557]/10">
                 Aguardando dados...
               </div>
             )}

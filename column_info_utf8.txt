@@ -1,0 +1,26 @@
+﻿[dotenv@17.2.3] injecting env (3) from .env -- tip: ­ƒöæ add access controls to secrets: https://dotenvx.com/ops
+Colunas da tabela transactions:
+ÔöîÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö¼ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÉ
+Ôöé (index) Ôöé column_name        Ôöé data_type                     Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö╝ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöñ
+Ôöé 0       Ôöé 'id'               Ôöé 'integer'                     Ôöé
+Ôöé 1       Ôöé 'user_id'          Ôöé 'integer'                     Ôöé
+Ôöé 2       Ôöé 'category_id'      Ôöé 'integer'                     Ôöé
+Ôöé 3       Ôöé 'chart_account_id' Ôöé 'integer'                     Ôöé
+Ôöé 4       Ôöé 'amount'           Ôöé 'numeric'                     Ôöé
+Ôöé 5       Ôöé 'description'      Ôöé 'text'                        Ôöé
+Ôöé 6       Ôöé 'type'             Ôöé 'text'                        Ôöé
+Ôöé 7       Ôöé 'date'             Ôöé 'timestamp without time zone' Ôöé
+Ôöé 8       Ôöé 'created_at'       Ôöé 'timestamp without time zone' Ôöé
+Ôöé 9       Ôöé 'repeticao'        Ôöé 'text'                        Ôöé
+Ôöé 10      Ôöé 'numero_parcelas'  Ôöé 'integer'                     Ôöé
+Ôöé 11      Ôöé 'parcela_atual'    Ôöé 'integer'                     Ôöé
+Ôöé 12      Ôöé 'parcelamento_id'  Ôöé 'text'                        Ôöé
+Ôöé 13      Ôöé 'relationship_id'  Ôöé 'integer'                     Ôöé
+Ôöé 14      Ôöé 'bank_account_id'  Ôöé 'integer'                     Ôöé
+Ôöé 15      Ôöé 'status'           Ôöé 'text'                        Ôöé
+Ôöé 16      Ôöé 'periodicidade'    Ôöé 'text'                        Ôöé
+Ôöé 17      Ôöé 'intervalo'        Ôöé 'integer'                     Ôöé
+Ôöé 18      Ôöé 'data_termino'     Ôöé 'timestamp without time zone' Ôöé
+Ôöé 19      Ôöé 'recorrencia_id'   Ôöé 'text'                        Ôöé
+ÔööÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔö┤ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÿ

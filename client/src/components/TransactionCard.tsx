@@ -40,13 +40,14 @@ interface TransactionCardProps {
   onClose: () => void;
   onSave: (transaction: any) => void;
   entryType?: 'payable' | 'receivable'; // Novo prop para definir tipo de lançamento
+  transaction?: any; // Prop para edição
 }
 
 /**
  * Card para criação de novas transações financeiras
  * Layout baseado na imagem de referência com campos organizados em grid
  */
-export function TransactionCard({ open, onClose, onSave, entryType }: TransactionCardProps) {
+export function TransactionCard({ open, onClose, onSave, entryType, transaction }: TransactionCardProps) {
   // Define o tipo inicial baseado no entryType
   const tipoInicial = entryType === 'payable' ? 'Nova despesa' : entryType === 'receivable' ? 'Nova receita' : 'Nova receita';
   const [tipo, setTipo] = useState(tipoInicial);
@@ -69,8 +70,65 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
   const [contato, setContato] = useState('');
   const [observacoes, setObservacoes] = useState('');
   const [isPaid, setIsPaid] = useState(false); // Inicia como pendente (false)
-  const [numeroDocumento, setNumeroDocumento] = useState('');
   const [tags, setTags] = useState('');
+  const [hasEndDate, setHasEndDate] = useState(false);
+  const [dataTermino, setDataTermino] = useState('');
+
+  // Efeito para preencher campos na edição ou resetar na criação
+  React.useEffect(() => {
+    if (open) {
+      if (transaction) {
+        // Modo Edição
+        setTipo(transaction.type === 'income' ? 'Nova receita' : 'Nova despesa');
+        setValor(new Intl.NumberFormat('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+          minimumFractionDigits: 2
+        }).format(transaction.amount));
+        setData(transaction.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+        setDescricao(transaction.description || '');
+        setConta(transaction.bankAccountId?.toString() || '');
+        setCategoria(transaction.chartAccountId?.toString() || '');
+        setContato(transaction.relationshipId?.toString() || '');
+        setObservacoes(transaction.observacoes || '');
+        setRepeticao(transaction.repeticao || 'Única');
+        setIsPaid(transaction.status === 'pago');
+        setTags(transaction.tags || '');
+        
+        // Parcelamento/Recorrência se houver
+        if (transaction.repeticao === 'Recorrente') {
+          setPeriodicidade(transaction.periodicidade || 'Mensal');
+          setIntervaloRepeticao(transaction.intervalo?.toString() || '1');
+          setHasEndDate(!!transaction.dataTermino);
+          setDataTermino(transaction.dataTermino || '');
+        } else if (transaction.repeticao === 'Parcelado') {
+          setNumeroParcelas(transaction.numeroParcelas?.toString() || '');
+          setDataPrimeiraParcela(transaction.dataPrimeiraParcela || '');
+          setAplicarJuros(transaction.aplicarJuros || false);
+          setTipoJuros(transaction.tipoJuros || 'percentual');
+          setValorJuros(transaction.valorJuros?.toString() || '');
+          setAplicarJurosEm(transaction.aplicarJurosEm || 'total');
+        }
+      } else {
+        // Modo Nova Transação - Resetar campos
+        setTipo(entryType === 'payable' ? 'Nova despesa' : 'Nova receita');
+        setValor('0,00');
+        setData(new Date().toISOString().split('T')[0]);
+        setDescricao('');
+        setConta('');
+        setCategoria('');
+        setSubcategoria('');
+        setContato('');
+        setObservacoes('');
+        setRepeticao('Única');
+        setIsPaid(false);
+        setTags('');
+        setHasEndDate(false);
+        setPeriodicidade('Mensal');
+        setIntervaloRepeticao('1');
+      }
+    }
+  }, [open, transaction, entryType]);
 
   // Estados para parcelamento
   const [parcelamentoModalOpen, setParcelamentoModalOpen] = useState(false);
@@ -286,7 +344,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Lógica inteligente de status
     let finalStatus = 'pendente';
     if (isPaid) {
@@ -306,23 +364,34 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
 
     const transaction = {
       tipo,
-      valor: parseFloat(valor.replace(/[R$\s.,]/g, '').replace(',', '.')) / 100,
+      valor: valor, // Envia string bruta (ex: 'R$ 500,00'), parsing é feito no handleSaveTransaction
       data,
       repeticao,
-      periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
-      intervaloRepeticao: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
-      descricao,
-      conta,
-      chartAccountId: subcategoria || categoria, // Salva o ID da subcategoria se houver, senão o da categoria
-      contato,
-      numeroDocumento,
-      observacoes,
       tags,
-      status: finalStatus
+      status: finalStatus,
+      descricao: descricao,
+      conta: conta,
+      chartAccountId: categoria,
+      contato: contato,
+      observacoes: observacoes,
+      periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
+      intervalo: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
+      dataTermino: (repeticao === 'Recorrente' && hasEndDate) ? dataTermino : undefined,
+      numeroParcelas: repeticao === 'Parcelado' ? numeroParcelas : undefined,
+      dataPrimeiraParcela: repeticao === 'Parcelado' ? dataPrimeiraParcela : undefined,
+      aplicarJuros: repeticao === 'Parcelado' ? aplicarJuros : undefined,
+      tipoJuros: repeticao === 'Parcelado' ? tipoJuros : undefined,
+      valorJuros: repeticao === 'Parcelado' ? valorJuros : undefined,
+      aplicarJurosEm: repeticao === 'Parcelado' ? aplicarJurosEm : undefined,
     };
 
-    onSave(transaction);
-    onClose();
+    try {
+      await onSave(transaction);
+      // onClose é chamado pelo Transactions.tsx no onSuccess da mutation
+    } catch (error) {
+      // Erro tratado pelo onError da mutation em Transactions.tsx
+      console.error('Erro ao salvar transação:', error);
+    }
   };
 
   if (!open) return null;
@@ -445,7 +514,6 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                     <MenuItem value="Anual">Anual</MenuItem>
                   </Select>
                 </FormControl>
-
                 <TextField
                   variant="standard"
                   label="Intervalo"
@@ -454,6 +522,29 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                   fullWidth
                   sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
                 />
+
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={hasEndDate}
+                        onChange={(e) => setHasEndDate(e.target.checked)}
+                        size="small"
+                        sx={{ color: '#B59363', '&.Mui-checked': { color: '#B59363' } }}
+                      />
+                    }
+                    label={<Typography sx={{ fontSize: '13px', color: '#666' }}>Definir término</Typography>}
+                  />
+                  {hasEndDate && (
+                    <Box sx={{ width: '150px' }}>
+                      <DateInput
+                        label="Até"
+                        value={dataTermino}
+                        onChange={setDataTermino}
+                      />
+                    </Box>
+                  )}
+                </Box>
               </>
             )}
           </Box>
@@ -477,7 +568,7 @@ export function TransactionCard({ open, onClose, onSave, entryType }: Transactio
                 >
                   {bankAccounts.map((account: any) => (
                     <MenuItem key={account.id} value={account.id}>
-                      {account.bank} - {account.accountNumber}
+                      {account.name} ({account.bank} - {account.accountNumber})
                     </MenuItem>
                   ))}
                 </Select>

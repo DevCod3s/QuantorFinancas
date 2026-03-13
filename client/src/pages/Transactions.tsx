@@ -2,6 +2,8 @@
  * @fileoverview Página de gestão financeira do sistema Quantor
  * 
  * Renomeada de "Transações" para "Finanças" com funcionalidades avançadas:
+### 4. Correção Visual do Tipo de Conta
+Identificamos que a lista estava procurando o campo `account_type`, mas o banco de dados estava entregando `accountType`. Fizemos a padronização para que o tipo (Conta Corrente, Poupança, etc.) apareça corretamente na listagem, assim como o número da conta.
  * - Sistema de 4 abas principais: Visão Geral, Movimentações, Contas, Centro de Custo
  * - Sub-abas inteligentes com barra de progressão animada
  * - Gráficos avançados com Chart.js (linha, rosca, barras)
@@ -192,6 +194,7 @@ export function Transactions() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
+  const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
   const [bankAccountData, setBankAccountData] = useState({
@@ -227,27 +230,72 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
       showSuccess('Conta bancária criada com sucesso!', "");
       setBankAccountModalOpen(false);
-      setBankAccountData({
-        initialBalanceDate: new Date().toISOString().split('T')[0],
-        currentBalance: '',
-        balanceType: 'credor',
-        accountType: 'conta_corrente',
-        name: '',
-        currency: 'BRL',
-        bank: '',
-        agency: '',
-        accountNumber: '',
-        creditLimit: '',
-        contactName: '',
-        contactPhone: ''
-      });
+      resetBankAccountData();
     },
     onError: (error: any) => {
       showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
     }
   });
+
+  // Mutation para atualizar conta bancária
+  const updateBankAccountMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: any }) =>
+      fetch(`/api/bank-accounts/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Conta bancária atualizada com sucesso!', "");
+      setBankAccountModalOpen(false);
+      setEditingBankAccount(null);
+      resetBankAccountData();
+    },
+    onError: (error: any) => {
+      showError('Erro ao atualizar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+    }
+  });
+
+  // Mutation para excluir conta bancária
+  const deleteBankAccountMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/bank-accounts/${id}`, {
+        method: 'DELETE',
+      }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
+    onSuccess: () => {
+       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+       showSuccess('Conta bancária excluída com sucesso!', "");
+    },
+    onError: (error: any) => {
+       showError('Erro ao excluir conta bancária', error.message || 'Tente novamente mais tarde.');
+    }
+  });
+
+  const resetBankAccountData = () => {
+    setBankAccountData({
+      initialBalanceDate: new Date().toISOString().split('T')[0],
+      currentBalance: '',
+      balanceType: 'credor',
+      accountType: 'conta_corrente',
+      name: '',
+      currency: 'BRL',
+      bank: '',
+      agency: '',
+      accountNumber: '',
+      creditLimit: '',
+      contactName: '',
+      contactPhone: ''
+    });
+  };
 
   // Mutation para criar banco customizado
   const createCustomBankMutation = useMutation({
@@ -297,7 +345,7 @@ export function Transactions() {
     });
   };
 
-  // Handler para salvar conta bancária
+  // Handler para salvar conta bancária (Criação ou Edição)
   const handleBankAccountSave = async (data: any) => {
     if (!data.name) {
       showError('Campo obrigatório', 'O nome da conta é obrigatório.');
@@ -315,7 +363,27 @@ export function Transactions() {
     }
 
     try {
-      await createBankAccountMutation.mutateAsync(data);
+      // Limpar formatação de valores antes de enviar preservando decimais
+      const parseMoeda = (val: any) => {
+        if (!val) return '0';
+        const str = val.toString();
+        // Se já é um número (ou string numérica sem formatação pt-BR), mantemos
+        if (/^\d+(\.\d+)?$/.test(str)) return str;
+        // Remove R$, espaços e pontos de milhar, troca vírgula por ponto
+        return str.replace(/[R$\s.]/g, '').replace(',', '.');
+      };
+
+      const cleanedData = {
+        ...data,
+        currentBalance: parseMoeda(data.currentBalance),
+        creditLimit: parseMoeda(data.creditLimit)
+      };
+
+      if (editingBankAccount) {
+        await updateBankAccountMutation.mutateAsync({ id: editingBankAccount.id, data: cleanedData });
+      } else {
+        await createBankAccountMutation.mutateAsync(cleanedData);
+      }
     } catch (error) {
       console.error('Erro ao salvar conta bancária:', error);
     }
@@ -338,6 +406,7 @@ export function Transactions() {
 
   // Estado para modal de transação
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
@@ -436,6 +505,12 @@ export function Transactions() {
     runningBalance += day.resultado;
     day.saldo = runningBalance;
   });
+
+  // Cálculos de Totais para o Demonstrativo Diário
+  const totalEntradasDemonstrativo = dailySummary.reduce((sum, d) => sum + d.entrada, 0);
+  const totalSaidasDemonstrativo = dailySummary.reduce((sum, d) => sum + d.saida, 0);
+  const totalResultadoDemonstrativo = dailySummary.reduce((sum, d) => sum + d.resultado, 0);
+  const totalSaldoDemonstrativo = dailySummary.length > 0 ? dailySummary[dailySummary.length - 1].saldo : 0;
 
   // 2. Agregação por Categoria (para Gráficos de Rosca)
   const getStatsByCategory = (type: 'income' | 'expense') => {
@@ -545,6 +620,46 @@ export function Transactions() {
   // Para compatibilidade com o código de renderização que usa safeChartAccounts
   const safeChartAccounts = safeChartAccountsData;
 
+  // Mutation para atualizar transação
+  const updateTransactionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number, data: any }) =>
+      fetch(`/api/transactions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(data),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Transação atualizada com sucesso!', "");
+      setTransactionModalOpen(false);
+      setEditingTransaction(null);
+    },
+    onError: (error: any) => {
+      showError('Erro ao atualizar transação', error.message || 'Verifique os dados e tente novamente.');
+    }
+  });
+
+  // Mutation para excluir transação
+  const deleteTransactionMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/transactions/${id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Transação excluída com sucesso!', "");
+    },
+    onError: (error: any) => {
+      showError('Erro ao excluir transação', error.message || 'Tente novamente mais tarde.');
+    }
+  });
+
   // Mutation para criar transação
   const createTransactionMutation = useMutation({
     mutationFn: (transactionData: any) =>
@@ -556,6 +671,8 @@ export function Transactions() {
       }).then(res => res.json()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
       showSuccess('Transação salva com sucesso!', "");
       setTransactionModalOpen(false);
     },
@@ -564,17 +681,19 @@ export function Transactions() {
     }
   });
 
-  // Função para salvar nova transação (À Pagar e À Receber)
+  // Função para salvar transação (Criação ou Edição)
   const handleSaveTransaction = async (transactionData: any) => {
     try {
-      // Converter valor de string formatada para número
-      const valorNumerico = parseFloat(
-        transactionData.valor.toString()
-          .replace('R$', '')
-          .replace(/\s/g, '')
-          .replace(/\./g, '')
-          .replace(',', '.')
-      );
+      // Limpar formatação de valores preservando decimais (padrão parseMoeda)
+      const parseMoeda = (val: any) => {
+        if (!val) return 0;
+        const str = val.toString();
+        if (/^\d+(\.\d+)?$/.test(str)) return parseFloat(str);
+        const cleaned = str.replace(/[R$\s.]/g, '').replace(',', '.');
+        return parseFloat(cleaned) || 0;
+      };
+
+      const valorNumerico = parseMoeda(transactionData.valor);
 
       // Mapear os dados do formulário para o formato esperado pelo backend
       const transactionPayload = {
@@ -600,9 +719,17 @@ export function Transactions() {
 
         // Outros campos
         observacoes: transactionData.observacoes || null,
+        tags: transactionData.tags || null,
       };
 
-      await createTransactionMutation.mutateAsync(transactionPayload);
+      if (editingTransaction) {
+        await updateTransactionMutation.mutateAsync({ 
+          id: editingTransaction.id, 
+          data: transactionPayload 
+        });
+      } else {
+        await createTransactionMutation.mutateAsync(transactionPayload);
+      }
     } catch (error) {
       console.error('Erro ao salvar transação:', error);
     }
@@ -865,10 +992,8 @@ export function Transactions() {
                 icon: <Activity className="h-4 w-4" />,
                 content: (
                   <div className="space-y-6">
-                    {/* Grid de cards com gráficos */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Card Fluxo de Caixa */}
-                      <Card className="col-span-1 lg:col-span-2 shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
+                    {/* Card Fluxo de Caixa */}
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div>
@@ -1035,103 +1160,43 @@ export function Transactions() {
                         </CardContent>
                       </Card>
 
-                      {/* Card Saldos de Caixa */}
-                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
-                        <CardHeader>
-                          <CardTitle className="text-lg font-semibold">Saldos de caixa</CardTitle>
+                    {/* 3 cards resumo em colunas iguais */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      {/* Card Saldos em Contas */}
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
+                        <CardHeader className="pb-2 pt-3 px-4">
+                          <CardTitle className="text-sm font-semibold">Saldos em Contas</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                          <div className="space-y-4">
+                        <CardContent className="pt-0 px-4 pb-3">
+                          <div className="space-y-1">
                             {dashboardData?.bankAccounts && dashboardData.bankAccounts.length > 0 ? (
                               dashboardData.bankAccounts.map((account) => (
-                                <div key={account.id} className="flex items-center justify-between">
+                                <div key={account.id} className="flex items-center justify-between py-0.5">
                                   <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-[#B59363] rounded-full"></div>
-                                    <span className="text-sm">{account.name}</span>
+                                    <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
+                                    <span className="text-xs">{account.name}</span>
                                   </div>
-                                  <div className="text-right">
-                                    <div className={`text-sm font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                                      {formatCurrency(account.realBalance.toString())}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                      {formatCurrency(account.projectedBalance.toString())}
-                                    </div>
+                                  <div className={`text-xs font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                    {formatCurrency(account.realBalance.toString())}
                                   </div>
                                 </div>
                               ))
                             ) : (
-                              <div className="text-center py-4 text-sm text-gray-500">
+                              <div className="text-center py-2 text-xs text-gray-500">
                                 Nenhuma conta bancária cadastrada
                               </div>
                             )}
-                            <div className="border-t pt-3">
-                              <div className="flex items-center justify-between font-semibold">
+                            <div className="border-t pt-1 mt-1">
+                              <div className="flex items-center justify-between font-semibold text-xs">
                                 <span>Total</span>
-                                <div className="text-right">
-                                  <div className={(dashboardData?.totalBalance || 0) >= 0 ? 'text-gray-900' : 'text-red-600'}>
-                                    {formatCurrency((dashboardData?.totalBalance || 0).toString())}
-                                  </div>
-                                  <div className="text-xs font-normal text-gray-500">
-                                    Projetado: {formatCurrency((dashboardData?.bankAccounts?.reduce((sum, acc) => sum + acc.projectedBalance, 0) || 0).toString())}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Gráfico de resultado do mês */}
-                            <div className="mt-6">
-                              <h4 className="text-sm font-medium mb-2">Resultado do mês</h4>
-                              <p className="text-xs text-gray-500 mb-4">Despesas projetadas</p>
-                              <div className="h-32">
-                                <Bar
-                                  data={{
-                                    labels: ['Receitas', 'Despesas'],
-                                    datasets: [{
-                                      data: [dashboardData?.monthlyIncome || 0, dashboardData?.monthlyExpenses || 0],
-                                      backgroundColor: ['#10b981', '#ef4444'],
-                                      borderRadius: 4,
-                                    }]
-                                  }}
-                                  options={{
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                      legend: {
-                                        display: false
-                                      }
-                                    },
-                                    scales: {
-                                      y: {
-                                        display: false
-                                      },
-                                      x: {
-                                        display: false
-                                      }
-                                    }
-                                  }}
-                                />
-                              </div>
-                              <div className="mt-3 space-y-1">
-                                <div className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                                    <span>Receitas</span>
-                                  </div>
-                                  <span className="font-medium">{formatCurrency((dashboardData?.monthlyIncome || 0).toString())}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                                    <span>Despesas</span>
-                                  </div>
-                                  <span className="font-medium">{formatCurrency((dashboardData?.monthlyExpenses || 0).toString())}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
-                                  <span>Resultado</span>
-                                  <span className={(dashboardData?.balance || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                    {formatCurrency((dashboardData?.balance || 0).toString())}
-                                  </span>
-                                </div>
+                                {(() => {
+                                  const totalReal = dashboardData?.bankAccounts?.reduce((sum, acc) => sum + (acc.realBalance || 0), 0) || 0;
+                                  return (
+                                    <span className={totalReal >= 0 ? 'text-gray-900' : 'text-red-600'}>
+                                      {formatCurrency(totalReal.toString())}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                             </div>
                           </div>
@@ -1139,13 +1204,13 @@ export function Transactions() {
                       </Card>
 
                       {/* Card Despesas por Categoria */}
-                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
-                        <CardHeader>
-                          <CardTitle className="text-lg font-semibold">Despesas por categoria</CardTitle>
-                          <CardDescription className="text-sm text-gray-500">Gastos projetados</CardDescription>
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
+                        <CardHeader className="pb-1 pt-3 px-4">
+                          <CardTitle className="text-sm font-semibold">Despesas por categoria</CardTitle>
+                          <CardDescription className="text-xs text-gray-500">Gastos projetados</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <div className="h-48">
+                        <CardContent className="pt-0 px-4 pb-3">
+                          <div className="h-32">
                             <Doughnut
                               data={{
                                 labels: expenseStats.length > 0 ? expenseStats.map(s => s.name) : ['Nenhuma'],
@@ -1167,31 +1232,31 @@ export function Transactions() {
                               }}
                             />
                           </div>
-                          <div className="mt-4 space-y-2 text-sm">
+                          <div className="mt-2 space-y-1 text-xs">
                             {expenseStats.length > 0 ? expenseStats.map((stat, idx) => (
                               <div key={idx} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
-                                  <span>{stat.name}</span>
-                                  <span className="text-gray-500">{stat.percent.toFixed(2).replace('.', ',')}%</span>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                  <span className="truncate">{stat.name}</span>
+                                  <span className="text-gray-500">{stat.percent.toFixed(1).replace('.', ',')}%</span>
                                 </div>
                                 <span className="font-medium text-red-600">-{formatCurrency(stat.value.toString())}</span>
                               </div>
                             )) : (
-                              <div className="text-center py-4 text-gray-500">Sem despesas no período</div>
+                              <div className="text-center py-2 text-gray-500">Sem despesas no período</div>
                             )}
                           </div>
                         </CardContent>
                       </Card>
 
                       {/* Card Receitas por Categoria */}
-                      <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
-                        <CardHeader>
-                          <CardTitle className="text-lg font-semibold">Receitas por Categoria</CardTitle>
-                          <CardDescription className="text-sm text-gray-500">Entradas projetadas</CardDescription>
+                      <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
+                        <CardHeader className="pb-1 pt-3 px-4">
+                          <CardTitle className="text-sm font-semibold">Receitas por Categoria</CardTitle>
+                          <CardDescription className="text-xs text-gray-500">Entradas projetadas</CardDescription>
                         </CardHeader>
-                        <CardContent>
-                          <div className="h-48">
+                        <CardContent className="pt-0 px-4 pb-3">
+                          <div className="h-32">
                             <Doughnut
                               data={{
                                 labels: incomeStats.length > 0 ? incomeStats.map(s => s.name) : ['Nenhuma'],
@@ -1213,18 +1278,18 @@ export function Transactions() {
                               }}
                             />
                           </div>
-                          <div className="mt-4 space-y-2 text-sm">
+                          <div className="mt-2 space-y-1 text-xs">
                             {incomeStats.length > 0 ? incomeStats.map((stat, idx) => (
                               <div key={idx} className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
-                                  <span>{stat.name}</span>
-                                  <span className="text-gray-500">{stat.percent.toFixed(2).replace('.', ',')}%</span>
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                  <span className="truncate">{stat.name}</span>
+                                  <span className="text-gray-500">{stat.percent.toFixed(1).replace('.', ',')}%</span>
                                 </div>
                                 <span className="font-medium text-green-600">+{formatCurrency(stat.value.toString())}</span>
                               </div>
                             )) : (
-                              <div className="text-center py-4 text-gray-500">Sem receitas no período</div>
+                              <div className="text-center py-2 text-gray-500">Sem receitas no período</div>
                             )}
                           </div>
                         </CardContent>
@@ -1349,10 +1414,14 @@ export function Transactions() {
                           <div className="space-y-2">
                             <div className="grid grid-cols-6 gap-4 text-sm items-center border-t pt-2 font-semibold">
                               <div>Total</div>
-                              <div></div>
-                              <div></div>
-                              <div></div>
-                              <div className="text-right">2.324,65</div>
+                              <div className="text-center text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
+                              <div className="text-center text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
+                              <div className={`text-center ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
+                              </div>
+                              <div className={`text-right ${totalSaldoDemonstrativo >= 0 ? "text-gray-900" : "text-red-600"}`}>
+                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
+                              </div>
                               <div></div>
                             </div>
                           </div>
@@ -1416,7 +1485,7 @@ export function Transactions() {
                               datasets: [{
                                 data: dailySummary.map(d => d.resultado),
                                 backgroundColor: function (context: any) {
-                                  const value = context.parsed.y;
+                                  const value = context.parsed?.y ?? 0;
                                   return value >= 0 ? '#10b981' : '#ef4444';
                                 },
                                 borderRadius: 4,
@@ -2089,14 +2158,14 @@ export function Transactions() {
                 width: "35%",
                 render: (account: any) => (
                   <div>
-                    <div className="font-medium text-gray-900">{account.account_name || account.name || 'Nome não informado'}</div>
+                     <div className="font-medium text-gray-900">{account.name || 'Nome não informado'}</div>
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider">
-                      {account.account_type === 'conta_corrente' ? 'Conta Corrente' :
-                        account.account_type === 'conta_poupanca' ? 'Conta Poupança' :
-                          account.account_type === 'conta_investimento' ? 'Conta de Investimento' :
+                      {account.accountType === 'conta_corrente' ? 'Conta Corrente' :
+                        account.accountType === 'conta_poupanca' ? 'Conta Poupança' :
+                          account.accountType === 'conta_investimento' ? 'Conta de Investimento' :
                             'Tipo não informado'}
                       {account.agency && ` • AG ${account.agency}`}
-                      {account.account_number && ` • CC ${account.account_number}`}
+                      {account.accountNumber && ` • CC ${account.accountNumber}`}
                     </div>
                   </div>
                 )
@@ -2132,14 +2201,43 @@ export function Transactions() {
                 <IButtonPrime
                   icon={<Edit className="h-3.5 w-3.5" />}
                   className="!p-2"
-                  onClick={() => console.log('Edit account', account.id)}
+                  onClick={() => {
+                    setEditingBankAccount(account);
+                    // Converter valores numéricos para formato de exibição no modal
+                    const formatForModal = (val: any) => {
+                      if (val === null || val === undefined) return '';
+                      return formatCurrencyValue(val.toString().replace('.', ''), 'BRL');
+                    };
+
+                    setBankAccountData({
+                      initialBalanceDate: account.initialBalanceDate ? new Date(account.initialBalanceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                      currentBalance: formatForModal(account.currentBalance),
+                      balanceType: account.balanceType || ((account.balance || 0) >= 0 ? 'credor' : 'devedor'),
+                      accountType: account.accountType || 'conta_corrente',
+                      name: account.name || '',
+                      currency: account.currency || 'BRL',
+                      bank: account.bank || '',
+                      agency: account.agency || '',
+                      accountNumber: account.accountNumber || '',
+                      creditLimit: formatForModal(account.creditLimit),
+                      contactName: account.contactName || '',
+                      contactPhone: account.contactPhone || ''
+                    });
+                    setBankAccountModalOpen(true);
+                  }}
                   title="Editar Conta"
                 />
                 <IButtonPrime
                   icon={<Trash2 className="h-3.5 w-3.5" />}
                   variant="red"
                   className="!p-2"
-                  onClick={() => console.log('Delete account', account.id)}
+                  onClick={() => {
+                    showConfirm(
+                      "Excluir Conta Bancária",
+                      `Tem certeza que deseja excluir a conta "${account.name || account.account_name}"? Esta ação não pode ser desfeita.`,
+                      () => deleteBankAccountMutation.mutate(account.id)
+                    );
+                  }}
                   title="Excluir Conta"
                 />
               </div>
@@ -2201,15 +2299,21 @@ export function Transactions() {
         onClose={() => {
           console.log("Closing transaction modal");
           setTransactionModalOpen(false);
+          setEditingTransaction(null);
         }}
         onSave={handleSaveTransaction}
+        transaction={editingTransaction}
         entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
       />
 
       < DynamicModal
         isOpen={bankAccountModalOpen}
-        onClose={() => setBankAccountModalOpen(false)}
-        title="Contas Financeiras"
+        onClose={() => {
+          setBankAccountModalOpen(false);
+          setEditingBankAccount(null);
+          resetBankAccountData();
+        }}
+        title={editingBankAccount ? "Editar Conta Financeira" : "Nova Conta Financeira"}
         initialData={bankAccountData}
         onSave={(data) => {
           setBankAccountData(data);

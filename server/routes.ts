@@ -16,6 +16,9 @@
 
 // Importações do Express para roteamento
 import { Router, Request } from "express";
+import crypto from "crypto";
+import fs from "fs";
+import path from "path";
 import type { User } from "@shared/schema";
 
 // Estender tipos do Express para incluir user
@@ -215,19 +218,17 @@ router.post("/auth/register", async (req: any, res) => {
 // PRODUCT UNITS ROUTES
 // ==========================================
 router.get("/product-units", requireAuth, async (req, res) => {
-  console.log("TESTE: GET /api/product-units atingido");
   try {
     const userId = req.user?.id?.toString();
     const units = await storage.getProductUnitsByUserId(userId);
     res.json(units);
-  } catch (error) {
-    console.error("Erro ao buscar unidades de produto:", error);
+  } catch (error: any) {
+    console.error("Erro ao buscar unidades de produto:", error.message || error);
     res.status(500).json({ error: "Erro ao buscar unidades de produto" });
   }
 });
 
 router.post("/product-units", requireAuth, async (req, res) => {
-  console.log("TESTE: POST /api/product-units atingido com:", req.body);
   try {
     const userId = req.user?.id;
     const validatedData = schema.insertProductUnitSchema.parse({
@@ -237,10 +238,11 @@ router.post("/product-units", requireAuth, async (req, res) => {
     const unit = await storage.createProductUnit(validatedData);
     res.status(201).json(unit);
   } catch (error: any) {
-    console.error("Erro ao criar unidade de produto:", error);
     if (error instanceof z.ZodError) {
+      console.error("Erro de validação em unidade de produto:", error.errors);
       res.status(400).json({ error: "Dados inválidos", details: error.errors });
     } else {
+      console.error("Erro ao criar unidade de produto:", error.message || error);
       res.status(500).json({ error: "Falhou ao criar unidade de produto" });
     }
   }
@@ -344,7 +346,7 @@ router.get("/transactions", requireAuth, async (req: any, res) => {
 
 router.post("/transactions", requireAuth, async (req: any, res) => {
   try {
-    const { repeticao, numeroParcelas, ...rest } = req.body;
+    const { repeticao, numeroParcelas, periodicidade, intervalo, dataTermino, ...rest } = req.body;
 
     // Se for parcelado, gerar múltiplas transações (uma por parcela)
     if (repeticao === 'Parcelado' && numeroParcelas && parseInt(numeroParcelas) > 1) {
@@ -368,9 +370,9 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
         const validatedData = insertTransactionSchema.parse({
           ...rest,
           userId: req.user.id,
-          amount: valorDestaParcela.toFixed(2),
+          amount: valorDestaParcela.toString(),
           description: descricaoParcela,
-          date: dataParcela.toISOString(),
+          date: new Date(dataParcela),
           repeticao: 'Parcelado',
           numeroParcelas: totalParcelas,
           parcelaAtual: i + 1,
@@ -388,20 +390,84 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
       });
     }
 
+    // Se for recorrente, gerar projeções (ex: próximos 24 meses ou até dataTermino)
+    if (repeticao === 'Recorrente') {
+      const recurrencyId = crypto.randomUUID();
+      const dataBase = new Date(rest.date);
+      const limitDate = dataTermino ? new Date(dataTermino) : new Date(new Date().setFullYear(new Date().getFullYear() + 2)); // 2 anos de projeção por padrão
+      const period = periodicidade || 'Mensal';
+      const interval = parseInt(intervalo || '1');
+      const criadas: any[] = [];
+
+      let currentDate = new Date(dataBase);
+      let count = 0;
+      const MAX_OCCURRENCES = 300; // Limite de segurança
+
+      while (currentDate <= limitDate && count < MAX_OCCURRENCES) {
+        const validatedData = insertTransactionSchema.parse({
+          ...rest,
+          userId: req.user.id,
+          amount: rest.amount.toString(),
+          date: new Date(currentDate),
+          repeticao: 'Recorrente',
+          periodicidade: period,
+          intervalo: interval,
+          dataTermino: dataTermino ? new Date(dataTermino) : null,
+          status: 'pendente', // Futuros lançamentos recorrentes devem ser pendentes
+          recorrenciaId: recurrencyId,
+        });
+
+        const transaction = await storage.createTransaction(validatedData);
+        criadas.push(transaction);
+
+        // Incrementar a data para a próxima ocorrência
+        const nextDate = new Date(currentDate);
+        if (period === 'Diário') nextDate.setDate(nextDate.getDate() + interval);
+        else if (period === 'Semanal') nextDate.setDate(nextDate.getDate() + (interval * 7));
+        else if (period === 'Mensal') nextDate.setMonth(nextDate.getMonth() + interval);
+        else if (period === 'Anual') nextDate.setFullYear(nextDate.getFullYear() + interval);
+        
+        currentDate = nextDate;
+        count++;
+      }
+
+      return res.status(201).json({
+        message: `${criadas.length} lançamentos recorrentes criados com sucesso`,
+        recorrenciaId: recurrencyId,
+        lancamentos: criadas,
+      });
+    }
+
     // Transação única (padrão)
     const validatedData = insertTransactionSchema.parse({
       ...req.body,
       userId: req.user.id,
       repeticao: repeticao || 'Única',
+      amount: req.body.amount?.toString(),
+      date: req.body.date ? new Date(req.body.date) : new Date(),
     });
     const transaction = await storage.createTransaction(validatedData);
     res.status(201).json(transaction);
-  } catch (error) {
-    console.error("Erro ao criar transação:", error);
+  } catch (error: any) {
+    const errorLog = `[${new Date().toISOString()}] ERROR POST /transactions: ${error.message || error}\nStack: ${error.stack}\nBody: ${JSON.stringify(req.body, null, 2)}\n\n`;
+    try {
+      fs.appendFileSync("C:\\Users\\devel\\debug_logs.txt", errorLog);
+    } catch (e) {
+      console.error("Falhou ao escrever log em arquivo:", e);
+    }
+    
+    console.error("DEBUG - Erro detalhado no POST /transactions:");
+    console.error(error);
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      console.error("Erro de validação ao criar transação:", JSON.stringify(error.errors, null, 2));
+      res.status(400).json({ error: "Dados inválidos", details: error.errors });
     } else {
-      res.status(500).json({ error: "Falhou ao criar transação" });
+      console.error("Erro ao criar transação:", error.message || error);
+      res.status(500).json({ 
+        error: "Falhou ao criar transação", 
+        message: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      });
     }
   }
 });
@@ -409,14 +475,19 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
 router.put("/transactions/:id", requireAuth, async (req: any, res) => {
   try {
     const id = parseInt(req.params.id);
-    const validatedData = insertTransactionSchema.partial().parse(req.body);
+    const updateData = { ...req.body };
+    if (updateData.amount !== undefined) updateData.amount = updateData.amount?.toString();
+    if (updateData.date !== undefined) updateData.date = updateData.date ? new Date(updateData.date) : undefined;
+    
+    const validatedData = insertTransactionSchema.partial().parse(updateData);
     const transaction = await storage.updateTransaction(id, validatedData);
     res.json(transaction);
-  } catch (error) {
-    console.error("Erro ao atualizar transação:", error);
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
-      res.status(400).json({ error: error.errors });
+      console.error("Erro de validação ao atualizar transação:", error.errors);
+      res.status(400).json({ error: "Dados inválidos", details: error.errors });
     } else {
+      console.error("Erro ao atualizar transação:", error.message || error);
       res.status(500).json({ error: "Falhou ao atualizar transação" });
     }
   }
@@ -1211,21 +1282,41 @@ router.get("/bank-accounts/:id", requireAuth, async (req, res) => {
  */
 router.post("/bank-accounts", requireAuth, async (req, res) => {
   try {
-    const userId = req.user?.id?.toString();
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Usuário não autenticado" });
     }
 
-    // Validar dados usando schema Zod
-    const bankAccountData = schema.insertBankAccountSchema.parse({
+    const cleanCurrency = (val: any) => {
+      if (typeof val === 'number') return val.toString();
+      if (typeof val !== 'string') return "0";
+      
+      // Se já for um formato numérico puro (ex: "1000.50"), retorna como está
+      if (/^-?\d+(\.\d+)?$/.test(val.trim())) {
+        return val.trim();
+      }
+
+      const clean = val.replace(/[R$\s.]/g, '').replace(',', '.').trim();
+      const parsed = parseFloat(clean);
+      return isNaN(parsed) ? "0" : parsed.toString();
+    };
+
+    const sanitizedBody = {
       ...req.body,
-      userId
-    });
+      currentBalance: cleanCurrency(req.body.currentBalance),
+      creditLimit: req.body.creditLimit !== undefined ? cleanCurrency(req.body.creditLimit) : null,
+      userId: Number(userId)
+    };
+
+    // Validar dados usando schema Zod
+    const bankAccountData = schema.insertBankAccountSchema.parse(sanitizedBody);
 
     const newBankAccount = await storage.createBankAccount(bankAccountData);
     res.status(201).json(newBankAccount);
-  } catch (error) {
-    console.error("Erro ao criar conta bancária:", error);
+  } catch (error: any) {
+    // Log seguro para evitar crash do inspect em objetos complexos
+    console.error("Erro ao criar conta bancária:", error?.message || error);
+    
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: "Dados inválidos",
@@ -1236,13 +1327,9 @@ router.post("/bank-accounts", requireAuth, async (req, res) => {
   }
 });
 
-/**
- * PUT /api/bank-accounts/:id
- * Atualiza uma conta bancária existente
- */
 router.put("/bank-accounts/:id", requireAuth, async (req, res) => {
   try {
-    const userId = req.user?.id?.toString();
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Usuário não autenticado" });
     }
@@ -1258,12 +1345,37 @@ router.put("/bank-accounts/:id", requireAuth, async (req, res) => {
       return res.status(404).json({ error: "Conta bancária não encontrada" });
     }
 
-    const updateData = schema.insertBankAccountSchema.partial().parse(req.body);
-    const updatedBankAccount = await storage.updateBankAccount(id, updateData);
+    const cleanCurrency = (val: any) => {
+      if (typeof val === 'number') return val.toString();
+      if (typeof val !== 'string') return "0";
+      
+      // Se já for um formato numérico puro (ex: "1000.50"), retorna como está
+      if (/^-?\d+(\.\d+)?$/.test(val.trim())) {
+        return val.trim();
+      }
 
+      const clean = val.replace(/[R$\s.]/g, '').replace(',', '.').trim();
+      const parsed = parseFloat(clean);
+      return isNaN(parsed) ? "0" : parsed.toString();
+    };
+
+    const sanitizedBody = {
+      ...req.body,
+      currentBalance: req.body.currentBalance !== undefined ? cleanCurrency(req.body.currentBalance) : undefined,
+      creditLimit: req.body.creditLimit !== undefined ? cleanCurrency(req.body.creditLimit) : undefined,
+      userId: userId
+    };
+
+    // Validar dados usando schema Zod
+    const bankAccountData = schema.insertBankAccountSchema.partial().parse(sanitizedBody);
+
+    const updatedBankAccount = await storage.updateBankAccount(id, bankAccountData);
+    if (!updatedBankAccount) {
+      return res.status(404).json({ error: "Conta bancária não encontrada" });
+    }
     res.json(updatedBankAccount);
-  } catch (error) {
-    console.error("Erro ao atualizar conta bancária:", error);
+  } catch (error: any) {
+    console.error("Erro ao atualizar conta bancária:", error?.message || error);
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: "Dados inválidos",
@@ -1280,7 +1392,7 @@ router.put("/bank-accounts/:id", requireAuth, async (req, res) => {
  */
 router.delete("/bank-accounts/:id", requireAuth, async (req, res) => {
   try {
-    const userId = req.user?.id?.toString();
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: "Usuário não autenticado" });
     }
@@ -1298,8 +1410,8 @@ router.delete("/bank-accounts/:id", requireAuth, async (req, res) => {
 
     await storage.deleteBankAccount(id);
     res.status(204).send();
-  } catch (error) {
-    console.error("Erro ao deletar conta bancária:", error);
+  } catch (error: any) {
+    console.error("Erro ao deletar conta bancária:", error?.message || error);
     res.status(500).json({ error: "Erro interno do servidor" });
   }
 });
@@ -1308,7 +1420,7 @@ router.delete("/bank-accounts/:id", requireAuth, async (req, res) => {
  * PATCH /api/relationships/:id/type
  * Endpoint temporário para corrigir tipo de relacionamento
  */
-router.patch("/api/relationships/:id/type", requireAuth, async (req, res) => {
+router.patch("/relationships/:id/type", requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const { type } = req.body;
@@ -1374,10 +1486,11 @@ router.post("/products-services", requireAuth, async (req, res) => {
     const item = await storage.createProductService(validatedData);
     res.status(201).json(item);
   } catch (error: any) {
-    console.error("Erro ao criar produto/serviço:", error);
     if (error instanceof z.ZodError) {
+      console.error("Erro de validação em produto/serviço:", error.errors);
       res.status(400).json({ error: "Dados inválidos", details: error.errors });
     } else {
+      console.error("Erro ao criar produto/serviço:", error.message || error);
       res.status(500).json({ error: "Falhou ao criar produto/serviço" });
     }
   }
@@ -1420,5 +1533,19 @@ router.delete("/products-services/:id", requireAuth, async (req, res) => {
 
 // Unidades removidas daqui e movidas para o topo das rotas de dados
 
+
+router.get("/debug-server-logs", async (req, res) => {
+  try {
+    const logPath = "C:\\Users\\devel\\debug_logs.txt";
+    if (fs.existsSync(logPath)) {
+      const content = fs.readFileSync(logPath, "utf-8");
+      res.send(`<h1>Logs do Servidor</h1><pre>${content}</pre>`);
+    } else {
+      res.send("<h1>Arquivo de log não encontrado.</h1><p>Tente realizar uma transação primeiro.</p>");
+    }
+  } catch (err) {
+    res.status(500).send("Erro ao ler log");
+  }
+});
 
 export default router;

@@ -103,9 +103,13 @@ export const transactions = pgTable("transactions", {
   date: timestamp("date").notNull(), // Data da transação
   // Campos de repetição/parcelamento
   repeticao: text("repeticao").default("Única"), // 'Única' | 'Parcelado' | 'Recorrente'
+  periodicidade: text("periodicidade"), // 'Diário' | 'Semanal' | 'Mensal' | 'Anual'
+  intervalo: integer("intervalo").default(1),
+  dataTermino: timestamp("data_termino"), // Data para parar a recorrência
   numeroParcelas: integer("numero_parcelas"), // Total de parcelas (ex: 12)
   parcelaAtual: integer("parcela_atual"), // Parcela atual (ex: 1 de 12)
-  parcelamentoId: text("parcelamento_id"), // UUID para agrupar parcelas do mesmo parcelamento
+  parcelamentoId: text("parcelamento_id"), // UUID para agrupar parcelas
+  recorrenciaId: text("recorrencia_id"), // UUID para agrupar recorrências
   createdAt: timestamp("created_at").defaultNow().notNull(), // Data de criação
 });
 
@@ -218,7 +222,11 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
  * Remove campos auto-gerados da validação.
  * Usado em: Criação de receitas e despesas pelo usuário.
  */
-export const insertTransactionSchema = createInsertSchema(transactions).omit({
+export const insertTransactionSchema = createInsertSchema(transactions, {
+  amount: z.coerce.string(),
+  date: z.coerce.date(),
+  dataTermino: z.coerce.date().optional().nullable(),
+}).omit({
   id: true, // Auto-incrementado pelo banco
   createdAt: true, // Definido automaticamente
 });
@@ -229,7 +237,11 @@ export const insertTransactionSchema = createInsertSchema(transactions).omit({
  * Remove campos auto-gerados da validação.
  * Usado em: Criação de metas de gastos por categoria.
  */
-export const insertBudgetSchema = createInsertSchema(budgets).omit({
+export const insertBudgetSchema = createInsertSchema(budgets, {
+  budgetedAmount: z.coerce.string(),
+  startDate: z.coerce.date(),
+  endDate: z.coerce.date(),
+}).omit({
   id: true, // Auto-incrementado pelo banco
   createdAt: true, // Definido automaticamente
 });
@@ -369,7 +381,11 @@ export const bankAccounts = pgTable("bank_accounts", {
 });
 
 // Schema de inserção para contas bancárias
-export const insertBankAccountSchema = createInsertSchema(bankAccounts).omit({
+export const insertBankAccountSchema = createInsertSchema(bankAccounts, {
+  currentBalance: z.coerce.string(),
+  creditLimit: z.coerce.string().optional().nullable(),
+  initialBalanceDate: z.coerce.date(),
+}).omit({
   id: true,
   createdAt: true,
 });
@@ -482,7 +498,10 @@ export const productsServices = pgTable("products_services", {
 });
 
 // Schema de inserção para produtos e serviços
-export const insertProductServiceSchema = createInsertSchema(productsServices).omit({
+export const insertProductServiceSchema = createInsertSchema(productsServices, {
+  salePrice: z.coerce.string(),
+  costPrice: z.coerce.string().optional().nullable(),
+}).omit({
   id: true,
   createdAt: true,
 });

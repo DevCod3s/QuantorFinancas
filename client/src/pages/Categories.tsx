@@ -1011,14 +1011,20 @@ export function Categories() {
           const cleanPrice = (val: any) => {
             if (!val) return '0';
             if (typeof val === 'number') return val.toString();
-            return val.replace('R$', '').replace(/\s/g, '').replace(/\./g, '').replace(',', '.').trim();
+            // Remove R$, espaços e pontos de milhar, troca vírgula por ponto
+            const cleaned = val.replace(/[R$\s.]/g, '').replace(',', '.').trim();
+            return cleaned || '0';
           };
 
-          saveProductMutation.mutate({
+          const payload = {
             ...data,
             salePrice: cleanPrice(data.salePrice),
-            costPrice: cleanPrice(data.costPrice)
-          });
+            costPrice: cleanPrice(data.costPrice),
+            categoryId: data.categoryId ? parseInt(data.categoryId) : null,
+            subcategoryId: data.subcategoryId ? parseInt(data.subcategoryId) : null
+          };
+
+          saveProductMutation.mutate(payload);
         }}
         hideCloseButton={true}
       />

@@ -433,7 +433,7 @@ export class DatabaseStorage implements IStorage {
         .from(schema.transactions)
         .where(eq(schema.transactions.bankAccountId, account.id));
 
-      const initialBalance = parseFloat(account.currentBalance || "0");
+      const initialBalance = parseFloat(account.currentBalance?.toString() || "0");
 
       const realChange = accountTransactions
         .filter(t => t.status === 'pago')
@@ -452,6 +452,7 @@ export class DatabaseStorage implements IStorage {
         ...account,
         realBalance: initialBalance + realChange,
         projectedBalance: initialBalance + projectedChange,
+        balance: initialBalance + realChange,
       };
     }));
 
@@ -783,7 +784,9 @@ export class DatabaseStorage implements IStorage {
       })),
       expensesByCategory,
       monthlyTrends: Array.from(trendsMap.values()),
-      bankAccounts: bankBalances, // Adicionado para dados reais
+      bankAccounts: bankBalances,
+      totalBalance: bankBalances.reduce((sum, b) => sum + b.realBalance, 0),
+      totalProjectedBalance: bankBalances.reduce((sum, b) => sum + b.projectedBalance, 0),
     };
   }
 

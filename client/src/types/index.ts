@@ -70,6 +70,7 @@ export interface AiInteraction {
 
 export interface DashboardData {
   totalBalance: number;
+  totalProjectedBalance?: number;
   monthlyIncome: number;
   monthlyExpenses: number;
   monthlySavings: number;
