@@ -24,7 +24,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown, LogOut } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -43,6 +43,7 @@ import { SubTabs } from "@/components/SubTabs";
 import { DynamicModal, DynamicField } from "@/components/DynamicModal";
 import { TabelaItens } from "@/components/ui/TabelaItens";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
+import { MoneyBagIcon } from "@/components/icons/MoneyBagIcon";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
@@ -188,7 +189,12 @@ export function Transactions() {
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
-  const [currentMonth, setCurrentMonth] = useState("julho 2025");
+  
+  // Mês atual dinâmico para não sumir com os dados
+  const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const todayDate = new Date();
+  const [currentMonth, setCurrentMonth] = useState(`${monthNames[todayDate.getMonth()]} ${todayDate.getFullYear()}`);
+  
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterPeriod, setFilterPeriod] = useState("Mensal");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -214,10 +220,12 @@ export function Transactions() {
 
   const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
+    queryFn: () => fetch('/api/transactions', { credentials: 'include' }).then(res => res.json()),
   });
 
   const { data: bankAccounts = [], isLoading: isLoadingBankAccounts, refetch: refetchBankAccounts } = useQuery<any[]>({
     queryKey: ["/api/bank-accounts"],
+    queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
   });
 
   // Mutation para criar conta bancária
@@ -611,7 +619,8 @@ export function Transactions() {
     queryFn: () => fetch('/api/dashboard', { credentials: 'include' }).then(res => res.json()),
   });
 
-  const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...customBanks].map(item => [item.code, item])).values())
+  const safeCustomBanks = Array.isArray(customBanks) ? customBanks : [];
+  const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...safeCustomBanks].map(item => [item.code, item])).values())
     .sort((a, b) => parseInt(a.code) - parseInt(b.code));
 
   // Garantir que chartAccounts seja sempre um array
@@ -619,6 +628,33 @@ export function Transactions() {
 
   // Para compatibilidade com o código de renderização que usa safeChartAccounts
   const safeChartAccounts = safeChartAccountsData;
+
+  // Mutation para liquidar transação (Adicionada manualmente por recuperação)
+  const liquidateTransactionMutation = useMutation({
+    mutationFn: (id: number) =>
+      fetch(`/api/transactions/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: 'pago' }),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Lançamento liquidado com sucesso!', "");
+    },
+    onError: (error: any) => {
+      showError('Erro ao liquidar lançamento', error.message || 'Tente novamente.');
+    }
+  });
+
+  const handleLiquidateTransaction = (item: any, type: string) => {
+    showConfirm(
+      "Liquidar Lançamento",
+      "Tem certeza que deseja marcar este lançamento como pago/liquidado?",
+      () => liquidateTransactionMutation.mutate(item.id)
+    );
+  };
 
   // Mutation para atualizar transação
   const updateTransactionMutation = useMutation({
@@ -1808,6 +1844,13 @@ export function Transactions() {
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
+                                  icon={<Coins className="h-3.5 w-3.5" />}
+                                  variant="gold"
+                                  title="Liquidação"
+                                  className="!p-2"
+                                  onClick={() => handleLiquidateTransaction(item, 'payable')}
+                                />
+                                <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
                                   variant="gold"
                                   title="Editar"
@@ -2087,6 +2130,13 @@ export function Transactions() {
                             ]}
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
+                                <IButtonPrime
+                                  icon={<MoneyBagIcon className="h-3.5 w-3.5" />}
+                                  variant="gold"
+                                  title="Liquidação"
+                                  className="!p-2"
+                                  onClick={() => handleLiquidateTransaction(item, 'receivable')}
+                                />
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
                                   variant="gold"

@@ -50,6 +50,7 @@ export function ConfirmDialog({
   confirmText = "OK",
   cancelText = "Cancelar"
 }: ConfirmDialogProps) {
+  console.log('ConfirmDialog Renderizado - open:', open, 'title:', title);
 
   const handleConfirm = () => {
     onConfirm();

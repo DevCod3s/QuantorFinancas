@@ -96,6 +96,9 @@ export const transactions = pgTable("transactions", {
   chartAccountId: integer("chart_account_id").references(() => chartOfAccounts.id),
   bankAccountId: integer("bank_account_id").references(() => bankAccounts.id),
   relationshipId: integer("relationship_id").references(() => relationships.id),
+  productServiceId: integer("product_service_id").references(() => productsServices.id), // Produto/Serviço vinculado (receitas)
+  businessCategoryId: integer("business_category_id").references(() => businessCategories.id), // Categoria de Negócio (DRE gerencial)
+  businessSubcategoryId: integer("business_subcategory_id").references(() => businessSubcategories.id), // Subcategoria de Negócio
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(), // Máx: 99.999.999,99
   description: text("description").notNull(),
   type: text("type").notNull(), // 'income' | 'expense'

@@ -1,0 +1,28 @@
+[dotenv@17.2.3] injecting env (3) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+Buscando transações com valor ~320.00...
+Encontradas: 24
+ID: 111, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 112, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 113, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 114, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 115, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 116, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 117, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 118, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 119, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 120, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 121, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 122, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 123, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 124, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 125, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 126, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 127, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 128, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 129, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 130, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 131, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 132, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 133, Desc: Solução TEF Express, Status: pendente, Type: income
+ID: 110, Desc: Solução TEF Express, Status: pago, Type: income
+Múltiplas transações encontradas. Por favor, restrinja a busca.

@@ -41,13 +41,14 @@ interface TransactionCardProps {
   onSave: (transaction: any) => void;
   entryType?: 'payable' | 'receivable'; // Novo prop para definir tipo de lançamento
   transaction?: any; // Prop para edição
+  viewOnly?: boolean; // Novo prop para modo visualização
 }
 
 /**
  * Card para criação de novas transações financeiras
  * Layout baseado na imagem de referência com campos organizados em grid
  */
-export function TransactionCard({ open, onClose, onSave, entryType, transaction }: TransactionCardProps) {
+export function TransactionCard({ open, onClose, onSave, entryType, transaction, viewOnly }: TransactionCardProps) {
   // Define o tipo inicial baseado no entryType
   const tipoInicial = entryType === 'payable' ? 'Nova despesa' : entryType === 'receivable' ? 'Nova receita' : 'Nova receita';
   const [tipo, setTipo] = useState(tipoInicial);
@@ -65,14 +66,17 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
-  const [categoria, setCategoria] = useState('');
-  const [subcategoria, setSubcategoria] = useState('');
   const [contato, setContato] = useState('');
   const [observacoes, setObservacoes] = useState('');
-  const [isPaid, setIsPaid] = useState(false); // Inicia como pendente (false)
+  const [isPaid, setIsPaid] = useState(false);
   const [tags, setTags] = useState('');
   const [hasEndDate, setHasEndDate] = useState(false);
   const [dataTermino, setDataTermino] = useState('');
+  // Novos campos: Produto/Serviço, Business Categories e Plano de Contas
+  const [produtoServico, setProdutoServico] = useState('');
+  const [businessCategoria, setBusinessCategoria] = useState('');
+  const [businessSubcategoria, setBusinessSubcategoria] = useState('');
+  const [planoContas, setPlanoContas] = useState('');
 
   // Efeito para preencher campos na edição ou resetar na criação
   React.useEffect(() => {
@@ -88,12 +92,15 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
         setData(transaction.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
         setDescricao(transaction.description || '');
         setConta(transaction.bankAccountId?.toString() || '');
-        setCategoria(transaction.chartAccountId?.toString() || '');
         setContato(transaction.relationshipId?.toString() || '');
         setObservacoes(transaction.observacoes || '');
         setRepeticao(transaction.repeticao || 'Única');
         setIsPaid(transaction.status === 'pago');
         setTags(transaction.tags || '');
+        setProdutoServico(transaction.productServiceId?.toString() || '');
+        setBusinessCategoria(transaction.businessCategoryId?.toString() || '');
+        setBusinessSubcategoria(transaction.businessSubcategoryId?.toString() || '');
+        setPlanoContas(transaction.chartAccountId?.toString() || '');
         
         // Parcelamento/Recorrência se houver
         if (transaction.repeticao === 'Recorrente') {
@@ -116,8 +123,6 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
         setData(new Date().toISOString().split('T')[0]);
         setDescricao('');
         setConta('');
-        setCategoria('');
-        setSubcategoria('');
         setContato('');
         setObservacoes('');
         setRepeticao('Única');
@@ -126,6 +131,10 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
         setHasEndDate(false);
         setPeriodicidade('Mensal');
         setIntervaloRepeticao('1');
+        setProdutoServico('');
+        setBusinessCategoria('');
+        setBusinessSubcategoria('');
+        setPlanoContas('');
       }
     }
   }, [open, transaction, entryType]);
@@ -243,37 +252,70 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
     queryFn: () => fetch('/api/relationships', { credentials: 'include' }).then(res => res.json())
   });
 
-  // Buscar dados de contas bancárias  
+  // Buscar dados de contas bancárias
   const { data: bankAccounts = [] } = useQuery({
     queryKey: ['/api/bank-accounts'],
     queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
-  // Buscar dados do plano de contas
+  // Buscar Plano de Contas (contábil)
   const { data: chartOfAccounts = [] } = useQuery({
     queryKey: ['/api/chart-accounts'],
     queryFn: () => fetch('/api/chart-accounts', { credentials: 'include' }).then(res => res.json())
   });
 
-  // Filtragem de categorias (Nível 1) do Plano de Contas por tipo
-  const filteredCategories = chartOfAccounts.filter((account: any) => {
-    if (account.level !== 1) return false;
+  // Buscar Produtos e Serviços
+  const { data: productsServices = [] } = useQuery({
+    queryKey: ['/api/products-services'],
+    queryFn: () => fetch('/api/products-services', { credentials: 'include' }).then(res => res.json())
+  });
 
-    if (tipo.includes('receita')) {
-      const accountType = account.type?.toLowerCase();
-      return accountType === 'receita' || accountType === 'receitas';
-    }
-    if (tipo.includes('despesa')) {
-      const accountType = account.type?.toLowerCase();
-      return accountType === 'despesa' || accountType === 'despesas';
-    }
+  // Buscar Categorias de Negócio (Unidade de Negócios)
+  const { data: businessCategories = [] } = useQuery({
+    queryKey: ['/api/business-categories'],
+    queryFn: () => fetch('/api/business-categories', { credentials: 'include' }).then(res => res.json())
+  });
+
+  // Buscar Subcategorias de Negócio
+  const { data: businessSubcategories = [] } = useQuery({
+    queryKey: ['/api/business-subcategories'],
+    queryFn: () => fetch('/api/business-subcategories', { credentials: 'include' }).then(res => res.json())
+  });
+
+  // Produto selecionado (para auto-fill e filtragem)
+  const selectedProduct = (productsServices as any[]).find((p: any) => String(p.id) === String(produtoServico));
+
+  // Filtragem do Plano de Contas (nível 1) por tipo da transação
+  const filteredPlanoContas = (chartOfAccounts as any[]).filter((account: any) => {
+    if (account.level !== 1) return false;
+    const accountType = account.type?.toLowerCase();
+    if (tipo.includes('receita')) return accountType === 'receita' || accountType === 'receitas';
+    if (tipo.includes('despesa')) return accountType === 'despesa' || accountType === 'despesas';
     return true;
   });
 
-  // Filtragem de subcategorias (Nível 2) do Plano de Contas
-  const filteredSubcategories = chartOfAccounts.filter((account: any) => {
-    return account.level === 2 && account.parentId === parseInt(categoria);
+  // Filtragem das Categorias de Negócio por tipo (income/expense) e appliedTo (product/service/both)
+  const filteredBusinessCategories = (businessCategories as any[]).filter((cat: any) => {
+    const tipoFiltro = tipo.includes('receita') ? 'income' : 'expense';
+    if (cat.type !== tipoFiltro) return false;
+    if (!selectedProduct) return true; // sem produto, mostra todas do tipo
+    const appliedTo = cat.appliedTo || 'both';
+    if (appliedTo === 'both') return true;
+    return appliedTo === (selectedProduct.type === 'product' ? 'products' : 'services');
   });
+
+  // Filtragem das Subcategorias pela categoria de negócio selecionada
+  const filteredBusinessSubcategories = (businessSubcategories as any[]).filter((sub: any) => {
+    return String(sub.categoryId) === String(businessCategoria);
+  });
+
+  // Auto-preenchimento de categoria/subcategoria ao selecionar produto
+  React.useEffect(() => {
+    if (selectedProduct) {
+      if (selectedProduct.categoryId) setBusinessCategoria(selectedProduct.categoryId.toString());
+      if (selectedProduct.subcategoryId) setBusinessSubcategoria(selectedProduct.subcategoryId.toString());
+    }
+  }, [produtoServico]);
 
   // Cálculo do valor da parcela
   React.useEffect(() => {
@@ -364,16 +406,19 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
 
     const transaction = {
       tipo,
-      valor: valor, // Envia string bruta (ex: 'R$ 500,00'), parsing é feito no handleSaveTransaction
+      valor,
       data,
       repeticao,
       tags,
       status: finalStatus,
-      descricao: descricao,
-      conta: conta,
-      chartAccountId: categoria,
-      contato: contato,
-      observacoes: observacoes,
+      descricao,
+      conta,
+      contato,
+      observacoes,
+      planoContas,
+      produtoServico,
+      businessCategoria,
+      businessSubcategoria,
       periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
       intervalo: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
       dataTermino: (repeticao === 'Recorrente' && hasEndDate) ? dataTermino : undefined,
@@ -435,6 +480,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
             <Select
               value={tipo}
               onChange={(e) => setTipo(e.target.value)}
+              disabled={viewOnly}
               sx={{
                 fontSize: '16px',
                 fontWeight: 500,
@@ -451,13 +497,14 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
         </Box>
 
         <CardContent sx={{ p: 3 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2, mb: 2 }}>
             <TextField
               variant="standard"
               label="Valor"
               value={valor}
               onChange={handleValorChange}
               fullWidth
+              disabled={viewOnly}
               sx={{
                 '& .MuiInput-root': { fontSize: '16px' },
                 '& .MuiInputLabel-root': { color: '#666' }
@@ -467,11 +514,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
               label="Data"
               value={data}
               onChange={setData}
+              disabled={viewOnly}
             />
-          </Box>
-
-
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
               <FormControl variant="standard" sx={{ width: repeticao === 'Parcelado' ? '85%' : '100%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>
@@ -480,6 +524,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
                 <Select
                   value={repeticao}
                   onChange={(e) => setRepeticao(e.target.value)}
+                  disabled={viewOnly}
                 >
                   <MenuItem value="Única">Única</MenuItem>
                   <MenuItem value="Parcelado">Parcelado</MenuItem>
@@ -497,57 +542,82 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
                 </IconButton>
               )}
             </Box>
-
-            {repeticao === 'Recorrente' && (
-              <>
-                <FormControl variant="standard" fullWidth>
-                  <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
-                    Periodicidade
-                  </InputLabel>
-                  <Select
-                    value={periodicidade}
-                    onChange={(e) => setPeriodicidade(e.target.value)}
-                  >
-                    <MenuItem value="Diário">Diário</MenuItem>
-                    <MenuItem value="Semanal">Semanal</MenuItem>
-                    <MenuItem value="Mensal">Mensal</MenuItem>
-                    <MenuItem value="Anual">Anual</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  variant="standard"
-                  label="Intervalo"
-                  value={intervaloRepeticao}
-                  onChange={(e) => setIntervaloRepeticao(e.target.value)}
-                  fullWidth
-                  sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-                />
-
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={hasEndDate}
-                        onChange={(e) => setHasEndDate(e.target.checked)}
-                        size="small"
-                        sx={{ color: '#B59363', '&.Mui-checked': { color: '#B59363' } }}
-                      />
-                    }
-                    label={<Typography sx={{ fontSize: '13px', color: '#666' }}>Definir término</Typography>}
-                  />
-                  {hasEndDate && (
-                    <Box sx={{ width: '150px' }}>
-                      <DateInput
-                        label="Até"
-                        value={dataTermino}
-                        onChange={setDataTermino}
-                      />
-                    </Box>
-                  )}
-                </Box>
-              </>
-            )}
           </Box>
+
+          {repeticao === 'Recorrente' && (
+            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
+                  Periodicidade
+                </InputLabel>
+                <Select
+                  value={periodicidade}
+                  onChange={(e) => setPeriodicidade(e.target.value)}
+                >
+                  <MenuItem value="Diário">Diário</MenuItem>
+                  <MenuItem value="Semanal">Semanal</MenuItem>
+                  <MenuItem value="Mensal">Mensal</MenuItem>
+                  <MenuItem value="Anual">Anual</MenuItem>
+                </Select>
+              </FormControl>
+              <TextField
+                variant="standard"
+                label="Intervalo"
+                value={intervaloRepeticao}
+                onChange={(e) => setIntervaloRepeticao(e.target.value)}
+                fullWidth
+                sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
+              />
+
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={hasEndDate}
+                      onChange={(e) => setHasEndDate(e.target.checked)}
+                      size="small"
+                      sx={{ color: '#B59363', '&.Mui-checked': { color: '#B59363' } }}
+                    />
+                  }
+                  label={<Typography sx={{ fontSize: '13px', color: '#666' }}>Definir término</Typography>}
+                />
+                {hasEndDate && (
+                  <Box sx={{ width: '150px' }}>
+                    <DateInput
+                      label="Até"
+                      value={dataTermino}
+                      onChange={setDataTermino}
+                    />
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          )}
+
+          {/* Campo Produto/Serviço — visível apenas para RECEITAS */}
+          {tipo.includes('receita') && (
+            <Box sx={{ display: 'flex', alignItems: 'end', gap: 1, mb: 2 }}>
+              <FormControl variant="standard" sx={{ width: '100%' }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!produtoServico || undefined}>Produto / Serviço</InputLabel>
+                <Select
+                  value={produtoServico}
+                  disabled={viewOnly}
+                  onChange={(e) => {
+                    setProdutoServico(e.target.value);
+                    // Limpa subcategoria ao trocar produto
+                    setBusinessSubcategoria('');
+                  }}
+                >
+                  <MenuItem value=""><em>Nenhum</em></MenuItem>
+                  {(productsServices as any[]).filter((p: any) => p.status === 'active' || p.status === 'ativo').map((p: any) => (
+                    <MenuItem key={p.id} value={p.id}>
+                      {p.type === 'service' ? '🛠 ' : '📦 '}{p.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Box>
+          )}
 
           <TextField
             variant="standard"
@@ -555,9 +625,11 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             fullWidth
+            disabled={viewOnly}
             sx={{ '& .MuiInputLabel-root': { color: '#666' }, mb: 2 }}
           />
 
+          {/* Linha: Conta Bancária + Plano de Contas */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
               <FormControl variant="standard" sx={{ width: '85%' }}>
@@ -565,48 +637,39 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
                 <Select
                   value={conta}
                   onChange={(e) => setConta(e.target.value)}
+                  disabled={viewOnly}
                 >
-                  {bankAccounts.map((account: any) => (
+                  {(bankAccounts as any[]).map((account: any) => (
                     <MenuItem key={account.id} value={account.id}>
                       {account.name} ({account.bank} - {account.accountNumber})
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <IconButton
-                size="small"
-                sx={{ mb: 0.5, color: '#1976d2' }}
-              >
+              <IconButton size="small" sx={{ mb: 0.5, color: '#1976d2' }}>
                 <CreditCard className="h-4 w-4" />
               </IconButton>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!categoria || undefined}>Categoria</InputLabel>
+              <FormControl variant="standard" sx={{ width: '100%' }}>
+                <InputLabel sx={{ color: '#666' }} shrink={!!planoContas || undefined}>Plano de Contas</InputLabel>
                 <Select
-                  value={categoria}
-                  onChange={(e) => {
-                    setCategoria(e.target.value);
-                    setSubcategoria('');
-                  }}
+                  value={planoContas}
+                  onChange={(e) => setPlanoContas(e.target.value)}
                 >
-                  {filteredCategories.map((cat: any) => (
-                    <MenuItem key={cat.id} value={cat.id}>
-                      {cat.code} - {cat.name}
+                  <MenuItem value=""><em>Nenhum</em></MenuItem>
+                  {filteredPlanoContas.map((acc: any) => (
+                    <MenuItem key={acc.id} value={acc.id}>
+                      {acc.code} - {acc.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <IconButton
-                size="small"
-                sx={{ mb: 0.5, color: '#1976d2' }}
-              >
-                <Plus className="h-4 w-4" />
-              </IconButton>
             </Box>
           </Box>
 
+          {/* Linha: Relacionamento + Categoria de Negócio */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
               <FormControl variant="standard" sx={{ width: '85%' }}>
@@ -615,7 +678,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
                   value={contato}
                   onChange={(e) => setContato(e.target.value)}
                 >
-                  {relationships.map((rel: any) => (
+                  {(relationships as any[]).map((rel: any) => (
                     <MenuItem key={rel.id} value={rel.id}>
                       {rel.fantasyName || rel.socialName}
                     </MenuItem>
@@ -633,26 +696,55 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
 
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
               <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!subcategoria || undefined}>Subcategoria</InputLabel>
+                <InputLabel sx={{ color: '#666' }} shrink={!!businessCategoria || undefined}>Categoria</InputLabel>
                 <Select
-                  value={subcategoria}
-                  onChange={(e) => setSubcategoria(e.target.value)}
+                  value={businessCategoria}
+                  onChange={(e) => {
+                    setBusinessCategoria(e.target.value);
+                    setBusinessSubcategoria('');
+                  }}
                 >
-                  {filteredSubcategories.map((subcat: any) => (
-                    <MenuItem key={subcat.id} value={subcat.id}>
-                      {subcat.code} - {subcat.name}
+                  <MenuItem value=""><em>Nenhuma</em></MenuItem>
+                  {filteredBusinessCategories.map((cat: any) => (
+                    <MenuItem key={cat.id} value={cat.id}>
+                      {cat.name}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-              <IconButton
-                size="small"
-                sx={{ mb: 0.5, color: '#1976d2' }}
-              >
+              <IconButton size="small" sx={{ mb: 0.5, color: '#1976d2' }}>
                 <Plus className="h-4 w-4" />
               </IconButton>
             </Box>
           </Box>
+
+
+          {/* Linha: Subcategoria de Negócio — aparece apenas quando uma categoria é selecionada */}
+          {businessCategoria && (
+            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+              <Box /> {/* espaço vazio na esquerda */}
+              <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
+                <FormControl variant="standard" sx={{ width: '85%' }}>
+                  <InputLabel sx={{ color: '#666' }} shrink={!!businessSubcategoria || undefined}>Subcategoria</InputLabel>
+                  <Select
+                    value={businessSubcategoria}
+                    onChange={(e) => setBusinessSubcategoria(e.target.value)}
+                  >
+                    <MenuItem value=""><em>Nenhuma</em></MenuItem>
+                    {filteredBusinessSubcategories.map((sub: any) => (
+                      <MenuItem key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                <IconButton size="small" sx={{ mb: 0.5, color: '#1976d2' }}>
+                  <Plus className="h-4 w-4" />
+                </IconButton>
+              </Box>
+            </Box>
+          )}
+
 
           <TextField
             variant="standard"
@@ -676,16 +768,18 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
                 className="!p-2"
                 onClick={() => console.log('Anexos')}
               />
-              <IButtonPrime
-                icon={isPaid ? <CheckCheck className="h-4 w-4" /> : <Check className="h-4 w-4" />}
-                variant="gold"
-                title={isPaid ? "Marcado como Pago" : "Marcar como Pago"}
-                className={cn(
-                  "!p-2",
-                  isPaid ? "text-green-600 hover:bg-green-50/50" : ""
-                )}
-                onClick={() => setIsPaid(!isPaid)}
-              />
+              {!viewOnly && (
+                <IButtonPrime
+                  icon={isPaid ? <CheckCheck className="h-4 w-4" /> : <Check className="h-4 w-4" />}
+                  variant="gold"
+                  title={isPaid ? "Marcado como Pago" : "Marcar como Pago"}
+                  className={cn(
+                    "!p-2",
+                    isPaid ? "text-green-600 hover:bg-green-50/50" : ""
+                  )}
+                  onClick={() => setIsPaid(!isPaid)}
+                />
+              )}
             </Box>
 
             <Box sx={{ display: 'flex', gap: 1 }}>
@@ -696,20 +790,24 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction 
                 className="!p-2"
                 onClick={onClose}
               />
-              <IButtonPrime
-                icon={<Save className="h-4 w-4" />}
-                variant="gold"
-                title="Salvar"
-                className="!p-2"
-                onClick={handleSave}
-              />
-              <IButtonPrime
-                icon={<Plus className="h-4 w-4" />}
-                variant="gold"
-                title="Adicionar novo"
-                className="!p-2"
-                onClick={() => console.log('Novo')}
-              />
+              {!viewOnly && (
+                <>
+                  <IButtonPrime
+                    icon={<Save className="h-4 w-4" />}
+                    variant="gold"
+                    title="Salvar"
+                    className="!p-2"
+                    onClick={handleSave}
+                  />
+                  <IButtonPrime
+                    icon={<Plus className="h-4 w-4" />}
+                    variant="gold"
+                    title="Adicionar novo"
+                    className="!p-2"
+                    onClick={() => console.log('Novo')}
+                  />
+                </>
+              )}
             </Box>
           </Box>
         </CardContent>

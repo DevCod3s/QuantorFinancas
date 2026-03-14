@@ -1,0 +1,82 @@
+[
+  {
+    "id": 37,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 36,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 35,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 34,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 33,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 32,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 31,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 30,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 29,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  },
+  {
+    "id": 28,
+    "description": "TEF Multiplus Card",
+    "amount": "2160.00",
+    "repeticao": "Recorrente",
+    "recorrencia_id": "b11b204e-6f5d-485d-a0d2-5be1fda0a839",
+    "parcelamento_id": null
+  }
+]

@@ -475,12 +475,13 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
 router.put("/transactions/:id", requireAuth, async (req: any, res) => {
   try {
     const id = parseInt(req.params.id);
+    const updateMode = (req.query.mode as 'single' | 'future' | 'all') || 'single';
     const updateData = { ...req.body };
     if (updateData.amount !== undefined) updateData.amount = updateData.amount?.toString();
     if (updateData.date !== undefined) updateData.date = updateData.date ? new Date(updateData.date) : undefined;
     
     const validatedData = insertTransactionSchema.partial().parse(updateData);
-    const transaction = await storage.updateTransaction(id, validatedData);
+    const transaction = await storage.updateTransaction(id, validatedData, updateMode);
     res.json(transaction);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -496,7 +497,8 @@ router.put("/transactions/:id", requireAuth, async (req: any, res) => {
 router.delete("/transactions/:id", requireAuth, async (req: any, res) => {
   try {
     const id = parseInt(req.params.id);
-    await storage.deleteTransaction(id);
+    const deleteMode = (req.query.mode as 'single' | 'future' | 'all') || 'single';
+    await storage.deleteTransaction(id, deleteMode);
     res.status(204).send();
   } catch (error) {
     console.error("Erro ao excluir transação:", error);

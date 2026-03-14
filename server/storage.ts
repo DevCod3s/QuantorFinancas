@@ -72,8 +72,8 @@ export interface IStorage {
   getTransactionsByUserId(userId: string): Promise<any[]>;
   getTransactionById(id: number): Promise<Transaction | null>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
-  updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction>;
-  deleteTransaction(id: number): Promise<void>;
+  updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode?: 'single' | 'future' | 'all'): Promise<Transaction>;
+  deleteTransaction(id: number, deleteMode?: 'single' | 'future' | 'all'): Promise<void>;
 
   // Orçamentos
   getBudgetsByUserId(userId: string): Promise<Budget[]>;
@@ -238,19 +238,47 @@ export class DatabaseStorage implements IStorage {
         repeticao: schema.transactions.repeticao,
         numeroParcelas: schema.transactions.numeroParcelas,
         parcelaAtual: schema.transactions.parcelaAtual,
+        parcelamentoId: schema.transactions.parcelamentoId,
+        recorrenciaId: schema.transactions.recorrenciaId,
         categoryId: schema.transactions.categoryId,
         chartAccountId: schema.transactions.chartAccountId,
         bankAccountId: schema.transactions.bankAccountId,
         relationshipId: schema.transactions.relationshipId,
+        productServiceId: schema.transactions.productServiceId,
+        businessCategoryId: schema.transactions.businessCategoryId,
+        businessSubcategoryId: schema.transactions.businessSubcategoryId,
         relationship: {
           id: schema.relationships.id,
           socialName: schema.relationships.socialName,
           document: schema.relationships.document,
           type: schema.relationships.type,
-        }
+        },
+        productService: {
+          id: schema.productsServices.id,
+          name: schema.productsServices.name,
+          type: schema.productsServices.type,
+        },
+        businessCategory: {
+          id: schema.businessCategories.id,
+          name: schema.businessCategories.name,
+          type: schema.businessCategories.type,
+        },
+        businessSubcategory: {
+          id: schema.businessSubcategories.id,
+          name: schema.businessSubcategories.name,
+        },
+        chartAccount: {
+          id: schema.chartOfAccounts.id,
+          name: schema.chartOfAccounts.name,
+          code: schema.chartOfAccounts.code,
+        },
       })
       .from(schema.transactions)
       .leftJoin(schema.relationships, eq(schema.transactions.relationshipId, schema.relationships.id))
+      .leftJoin(schema.productsServices, eq(schema.transactions.productServiceId, schema.productsServices.id))
+      .leftJoin(schema.businessCategories, eq(schema.transactions.businessCategoryId, schema.businessCategories.id))
+      .leftJoin(schema.businessSubcategories, eq(schema.transactions.businessSubcategoryId, schema.businessSubcategories.id))
+      .leftJoin(schema.chartOfAccounts, eq(schema.transactions.chartAccountId, schema.chartOfAccounts.id))
       .where(eq(schema.transactions.userId, parseInt(userId)))
       .orderBy(desc(schema.transactions.date));
   }
@@ -271,16 +299,81 @@ export class DatabaseStorage implements IStorage {
     return newTransaction;
   }
 
-  async updateTransaction(id: number, transaction: Partial<InsertTransaction>): Promise<Transaction> {
-    const [updatedTransaction] = await db
-      .update(schema.transactions)
-      .set(transaction)
-      .where(eq(schema.transactions.id, id))
-      .returning();
+  async updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode: 'single' | 'future' | 'all' = 'single'): Promise<Transaction> {
+    const [original] = await db.select().from(schema.transactions).where(eq(schema.transactions.id, id));
+    if (!original) throw new Error("Transaction not found");
+
+    if (updateMode === 'single' || (!original.parcelamentoId && !original.recorrenciaId)) {
+      const [updatedTransaction] = await db
+        .update(schema.transactions)
+        .set(transaction)
+        .where(eq(schema.transactions.id, id))
+        .returning();
+      return updatedTransaction;
+    }
+
+    const groupId = original.parcelamentoId || original.recorrenciaId;
+    const groupField = original.parcelamentoId ? schema.transactions.parcelamentoId : schema.transactions.recorrenciaId;
+    
+    // Atualização em lote de propriedades secundárias, mantendo a data e a parcela atual intactas
+    const safeUpdate = { ...transaction };
+    delete safeUpdate.date;
+    delete safeUpdate.parcelaAtual;
+
+    if (updateMode === 'all') {
+      const [updatedTransaction] = await db.update(schema.transactions).set(transaction).where(eq(schema.transactions.id, id)).returning();
+      if (groupId) {
+        await db.update(schema.transactions).set(safeUpdate).where(and(eq(groupField, groupId), sql`${schema.transactions.id} != ${id}`));
+      }
+      return updatedTransaction;
+    }
+
+    if (updateMode === 'future' && original.date) {
+      const [updatedTransaction] = await db.update(schema.transactions).set(transaction).where(eq(schema.transactions.id, id)).returning();
+      if (groupId) {
+        // Formatar para iso string compátivel com datas do pg
+        const originalDateIso = original.date.toISOString();
+        await db.update(schema.transactions).set(safeUpdate).where(and(
+          eq(groupField, groupId),
+          sql`${schema.transactions.date} > ${originalDateIso}`,
+          sql`${schema.transactions.id} != ${id}`
+        ));
+      }
+      return updatedTransaction;
+    }
+
+    // Fallback original
+    const [updatedTransaction] = await db.update(schema.transactions).set(transaction).where(eq(schema.transactions.id, id)).returning();
     return updatedTransaction;
   }
 
-  async deleteTransaction(id: number): Promise<void> {
+  async deleteTransaction(id: number, deleteMode: 'single' | 'future' | 'all' = 'single'): Promise<void> {
+    const [original] = await db.select().from(schema.transactions).where(eq(schema.transactions.id, id));
+    if (!original) return;
+
+    if (deleteMode === 'single' || (!original.parcelamentoId && !original.recorrenciaId)) {
+      await db.delete(schema.transactions).where(eq(schema.transactions.id, id));
+      return;
+    }
+
+    const groupId = original.parcelamentoId || original.recorrenciaId;
+    const groupField = original.parcelamentoId ? schema.transactions.parcelamentoId : schema.transactions.recorrenciaId;
+
+    if (deleteMode === 'all' && groupId) {
+      await db.delete(schema.transactions).where(eq(groupField, groupId));
+      return;
+    }
+
+    if (deleteMode === 'future' && groupId && original.date) {
+      const originalDateIso = original.date.toISOString();
+      await db.delete(schema.transactions).where(and(
+        eq(groupField, groupId),
+        sql`${schema.transactions.date} >= ${originalDateIso}`
+      ));
+      return;
+    }
+    
+    // Fallback
     await db.delete(schema.transactions).where(eq(schema.transactions.id, id));
   }
 
@@ -303,7 +396,7 @@ export class DatabaseStorage implements IStorage {
   async createBudget(budget: InsertBudget): Promise<Budget> {
     const [newBudget] = await db
       .insert(schema.budgets)
-      .values(budget)
+      .values(budget as any)
       .returning();
     return newBudget;
   }
@@ -311,7 +404,7 @@ export class DatabaseStorage implements IStorage {
   async updateBudget(id: number, budget: Partial<InsertBudget>): Promise<Budget> {
     const [updatedBudget] = await db
       .update(schema.budgets)
-      .set(budget)
+      .set(budget as any)
       .where(eq(schema.budgets.id, id))
       .returning();
     return updatedBudget;
@@ -469,14 +562,14 @@ export class DatabaseStorage implements IStorage {
 
   async createBankAccount(bankAccount: InsertBankAccount): Promise<BankAccount> {
     const newBankAccount = await db.insert(schema.bankAccounts)
-      .values(bankAccount)
+      .values(bankAccount as any)
       .returning();
     return newBankAccount[0];
   }
 
   async updateBankAccount(id: number, bankAccount: Partial<InsertBankAccount>): Promise<BankAccount> {
     const updated = await db.update(schema.bankAccounts)
-      .set(bankAccount)
+      .set(bankAccount as any)
       .where(eq(schema.bankAccounts.id, id))
       .returning();
     return updated[0];
@@ -634,9 +727,13 @@ export class DatabaseStorage implements IStorage {
         description: schema.transactions.description,
         categoryName: schema.categories.name,
         categoryColor: schema.categories.color,
+        businessCategoryName: schema.businessCategories.name,
+        chartAccountName: schema.chartOfAccounts.name,
       })
       .from(schema.transactions)
       .leftJoin(schema.categories, eq(schema.transactions.categoryId, schema.categories.id))
+      .leftJoin(schema.businessCategories, eq(schema.transactions.businessCategoryId, schema.businessCategories.id))
+      .leftJoin(schema.chartOfAccounts, eq(schema.transactions.chartAccountId, schema.chartOfAccounts.id))
       .where(
         and(
           eq(schema.transactions.userId, userIdNum),
@@ -660,7 +757,7 @@ export class DatabaseStorage implements IStorage {
     currentMonthTransactions
       .filter(t => t.type === 'expense')
       .forEach(t => {
-        const name = t.categoryName || 'Outros';
+        const name = t.businessCategoryName || t.chartAccountName || t.categoryName || 'Sem Classificação';
         const color = t.categoryColor || '#4D4E48';
         if (!categoryMap.has(name)) {
           categoryMap.set(name, { category: name, amount: 0, color });
@@ -718,9 +815,13 @@ export class DatabaseStorage implements IStorage {
         date: schema.transactions.date,
         description: schema.transactions.description,
         categoryName: schema.categories.name,
+        businessCategoryName: schema.businessCategories.name,
+        chartAccountName: schema.chartOfAccounts.name,
       })
       .from(schema.transactions)
       .leftJoin(schema.categories, eq(schema.transactions.categoryId, schema.categories.id))
+      .leftJoin(schema.businessCategories, eq(schema.transactions.businessCategoryId, schema.businessCategories.id))
+      .leftJoin(schema.chartOfAccounts, eq(schema.transactions.chartAccountId, schema.chartOfAccounts.id))
       .where(eq(schema.transactions.userId, userIdNum))
       .orderBy(desc(schema.transactions.date))
       .limit(5);
@@ -778,7 +879,7 @@ export class DatabaseStorage implements IStorage {
         type: t.type === 'income' ? 'receita' : 'despesa',
         date: t.date.toISOString(),
         category: {
-          name: t.categoryName || 'Sem Categoria',
+          name: t.businessCategoryName || t.chartAccountName || t.categoryName || 'Sem Classificação',
           icon: 'fa-circle'
         }
       })),
@@ -871,11 +972,13 @@ export class DatabaseStorage implements IStorage {
 
     console.log(`[GEOGRAPHIC DEBUG] Registros brutos encontrados: ${clientsRaw.length}`);
 
-    const clients = clientsRaw.map(c => ({
-      ...c,
-      city: String(c.city || "").trim(),
-      state: String(c.state || "").trim()
-    }));
+    const clients = clientsRaw.map(c => {
+      return {
+        ...c,
+        city: String(c.city || "").trim(),
+        state: String(c.state || "").trim()
+      };
+    });
 
     // 2. Buscar todas as transações de receita deste usuário para calcular faturamento por cliente
     const incomes = await db
@@ -903,6 +1006,7 @@ export class DatabaseStorage implements IStorage {
       return {
         id: client.id,
         name: client.socialName,
+        type: client.type,
         city: client.city,
         state: client.state,
         zipCode: client.zipCode,
