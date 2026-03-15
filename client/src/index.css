@@ -125,6 +125,29 @@
   animation-fill-mode: forwards;
 }
 
+/* Efeito cortina suave para toggle de cards */
+@keyframes curtainReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px) scaleY(0.95);
+    clip-path: inset(0 0 100% 0);
+  }
+  40% {
+    opacity: 0.5;
+    clip-path: inset(0 0 40% 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scaleY(1);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.curtain-enter {
+  animation: curtainReveal 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+  transform-origin: top center;
+}
+
 @layer base {
   * {
     @apply border-border;

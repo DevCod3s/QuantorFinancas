@@ -272,6 +272,12 @@ export class DatabaseStorage implements IStorage {
           name: schema.chartOfAccounts.name,
           code: schema.chartOfAccounts.code,
         },
+        category: {
+          id: schema.categories.id,
+          name: schema.categories.name,
+          color: schema.categories.color,
+          type: schema.categories.type,
+        },
       })
       .from(schema.transactions)
       .leftJoin(schema.relationships, eq(schema.transactions.relationshipId, schema.relationships.id))
@@ -279,6 +285,7 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(schema.businessCategories, eq(schema.transactions.businessCategoryId, schema.businessCategories.id))
       .leftJoin(schema.businessSubcategories, eq(schema.transactions.businessSubcategoryId, schema.businessSubcategories.id))
       .leftJoin(schema.chartOfAccounts, eq(schema.transactions.chartAccountId, schema.chartOfAccounts.id))
+      .leftJoin(schema.categories, eq(schema.transactions.categoryId, schema.categories.id))
       .where(eq(schema.transactions.userId, parseInt(userId)))
       .orderBy(desc(schema.transactions.date));
   }

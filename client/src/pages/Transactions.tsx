@@ -24,7 +24,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -44,6 +44,8 @@ import { DynamicModal, DynamicField } from "@/components/DynamicModal";
 import { TabelaItens } from "@/components/ui/TabelaItens";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 import { MoneyBagIcon } from "@/components/icons/MoneyBagIcon";
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
@@ -423,6 +425,9 @@ export function Transactions() {
   const [selectedReceivables, setSelectedReceivables] = useState<any[]>([]);
   const [batchPaymentModalOpen, setBatchPaymentModalOpen] = useState(false);
   const [batchPaymentType, setBatchPaymentType] = useState<'payable' | 'receivable'>('payable');
+  const [showExpenseSubcategory, setShowExpenseSubcategory] = useState(false);
+  const [showIncomeSubcategory, setShowIncomeSubcategory] = useState(false);
+  const [showAccountFlow, setShowAccountFlow] = useState(false);
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
 
@@ -526,7 +531,7 @@ export function Transactions() {
     const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
 
     const categories = data.reduce((acc: any, t) => {
-      const cat = t.category || 'Geral';
+      const cat = t.businessCategory?.name || t.category?.name || 'Geral';
       acc[cat] = (acc[cat] || 0) + parseFloat(t.amount || '0');
       return acc;
     }, {});
@@ -540,6 +545,27 @@ export function Transactions() {
 
   const incomeStats = getStatsByCategory('income');
   const expenseStats = getStatsByCategory('expense');
+
+  // Agregação por Subcategoria
+  const getStatsBySubcategory = (type: 'income' | 'expense') => {
+    const data = filteredTransactions.filter(t => t.type === type);
+    const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
+
+    const subcategories = data.reduce((acc: any, t) => {
+      const subcat = t.businessSubcategory?.name || 'Geral';
+      acc[subcat] = (acc[subcat] || 0) + parseFloat(t.amount || '0');
+      return acc;
+    }, {});
+
+    return Object.entries(subcategories).map(([name, value]: [string, any]) => ({
+      name,
+      value,
+      percent: total > 0 ? (value / total) * 100 : 0
+    })).sort((a, b) => b.value - a.value);
+  };
+
+  const incomeSubStats = getStatsBySubcategory('income');
+  const expenseSubStats = getStatsBySubcategory('expense');
 
   // Cores para os gráficos
   const chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#6b7280', '#ec4899', '#06b6d4'];
@@ -618,6 +644,32 @@ export function Transactions() {
     queryKey: ["/api/dashboard"],
     queryFn: () => fetch('/api/dashboard', { credentials: 'include' }).then(res => res.json()),
   });
+
+  // Movimentação por conta bancária no período filtrado
+  const buildAccountFlow = (typeFilter?: 'income' | 'expense') => {
+    const flowByAccount: Record<number, { name: string; flow: number }> = {};
+    filteredTransactions.forEach(t => {
+      if (typeFilter && t.type !== typeFilter) return;
+      const accId = t.bankAccountId;
+      if (!accId) return;
+      const account = dashboardData?.bankAccounts?.find((a: any) => a.id === accId);
+      if (!account) return;
+      if (!flowByAccount[accId]) {
+        flowByAccount[accId] = { name: account.name, flow: 0 };
+      }
+      const amount = parseFloat(t.amount || '0');
+      flowByAccount[accId].flow += amount;
+    });
+    return Object.entries(flowByAccount).map(([id, data]) => ({
+      id: Number(id),
+      name: data.name,
+      flow: data.flow,
+    }));
+  };
+
+  const accountFlowStats = buildAccountFlow();
+  const accountFlowExpenseStats = buildAccountFlow('expense');
+  const accountFlowIncomeStats = buildAccountFlow('income');
 
   const safeCustomBanks = Array.isArray(customBanks) ? customBanks : [];
   const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...safeCustomBanks].map(item => [item.code, item])).values())
@@ -1198,40 +1250,83 @@ export function Transactions() {
 
                     {/* 3 cards resumo em colunas iguais */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                      {/* Card Saldos em Contas */}
+                      {/* Card Contas - Saldo / Movimentação */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
                         <CardHeader className="pb-2 pt-3 px-4">
-                          <CardTitle className="text-sm font-semibold">Saldos em Contas</CardTitle>
+                          <div className="flex items-center gap-1.5">
+                            <CardTitle className="text-sm font-semibold">
+                              {showAccountFlow ? 'Movimentação' : 'Saldos em Contas'}
+                            </CardTitle>
+                            <IButtonPrime
+                              icon={<Layers className="h-3.5 w-3.5" />}
+                              variant={showAccountFlow ? 'gold' : 'primary'}
+                              onClick={() => setShowAccountFlow(!showAccountFlow)}
+                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
+                              className="p-1"
+                            />
+                          </div>
+                          <CardDescription className="text-xs text-gray-500">
+                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Posição patrimonial acumulada'}
+                          </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          <div className="space-y-1">
-                            {dashboardData?.bankAccounts && dashboardData.bankAccounts.length > 0 ? (
-                              dashboardData.bankAccounts.map((account) => (
-                                <div key={account.id} className="flex items-center justify-between py-0.5">
-                                  <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
-                                    <span className="text-xs">{account.name}</span>
+                          <div className="space-y-1 curtain-enter" key={showAccountFlow ? 'flow' : 'balance'}>
+                            {showAccountFlow ? (
+                              accountFlowStats.length > 0 ? (
+                                accountFlowStats.map((account) => (
+                                  <div key={account.id} className="flex items-center justify-between py-0.5 animate-in fade-in duration-300">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
+                                      <span className="text-xs truncate">{account.name}</span>
+                                    </div>
+                                    <div className={`text-xs font-medium ${account.flow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                      {account.flow >= 0 ? '+' : ''}{formatCurrency(account.flow.toString())}
+                                    </div>
                                   </div>
-                                  <div className={`text-xs font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                                    {formatCurrency(account.realBalance.toString())}
-                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-center py-2 text-xs text-gray-500">
+                                  Sem movimentações no período
                                 </div>
-                              ))
+                              )
                             ) : (
-                              <div className="text-center py-2 text-xs text-gray-500">
-                                Nenhuma conta bancária cadastrada
-                              </div>
+                              dashboardData?.bankAccounts && dashboardData.bankAccounts.length > 0 ? (
+                                dashboardData.bankAccounts.map((account) => (
+                                  <div key={account.id} className="flex items-center justify-between py-0.5 animate-in fade-in duration-300">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
+                                      <span className="text-xs truncate">{account.name}</span>
+                                    </div>
+                                    <div className={`text-xs font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                      {formatCurrency(account.realBalance.toString())}
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="text-center py-2 text-xs text-gray-500">
+                                  Nenhuma conta bancária cadastrada
+                                </div>
+                              )
                             )}
                             <div className="border-t pt-1 mt-1">
                               <div className="flex items-center justify-between font-semibold text-xs">
-                                <span>Total</span>
+                                <span>{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
                                 {(() => {
-                                  const totalReal = dashboardData?.bankAccounts?.reduce((sum, acc) => sum + (acc.realBalance || 0), 0) || 0;
-                                  return (
-                                    <span className={totalReal >= 0 ? 'text-gray-900' : 'text-red-600'}>
-                                      {formatCurrency(totalReal.toString())}
-                                    </span>
-                                  );
+                                  if (showAccountFlow) {
+                                    const totalFlow = accountFlowStats.reduce((sum, acc) => sum + acc.flow, 0);
+                                    return (
+                                      <span className={totalFlow >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                        {totalFlow >= 0 ? '+' : ''}{formatCurrency(totalFlow.toString())}
+                                      </span>
+                                    );
+                                  } else {
+                                    const totalReal = dashboardData?.bankAccounts?.reduce((sum, acc) => sum + (acc.realBalance || 0), 0) || 0;
+                                    return (
+                                      <span className={totalReal >= 0 ? 'text-gray-900' : 'text-red-600'}>
+                                        {formatCurrency(totalReal.toString())}
+                                      </span>
+                                    );
+                                  }
                                 })()}
                               </div>
                             </div>
@@ -1239,95 +1334,139 @@ export function Transactions() {
                         </CardContent>
                       </Card>
 
-                      {/* Card Despesas por Categoria */}
+                      {/* Card Despesas por Categoria / Subcategoria */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
-                        <CardHeader className="pb-1 pt-3 px-4">
-                          <CardTitle className="text-sm font-semibold">Despesas por categoria</CardTitle>
+                        <CardHeader className="pb-0 pt-3 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <CardTitle className="text-sm font-semibold">
+                              {showExpenseSubcategory ? 'Despesas por subcategoria' : 'Despesas por categoria'}
+                            </CardTitle>
+                            <IButtonPrime
+                              icon={<Layers className="h-3.5 w-3.5" />}
+                              variant={showExpenseSubcategory ? 'gold' : 'primary'}
+                              onClick={() => setShowExpenseSubcategory(!showExpenseSubcategory)}
+                              title={showExpenseSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
+                              className="p-1"
+                            />
+                          </div>
                           <CardDescription className="text-xs text-gray-500">Gastos projetados</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          <div className="h-32">
-                            <Doughnut
-                              data={{
-                                labels: expenseStats.length > 0 ? expenseStats.map(s => s.name) : ['Nenhuma'],
-                                datasets: [{
-                                  data: expenseStats.length > 0 ? expenseStats.map(s => s.percent) : [100],
-                                  backgroundColor: expenseStats.length > 0 ? chartColors.slice(0, expenseStats.length) : ['#f3f4f6'],
-                                  borderWidth: 0,
-                                }]
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                cutout: '60%',
-                                plugins: {
-                                  legend: {
-                                    display: false
-                                  }
-                                }
-                              }}
-                            />
-                          </div>
-                          <div className="mt-2 space-y-1 text-xs">
-                            {expenseStats.length > 0 ? expenseStats.map((stat, idx) => (
-                              <div key={idx} className="flex items-center justify-between">
-                                <div className="flex items-center gap-1">
-                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
-                                  <span className="truncate">{stat.name}</span>
-                                  <span className="text-gray-500">{stat.percent.toFixed(1).replace('.', ',')}%</span>
+                          {(() => {
+                            const currentExpenseStats = showExpenseSubcategory ? expenseSubStats : expenseStats;
+                            const totalExpense = currentExpenseStats.reduce((sum, s) => sum + s.value, 0);
+                            return (
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1 min-w-0 curtain-enter" key={showExpenseSubcategory ? 'sub' : 'cat'}>
+                                  <div className="space-y-1 text-xs">
+                                    {currentExpenseStats.length > 0 ? currentExpenseStats.map((stat, idx) => (
+                                      <div key={idx} className="flex items-center gap-1.5 animate-in fade-in duration-300">
+                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                        <span className="truncate">{stat.name}</span>
+                                        <span className="text-gray-500 flex-shrink-0">{stat.percent.toFixed(1).replace('.', ',')}%</span>
+                                      </div>
+                                    )) : (
+                                      <div className="py-2 text-gray-500">Sem despesas no período</div>
+                                    )}
+                                  </div>
                                 </div>
-                                <span className="font-medium text-red-600">-{formatCurrency(stat.value.toString())}</span>
+                                <div className="flex flex-col items-center flex-shrink-0">
+                                  <div className="w-28 h-28">
+                                    <Doughnut
+                                      data={{
+                                        labels: currentExpenseStats.length > 0 ? currentExpenseStats.map(s => s.name) : ['Nenhuma'],
+                                        datasets: [{
+                                          data: currentExpenseStats.length > 0 ? currentExpenseStats.map(s => s.percent) : [100],
+                                          backgroundColor: currentExpenseStats.length > 0 ? chartColors.slice(0, currentExpenseStats.length) : ['#f3f4f6'],
+                                          borderWidth: 0,
+                                        }]
+                                      }}
+                                      options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        cutout: '60%',
+                                        plugins: {
+                                          legend: { display: false },
+                                          tooltip: { enabled: true }
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="text-sm font-medium text-red-600 mt-1">
+                                    -{formatCurrency(totalExpense.toString())}
+                                  </span>
+                                </div>
                               </div>
-                            )) : (
-                              <div className="text-center py-2 text-gray-500">Sem despesas no período</div>
-                            )}
-                          </div>
+                            );
+                          })()}
                         </CardContent>
                       </Card>
 
-                      {/* Card Receitas por Categoria */}
+                      {/* Card Receitas por Categoria / Subcategoria */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
-                        <CardHeader className="pb-1 pt-3 px-4">
-                          <CardTitle className="text-sm font-semibold">Receitas por Categoria</CardTitle>
+                        <CardHeader className="pb-0 pt-3 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <CardTitle className="text-sm font-semibold">
+                              {showIncomeSubcategory ? 'Receitas por subcategoria' : 'Receitas por Categoria'}
+                            </CardTitle>
+                            <IButtonPrime
+                              icon={<Layers className="h-3.5 w-3.5" />}
+                              variant={showIncomeSubcategory ? 'gold' : 'primary'}
+                              onClick={() => setShowIncomeSubcategory(!showIncomeSubcategory)}
+                              title={showIncomeSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
+                              className="p-1"
+                            />
+                          </div>
                           <CardDescription className="text-xs text-gray-500">Entradas projetadas</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          <div className="h-32">
-                            <Doughnut
-                              data={{
-                                labels: incomeStats.length > 0 ? incomeStats.map(s => s.name) : ['Nenhuma'],
-                                datasets: [{
-                                  data: incomeStats.length > 0 ? incomeStats.map(s => s.percent) : [100],
-                                  backgroundColor: incomeStats.length > 0 ? chartColors.slice(0, incomeStats.length) : ['#f3f4f6'],
-                                  borderWidth: 0,
-                                }]
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                cutout: '60%',
-                                plugins: {
-                                  legend: {
-                                    display: false
-                                  }
-                                }
-                              }}
-                            />
-                          </div>
-                          <div className="mt-2 space-y-1 text-xs">
-                            {incomeStats.length > 0 ? incomeStats.map((stat, idx) => (
-                              <div key={idx} className="flex items-center justify-between">
-                                <div className="flex items-center gap-1">
-                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
-                                  <span className="truncate">{stat.name}</span>
-                                  <span className="text-gray-500">{stat.percent.toFixed(1).replace('.', ',')}%</span>
+                          {(() => {
+                            const currentIncomeStats = showIncomeSubcategory ? incomeSubStats : incomeStats;
+                            const totalIncome = currentIncomeStats.reduce((sum, s) => sum + s.value, 0);
+                            return (
+                              <div className="flex items-center gap-3">
+                                <div className="flex-1 min-w-0 curtain-enter" key={showIncomeSubcategory ? 'sub' : 'cat'}>
+                                  <div className="space-y-1 text-xs">
+                                    {currentIncomeStats.length > 0 ? currentIncomeStats.map((stat, idx) => (
+                                      <div key={idx} className="flex items-center gap-1.5 animate-in fade-in duration-300">
+                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                        <span className="truncate">{stat.name}</span>
+                                        <span className="text-gray-500 flex-shrink-0">{stat.percent.toFixed(1).replace('.', ',')}%</span>
+                                      </div>
+                                    )) : (
+                                      <div className="py-2 text-gray-500">Sem receitas no período</div>
+                                    )}
+                                  </div>
                                 </div>
-                                <span className="font-medium text-green-600">+{formatCurrency(stat.value.toString())}</span>
+                                <div className="flex flex-col items-center flex-shrink-0">
+                                  <div className="w-28 h-28">
+                                    <Doughnut
+                                      data={{
+                                        labels: currentIncomeStats.length > 0 ? currentIncomeStats.map(s => s.name) : ['Nenhuma'],
+                                        datasets: [{
+                                          data: currentIncomeStats.length > 0 ? currentIncomeStats.map(s => s.percent) : [100],
+                                          backgroundColor: currentIncomeStats.length > 0 ? chartColors.slice(0, currentIncomeStats.length) : ['#f3f4f6'],
+                                          borderWidth: 0,
+                                        }]
+                                      }}
+                                      options={{
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        cutout: '60%',
+                                        plugins: {
+                                          legend: { display: false },
+                                          tooltip: { enabled: true }
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="text-sm font-medium text-green-600 mt-1">
+                                    +{formatCurrency(totalIncome.toString())}
+                                  </span>
+                                </div>
                               </div>
-                            )) : (
-                              <div className="text-center py-2 text-gray-500">Sem receitas no período</div>
-                            )}
-                          </div>
+                            );
+                          })()}
                         </CardContent>
                       </Card>
                     </div>
@@ -1617,38 +1756,79 @@ export function Transactions() {
                       {/* Card 2 - Bancos e saldos */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
-                            <div className="flex items-center gap-2">
-
-                              <span className="text-xs text-gray-500">Total a pagar</span>
-                            </div>
+                          <div className="flex items-center gap-1.5">
+                            <CardTitle className="text-base font-semibold">
+                              {showAccountFlow ? 'Movimentação' : 'Contas'}
+                            </CardTitle>
+                            <IButtonPrime
+                              icon={<Layers className="h-3.5 w-3.5" />}
+                              variant={showAccountFlow ? 'gold' : 'primary'}
+                              onClick={() => setShowAccountFlow(!showAccountFlow)}
+                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
+                              className="p-1"
+                            />
                           </div>
+                          <CardDescription className="text-xs text-gray-500">
+                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Total a pagar'}
+                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          {bankAccounts.length > 0 ? bankAccounts.map((account) => (
-                            <div key={account.id} className="flex items-center justify-between group">
-                              <div className="flex items-center gap-2">
-                                <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
-                                <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
-                                  {account.name}
+                          <div className="curtain-enter space-y-3" key={showAccountFlow ? 'flow' : 'balance'}>
+                          {showAccountFlow ? (
+                            accountFlowExpenseStats.length > 0 ? accountFlowExpenseStats.map((account) => (
+                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
+                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
+                                    {account.name}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-bold text-red-600">
+                                  -{formatCurrencyNumber(account.flow)}
                                 </span>
                               </div>
-                              <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {formatCurrencyNumber(account.projectedBalance)}
-                              </span>
-                            </div>
-                          )) : (
-                            <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
+                            )) : (
+                              <div className="text-center py-2 text-[10px] text-gray-500">Sem movimentações no período</div>
+                            )
+                          ) : (
+                            bankAccounts.length > 0 ? bankAccounts.map((account) => (
+                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
+                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
+                                    {account.name}
+                                  </span>
+                                </div>
+                                <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                  {formatCurrencyNumber(account.projectedBalance)}
+                                </span>
+                              </div>
+                            )) : (
+                              <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
+                            )
                           )}
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">Total Geral</span>
-                              <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
-                              </span>
+                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
+                              {(() => {
+                                if (showAccountFlow) {
+                                  const totalFlow = accountFlowExpenseStats.reduce((sum, acc) => sum + acc.flow, 0);
+                                  return (
+                                    <span className="text-xs font-bold text-red-600">
+                                      -{formatCurrencyNumber(totalFlow)}
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                      {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
+                                    </span>
+                                  );
+                                }
+                              })()}
                             </div>
+                          </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -1844,7 +2024,7 @@ export function Transactions() {
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
-                                  icon={<Coins className="h-3.5 w-3.5" />}
+                                  icon={<CurrencyExchangeIcon style={{ fontSize: 14 }} />}
                                   variant="gold"
                                   title="Liquidação"
                                   className="!p-2"
@@ -1852,24 +2032,17 @@ export function Transactions() {
                                 />
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
-                                  variant="gold"
+                                  variant="neutral"
                                   title="Editar"
                                   className="!p-2"
                                   onClick={() => console.log('Edit', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
-                                  variant="gold"
+                                  variant="teal"
                                   title="Visualizar"
                                   className="!p-2"
                                   onClick={() => console.log('View', item.id)}
-                                />
-                                <IButtonPrime
-                                  icon={<Download className="h-3.5 w-3.5" />}
-                                  variant="gold"
-                                  title="Baixar Documento"
-                                  className="!p-2"
-                                  onClick={() => console.log('Download', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
@@ -1923,17 +2096,79 @@ export function Transactions() {
                       {/* Card 2 - Bancos e saldos */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
-                            <span className="text-xs text-gray-500">Total a receber</span>
+                          <div className="flex items-center gap-1.5">
+                            <CardTitle className="text-base font-semibold">
+                              {showAccountFlow ? 'Movimentação' : 'Contas'}
+                            </CardTitle>
+                            <IButtonPrime
+                              icon={<Layers className="h-3.5 w-3.5" />}
+                              variant={showAccountFlow ? 'gold' : 'primary'}
+                              onClick={() => setShowAccountFlow(!showAccountFlow)}
+                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
+                              className="p-1"
+                            />
                           </div>
+                          <CardDescription className="text-xs text-gray-500">
+                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Total a receber'}
+                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
+                          <div className="curtain-enter space-y-3" key={showAccountFlow ? 'flow-r' : 'balance-r'}>
+                          {showAccountFlow ? (
+                            accountFlowIncomeStats.length > 0 ? accountFlowIncomeStats.map((account) => (
+                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
+                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
+                                    {account.name}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-bold text-green-600">
+                                  +{formatCurrencyNumber(account.flow)}
+                                </span>
+                              </div>
+                            )) : (
+                              <div className="text-center py-2 text-[10px] text-gray-500">Sem movimentações no período</div>
+                            )
+                          ) : (
+                            bankAccounts.length > 0 ? bankAccounts.map((account) => (
+                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
+                                <div className="flex items-center gap-2">
+                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
+                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
+                                    {account.name}
+                                  </span>
+                                </div>
+                                <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                  {formatCurrencyNumber(account.projectedBalance)}
+                                </span>
+                              </div>
+                            )) : (
+                              <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
+                            )
+                          )}
+
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">Total</span>
-                              <span className="text-xs font-bold text-green-600">{formatCurrencyNumber(totalReceivablesMonth)}</span>
+                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
+                              {(() => {
+                                if (showAccountFlow) {
+                                  const totalFlow = accountFlowIncomeStats.reduce((sum, acc) => sum + acc.flow, 0);
+                                  return (
+                                    <span className="text-xs font-bold text-green-600">
+                                      +{formatCurrencyNumber(totalFlow)}
+                                    </span>
+                                  );
+                                } else {
+                                  return (
+                                    <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                      {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
+                                    </span>
+                                  );
+                                }
+                              })()}
                             </div>
+                          </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -2131,7 +2366,7 @@ export function Transactions() {
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
-                                  icon={<MoneyBagIcon className="h-3.5 w-3.5" />}
+                                  icon={<PointOfSaleIcon style={{ fontSize: 14 }} />}
                                   variant="gold"
                                   title="Liquidação"
                                   className="!p-2"
@@ -2139,24 +2374,17 @@ export function Transactions() {
                                 />
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
-                                  variant="gold"
+                                  variant="neutral"
                                   title="Editar"
                                   className="!p-2"
                                   onClick={() => console.log('Edit', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
-                                  variant="gold"
+                                  variant="teal"
                                   title="Visualizar"
                                   className="!p-2"
                                   onClick={() => console.log('View', item.id)}
-                                />
-                                <IButtonPrime
-                                  icon={<Download className="h-3.5 w-3.5" />}
-                                  variant="gold"
-                                  title="Baixar Documento"
-                                  className="!p-2"
-                                  onClick={() => console.log('Download', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
