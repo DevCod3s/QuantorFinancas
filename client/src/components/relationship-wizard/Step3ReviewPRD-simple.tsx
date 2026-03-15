@@ -100,7 +100,7 @@ export default function Step3ReviewPRD({
             <Card elevation={3}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <User size={20} color="#1976d2" />
+                  <User size={20} color="#1D3557" />
                   <Typography variant="h6" fontWeight={600}>
                     Informações Básicas
                   </Typography>
@@ -151,7 +151,7 @@ export default function Step3ReviewPRD({
               <Card elevation={3}>
                 <CardContent>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <FileText size={20} color="#1976d2" />
+                    <FileText size={20} color="#1D3557" />
                     <Typography variant="h6" fontWeight={600}>
                       Informações do Contrato
                     </Typography>

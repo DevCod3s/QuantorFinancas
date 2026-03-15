@@ -74,7 +74,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 <select
                   value={tipo}
                   onChange={(e) => setTipo(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D3557] focus:border-[#1D3557]"
                 >
                   <option value="">Selecione...</option>
                   <option value="Receita">Receita</option>
@@ -91,7 +91,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                   value={valor}
                   onChange={(e) => setValor(e.target.value)}
                   placeholder="0,00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D3557] focus:border-[#1D3557]"
                 />
               </div>
 
@@ -113,7 +113,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 <select
                   value={repeticao}
                   onChange={(e) => setRepeticao(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D3557] focus:border-[#1D3557]"
                 >
                   <option value="Única">Única</option>
                   <option value="Parcelada">Parcelada</option>
@@ -128,7 +128,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 <select
                   value={conta}
                   onChange={(e) => setConta(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D3557] focus:border-[#1D3557]"
                 >
                   <option value="">Selecione...</option>
                   <option value="Banco Inter">Banco Inter</option>
@@ -151,7 +151,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
                 onChange={(e) => setDescricao(e.target.value.slice(0, 30))}
                 placeholder="Descrição do lançamento..."
                 maxLength={30}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#1D3557] focus:border-[#1D3557]"
               />
               <div className="text-xs text-gray-500 mt-1">{descricao.length}/30</div>
             </div>

@@ -86,7 +86,7 @@ export default function Landing() {
               <div className="flex justify-center space-x-4">
                 <button 
                   onClick={() => window.location.href = '/api/login'}
-                  className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors"
+                  className="w-10 h-10 bg-[#1D3557] rounded-full flex items-center justify-center hover:bg-[#1D3557]/90 transition-colors"
                 >
                   <i className="fab fa-facebook-f text-white text-sm"></i>
                 </button>

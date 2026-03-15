@@ -276,7 +276,7 @@ export default function TransactionList() {
                   <ChevronLeft className="h-4 w-4 mr-1" />
                   Anterior
                 </Button>
-                <span className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded font-medium">
+                <span className="px-3 py-1 text-sm bg-[#1D3557]/10 text-[#1D3557] rounded font-medium">
                   {currentPage}
                 </span>
                 <Button

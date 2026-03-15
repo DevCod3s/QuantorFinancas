@@ -513,7 +513,7 @@ export function Categories() {
       label: 'Tipo',
       key: 'type',
       render: (item: ProductService) => (
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.type === 'product' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.type === 'product' ? 'bg-[#1D3557]/15 text-[#1D3557]' : 'bg-purple-100 text-purple-700'
           }`}>
           {item.type === 'product' ? 'Produto' : 'Serviço'}
         </span>

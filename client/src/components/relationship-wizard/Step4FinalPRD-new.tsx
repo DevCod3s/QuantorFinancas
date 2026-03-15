@@ -245,7 +245,7 @@ export default function Step4FinalPRD({
             <Card elevation={3}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Settings size={20} color="#1976d2" />
+                  <Settings size={20} color="#1D3557" />
                   <Typography variant="h6" fontWeight={600}>
                     Contato e Notificações
                   </Typography>
@@ -313,7 +313,7 @@ export default function Step4FinalPRD({
             <Card elevation={3}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <FileText size={20} color="#1976d2" />
+                  <FileText size={20} color="#1D3557" />
                   <Typography variant="h6" fontWeight={600}>
                     Documentos Gerados
                   </Typography>

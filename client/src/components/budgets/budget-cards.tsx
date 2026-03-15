@@ -94,7 +94,7 @@ export default function BudgetCards() {
   const getCategoryColor = (categoryName: string) => {
     const colorMap: { [key: string]: string } = {
       'alimentação': 'text-red-600 bg-red-50',
-      'transporte': 'text-blue-600 bg-blue-50',
+      'transporte': 'text-[#1D3557] bg-[#1D3557]/10',
       'moradia': 'text-green-600 bg-green-50',
       'lazer': 'text-purple-600 bg-purple-50',
       'saúde': 'text-pink-600 bg-pink-50',

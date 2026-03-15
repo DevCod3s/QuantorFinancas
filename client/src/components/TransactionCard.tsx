@@ -34,6 +34,7 @@ import CustomInput, { CustomSelect } from "./CustomInput";
 import { DateInput } from "./DateInput";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 import { ParcelamentoModal } from "./ParcelamentoModal";
+import { RecorrenciaModal } from "./RecorrenciaModal";
 
 interface TransactionCardProps {
   open: boolean;
@@ -72,6 +73,11 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   const [tags, setTags] = useState('');
   const [hasEndDate, setHasEndDate] = useState(false);
   const [dataTermino, setDataTermino] = useState('');
+  const [aplicarEncargos, setAplicarEncargos] = useState(false);
+  const [jurosMes, setJurosMes] = useState('');
+  const [moraDia, setMoraDia] = useState('');
+  const [tipoEncargo, setTipoEncargo] = useState<'percentual' | 'valor'>('percentual');
+  const [aplicarMultaEm, setAplicarMultaEm] = useState<'atrasados' | 'todos' | 'ambos'>('atrasados');
   // Novos campos: Produto/Serviço, Business Categories e Plano de Contas
   const [produtoServico, setProdutoServico] = useState('');
   const [businessCategoria, setBusinessCategoria] = useState('');
@@ -141,6 +147,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
 
   // Estados para parcelamento
   const [parcelamentoModalOpen, setParcelamentoModalOpen] = useState(false);
+  const [recorrenciaModalOpen, setRecorrenciaModalOpen] = useState(false);
   const [numeroParcelas, setNumeroParcelas] = useState('');
   const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState('');
   const [aplicarJuros, setAplicarJuros] = useState(false);
@@ -517,7 +524,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               disabled={viewOnly}
             />
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ width: repeticao === 'Parcelado' ? '85%' : '100%' }}>
+              <FormControl variant="standard" sx={{ width: (repeticao === 'Parcelado' || repeticao === 'Recorrente') ? '85%' : '100%' }}>
                 <InputLabel sx={{ color: '#666' }} shrink={!!repeticao || undefined}>
                   Repetição
                 </InputLabel>
@@ -534,65 +541,25 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               {repeticao === 'Parcelado' && (
                 <IconButton
                   size="small"
-                  sx={{ mb: 0.5, color: '#1976d2' }}
+                  sx={{ mb: 0.5, color: '#1D3557' }}
                   title="Configurar parcelamento"
                   onClick={() => setParcelamentoModalOpen(true)}
                 >
                   <Settings className="h-4 w-4" />
                 </IconButton>
               )}
+              {repeticao === 'Recorrente' && (
+                <IconButton
+                  size="small"
+                  sx={{ mb: 0.5, color: '#1D3557' }}
+                  title="Configurar recorrência"
+                  onClick={() => setRecorrenciaModalOpen(true)}
+                >
+                  <Settings className="h-4 w-4" />
+                </IconButton>
+              )}
             </Box>
           </Box>
-
-          {repeticao === 'Recorrente' && (
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
-              <FormControl variant="standard" fullWidth>
-                <InputLabel sx={{ color: '#666' }} shrink={!!periodicidade || undefined}>
-                  Periodicidade
-                </InputLabel>
-                <Select
-                  value={periodicidade}
-                  onChange={(e) => setPeriodicidade(e.target.value)}
-                >
-                  <MenuItem value="Diário">Diário</MenuItem>
-                  <MenuItem value="Semanal">Semanal</MenuItem>
-                  <MenuItem value="Mensal">Mensal</MenuItem>
-                  <MenuItem value="Anual">Anual</MenuItem>
-                </Select>
-              </FormControl>
-              <TextField
-                variant="standard"
-                label="Intervalo"
-                value={intervaloRepeticao}
-                onChange={(e) => setIntervaloRepeticao(e.target.value)}
-                fullWidth
-                sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-              />
-
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={hasEndDate}
-                      onChange={(e) => setHasEndDate(e.target.checked)}
-                      size="small"
-                      sx={{ color: '#B59363', '&.Mui-checked': { color: '#B59363' } }}
-                    />
-                  }
-                  label={<Typography sx={{ fontSize: '13px', color: '#666' }}>Definir término</Typography>}
-                />
-                {hasEndDate && (
-                  <Box sx={{ width: '150px' }}>
-                    <DateInput
-                      label="Até"
-                      value={dataTermino}
-                      onChange={setDataTermino}
-                    />
-                  </Box>
-                )}
-              </Box>
-            </Box>
-          )}
 
           {/* Campo Produto/Serviço — visível apenas para RECEITAS */}
           {tipo.includes('receita') && (
@@ -646,7 +613,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                   ))}
                 </Select>
               </FormControl>
-              <IconButton size="small" sx={{ mb: 0.5, color: '#1976d2' }}>
+              <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
                 <CreditCard className="h-4 w-4" />
               </IconButton>
             </Box>
@@ -687,7 +654,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               </FormControl>
               <IconButton
                 size="small"
-                sx={{ mb: 0.5, color: '#1976d2' }}
+                sx={{ mb: 0.5, color: '#1D3557' }}
                 onClick={() => setContactModalOpen(true)}
               >
                 <Users className="h-4 w-4" />
@@ -712,7 +679,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                   ))}
                 </Select>
               </FormControl>
-              <IconButton size="small" sx={{ mb: 0.5, color: '#1976d2' }}>
+              <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
                 <Plus className="h-4 w-4" />
               </IconButton>
             </Box>
@@ -738,7 +705,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                     ))}
                   </Select>
                 </FormControl>
-                <IconButton size="small" sx={{ mb: 0.5, color: '#1976d2' }}>
+                <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
                   <Plus className="h-4 w-4" />
                 </IconButton>
               </Box>
@@ -852,7 +819,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
 
                     <button
                       type="button"
-                      className="w-10 h-10 border-2 border-blue-500 text-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center rounded-md"
+                      className="w-10 h-10 border-2 border-[#1D3557] text-[#1D3557] hover:bg-[#1D3557]/10 transition-colors flex items-center justify-center rounded-md"
                       title="Adicionar novo tipo"
                     >
                       <Plus className="h-5 w-5" />
@@ -1041,6 +1008,34 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           aplicarJurosEm,
         }}
         valorTotal={valor}
+      />
+
+      {/* Modal de Configuração de Recorrência */}
+      <RecorrenciaModal
+        open={recorrenciaModalOpen}
+        onClose={() => setRecorrenciaModalOpen(false)}
+        onSave={(config) => {
+          setPeriodicidade(config.periodicidade);
+          setIntervaloRepeticao(config.intervalo);
+          setHasEndDate(config.hasEndDate);
+          setDataTermino(config.dataTermino);
+          setAplicarEncargos(config.aplicarEncargos);
+          setJurosMes(config.jurosMes);
+          setMoraDia(config.moraDia);
+          setTipoEncargo(config.tipoEncargo);
+          setAplicarMultaEm(config.aplicarMultaEm);
+        }}
+        initialConfig={{
+          periodicidade,
+          intervalo: intervaloRepeticao,
+          hasEndDate,
+          dataTermino,
+          aplicarEncargos,
+          jurosMes,
+          moraDia,
+          tipoEncargo,
+          aplicarMultaEm,
+        }}
       />
     </Box >
   );

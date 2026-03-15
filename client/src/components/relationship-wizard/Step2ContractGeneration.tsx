@@ -337,8 +337,8 @@ export default function Step2ContractGeneration({
               sx={{ 
                 px: 4, 
                 py: 1.5,
-                bgcolor: '#2563eb',
-                '&:hover': { bgcolor: '#1d4ed8' }
+                bgcolor: '#1D3557',
+                '&:hover': { bgcolor: '#1D3557' }
               }}
             >
               Gerar Contrato com IA
@@ -356,7 +356,7 @@ export default function Step2ContractGeneration({
   return (
     <Card sx={{ maxWidth: 1000, mx: 'auto', boxShadow: 3 }}>
       <CardHeader
-        avatar={<FileText size={24} style={{ color: '#2563eb' }} />}
+        avatar={<FileText size={24} style={{ color: '#1D3557' }} />}
         title={
           <Typography variant="h6" fontWeight={600} color="text.primary">
             Configuração do Contrato
@@ -390,7 +390,7 @@ export default function Step2ContractGeneration({
                     <Checkbox
                       checked={showTemplateUpload}
                       onChange={(e) => setShowTemplateUpload(e.target.checked)}
-                      sx={{ color: '#2563eb' }}
+                      sx={{ color: '#1D3557' }}
                     />
                   }
                   label={
@@ -612,8 +612,8 @@ export default function Step2ContractGeneration({
                         sx={{ 
                           p: 2, 
                           cursor: 'pointer',
-                          border: formData.paymentMethods.includes(option.id) ? '2px solid #2563eb' : '1px solid #e5e7eb',
-                          '&:hover': { borderColor: '#2563eb' }
+                          border: formData.paymentMethods.includes(option.id) ? '2px solid #1D3557' : '1px solid #e5e7eb',
+                          '&:hover': { borderColor: '#1D3557' }
                         }}
                         onClick={() => handlePaymentMethodChange(option.id, !formData.paymentMethods.includes(option.id))}
                       >

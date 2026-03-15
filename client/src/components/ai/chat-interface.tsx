@@ -124,7 +124,7 @@ export default function ChatInterface() {
       title: 'Metas Financeiras',
       description: 'Planejamento futuro',
       icon: 'fas fa-target',
-      color: 'bg-blue-50 text-blue-600',
+      color: 'bg-[#1D3557]/10 text-[#1D3557]',
       message: 'Me ajude a definir metas financeiras realistas para os próximos meses.',
     },
   ];

@@ -568,7 +568,7 @@ export function Transactions() {
   const expenseSubStats = getStatsBySubcategory('expense');
 
   // Cores para os gráficos
-  const chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#6b7280', '#ec4899', '#06b6d4'];
+  const chartColors = ['#10b981', '#1D3557', '#f59e0b', '#8b5cf6', '#6b7280', '#ec4899', '#06b6d4'];
 
   // Funções de ordenação
   const handlePayablesSort = (field: string) => {
@@ -1546,25 +1546,25 @@ export function Transactions() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Trimestral')}
-                                  className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                  className={filterPeriod === 'Trimestral' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
                                 >
                                   Trimestral
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Semestral')}
-                                  className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                  className={filterPeriod === 'Semestral' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
                                 >
                                   Semestral
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Anual')}
-                                  className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
+                                  className={filterPeriod === 'Anual' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
                                 >
                                   Anual
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Personalizar')}
-                                  className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
+                                  className={filterPeriod === 'Personalizar' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
                                 >
                                   Personalizar
                                 </DropdownMenuItem>
@@ -1983,7 +1983,7 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Parcela' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
                                     item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
                                       'bg-gray-100 text-gray-800'
                                     }`}>
@@ -2324,7 +2324,7 @@ export function Transactions() {
                                 sortable: true,
                                 render: (item: any) => (
                                   <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
-                                    item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
+                                    item.type === 'Parcela' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
                                       item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
                                         item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
                                           'bg-gray-100 text-gray-800'
@@ -3506,7 +3506,7 @@ function ChartOfAccountsContent({
                 </tr>
               ) : (
                 safeChartAccounts.map((account: any, index: number) => (
-                  <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
+                  <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-[#1D3557]/5 transition-colors`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {index + 1}
                     </td>
@@ -3531,9 +3531,9 @@ function ChartOfAccountsContent({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-blue-100 text-blue-800' :
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-[#1D3557]/15 text-[#1D3557]' :
                         (account.type === 'despesa' || account.type === 'despesas') ? 'bg-red-100 text-red-800' :
-                          account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
+                          account.type === 'ativo' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
                             'bg-purple-100 text-purple-800'
                         }`}>
                         {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
