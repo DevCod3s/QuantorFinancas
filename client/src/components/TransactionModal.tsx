@@ -21,6 +21,7 @@ import {
 import { X, Check, CheckCheck, Paperclip, Plus, HelpCircle, Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
 import { IButtonPrime } from './ui/i-ButtonPrime';
+import { localDateStr } from '@/lib/utils';
 
 interface TransactionModalProps {
   open: boolean;
@@ -35,7 +36,7 @@ interface TransactionModalProps {
 export function TransactionModal({ open, onClose, onSave }: TransactionModalProps) {
   const [tipo, setTipo] = useState('Nova receita');
   const [valor, setValor] = useState('0,00');
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]); // Formato ISO: YYYY-MM-DD
+  const [data, setData] = useState(localDateStr()); // Formato ISO: YYYY-MM-DD
   const [repeticao, setRepeticao] = useState('Única');
   const [periodicidade, setPeriodicidade] = useState('mensal');
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');

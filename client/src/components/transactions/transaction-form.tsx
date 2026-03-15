@@ -10,6 +10,7 @@ import { useCreateTransaction, useUpdateTransaction } from "@/hooks/use-transact
 import { useQuery } from "@tanstack/react-query";
 import { Transaction, Category, ChartAccount } from "@/types";
 import { DateInput } from "../DateInput";
+import { localDateStr } from "@/lib/utils";
 
 const transactionSchema = z.object({
   type: z.enum(['receita', 'despesa']),
@@ -51,7 +52,7 @@ export default function TransactionForm({ open, onClose, transaction }: Transact
     defaultValues: {
       type: transaction?.type || 'despesa',
       amount: transaction?.amount || '',
-      date: transaction?.date || new Date().toISOString().split('T')[0],
+      date: transaction?.date || localDateStr(),
       chartAccountId: transaction?.chartAccountId || undefined,
       description: transaction?.description || '',
       notes: transaction?.notes || '',

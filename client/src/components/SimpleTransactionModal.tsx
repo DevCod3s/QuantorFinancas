@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { X, Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
 import { IButtonPrime } from './ui/i-ButtonPrime';
+import { localDateStr } from '@/lib/utils';
 
 interface SimpleTransactionModalProps {
   open: boolean;
@@ -14,7 +15,7 @@ interface SimpleTransactionModalProps {
 export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransactionModalProps) {
   const [tipo, setTipo] = useState('');
   const [valor, setValor] = useState('');
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [data, setData] = useState(localDateStr());
   const [repeticao, setRepeticao] = useState('Única');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
@@ -41,7 +42,7 @@ export function SimpleTransactionModal({ open, onClose, onSave }: SimpleTransact
     // Limpar formulário
     setTipo('');
     setValor('');
-    setData(new Date().toISOString().split('T')[0]);
+    setData(localDateStr());
     setRepeticao('Única');
     setDescricao('');
     setConta('');

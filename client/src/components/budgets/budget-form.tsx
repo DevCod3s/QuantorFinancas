@@ -12,6 +12,7 @@ import { Budget, Category } from "@/types";
 import { DateInput } from "../DateInput";
 import { Save, LogOut } from "lucide-react";
 import { IButtonPrime } from "../ui/i-ButtonPrime";
+import { localDateStr } from "@/lib/utils";
 
 const budgetSchema = z.object({
   categoryId: z.number().min(1, 'Categoria é obrigatória'),
@@ -52,7 +53,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
   const defaultStartDate = `${currentYear}-${currentMonth.toString().padStart(2, '0')}-01`;
-  const defaultEndDate = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0];
+  const defaultEndDate = localDateStr(new Date(currentYear, currentMonth, 0));
 
   const form = useForm<BudgetFormData>({
     resolver: zodResolver(budgetSchema),
@@ -101,7 +102,7 @@ export default function BudgetForm({ open, onClose, budget }: BudgetFormProps) {
         endDate = new Date(start.getFullYear(), 11, 31);
       }
 
-      form.setValue('endDate', endDate.toISOString().split('T')[0]);
+      form.setValue('endDate', localDateStr(endDate));
     }
   };
 

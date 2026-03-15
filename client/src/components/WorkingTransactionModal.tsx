@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
 import { IButtonPrime } from './ui/i-ButtonPrime';
+import { localDateStr } from '@/lib/utils';
 
 interface WorkingTransactionModalProps {
   open: boolean;
@@ -12,7 +13,7 @@ interface WorkingTransactionModalProps {
 export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransactionModalProps) {
   const [tipo, setTipo] = useState('');
   const [valor, setValor] = useState('');
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [data, setData] = useState(localDateStr());
   const [repeticao, setRepeticao] = useState('Única');
   const [descricao, setDescricao] = useState('');
   const [conta, setConta] = useState('');
@@ -39,7 +40,7 @@ export function WorkingTransactionModal({ open, onClose, onSave }: WorkingTransa
     // Reset form
     setTipo('');
     setValor('');
-    setData(new Date().toISOString().split('T')[0]);
+    setData(localDateStr());
     setRepeticao('Única');
     setDescricao('');
     setConta('');

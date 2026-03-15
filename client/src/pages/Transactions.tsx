@@ -70,6 +70,7 @@ import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
 import { DateInput } from "@/components/DateInput";
+import { localDateStr, toLocalDateStr } from "@/lib/utils";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -195,18 +196,23 @@ export function Transactions() {
   // Mês atual dinâmico para não sumir com os dados
   const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
   const todayDate = new Date();
-  const [currentMonth, setCurrentMonth] = useState(`${monthNames[todayDate.getMonth()]} ${todayDate.getFullYear()}`);
-  
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterPeriod, setFilterPeriod] = useState("Mensal");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  // Derived current month from selectedDate
+  const currentMonth = selectedDate ? format(selectedDate, 'MMMM yyyy', { locale: ptBR }) : `${monthNames[todayDate.getMonth()]} ${todayDate.getFullYear()}`;
+
+  // Estados para modo "Período"
+  const [periodStartDate, setPeriodStartDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
+  const [periodEndDate, setPeriodEndDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0));
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
   const [bankAccountData, setBankAccountData] = useState({
-    initialBalanceDate: new Date().toISOString().split('T')[0],
+    initialBalanceDate: localDateStr(),
     currentBalance: '',
     balanceType: 'credor',
     accountType: 'conta_corrente',
@@ -292,7 +298,7 @@ export function Transactions() {
 
   const resetBankAccountData = () => {
     setBankAccountData({
-      initialBalanceDate: new Date().toISOString().split('T')[0],
+      initialBalanceDate: localDateStr(),
       currentBalance: '',
       balanceType: 'credor',
       accountType: 'conta_corrente',
@@ -431,18 +437,232 @@ export function Transactions() {
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
 
+  // Calcula o range de datas para filtragem baseado no período selecionado
+  const getFilterDateRange = (): { start: Date; end: Date } => {
+    const refDate = selectedDate || new Date();
+
+    switch (filterPeriod) {
+      case 'Diário': {
+        const start = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
+        const end = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 23, 59, 59, 999);
+        return { start, end };
+      }
+      case 'Semanal': {
+        const day = refDate.getDay();
+        const monday = new Date(refDate);
+        monday.setDate(refDate.getDate() - (day === 0 ? 6 : day - 1));
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+        return { start: monday, end: sunday };
+      }
+      case 'Mensal': {
+        const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+        const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0, 23, 59, 59, 999);
+        return { start, end };
+      }
+      case 'Anual': {
+        const start = new Date(refDate.getFullYear(), 0, 1);
+        const end = new Date(refDate.getFullYear(), 11, 31, 23, 59, 59, 999);
+        return { start, end };
+      }
+      case 'Período': {
+        const start = new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate());
+        const end = new Date(periodEndDate.getFullYear(), periodEndDate.getMonth(), periodEndDate.getDate(), 23, 59, 59, 999);
+        return { start, end };
+      }
+      default: {
+        const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+        const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0, 23, 59, 59, 999);
+        return { start, end };
+      }
+    }
+  };
+
   // Filtrar transações por mês, busca e tipo
   const filteredTransactions = transactions.filter(t => {
     const tDate = new Date(t.date);
-    const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    const tMonthYear = `${monthNames[tDate.getMonth()]} ${tDate.getFullYear()}`;
-    const matchesMonth = tMonthYear === currentMonth;
+    const { start, end } = getFilterDateRange();
+    const matchesPeriod = tDate >= start && tDate <= end;
 
     const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || t.type === filterType;
 
-    return matchesMonth && matchesSearch && matchesFilter;
+    return matchesPeriod && matchesSearch && matchesFilter;
   });
+
+  // Gera labels e datasets do gráfico de Fluxo de Caixa baseado no filtro ativo
+  const getChartData = () => {
+    const { start, end } = getFilterDateRange();
+    const monthShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+    type Bucket = { label: string; income: number; expense: number };
+    let buckets: Bucket[] = [];
+
+    switch (filterPeriod) {
+      case 'Diário': {
+        // Mostra os últimos 7 dias até o dia selecionado para ter linhas no gráfico
+        const chartStart = new Date(start);
+        chartStart.setDate(chartStart.getDate() - 6);
+        chartStart.setHours(0, 0, 0, 0);
+        const chartEnd = new Date(start);
+        chartEnd.setHours(23, 59, 59, 999);
+
+        const dailyTransactions = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d >= chartStart && d <= chartEnd;
+        });
+
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(chartStart);
+          d.setDate(chartStart.getDate() + i);
+          buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
+        }
+        dailyTransactions.forEach(t => {
+          const d = new Date(t.date);
+          const diffDays = Math.floor((d.getTime() - chartStart.getTime()) / 86400000);
+          if (diffDays >= 0 && diffDays < 7) {
+            const val = Math.abs(parseFloat(t.amount) || 0);
+            if (t.type === 'income') buckets[diffDays].income += val;
+            else buckets[diffDays].expense += val;
+          }
+        });
+        break;
+      }
+      case 'Semanal': {
+        const weekTransactions = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d >= start && d <= end;
+        });
+        for (let i = 0; i < 7; i++) {
+          const d = new Date(start);
+          d.setDate(start.getDate() + i);
+          buckets.push({ label: `${dayNames[d.getDay()]} ${format(d, 'dd')}`, income: 0, expense: 0 });
+        }
+        weekTransactions.forEach(t => {
+          const d = new Date(t.date);
+          const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
+          if (diffDays >= 0 && diffDays < 7) {
+            const val = Math.abs(parseFloat(t.amount) || 0);
+            if (t.type === 'income') buckets[diffDays].income += val;
+            else buckets[diffDays].expense += val;
+          }
+        });
+        break;
+      }
+      case 'Mensal': {
+        const monthTransactions = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d >= start && d <= end;
+        });
+        const daysInMonth = end.getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+          buckets.push({ label: String(i), income: 0, expense: 0 });
+        }
+        monthTransactions.forEach(t => {
+          const d = new Date(t.date);
+          const day = d.getDate();
+          if (day >= 1 && day <= daysInMonth) {
+            const val = Math.abs(parseFloat(t.amount) || 0);
+            if (t.type === 'income') buckets[day - 1].income += val;
+            else buckets[day - 1].expense += val;
+          }
+        });
+        break;
+      }
+      case 'Anual': {
+        const yearTransactions = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d >= start && d <= end;
+        });
+        for (let i = 0; i < 12; i++) {
+          buckets.push({ label: monthShort[i], income: 0, expense: 0 });
+        }
+        yearTransactions.forEach(t => {
+          const d = new Date(t.date);
+          const m = d.getMonth();
+          const val = Math.abs(parseFloat(t.amount) || 0);
+          if (t.type === 'income') buckets[m].income += val;
+          else buckets[m].expense += val;
+        });
+        break;
+      }
+      case 'Período': {
+        const periodTransactions = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d >= start && d <= end;
+        });
+        const diffTime = end.getTime() - start.getTime();
+        const diffDays = Math.ceil(diffTime / 86400000);
+
+        if (diffDays <= 31) {
+          for (let i = 0; i <= diffDays; i++) {
+            const d = new Date(start);
+            d.setDate(start.getDate() + i);
+            buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
+          }
+          periodTransactions.forEach(t => {
+            const d = new Date(t.date);
+            const idx = Math.floor((d.getTime() - start.getTime()) / 86400000);
+            if (idx >= 0 && idx < buckets.length) {
+              const val = Math.abs(parseFloat(t.amount) || 0);
+              if (t.type === 'income') buckets[idx].income += val;
+              else buckets[idx].expense += val;
+            }
+          });
+        } else if (diffDays <= 180) {
+          let weekStart = new Date(start);
+          while (weekStart <= end) {
+            buckets.push({ label: format(weekStart, 'dd/MM'), income: 0, expense: 0 });
+            weekStart = new Date(weekStart);
+            weekStart.setDate(weekStart.getDate() + 7);
+          }
+          periodTransactions.forEach(t => {
+            const d = new Date(t.date);
+            const daysSinceStart = Math.floor((d.getTime() - start.getTime()) / 86400000);
+            const bIdx = Math.floor(daysSinceStart / 7);
+            if (bIdx >= 0 && bIdx < buckets.length) {
+              const val = Math.abs(parseFloat(t.amount) || 0);
+              if (t.type === 'income') buckets[bIdx].income += val;
+              else buckets[bIdx].expense += val;
+            }
+          });
+        } else {
+          let current = new Date(start.getFullYear(), start.getMonth(), 1);
+          while (current <= end) {
+            buckets.push({ label: `${monthShort[current.getMonth()]}/${String(current.getFullYear()).slice(2)}`, income: 0, expense: 0 });
+            current.setMonth(current.getMonth() + 1);
+          }
+          periodTransactions.forEach(t => {
+            const d = new Date(t.date);
+            const monthDiff = (d.getFullYear() - start.getFullYear()) * 12 + d.getMonth() - start.getMonth();
+            if (monthDiff >= 0 && monthDiff < buckets.length) {
+              const val = Math.abs(parseFloat(t.amount) || 0);
+              if (t.type === 'income') buckets[monthDiff].income += val;
+              else buckets[monthDiff].expense += val;
+            }
+          });
+        }
+        break;
+      }
+    }
+
+    const totalIncome = buckets.reduce((s, b) => s + b.income, 0);
+    const totalExpense = buckets.reduce((s, b) => s + b.expense, 0);
+
+    return {
+      labels: buckets.map(b => b.label),
+      incomeData: buckets.map(b => b.income),
+      expenseData: buckets.map(b => b.expense),
+      totalIncome,
+      totalExpense,
+      balance: totalIncome - totalExpense,
+    };
+  };
+
+  const chartFluxoData = getChartData();
 
   // Dados reais para À Pagar
   const payablesData = filteredTransactions
@@ -788,7 +1008,7 @@ export function Transactions() {
         amount: valorNumerico,
         description: transactionData.descricao || 'Lançamento',
         type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
-        date: transactionData.data ? new Date(transactionData.data.split('/').reverse().join('-')).toISOString() : new Date().toISOString(),
+        date: transactionData.data ? transactionData.data.split('/').reverse().join('-') : localDateStr(),
         categoryId: null, // Desativado em favor do Plano de Contas (chartAccountId)
         chartAccountId: transactionData.chartAccountId ? parseInt(transactionData.chartAccountId) : null,
         bankAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
@@ -920,38 +1140,74 @@ export function Transactions() {
   // Lógica de transactions e filteredTransactions consolidada no topo
 
   // Funções para navegação temporal
-  const navigateMonth = (direction: 'prev' | 'next') => {
-    const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-    const [monthName, year] = currentMonth.split(' ');
-    const currentIndex = months.indexOf(monthName);
+  const navigatePeriod = (direction: 'prev' | 'next') => {
+    const refDate = selectedDate || new Date();
+    const newDate = new Date(refDate);
+    const step = direction === 'next' ? 1 : -1;
 
-    let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-    let newYear = parseInt(year);
-
-    if (newIndex > 11) {
-      newIndex = 0;
-      newYear++;
-    } else if (newIndex < 0) {
-      newIndex = 11;
-      newYear--;
+    switch (filterPeriod) {
+      case 'Diário':
+        newDate.setDate(newDate.getDate() + step);
+        break;
+      case 'Semanal':
+        newDate.setDate(newDate.getDate() + (step * 7));
+        break;
+      case 'Mensal':
+        newDate.setMonth(newDate.getMonth() + step);
+        break;
+      case 'Anual':
+        newDate.setFullYear(newDate.getFullYear() + step);
+        break;
+      case 'Período':
+        return; // Sem navegação por setas no modo Período
     }
 
-    setCurrentMonth(`${months[newIndex]} ${newYear}`);
+    setSelectedDate(newDate);
   };
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
-      const monthName = format(date, 'MMMM yyyy', { locale: ptBR });
-      setCurrentMonth(monthName);
       setIsCalendarOpen(false);
     }
   };
 
   const handleFilterChange = (period: string) => {
     setFilterPeriod(period);
+    if (period === 'Período') {
+      setIsCalendarOpen(true);
+    }
   };
+
+  // Título de exibição do período na barra de navegação
+  const getDisplayTitle = (): string => {
+    const refDate = selectedDate || new Date();
+    switch (filterPeriod) {
+      case 'Diário':
+        return format(refDate, "d 'de' MMMM yyyy", { locale: ptBR });
+      case 'Semanal': {
+        const day = refDate.getDay();
+        const monday = new Date(refDate);
+        monday.setDate(refDate.getDate() - (day === 0 ? 6 : day - 1));
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        if (monday.getMonth() === sunday.getMonth()) {
+          return `${format(monday, 'd', { locale: ptBR })} a ${format(sunday, "d 'de' MMM yyyy", { locale: ptBR })}`;
+        }
+        return `${format(monday, "d 'de' MMM", { locale: ptBR })} a ${format(sunday, "d 'de' MMM yyyy", { locale: ptBR })}`;
+      }
+      case 'Mensal':
+        return currentMonth;
+      case 'Anual':
+        return format(refDate, 'yyyy');
+      case 'Período':
+        return `${format(periodStartDate, 'dd/MM/yyyy')} a ${format(periodEndDate, 'dd/MM/yyyy')}`;
+      default:
+        return currentMonth;
+    }
+  };
+
+  const displayTitle = getDisplayTitle();
 
   return (
     <div className="space-y-6">
@@ -1086,26 +1342,32 @@ export function Transactions() {
                           <div className="flex items-center justify-between">
                             <div>
                               <CardTitle className="text-lg font-semibold">Fluxo de caixa</CardTitle>
-                              <CardDescription className="text-sm text-gray-500">Evolução mensal</CardDescription>
+                              <CardDescription className="text-sm text-gray-500">
+                                {filterPeriod === 'Diário' ? 'Evolução diária' : filterPeriod === 'Semanal' ? 'Evolução semanal' : filterPeriod === 'Anual' ? 'Evolução anual' : filterPeriod === 'Período' ? 'Evolução do período' : 'Evolução mensal'}
+                              </CardDescription>
                             </div>
                             <div className="flex items-center gap-3">
-                              {/* Navegação de mês */}
+                              {/* Navegação de período */}
                               <div className="flex items-center gap-1">
-                                <button
-                                  onClick={() => navigateMonth('prev')}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                >
-                                  <ChevronLeft className="h-4 w-4" />
-                                </button>
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('prev')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronLeft className="h-4 w-4" />
+                                  </button>
+                                )}
                                 <span className="text-sm font-medium min-w-[100px] text-center">
-                                  {currentMonth}
+                                  {displayTitle}
                                 </span>
-                                <button
-                                  onClick={() => navigateMonth('next')}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                >
-                                  <ChevronRight className="h-4 w-4" />
-                                </button>
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('next')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </button>
+                                )}
                               </div>
 
                               {/* Ícone do calendário */}
@@ -1116,12 +1378,27 @@ export function Transactions() {
                                   </button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="end">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={handleDateSelect}
-                                    initialFocus
-                                  />
+                                  {filterPeriod === 'Período' ? (
+                                    <CalendarComponent
+                                      mode="range"
+                                      selected={{ from: periodStartDate, to: periodEndDate }}
+                                      onSelect={(range: any) => {
+                                        if (range?.from) setPeriodStartDate(range.from);
+                                        if (range?.to) {
+                                          setPeriodEndDate(range.to);
+                                          setIsCalendarOpen(false);
+                                        }
+                                      }}
+                                      initialFocus
+                                    />
+                                  ) : (
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={selectedDate}
+                                      onSelect={handleDateSelect}
+                                      initialFocus
+                                    />
+                                  )}
                                 </PopoverContent>
                               </Popover>
 
@@ -1134,40 +1411,34 @@ export function Transactions() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
                                   <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Diário')}
+                                    className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  >
+                                    Diário
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Semanal')}
-                                    className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
+                                    className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                   >
                                     Semanal
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Mensal')}
-                                    className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
+                                    className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                   >
                                     Mensal
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => handleFilterChange('Trimestral')}
-                                    className={filterPeriod === 'Trimestral' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
-                                  >
-                                    Trimestral
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => handleFilterChange('Semestral')}
-                                    className={filterPeriod === 'Semestral' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
-                                  >
-                                    Semestral
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Anual')}
-                                    className={filterPeriod === 'Anual' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
+                                    className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                   >
                                     Anual
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => handleFilterChange('Personalizar')}
-                                    className={filterPeriod === 'Personalizar' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
+                                    onClick={() => handleFilterChange('Período')}
+                                    className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                   >
-                                    Personalizar
+                                    Período
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1178,11 +1449,11 @@ export function Transactions() {
                           <div className="h-64">
                             <Line
                               data={{
-                                labels: dashboardData?.monthlyTrends?.map(item => item.month) || ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                                labels: chartFluxoData.labels,
                                 datasets: [
                                   {
                                     label: 'Receitas',
-                                    data: dashboardData?.monthlyTrends?.map(item => item.income) || [0, 0, 0, 0, 0, 0],
+                                    data: chartFluxoData.incomeData,
                                     borderColor: '#B59363',
                                     backgroundColor: 'transparent',
                                     tension: 0.4,
@@ -1190,7 +1461,7 @@ export function Transactions() {
                                   },
                                   {
                                     label: 'Despesas',
-                                    data: dashboardData?.monthlyTrends?.map(item => item.expenses) || [0, 0, 0, 0, 0, 0],
+                                    data: chartFluxoData.expenseData,
                                     borderColor: '#ef4444',
                                     backgroundColor: 'transparent',
                                     tension: 0.4,
@@ -1229,19 +1500,19 @@ export function Transactions() {
                                 <div className="w-3 h-3 bg-[#B59363] rounded-full"></div>
                                 <span>Receitas</span>
                               </div>
-                              <span className="font-medium text-[#B59363]">{formatCurrency((dashboardData?.monthlyIncome || 0).toString())}</span>
+                              <span className="font-medium text-[#B59363]">{formatCurrency(chartFluxoData.totalIncome.toString())}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                                 <span>Despesas</span>
                               </div>
-                              <span className="font-medium text-red-500">{formatCurrency((dashboardData?.monthlyExpenses || 0).toString())}</span>
+                              <span className="font-medium text-red-500">{formatCurrency(chartFluxoData.totalExpense.toString())}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
                               <span>Saldo Acumulado</span>
-                              <span className={dashboardData?.balance && dashboardData.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                {formatCurrency((dashboardData?.balance || 0).toString())}
+                              <span className={chartFluxoData.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {formatCurrency(chartFluxoData.balance.toString())}
                               </span>
                             </div>
                           </div>
@@ -1266,7 +1537,7 @@ export function Transactions() {
                             />
                           </div>
                           <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Posição patrimonial acumulada'}
+                            {showAccountFlow ? 'Fluxo do período selecionado' : filterPeriod === 'Diário' ? 'Posição acumulada diária' : filterPeriod === 'Semanal' ? 'Posição acumulada semanal' : filterPeriod === 'Anual' ? 'Posição acumulada anual' : filterPeriod === 'Período' ? 'Posição acumulada do período' : 'Posição acumulada mensal'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
@@ -1488,23 +1759,27 @@ export function Transactions() {
                             <CardDescription className="text-sm text-gray-500">Saldo em 31 jul</CardDescription>
                           </div>
                           <div className="flex items-center gap-3">
-                            {/* Navegação de mês */}
+                            {/* Navegação de período */}
                             <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => navigateMonth('prev')}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                              >
-                                <ChevronLeft className="h-4 w-4" />
-                              </button>
+                              {filterPeriod !== 'Período' && (
+                                <button
+                                  onClick={() => navigatePeriod('prev')}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                </button>
+                              )}
                               <span className="text-sm font-medium min-w-[100px] text-center">
-                                {currentMonth}
+                                {displayTitle}
                               </span>
-                              <button
-                                onClick={() => navigateMonth('next')}
-                                className="p-1 hover:bg-gray-100 rounded transition-colors"
-                              >
-                                <ChevronRight className="h-4 w-4" />
-                              </button>
+                              {filterPeriod !== 'Período' && (
+                                <button
+                                  onClick={() => navigatePeriod('next')}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
 
                             {/* Ícone do calendário */}
@@ -1515,12 +1790,27 @@ export function Transactions() {
                                 </button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="end">
-                                <CalendarComponent
-                                  mode="single"
-                                  selected={selectedDate}
-                                  onSelect={handleDateSelect}
-                                  initialFocus
-                                />
+                                {filterPeriod === 'Período' ? (
+                                  <CalendarComponent
+                                    mode="range"
+                                    selected={{ from: periodStartDate, to: periodEndDate }}
+                                    onSelect={(range: any) => {
+                                      if (range?.from) setPeriodStartDate(range.from);
+                                      if (range?.to) {
+                                        setPeriodEndDate(range.to);
+                                        setIsCalendarOpen(false);
+                                      }
+                                    }}
+                                    initialFocus
+                                  />
+                                ) : (
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={handleDateSelect}
+                                    initialFocus
+                                  />
+                                )}
                               </PopoverContent>
                             </Popover>
 
@@ -1532,6 +1822,12 @@ export function Transactions() {
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={() => handleFilterChange('Diário')}
+                                  className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                >
+                                  Diário
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Semanal')}
                                   className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
@@ -1545,28 +1841,16 @@ export function Transactions() {
                                   Mensal
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Trimestral')}
-                                  className={filterPeriod === 'Trimestral' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
-                                >
-                                  Trimestral
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Semestral')}
-                                  className={filterPeriod === 'Semestral' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
-                                >
-                                  Semestral
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Anual')}
-                                  className={filterPeriod === 'Anual' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
+                                  className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                 >
                                   Anual
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Personalizar')}
-                                  className={filterPeriod === 'Personalizar' ? 'bg-[#1D3557]/10 text-[#1D3557]' : ''}
+                                  onClick={() => handleFilterChange('Período')}
+                                  className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
                                 >
-                                  Personalizar
+                                  Período
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1844,66 +2128,64 @@ export function Transactions() {
                               <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
-                                const [month, year] = prevMonth.split(' ');
-                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                                let currentMonthIndex = months.indexOf(month);
-                                let currentYear = parseInt(year);
-                                currentMonthIndex--;
-                                if (currentMonthIndex < 0) {
-                                  currentMonthIndex = 11;
-                                  currentYear--;
-                                }
-                                return `${months[currentMonthIndex]} ${currentYear}`;
-                              })}>
-                                <ChevronLeft className="h-3 w-3" />
-                              </Button>
+                              {filterPeriod !== 'Período' && (
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('prev')}>
+                                  <ChevronLeft className="h-3 w-3" />
+                                </Button>
+                              )}
 
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                                    {currentMonth}
+                                    {displayTitle}
                                   </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="end">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={(date) => {
-                                      setSelectedDate(date);
-                                      if (date) {
-                                        const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                                        setCurrentMonth(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
-                                      }
-                                    }}
-                                    locale={ptBR}
-                                    initialFocus
-                                  />
+                                  {filterPeriod === 'Período' ? (
+                                    <CalendarComponent
+                                      mode="range"
+                                      selected={{ from: periodStartDate, to: periodEndDate }}
+                                      onSelect={(range: any) => {
+                                        if (range?.from) setPeriodStartDate(range.from);
+                                        if (range?.to) setPeriodEndDate(range.to);
+                                      }}
+                                      locale={ptBR}
+                                      initialFocus
+                                    />
+                                  ) : (
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={selectedDate}
+                                      onSelect={(date) => {
+                                        if (date) setSelectedDate(date);
+                                      }}
+                                      locale={ptBR}
+                                      initialFocus
+                                    />
+                                  )}
                                 </PopoverContent>
                               </Popover>
 
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
-                                const [month, year] = nextMonth.split(' ');
-                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                                let currentMonthIndex = months.indexOf(month);
-                                let currentYear = parseInt(year);
-                                currentMonthIndex++;
-                                if (currentMonthIndex > 11) {
-                                  currentMonthIndex = 0;
-                                  currentYear++;
-                                }
-                                return `${months[currentMonthIndex]} ${currentYear}`;
-                              })}>
-                                <ChevronRight className="h-3 w-3" />
-                              </Button>
+                              {filterPeriod !== 'Período' && (
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('next')}>
+                                  <ChevronRight className="h-3 w-3" />
+                                </Button>
+                              )}
 
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <Calendar className="h-3 w-3" />
-                              </Button>
-
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <Settings className="h-3 w-3" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                    <Settings className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Diário')} className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Diário</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Semanal')} className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Semanal</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Mensal')} className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Mensal</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Anual')} className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Anual</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Período')} className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Período</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         </CardHeader>
@@ -2184,66 +2466,64 @@ export function Transactions() {
                               <CardDescription>Receitas e entradas programadas</CardDescription>
                             </div>
                             <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
-                                const [month, year] = prevMonth.split(' ');
-                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                                let currentMonthIndex = months.indexOf(month);
-                                let currentYear = parseInt(year);
-                                currentMonthIndex--;
-                                if (currentMonthIndex < 0) {
-                                  currentMonthIndex = 11;
-                                  currentYear--;
-                                }
-                                return `${months[currentMonthIndex]} ${currentYear}`;
-                              })}>
-                                <ChevronLeft className="h-3 w-3" />
-                              </Button>
+                              {filterPeriod !== 'Período' && (
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('prev')}>
+                                  <ChevronLeft className="h-3 w-3" />
+                                </Button>
+                              )}
 
                               <Popover>
                                 <PopoverTrigger asChild>
                                   <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                                    {currentMonth}
+                                    {displayTitle}
                                   </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="end">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={(date) => {
-                                      setSelectedDate(date);
-                                      if (date) {
-                                        const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                                        setCurrentMonth(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
-                                      }
-                                    }}
-                                    locale={ptBR}
-                                    initialFocus
-                                  />
+                                  {filterPeriod === 'Período' ? (
+                                    <CalendarComponent
+                                      mode="range"
+                                      selected={{ from: periodStartDate, to: periodEndDate }}
+                                      onSelect={(range: any) => {
+                                        if (range?.from) setPeriodStartDate(range.from);
+                                        if (range?.to) setPeriodEndDate(range.to);
+                                      }}
+                                      locale={ptBR}
+                                      initialFocus
+                                    />
+                                  ) : (
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={selectedDate}
+                                      onSelect={(date) => {
+                                        if (date) setSelectedDate(date);
+                                      }}
+                                      locale={ptBR}
+                                      initialFocus
+                                    />
+                                  )}
                                 </PopoverContent>
                               </Popover>
 
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
-                                const [month, year] = nextMonth.split(' ');
-                                const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-                                let currentMonthIndex = months.indexOf(month);
-                                let currentYear = parseInt(year);
-                                currentMonthIndex++;
-                                if (currentMonthIndex > 11) {
-                                  currentMonthIndex = 0;
-                                  currentYear++;
-                                }
-                                return `${months[currentMonthIndex]} ${currentYear}`;
-                              })}>
-                                <ChevronRight className="h-3 w-3" />
-                              </Button>
+                              {filterPeriod !== 'Período' && (
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('next')}>
+                                  <ChevronRight className="h-3 w-3" />
+                                </Button>
+                              )}
 
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <Calendar className="h-3 w-3" />
-                              </Button>
-
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <Settings className="h-3 w-3" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                    <Settings className="h-3 w-3" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Diário')} className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Diário</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Semanal')} className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Semanal</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Mensal')} className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Mensal</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Anual')} className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Anual</DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleFilterChange('Período')} className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Período</DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         </CardHeader>
@@ -2488,7 +2768,7 @@ export function Transactions() {
                     };
 
                     setBankAccountData({
-                      initialBalanceDate: account.initialBalanceDate ? new Date(account.initialBalanceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                      initialBalanceDate: account.initialBalanceDate ? toLocalDateStr(account.initialBalanceDate) : localDateStr(),
                       currentBalance: formatForModal(account.currentBalance),
                       balanceType: account.balanceType || ((account.balance || 0) >= 0 ? 'credor' : 'devedor'),
                       accountType: account.accountType || 'conta_corrente',
@@ -2772,7 +3052,7 @@ export function Transactions() {
         })()}
         initialData={{
           contaBancaria: '',
-          dataBaixa: new Date().toISOString().split('T')[0],
+          dataBaixa: localDateStr(),
           formaPagamento: 'transferencia',
           jurosMulta: '0,00',
           desconto: '0,00',

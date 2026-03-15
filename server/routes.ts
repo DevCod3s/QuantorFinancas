@@ -38,6 +38,18 @@ import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, inse
 import * as schema from "@shared/schema";
 import { z } from "zod";
 
+/**
+ * Parseia uma string de data para Date local (Brasília)
+ * Evita que "YYYY-MM-DD" seja interpretado como UTC midnight
+ */
+function parseLocalDate(dateStr: string | Date): Date {
+  if (dateStr instanceof Date) return dateStr;
+  if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return new Date(dateStr + 'T12:00:00');
+  }
+  return new Date(dateStr);
+}
+
 // Sistema de autenticação
 import { getLoginUrl, handleCallback, logout, requireAuth as authMiddleware, loginWithCredentials } from "./auth";
 
@@ -357,7 +369,7 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
       const valorUltimaParcela = Math.round((valorTotal - valorParcela * (totalParcelas - 1)) * 100) / 100;
 
       const parcelamentoId = crypto.randomUUID();
-      const dataBase = new Date(rest.date);
+      const dataBase = parseLocalDate(rest.date);
       const criadas: any[] = [];
 
       for (let i = 0; i < totalParcelas; i++) {
@@ -393,8 +405,8 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
     // Se for recorrente, gerar projeções (ex: próximos 24 meses ou até dataTermino)
     if (repeticao === 'Recorrente') {
       const recurrencyId = crypto.randomUUID();
-      const dataBase = new Date(rest.date);
-      const limitDate = dataTermino ? new Date(dataTermino) : new Date(new Date().setFullYear(new Date().getFullYear() + 2)); // 2 anos de projeção por padrão
+      const dataBase = parseLocalDate(rest.date);
+      const limitDate = dataTermino ? parseLocalDate(dataTermino) : new Date(new Date().setFullYear(new Date().getFullYear() + 2)); // 2 anos de projeção por padrão
       const period = periodicidade || 'Mensal';
       const interval = parseInt(intervalo || '1');
       const criadas: any[] = [];
@@ -412,7 +424,7 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           repeticao: 'Recorrente',
           periodicidade: period,
           intervalo: interval,
-          dataTermino: dataTermino ? new Date(dataTermino) : null,
+          dataTermino: dataTermino ? parseLocalDate(dataTermino) : null,
           status: 'pendente', // Futuros lançamentos recorrentes devem ser pendentes
           recorrenciaId: recurrencyId,
         });
@@ -444,7 +456,7 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
       userId: req.user.id,
       repeticao: repeticao || 'Única',
       amount: req.body.amount?.toString(),
-      date: req.body.date ? new Date(req.body.date) : new Date(),
+      date: req.body.date ? parseLocalDate(req.body.date) : new Date(),
     });
     const transaction = await storage.createTransaction(validatedData);
     res.status(201).json(transaction);
@@ -478,7 +490,7 @@ router.put("/transactions/:id", requireAuth, async (req: any, res) => {
     const updateMode = (req.query.mode as 'single' | 'future' | 'all') || 'single';
     const updateData = { ...req.body };
     if (updateData.amount !== undefined) updateData.amount = updateData.amount?.toString();
-    if (updateData.date !== undefined) updateData.date = updateData.date ? new Date(updateData.date) : undefined;
+    if (updateData.date !== undefined) updateData.date = updateData.date ? parseLocalDate(updateData.date) : undefined;
     
     const validatedData = insertTransactionSchema.partial().parse(updateData);
     const transaction = await storage.updateTransaction(id, validatedData, updateMode);

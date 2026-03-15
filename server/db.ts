@@ -8,6 +8,9 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Configura fuso horário do processo Node para Brasília
+process.env.TZ = 'America/Sao_Paulo';
+
 // Neon serverless driver - ideal para edge computing e serverless
 const sql = neon(process.env.DATABASE_URL);
 

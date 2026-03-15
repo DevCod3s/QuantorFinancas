@@ -33,6 +33,7 @@ import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
 import { DateInput } from "./DateInput";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
+import { localDateStr, toLocalDateStr } from "@/lib/utils";
 import { ParcelamentoModal } from "./ParcelamentoModal";
 import { RecorrenciaModal } from "./RecorrenciaModal";
 
@@ -61,7 +62,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
     }
   }, [entryType]);
   const [valor, setValor] = useState('0,00');
-  const [data, setData] = useState(new Date().toISOString().split('T')[0]);
+  const [data, setData] = useState(localDateStr());
   const [repeticao, setRepeticao] = useState('Única');
   const [periodicidade, setPeriodicidade] = useState('Mensal');
   const [intervaloRepeticao, setIntervaloRepeticao] = useState('1');
@@ -95,7 +96,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           currency: 'BRL',
           minimumFractionDigits: 2
         }).format(transaction.amount));
-        setData(transaction.date ? new Date(transaction.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]);
+        setData(transaction.date ? toLocalDateStr(transaction.date) : localDateStr());
         setDescricao(transaction.description || '');
         setConta(transaction.bankAccountId?.toString() || '');
         setContato(transaction.relationshipId?.toString() || '');
@@ -126,7 +127,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
         // Modo Nova Transação - Resetar campos
         setTipo(entryType === 'payable' ? 'Nova despesa' : 'Nova receita');
         setValor('0,00');
-        setData(new Date().toISOString().split('T')[0]);
+        setData(localDateStr());
         setDescricao('');
         setConta('');
         setContato('');
