@@ -211,9 +211,6 @@ export function Transactions() {
   // Estados para modo "Período"
   const [periodStartDate, setPeriodStartDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
   const [periodEndDate, setPeriodEndDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0));
-  const [periodModalOpen, setPeriodModalOpen] = useState(false);
-  const [tempPeriodStart, setTempPeriodStart] = useState('');
-  const [tempPeriodEnd, setTempPeriodEnd] = useState('');
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
@@ -1197,29 +1194,13 @@ export function Transactions() {
     }
   };
 
-  const openPeriodModal = () => {
-    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    setTempPeriodStart(fmt(periodStartDate));
-    setTempPeriodEnd(fmt(periodEndDate));
-    setPeriodModalOpen(true);
-  };
+
 
   const handleFilterChange = (period: string) => {
     setFilterPeriod(period);
-    if (period === 'Período') {
-      openPeriodModal();
-    }
   };
 
-  const handlePeriodConfirm = () => {
-    if (tempPeriodStart && tempPeriodEnd) {
-      const startParts = tempPeriodStart.split('-');
-      const endParts = tempPeriodEnd.split('-');
-      setPeriodStartDate(new Date(+startParts[0], +startParts[1] - 1, +startParts[2]));
-      setPeriodEndDate(new Date(+endParts[0], +endParts[1] - 1, +endParts[2]));
-    }
-    setPeriodModalOpen(false);
-  };
+
 
   // Título de exibição do período na barra de navegação
   const getDisplayTitle = (): string => {
@@ -1399,9 +1380,11 @@ export function Transactions() {
                                     <ChevronLeft className="h-4 w-4" />
                                   </button>
                                 )}
-                                <span className="text-sm font-medium min-w-[100px] text-center">
-                                  {displayTitle}
-                                </span>
+                                {filterPeriod !== 'Período' && (
+                                  <span className="text-sm font-medium min-w-[100px] text-center">
+                                    {displayTitle}
+                                  </span>
+                                )}
                                 {filterPeriod !== 'Período' && (
                                   <button
                                     onClick={() => navigatePeriod('next')}
@@ -1412,14 +1395,34 @@ export function Transactions() {
                                 )}
                               </div>
 
-                              {/* Ícone do calendário */}
+                              {/* Filtro de Datas Inline ou Calendário */}
                               {filterPeriod === 'Período' ? (
-                                <button
-                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                                  onClick={openPeriodModal}
-                                >
-                                  <Calendar className="h-4 w-4" />
-                                </button>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Inicial"
+                                      value={format(periodStartDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodStartDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Final"
+                                      value={format(periodEndDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodEndDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               ) : (
                                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                   <PopoverTrigger asChild>
@@ -1810,9 +1813,11 @@ export function Transactions() {
                                   <ChevronLeft className="h-4 w-4" />
                                 </button>
                               )}
-                              <span className="text-sm font-medium min-w-[100px] text-center">
-                                {displayTitle}
-                              </span>
+                              {filterPeriod !== 'Período' && (
+                                <span className="text-sm font-medium min-w-[100px] text-center">
+                                  {displayTitle}
+                                </span>
+                              )}
                               {filterPeriod !== 'Período' && (
                                 <button
                                   onClick={() => navigatePeriod('next')}
@@ -1823,14 +1828,34 @@ export function Transactions() {
                               )}
                             </div>
 
-                            {/* Ícone do calendário */}
+                            {/* Filtro de Datas Inline ou Calendário */}
                             {filterPeriod === 'Período' ? (
-                              <button
-                                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                                onClick={openPeriodModal}
-                              >
-                                <Calendar className="h-4 w-4" />
-                              </button>
+                              <div className="flex items-center gap-3">
+                                <div className="flex flex-col w-36">
+                                  <DateInput
+                                    label="Data Inicial"
+                                    value={format(periodStartDate, 'yyyy-MM-dd')}
+                                    onChange={(val) => {
+                                      if (val) {
+                                        const dt = new Date(val + 'T12:00:00');
+                                        setPeriodStartDate(dt);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                                <div className="flex flex-col w-36">
+                                  <DateInput
+                                    label="Data Final"
+                                    value={format(periodEndDate, 'yyyy-MM-dd')}
+                                    onChange={(val) => {
+                                      if (val) {
+                                        const dt = new Date(val + 'T12:00:00');
+                                        setPeriodEndDate(dt);
+                                      }
+                                    }}
+                                  />
+                                </div>
+                              </div>
                             ) : (
                               <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                 <PopoverTrigger asChild>
@@ -2166,9 +2191,11 @@ export function Transactions() {
                                     <ChevronLeft className="h-4 w-4" />
                                   </button>
                                 )}
-                                <span className="text-sm font-medium min-w-[100px] text-center">
-                                  {displayTitle}
-                                </span>
+                                {filterPeriod !== 'Período' && (
+                                  <span className="text-sm font-medium min-w-[100px] text-center">
+                                    {displayTitle}
+                                  </span>
+                                )}
                                 {filterPeriod !== 'Período' && (
                                   <button
                                     onClick={() => navigatePeriod('next')}
@@ -2179,14 +2206,34 @@ export function Transactions() {
                                 )}
                               </div>
 
-                              {/* Ícone do calendário */}
+                              {/* Filtro de Datas Inline ou Calendário */}
                               {filterPeriod === 'Período' ? (
-                                <button
-                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                                  onClick={openPeriodModal}
-                                >
-                                  <Calendar className="h-4 w-4" />
-                                </button>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Inicial"
+                                      value={format(periodStartDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodStartDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Final"
+                                      value={format(periodEndDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodEndDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               ) : (
                                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                   <PopoverTrigger asChild>
@@ -2522,9 +2569,11 @@ export function Transactions() {
                                     <ChevronLeft className="h-4 w-4" />
                                   </button>
                                 )}
-                                <span className="text-sm font-medium min-w-[100px] text-center">
-                                  {displayTitle}
-                                </span>
+                                {filterPeriod !== 'Período' && (
+                                  <span className="text-sm font-medium min-w-[100px] text-center">
+                                    {displayTitle}
+                                  </span>
+                                )}
                                 {filterPeriod !== 'Período' && (
                                   <button
                                     onClick={() => navigatePeriod('next')}
@@ -2535,14 +2584,34 @@ export function Transactions() {
                                 )}
                               </div>
 
-                              {/* Ícone do calendário */}
+                              {/* Filtro de Datas Inline ou Calendário */}
                               {filterPeriod === 'Período' ? (
-                                <button
-                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
-                                  onClick={openPeriodModal}
-                                >
-                                  <Calendar className="h-4 w-4" />
-                                </button>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Inicial"
+                                      value={format(periodStartDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodStartDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Final"
+                                      value={format(periodEndDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodEndDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
                               ) : (
                                 <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
                                   <PopoverTrigger asChild>
@@ -3231,9 +3300,9 @@ function ChartOfAccountsContent({
   showSuccess: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showError: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showConfirm: (title: string, message: string, onConfirm: () => void) => void,
-  SuccessDialog: React.ComponentType,
-  ErrorDialog: React.ComponentType,
-  ConfirmDialog: React.ComponentType
+  SuccessDialog: React.ComponentType<any>,
+  ErrorDialog: React.ComponentType<any>,
+  ConfirmDialog: React.ComponentType<any>
 }) {
   const queryClient = useQueryClient();
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
@@ -4090,46 +4159,6 @@ function ChartOfAccountsContent({
       <ErrorDialog />
       <ConfirmDialog />
 
-      {/* Modal de seleção de período - Portal para renderizar no body */}
-      {periodModalOpen && createPortal(
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* Backdrop */}
-          <div
-            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)' }}
-            onClick={() => setPeriodModalOpen(false)}
-          />
-          {/* Modal */}
-          <div style={{ position: 'relative', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 25px 50px rgba(0,0,0,0.25)', width: '360px', padding: '24px' }}>
-            <h3 className="text-lg font-semibold text-[#1D3557] mb-4">Selecionar Período</h3>
-            <div className="space-y-4 mb-6">
-              <DateInput
-                label="Data Inicial"
-                value={tempPeriodStart}
-                onChange={setTempPeriodStart}
-                required
-              />
-              <DateInput
-                label="Data Final"
-                value={tempPeriodEnd}
-                onChange={setTempPeriodEnd}
-                required
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setPeriodModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button
-                onClick={handlePeriodConfirm}
-                className="bg-[#1D3557] hover:bg-[#2A4A6B] text-white"
-              >
-                Aplicar
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
