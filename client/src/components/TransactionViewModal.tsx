@@ -33,6 +33,11 @@ export function TransactionViewModal({ open, onClose, transaction, userName }: T
   let moraAcumulada = 0;
   let tipoJurosLabel = '';
 
+  const fmtTaxa = (val: string) => {
+    const num = parseFloat(val);
+    return isNaN(num) ? val : num.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
+  };
+
   if (isOverdue && hasParcelamentoJuros) {
     const rate = parseFloat(transaction.valorJuros) / 100;
     const isPercent = transaction.tipoJuros === 'percentual';
@@ -68,11 +73,6 @@ export function TransactionViewModal({ open, onClose, transaction, userName }: T
 
   const hasInterest = hasParcelamentoJuros || hasRecorrenciaEncargos;
   const totalEncargos = jurosAcumulado + moraAcumulada;
-
-  const fmtTaxa = (val: string) => {
-    const num = parseFloat(val);
-    return isNaN(num) ? val : num.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
-  };
 
   const createdDate = transaction.createdAt ? new Date(transaction.createdAt) : null;
 
