@@ -72,6 +72,8 @@ import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
 import { TransactionViewModal } from "@/components/TransactionViewModal";
+import { TransactionLiquidateModal } from "@/components/TransactionLiquidateModal";
+import { TransactionModal } from "@/components/TransactionModal";
 import { DateInput } from "@/components/DateInput";
 import { localDateStr, toLocalDateStr, toLocalDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -429,6 +431,8 @@ export function Transactions() {
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [viewingTransaction, setViewingTransaction] = useState<any>(null);
+  const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
+  const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
@@ -935,11 +939,53 @@ export function Transactions() {
   });
 
   const handleLiquidateTransaction = (item: any, type: string) => {
-    showConfirm(
-      "Liquidar Lançamento",
-      "Tem certeza que deseja marcar este lançamento como pago/liquidado?",
-      () => liquidateTransactionMutation.mutate(item.id)
-    );
+    console.log("Liquidar clicado. Item recebido:", item);
+    const tx = transactions.find(t => t.id == item.id);
+    console.log("Transação encontrada:", tx);
+    if (tx) {
+      setTransactionToLiquidate(tx);
+      setLiquidateModalOpen(true);
+      console.log("Abrindo o modal de liquidação...");
+    } else {
+      console.error("Transação não encontrada para o id:", item.id);
+    }
+  };
+
+  const confirmLiquidation = async (data: any) => {
+    if (!transactionToLiquidate) return;
+    
+    // Calcula o valor mantendo os centavos como string para a API
+    const amountStr = data.finalAmount.toFixed(2).replace('.', ',');
+    const parsedAmount = parseFloat(amountStr.replace(',', '.'));
+    
+    // Determina encargos se houver
+    let interestDetails = {};
+    if (data.interestAmount > 0) {
+      interestDetails = {
+        aplicarEncargos: true,
+        tipoEncargo: 'valor',
+        moraDia: data.interestAmount.toString(),
+      };
+    }
+
+    const payload = {
+      status: 'pago',
+      amount: parsedAmount.toString(),
+      bankAccountId: data.bankAccountId,
+      ...interestDetails
+    };
+
+    try {
+      await updateTransactionMutation.mutateAsync({
+        id: transactionToLiquidate.id,
+        data: payload
+      });
+      setLiquidateModalOpen(false);
+      setTransactionToLiquidate(null);
+      showSuccess('Lançamento liquidado com sucesso!', "");
+    } catch (error: any) {
+      showError('Erro ao liquidar lançamento', error.message || 'Tente novamente.');
+    }
   };
 
   // Mutation para atualizar transação
@@ -4153,6 +4199,35 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
+
+      {/* Transaction Modals */}
+      <TransactionModal
+        open={transactionModalOpen}
+        onClose={() => {
+          setTransactionModalOpen(false);
+          setEditingTransaction(null);
+        }}
+        transaction={editingTransaction}
+        type={activeMovimentacoesSubTab === 'a-receber' ? 'income' : 'expense'}
+      />
+
+      <TransactionViewModal
+        open={!!viewingTransaction}
+        onClose={() => setViewingTransaction(null)}
+        transaction={viewingTransaction}
+        userName={user?.name}
+      />
+
+      <TransactionLiquidateModal
+        open={liquidateModalOpen}
+        onClose={() => {
+          setLiquidateModalOpen(false);
+          setTransactionToLiquidate(null);
+        }}
+        transaction={transactionToLiquidate}
+        bankAccounts={bankAccounts}
+        onConfirm={confirmLiquidation}
+      />
 
       {/* Componentes de Diálogo */}
       <SuccessDialog />
