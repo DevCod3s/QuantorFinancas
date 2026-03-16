@@ -6,6 +6,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Converte data UTC (ISO string) para Date local preservando o dia do calendário.
+ * Resolve o bug onde T00:00:00.000Z em UTC vira dia anterior em BRT (UTC-3).
+ */
+export function toLocalDate(dateStr: string | Date): Date {
+  const d = dateStr instanceof Date ? dateStr : new Date(dateStr);
+  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12, 0, 0);
+}
+
+/**
  * Retorna a data local (Brasília) no formato YYYY-MM-DD
  * Evita o problema de new Date().toISOString().split('T')[0] que retorna UTC
  */

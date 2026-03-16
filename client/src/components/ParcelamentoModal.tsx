@@ -47,11 +47,13 @@ export function ParcelamentoModal({
   initialConfig,
   valorTotal
 }: ParcelamentoModalProps) {
+  const toDisplay = (val: string | undefined) => val ? val.replace('.', ',') : '';
+
   const [numeroParcelas, setNumeroParcelas] = useState(initialConfig?.numeroParcelas || '');
   const [dataPrimeiraParcela, setDataPrimeiraParcela] = useState(initialConfig?.dataPrimeiraParcela || '');
   const [aplicarJuros, setAplicarJuros] = useState(initialConfig?.aplicarJuros || false);
   const [tipoJuros, setTipoJuros] = useState<'percentual' | 'valor'>(initialConfig?.tipoJuros || 'percentual');
-  const [valorJuros, setValorJuros] = useState(initialConfig?.valorJuros || '');
+  const [valorJuros, setValorJuros] = useState(toDisplay(initialConfig?.valorJuros));
   const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela' | 'atraso'>(initialConfig?.aplicarJurosEm || 'total');
 
   // Atualiza estados quando initialConfig mudar
@@ -61,7 +63,7 @@ export function ParcelamentoModal({
       setDataPrimeiraParcela(initialConfig.dataPrimeiraParcela || '');
       setAplicarJuros(initialConfig.aplicarJuros || false);
       setTipoJuros(initialConfig.tipoJuros || 'percentual');
-      setValorJuros(initialConfig.valorJuros || '');
+      setValorJuros(toDisplay(initialConfig.valorJuros));
       setAplicarJurosEm(initialConfig.aplicarJurosEm || 'total');
     }
   }, [initialConfig]);
@@ -76,7 +78,7 @@ export function ParcelamentoModal({
     let valorFinal = valorNumerico;
 
     if (aplicarJuros && valorJuros) {
-      const juros = parseFloat(valorJuros);
+      const juros = parseFloat(valorJuros.replace(',', '.'));
 
       if (tipoJuros === 'percentual') {
         if (aplicarJurosEm === 'total') {
@@ -105,10 +107,26 @@ export function ParcelamentoModal({
       dataPrimeiraParcela,
       aplicarJuros,
       tipoJuros,
-      valorJuros,
+      valorJuros: valorJuros.replace(',', '.'),
       aplicarJurosEm,
     });
     onClose();
+  };
+
+  // Formatação PT-BR para campos de taxa (vírgula, 3 casas decimais)
+  const formatTaxa = (value: string): string => {
+    let clean = value.replace(/[^0-9,]/g, '');
+    const parts = clean.split(',');
+    if (parts.length > 2) clean = parts[0] + ',' + parts.slice(1).join('');
+    if (parts.length === 2 && parts[1].length > 3) clean = parts[0] + ',' + parts[1].substring(0, 3);
+    return clean;
+  };
+
+  const formatOnBlur = (value: string): string => {
+    if (!value) return '';
+    const num = parseFloat(value.replace(',', '.'));
+    if (isNaN(num)) return '';
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
   };
 
   const valorParcela = calcularValorParcela();
@@ -193,12 +211,14 @@ export function ParcelamentoModal({
             <TextField
               variant="standard"
               label={tipoJuros === 'percentual' ? 'Taxa (%)' : 'Valor (R$)'}
-              type="number"
+              type="text"
               value={valorJuros}
-              onChange={(e) => setValorJuros(e.target.value)}
+              onChange={(e) => setValorJuros(formatTaxa(e.target.value))}
+              onBlur={() => setValorJuros(formatOnBlur(valorJuros))}
               fullWidth
               sx={{ '& .MuiInputLabel-root': { color: '#666' } }}
-              inputProps={{ min: 0, step: tipoJuros === 'percentual' ? '0.01' : '0.01' }}
+              placeholder="0,000"
+              inputProps={{ inputMode: 'decimal' }}
             />
 
             <FormControl variant="standard" fullWidth>

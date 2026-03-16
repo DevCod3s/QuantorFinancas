@@ -358,7 +358,7 @@ router.get("/transactions", requireAuth, async (req: any, res) => {
 
 router.post("/transactions", requireAuth, async (req: any, res) => {
   try {
-    const { repeticao, numeroParcelas, periodicidade, intervalo, dataTermino, ...rest } = req.body;
+    const { repeticao, numeroParcelas, periodicidade, intervalo, dataTermino, aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm, aplicarEncargos, jurosMes, moraDia, tipoEncargo, aplicarMultaEm, ...rest } = req.body;
 
     // Se for parcelado, gerar múltiplas transações (uma por parcela)
     if (repeticao === 'Parcelado' && numeroParcelas && parseInt(numeroParcelas) > 1) {
@@ -389,6 +389,10 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           numeroParcelas: totalParcelas,
           parcelaAtual: i + 1,
           parcelamentoId,
+          aplicarJuros: aplicarJuros || false,
+          tipoJuros: tipoJuros || null,
+          valorJuros: valorJuros ? valorJuros.toString() : null,
+          aplicarJurosEm: aplicarJurosEm || null,
         });
 
         const transaction = await storage.createTransaction(validatedData);
@@ -425,8 +429,13 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           periodicidade: period,
           intervalo: interval,
           dataTermino: dataTermino ? parseLocalDate(dataTermino) : null,
-          status: 'pendente', // Futuros lançamentos recorrentes devem ser pendentes
+          status: 'pendente',
           recorrenciaId: recurrencyId,
+          aplicarEncargos: aplicarEncargos || false,
+          jurosMes: jurosMes ? jurosMes.toString() : null,
+          moraDia: moraDia ? moraDia.toString() : null,
+          tipoEncargo: tipoEncargo || null,
+          aplicarMultaEm: aplicarMultaEm || null,
         });
 
         const transaction = await storage.createTransaction(validatedData);
@@ -457,6 +466,15 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
       repeticao: repeticao || 'Única',
       amount: req.body.amount?.toString(),
       date: req.body.date ? parseLocalDate(req.body.date) : new Date(),
+      aplicarJuros: aplicarJuros || false,
+      tipoJuros: tipoJuros || null,
+      valorJuros: valorJuros ? valorJuros.toString() : null,
+      aplicarJurosEm: aplicarJurosEm || null,
+      aplicarEncargos: aplicarEncargos || false,
+      jurosMes: jurosMes ? jurosMes.toString() : null,
+      moraDia: moraDia ? moraDia.toString() : null,
+      tipoEncargo: tipoEncargo || null,
+      aplicarMultaEm: aplicarMultaEm || null,
     });
     const transaction = await storage.createTransaction(validatedData);
     res.status(201).json(transaction);
@@ -491,6 +509,9 @@ router.put("/transactions/:id", requireAuth, async (req: any, res) => {
     const updateData = { ...req.body };
     if (updateData.amount !== undefined) updateData.amount = updateData.amount?.toString();
     if (updateData.date !== undefined) updateData.date = updateData.date ? parseLocalDate(updateData.date) : undefined;
+    if (updateData.valorJuros !== undefined) updateData.valorJuros = updateData.valorJuros != null ? updateData.valorJuros.toString() : null;
+    if (updateData.jurosMes !== undefined) updateData.jurosMes = updateData.jurosMes != null ? updateData.jurosMes.toString() : null;
+    if (updateData.moraDia !== undefined) updateData.moraDia = updateData.moraDia != null ? updateData.moraDia.toString() : null;
     
     const validatedData = insertTransactionSchema.partial().parse(updateData);
     const transaction = await storage.updateTransaction(id, validatedData, updateMode);

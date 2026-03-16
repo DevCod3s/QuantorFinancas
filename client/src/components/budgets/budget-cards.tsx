@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBudgets, useDeleteBudget } from "@/hooks/use-budgets";
 import { useQuery } from "@tanstack/react-query";
 import { Budget, Transaction } from "@/types";
+import { toLocalDate } from "@/lib/utils";
 import BudgetForm from "./budget-form";
 
 export default function BudgetCards() {
@@ -44,7 +45,7 @@ export default function BudgetCards() {
 
     // Filtrar transações dentro do período do orçamento e mesma categoria
     const relevantTransactions = transactions.filter(transaction => {
-      const transactionDate = new Date(transaction.date);
+      const transactionDate = toLocalDate(transaction.date);
       return (
         transaction.type === 'despesa' &&
         transaction.categoryId === budget.categoryId &&

@@ -28,7 +28,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1, // Uma tentativa adicional em caso de falha
-      staleTime: 5 * 60 * 1000, // Dados frescos por 5 minutos
+      staleTime: 0, // Dados sempre verificados - garante atualização em tempo real
+      refetchOnWindowFocus: true, // Atualiza ao voltar para a janela
 
       /**
        * Query function padrão para requests GET

@@ -71,7 +71,7 @@ export function SuccessDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md mx-auto p-0 overflow-hidden border-0 shadow-2xl">
+      <DialogContent className="max-w-md mx-auto p-0 overflow-hidden border-0 shadow-2xl z-[9999]" style={{ zIndex: 9999 }}>
         {/* Elementos de acessibilidade (invisíveis) */}
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">{message}</DialogDescription>
@@ -150,6 +150,11 @@ export function useSuccessDialog() {
   return {
     showSuccess,
     closeDialog,
+    successDialogProps: {
+      isOpen,
+      onClose: closeDialog,
+      ...dialogProps
+    },
     SuccessDialog: () => (
       <SuccessDialog
         isOpen={isOpen}

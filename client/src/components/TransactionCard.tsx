@@ -115,6 +115,11 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           setIntervaloRepeticao(transaction.intervalo?.toString() || '1');
           setHasEndDate(!!transaction.dataTermino);
           setDataTermino(transaction.dataTermino || '');
+          setAplicarEncargos(transaction.aplicarEncargos || false);
+          setJurosMes(transaction.jurosMes?.toString() || '');
+          setMoraDia(transaction.moraDia?.toString() || '');
+          setTipoEncargo(transaction.tipoEncargo || 'percentual');
+          setAplicarMultaEm(transaction.aplicarMultaEm || 'atrasados');
         } else if (transaction.repeticao === 'Parcelado') {
           setNumeroParcelas(transaction.numeroParcelas?.toString() || '');
           setDataPrimeiraParcela(transaction.dataPrimeiraParcela || '');
@@ -436,6 +441,11 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       tipoJuros: repeticao === 'Parcelado' ? tipoJuros : undefined,
       valorJuros: repeticao === 'Parcelado' ? valorJuros : undefined,
       aplicarJurosEm: repeticao === 'Parcelado' ? aplicarJurosEm : undefined,
+      aplicarEncargos: repeticao === 'Recorrente' ? aplicarEncargos : undefined,
+      jurosMes: repeticao === 'Recorrente' ? jurosMes : undefined,
+      moraDia: repeticao === 'Recorrente' ? moraDia : undefined,
+      tipoEncargo: repeticao === 'Recorrente' ? tipoEncargo : undefined,
+      aplicarMultaEm: repeticao === 'Recorrente' ? aplicarMultaEm : undefined,
     };
 
     try {

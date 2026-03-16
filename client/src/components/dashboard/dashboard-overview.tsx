@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { toLocalDate } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DashboardData } from "@/types";
@@ -321,7 +322,7 @@ export default function DashboardOverview() {
                     <div>
                       <p className="font-medium text-foreground">{transaction.description}</p>
                       <p className="text-sm text-muted-foreground">
-                        {transaction.category?.name || 'Sem categoria'} • {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                        {transaction.category?.name || 'Sem categoria'} • {toLocalDate(transaction.date).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
                   </div>

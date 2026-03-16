@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { DashboardData, Transaction } from "@/types";
+import { toLocalDate } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
@@ -124,7 +125,7 @@ export default function ReportsCharts() {
     const lastYearData = Array(12).fill(0);
 
     transactions.forEach(transaction => {
-      const date = new Date(transaction.date);
+      const date = toLocalDate(transaction.date);
       const year = date.getFullYear();
       const month = date.getMonth();
       const amount = parseFloat(transaction.amount);
@@ -172,12 +173,12 @@ export default function ReportsCharts() {
     const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
     const currentMonthTransactions = transactions.filter(t => {
-      const date = new Date(t.date);
+      const date = toLocalDate(t.date);
       return date.getMonth() === currentMonth && date.getFullYear() === currentYear && t.type === 'despesa';
     });
 
     const lastMonthTransactions = transactions.filter(t => {
-      const date = new Date(t.date);
+      const date = toLocalDate(t.date);
       return date.getMonth() === lastMonth && date.getFullYear() === lastMonthYear && t.type === 'despesa';
     });
 

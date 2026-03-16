@@ -113,6 +113,17 @@ export const transactions = pgTable("transactions", {
   parcelaAtual: integer("parcela_atual"), // Parcela atual (ex: 1 de 12)
   parcelamentoId: text("parcelamento_id"), // UUID para agrupar parcelas
   recorrenciaId: text("recorrencia_id"), // UUID para agrupar recorrências
+  // Campos de juros/encargos (parcelamento)
+  aplicarJuros: boolean("aplicar_juros").default(false),
+  tipoJuros: text("tipo_juros"), // 'percentual' | 'valor'
+  valorJuros: decimal("valor_juros", { precision: 10, scale: 4 }), // Taxa de juros (% a.m. ou valor fixo)
+  aplicarJurosEm: text("aplicar_juros_em"), // 'total' | 'parcela' | 'atraso'
+  // Campos de encargos (recorrência)
+  aplicarEncargos: boolean("aplicar_encargos").default(false),
+  jurosMes: decimal("juros_mes", { precision: 10, scale: 4 }), // Juros ao mês (%)
+  moraDia: decimal("mora_dia", { precision: 10, scale: 4 }), // Mora por dia (%)
+  tipoEncargo: text("tipo_encargo"), // 'percentual' | 'valor'
+  aplicarMultaEm: text("aplicar_multa_em"), // 'atrasados' | 'todos' | 'ambos'
   createdAt: timestamp("created_at").defaultNow().notNull(), // Data de criação
 });
 
@@ -229,6 +240,9 @@ export const insertTransactionSchema = createInsertSchema(transactions, {
   amount: z.coerce.string(),
   date: z.coerce.date(),
   dataTermino: z.coerce.date().optional().nullable(),
+  valorJuros: z.coerce.string().optional().nullable(),
+  jurosMes: z.coerce.string().optional().nullable(),
+  moraDia: z.coerce.string().optional().nullable(),
 }).omit({
   id: true, // Auto-incrementado pelo banco
   createdAt: true, // Definido automaticamente

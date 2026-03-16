@@ -7,6 +7,7 @@ import { FloatingInput, FloatingSelect } from "@/components/ui/floating-input";
 import { useTransactions, useDeleteTransaction } from "@/hooks/use-transactions";
 import { useQuery } from "@tanstack/react-query";
 import { Transaction, Category } from "@/types";
+import { toLocalDate } from "@/lib/utils";
 import TransactionForm from "./transaction-form";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -210,7 +211,7 @@ export default function TransactionList() {
                         </Badge>
                       </td>
                       <td className="py-4 px-6 text-muted-foreground">
-                        {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                        {toLocalDate(transaction.date).toLocaleDateString('pt-BR')}
                       </td>
                       <td className="py-4 px-6">
                         <span className={`font-semibold ${

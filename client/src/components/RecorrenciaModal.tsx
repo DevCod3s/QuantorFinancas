@@ -51,13 +51,15 @@ export function RecorrenciaModal({
   onSave,
   initialConfig,
 }: RecorrenciaModalProps) {
+  const toDisplay = (val: string | undefined) => val ? val.replace('.', ',') : '';
+
   const [periodicidade, setPeriodicidade] = useState(initialConfig?.periodicidade || 'Mensal');
   const [intervalo, setIntervalo] = useState(initialConfig?.intervalo || '1');
   const [hasEndDate, setHasEndDate] = useState(initialConfig?.hasEndDate || false);
   const [dataTermino, setDataTermino] = useState(initialConfig?.dataTermino || '');
   const [aplicarEncargos, setAplicarEncargos] = useState(initialConfig?.aplicarEncargos || false);
-  const [jurosMes, setJurosMes] = useState(initialConfig?.jurosMes || '');
-  const [moraDia, setMoraDia] = useState(initialConfig?.moraDia || '');
+  const [jurosMes, setJurosMes] = useState(toDisplay(initialConfig?.jurosMes));
+  const [moraDia, setMoraDia] = useState(toDisplay(initialConfig?.moraDia));
   const [tipoEncargo, setTipoEncargo] = useState<'percentual' | 'valor'>(initialConfig?.tipoEncargo || 'percentual');
   const [aplicarMultaEm, setAplicarMultaEm] = useState<'atrasados' | 'todos' | 'ambos'>(initialConfig?.aplicarMultaEm || 'atrasados');
 
@@ -68,8 +70,8 @@ export function RecorrenciaModal({
       setHasEndDate(initialConfig.hasEndDate || false);
       setDataTermino(initialConfig.dataTermino || '');
       setAplicarEncargos(initialConfig.aplicarEncargos || false);
-      setJurosMes(initialConfig.jurosMes || '');
-      setMoraDia(initialConfig.moraDia || '');
+      setJurosMes(toDisplay(initialConfig.jurosMes));
+      setMoraDia(toDisplay(initialConfig.moraDia));
       setTipoEncargo(initialConfig.tipoEncargo || 'percentual');
       setAplicarMultaEm(initialConfig.aplicarMultaEm || 'atrasados');
     }
@@ -82,8 +84,8 @@ export function RecorrenciaModal({
       hasEndDate,
       dataTermino,
       aplicarEncargos,
-      jurosMes,
-      moraDia,
+      jurosMes: jurosMes.replace(',', '.'),
+      moraDia: moraDia.replace(',', '.'),
       tipoEncargo,
       aplicarMultaEm,
     });
@@ -91,6 +93,25 @@ export function RecorrenciaModal({
   };
 
   const labelEncargo = tipoEncargo === 'percentual' ? '%' : 'R$';
+
+  // Formatação PT-BR para campos de taxa (vírgula, 3 casas decimais)
+  const formatTaxa = (value: string): string => {
+    // Remove tudo exceto dígitos e vírgula
+    let clean = value.replace(/[^0-9,]/g, '');
+    // Permite apenas uma vírgula
+    const parts = clean.split(',');
+    if (parts.length > 2) clean = parts[0] + ',' + parts.slice(1).join('');
+    // Limita a 3 casas decimais
+    if (parts.length === 2 && parts[1].length > 3) clean = parts[0] + ',' + parts[1].substring(0, 3);
+    return clean;
+  };
+
+  const formatOnBlur = (value: string): string => {
+    if (!value) return '';
+    const num = parseFloat(value.replace(',', '.'));
+    if (isNaN(num)) return '';
+    return num.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
+  };
 
   return (
     <Dialog
@@ -211,30 +232,34 @@ export function RecorrenciaModal({
               <TextField
                 variant="standard"
                 label={`Juros ao mês (${labelEncargo})`}
-                type="number"
+                type="text"
                 value={jurosMes}
-                onChange={(e) => setJurosMes(e.target.value)}
+                onChange={(e) => setJurosMes(formatTaxa(e.target.value))}
+                onBlur={() => setJurosMes(formatOnBlur(jurosMes))}
                 fullWidth
                 sx={{
                   '& .MuiInputLabel-root': { color: '#1D3557', fontSize: '13px' },
                   '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
                   '& .MuiInput-input': { fontSize: '14px' }
                 }}
-                inputProps={{ min: 0, step: '0.01' }}
+                placeholder="0,000"
+                inputProps={{ inputMode: 'decimal' }}
               />
               <TextField
                 variant="standard"
                 label={`Mora ao dia (${labelEncargo})`}
-                type="number"
+                type="text"
                 value={moraDia}
-                onChange={(e) => setMoraDia(e.target.value)}
+                onChange={(e) => setMoraDia(formatTaxa(e.target.value))}
+                onBlur={() => setMoraDia(formatOnBlur(moraDia))}
                 fullWidth
                 sx={{
                   '& .MuiInputLabel-root': { color: '#1D3557', fontSize: '13px' },
                   '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
                   '& .MuiInput-input': { fontSize: '14px' }
                 }}
-                inputProps={{ min: 0, step: '0.01' }}
+                placeholder="0,000"
+                inputProps={{ inputMode: 'decimal' }}
               />
             </Box>
 

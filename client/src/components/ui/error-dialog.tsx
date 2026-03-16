@@ -65,7 +65,7 @@ export function ErrorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md p-0 gap-0 rounded-xl border-0 shadow-2xl">
+      <DialogContent className="max-w-md p-0 gap-0 rounded-xl border-0 shadow-2xl z-[9999]" style={{ zIndex: 9999 }}>
         {/* Elementos de acessibilidade (invisíveis) */}
         <DialogTitle className="sr-only">{title}</DialogTitle>
         <DialogDescription className="sr-only">{message}</DialogDescription>
@@ -166,6 +166,12 @@ export function useErrorDialog() {
 
   return {
     showError,
+    errorDialogProps: {
+      open: dialogState.open,
+      onClose: closeDialog,
+      title: dialogState.title,
+      message: dialogState.message
+    },
     ErrorDialog: ErrorDialogComponent
   };
 }

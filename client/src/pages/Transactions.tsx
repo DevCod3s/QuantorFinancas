@@ -65,12 +65,14 @@ import {
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { useSuccessDialog } from "@/components/ui/success-dialog";
-import { useErrorDialog } from "@/components/ui/error-dialog";
+import { SuccessDialog, useSuccessDialog } from "@/components/ui/success-dialog";
+import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
+import { TransactionViewModal } from "@/components/TransactionViewModal";
 import { DateInput } from "@/components/DateInput";
-import { localDateStr, toLocalDateStr } from "@/lib/utils";
+import { localDateStr, toLocalDateStr, toLocalDate } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -183,9 +185,10 @@ const BRAZILIAN_BANKS = [
 
 export function Transactions() {
   const queryClient = useQueryClient();
-  const { showSuccess, SuccessDialog } = useSuccessDialog();
-  const { showError, ErrorDialog } = useErrorDialog();
+  const { showSuccess, successDialogProps } = useSuccessDialog();
+  const { showError, errorDialogProps } = useErrorDialog();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
+  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
@@ -245,9 +248,9 @@ export function Transactions() {
         body: JSON.stringify(bankAccountData),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
       showSuccess('Conta bancária criada com sucesso!', "");
       setBankAccountModalOpen(false);
       resetBankAccountData();
@@ -266,9 +269,9 @@ export function Transactions() {
         body: JSON.stringify(data),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
       showSuccess('Conta bancária atualizada com sucesso!', "");
       setBankAccountModalOpen(false);
       setEditingBankAccount(null);
@@ -286,9 +289,9 @@ export function Transactions() {
         method: 'DELETE',
       }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
     onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
        showSuccess('Conta bancária excluída com sucesso!', "");
     },
     onError: (error: any) => {
@@ -423,6 +426,7 @@ export function Transactions() {
   // Estado para modal de transação
   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [viewingTransaction, setViewingTransaction] = useState<any>(null);
   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
@@ -482,7 +486,7 @@ export function Transactions() {
 
   // Filtrar transações por mês, busca e tipo
   const filteredTransactions = transactions.filter(t => {
-    const tDate = new Date(t.date);
+    const tDate = toLocalDate(t.date);
     const { start, end } = getFilterDateRange();
     const matchesPeriod = tDate >= start && tDate <= end;
 
@@ -511,7 +515,7 @@ export function Transactions() {
         chartEnd.setHours(23, 59, 59, 999);
 
         const dailyTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           return d >= chartStart && d <= chartEnd;
         });
 
@@ -521,7 +525,7 @@ export function Transactions() {
           buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
         }
         dailyTransactions.forEach(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           const diffDays = Math.floor((d.getTime() - chartStart.getTime()) / 86400000);
           if (diffDays >= 0 && diffDays < 7) {
             const val = Math.abs(parseFloat(t.amount) || 0);
@@ -533,7 +537,7 @@ export function Transactions() {
       }
       case 'Semanal': {
         const weekTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           return d >= start && d <= end;
         });
         for (let i = 0; i < 7; i++) {
@@ -542,7 +546,7 @@ export function Transactions() {
           buckets.push({ label: `${dayNames[d.getDay()]} ${format(d, 'dd')}`, income: 0, expense: 0 });
         }
         weekTransactions.forEach(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
           if (diffDays >= 0 && diffDays < 7) {
             const val = Math.abs(parseFloat(t.amount) || 0);
@@ -554,7 +558,7 @@ export function Transactions() {
       }
       case 'Mensal': {
         const monthTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           return d >= start && d <= end;
         });
         const daysInMonth = end.getDate();
@@ -562,7 +566,7 @@ export function Transactions() {
           buckets.push({ label: String(i), income: 0, expense: 0 });
         }
         monthTransactions.forEach(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           const day = d.getDate();
           if (day >= 1 && day <= daysInMonth) {
             const val = Math.abs(parseFloat(t.amount) || 0);
@@ -574,14 +578,14 @@ export function Transactions() {
       }
       case 'Anual': {
         const yearTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           return d >= start && d <= end;
         });
         for (let i = 0; i < 12; i++) {
           buckets.push({ label: monthShort[i], income: 0, expense: 0 });
         }
         yearTransactions.forEach(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           const m = d.getMonth();
           const val = Math.abs(parseFloat(t.amount) || 0);
           if (t.type === 'income') buckets[m].income += val;
@@ -591,7 +595,7 @@ export function Transactions() {
       }
       case 'Período': {
         const periodTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
+          const d = toLocalDate(t.date);
           return d >= start && d <= end;
         });
         const diffTime = end.getTime() - start.getTime();
@@ -604,7 +608,7 @@ export function Transactions() {
             buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
           }
           periodTransactions.forEach(t => {
-            const d = new Date(t.date);
+            const d = toLocalDate(t.date);
             const idx = Math.floor((d.getTime() - start.getTime()) / 86400000);
             if (idx >= 0 && idx < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
@@ -620,7 +624,7 @@ export function Transactions() {
             weekStart.setDate(weekStart.getDate() + 7);
           }
           periodTransactions.forEach(t => {
-            const d = new Date(t.date);
+            const d = toLocalDate(t.date);
             const daysSinceStart = Math.floor((d.getTime() - start.getTime()) / 86400000);
             const bIdx = Math.floor(daysSinceStart / 7);
             if (bIdx >= 0 && bIdx < buckets.length) {
@@ -636,7 +640,7 @@ export function Transactions() {
             current.setMonth(current.getMonth() + 1);
           }
           periodTransactions.forEach(t => {
-            const d = new Date(t.date);
+            const d = toLocalDate(t.date);
             const monthDiff = (d.getFullYear() - start.getFullYear()) * 12 + d.getMonth() - start.getMonth();
             if (monthDiff >= 0 && monthDiff < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
@@ -671,10 +675,10 @@ export function Transactions() {
       id: t.id,
       company: t.relationship?.socialName || 'Diversos',
       cnpj: t.relationship?.document || '-',
-      dueDate: format(new Date(t.date), 'dd/MM/yyyy'),
+      dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
       product: t.description,
       type: t.repeticao,
-      status: new Date(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
       value: parseFloat(t.amount)
     }));
 
@@ -685,10 +689,10 @@ export function Transactions() {
       id: t.id,
       company: t.relationship?.socialName || 'Diversos',
       cnpj: t.relationship?.document || '-',
-      dueDate: format(new Date(t.date), 'dd/MM/yyyy'),
+      dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
       product: t.description,
       type: t.repeticao,
-      status: new Date(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
       value: parseFloat(t.amount)
     }));
 
@@ -700,13 +704,13 @@ export function Transactions() {
   // AGREGAÇÕES DINÂMICAS PARA CARDS E GRÁFICOS
   // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras)
   const dailySummary = filteredTransactions.reduce((acc: any[], t) => {
-    const dateStr = format(new Date(t.date), 'dd/MM/yyyy');
+    const dateStr = format(toLocalDate(t.date), 'dd/MM/yyyy');
     let day = acc.find(d => d.date === dateStr);
 
     if (!day) {
       day = {
         date: dateStr,
-        dateLabel: format(new Date(t.date), 'dd/MM'),
+        dateLabel: format(toLocalDate(t.date), 'dd/MM'),
         entrada: 0,
         saida: 0,
         resultado: 0,
@@ -732,8 +736,9 @@ export function Transactions() {
     return parseDate(a.date) - parseDate(b.date);
   });
 
-  // Cálculo de Saldo Acumulado (Simulado no período)
-  let runningBalance = 0;
+  // Cálculo de Saldo Acumulado (começa pelo saldo real total das contas bancárias)
+  const initialBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
+  let runningBalance = initialBankBalance;
   dailySummary.forEach(day => {
     runningBalance += day.resultado;
     day.saldo = runningBalance;
@@ -878,7 +883,13 @@ export function Transactions() {
         flowByAccount[accId] = { name: account.name, flow: 0 };
       }
       const amount = parseFloat(t.amount || '0');
-      flowByAccount[accId].flow += amount;
+      // Sem filtro (Visão Geral): despesas subtraem do fluxo
+      // Com filtro: sempre soma (o sinal é tratado no template)
+      if (!typeFilter && t.type === 'expense') {
+        flowByAccount[accId].flow -= amount;
+      } else {
+        flowByAccount[accId].flow += amount;
+      }
     });
     return Object.entries(flowByAccount).map(([id, data]) => ({
       id: Number(id),
@@ -911,8 +922,9 @@ export function Transactions() {
         body: JSON.stringify({ status: 'pago' }),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
       showSuccess('Lançamento liquidado com sucesso!', "");
     },
     onError: (error: any) => {
@@ -938,12 +950,12 @@ export function Transactions() {
         body: JSON.stringify(data),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
-      showSuccess('Transação atualizada com sucesso!', "");
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
       setTransactionModalOpen(false);
       setEditingTransaction(null);
+      showSuccess('Transação atualizada com sucesso!', 'Os dados foram salvos no sistema.');
     },
     onError: (error: any) => {
       showError('Erro ao atualizar transação', error.message || 'Verifique os dados e tente novamente.');
@@ -958,9 +970,9 @@ export function Transactions() {
         credentials: 'include',
       }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
       showSuccess('Transação excluída com sucesso!', "");
     },
     onError: (error: any) => {
@@ -978,11 +990,11 @@ export function Transactions() {
         body: JSON.stringify(transactionData),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
-      showSuccess('Transação salva com sucesso!', "");
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
       setTransactionModalOpen(false);
+      showSuccess('Transação salva com sucesso!', 'O lançamento foi registrado no sistema.');
     },
     onError: (error: any) => {
       showError('Erro ao salvar transação', error.message || 'Verifique os dados e tente novamente.');
@@ -1023,7 +1035,14 @@ export function Transactions() {
         tipoJuros: transactionData.tipoJuros || null,
         valorJuros: transactionData.valorJuros ? parseFloat(transactionData.valorJuros) : null,
         aplicarJurosEm: transactionData.aplicarJurosEm || null,
+        aplicarEncargos: transactionData.aplicarEncargos || false,
+        jurosMes: transactionData.jurosMes ? parseFloat(transactionData.jurosMes) : null,
+        moraDia: transactionData.moraDia ? parseFloat(transactionData.moraDia) : null,
+        tipoEncargo: transactionData.tipoEncargo || null,
+        aplicarMultaEm: transactionData.aplicarMultaEm || null,
         periodicidade: transactionData.periodicidade || null,
+        intervalo: transactionData.intervalo ? parseInt(transactionData.intervalo) : null,
+        dataTermino: transactionData.dataTermino || null,
 
         // Outros campos
         observacoes: transactionData.observacoes || null,
@@ -1038,8 +1057,9 @@ export function Transactions() {
       } else {
         await createTransactionMutation.mutateAsync(transactionPayload);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar transação:', error);
+      showError('Erro ao salvar transação', error?.message || 'Ocorreu um erro inesperado. Verifique os dados e tente novamente.');
     }
   };
 
@@ -1756,7 +1776,12 @@ export function Transactions() {
                         <div className="flex items-center justify-between">
                           <div>
                             <CardTitle className="text-lg font-semibold">Demonstrativo Diário</CardTitle>
-                            <CardDescription className="text-sm text-gray-500">Saldo em 31 jul</CardDescription>
+                            <CardDescription className="text-sm text-gray-500">
+                              Saldo em {format(getFilterDateRange().end, "dd 'de' MMM", { locale: ptBR })}:{' '}
+                              <span className={`font-semibold ${totalSaldoDemonstrativo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
+                              </span>
+                            </CardDescription>
                           </div>
                           <div className="flex items-center gap-3">
                             {/* Navegação de período */}
@@ -1858,75 +1883,68 @@ export function Transactions() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-4">
+                        <div className="space-y-0">
                           {/* Header das colunas */}
-                          <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-600 border-b pb-2">
-                            <div></div>
-                            <div className="text-center">Entradas (R$)</div>
-                            <div className="text-center">Saídas (R$)</div>
-                            <div className="text-center">Resultado (R$)</div>
-                            <div className="text-center">Saldo (R$)</div>
-                            <div></div>
+                          <div className="grid grid-cols-5 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider border-b pb-2 mb-1">
+                            <div>Data</div>
+                            <div className="text-right">Entradas (R$)</div>
+                            <div className="text-right">Saídas (R$)</div>
+                            <div className="text-right">Resultado (R$)</div>
+                            <div className="text-right">Saldo (R$)</div>
                           </div>
 
-                          {/* Contas resumo */}
-                          <div className="space-y-2">
-                            <div className="grid grid-cols-6 gap-4 text-sm items-center border-t pt-2 font-semibold">
-                              <div>Total</div>
-                              <div className="text-center text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
-                              <div className="text-center text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
-                              <div className={`text-center ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
-                              </div>
-                              <div className={`text-right ${totalSaldoDemonstrativo >= 0 ? "text-gray-900" : "text-red-600"}`}>
-                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
-                              </div>
-                              <div></div>
+                          {/* Linha 1 - Saldo Inicial */}
+                          <div className="grid grid-cols-5 gap-4 text-sm py-2 bg-gray-50 rounded font-semibold border-b">
+                            <div className="text-gray-700 flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                              Saldo Inicial
+                            </div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div className={`text-right font-bold ${initialBankBalance >= 0 ? "text-gray-900" : "text-red-600"}`}>
+                              {formatCurrencyNumber(initialBankBalance)}
                             </div>
                           </div>
 
                           {/* Lançamentos por data */}
-                          <div className="space-y-1 mt-6">
+                          <div className="space-y-0">
                             {dailySummary.length > 0 ? dailySummary.map((item, index) => (
-                              <div key={index} className="grid grid-cols-6 gap-4 text-sm py-1 hover:bg-gray-100 rounded transition-colors group">
+                              <div key={index} className="grid grid-cols-5 gap-4 text-sm py-2 hover:bg-gray-50 rounded transition-colors group border-b border-gray-100 last:border-0">
                                 <div className="text-gray-700 flex items-center gap-2">
                                   <div className={`w-1.5 h-1.5 rounded-full ${item.resultado >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                   {item.date}
                                 </div>
-                                <div className="text-center text-green-600">{item.entrada > 0 ? formatCurrencyNumber(item.entrada) : ""}</div>
-                                <div className="text-center text-red-600">{item.saida > 0 ? formatCurrencyNumber(item.saida) : ""}</div>
-                                <div className={`text-center font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                <div className="text-right text-green-600">{item.entrada > 0 ? formatCurrencyNumber(item.entrada) : ""}</div>
+                                <div className="text-right text-red-600">{item.saida > 0 ? formatCurrencyNumber(item.saida) : ""}</div>
+                                <div className={`text-right font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
                                   {item.resultado >= 0 ? '+' : ''}{formatCurrencyNumber(item.resultado)}
                                 </div>
                                 <div className={`text-right font-medium ${item.saldo >= 0 ? "text-gray-900" : "text-red-600"}`}>
                                   {formatCurrencyNumber(item.saldo)}
                                 </div>
-                                <div className="flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button className="p-1 hover:text-[#B59363]">
-                                    <Eye className="h-3.5 w-3.5" />
-                                  </button>
-                                </div>
                               </div>
                             )) : (
-                              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
+                              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed mt-2">
                                 Nenhum lançamento para o período selecionado
                               </div>
                             )}
-
-                            {/* Total */}
-                            {dailySummary.length > 0 && (
-                              <div className="grid grid-cols-6 gap-4 text-sm py-2 border-t font-semibold bg-[#B59363]/5 rounded mt-4">
-                                <div className="pl-2">Total do Período</div>
-                                <div className="text-center text-green-600">{formatCurrencyNumber(dailySummary.reduce((s, i) => s + i.entrada, 0))}</div>
-                                <div className="text-center text-red-600">{formatCurrencyNumber(dailySummary.reduce((s, i) => s + i.saida, 0))}</div>
-                                <div className={`text-center ${resultMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                  {resultMonth >= 0 ? '+' : ''}{formatCurrencyNumber(resultMonth)}
-                                </div>
-                                <div className="text-right pr-2">Total Final</div>
-                                <div></div>
-                              </div>
-                            )}
                           </div>
+
+                          {/* Total do Período */}
+                          {dailySummary.length > 0 && (
+                            <div className="grid grid-cols-5 gap-4 text-sm py-3 border-t-2 border-[#B59363]/30 font-semibold bg-[#B59363]/5 rounded mt-2">
+                              <div className="pl-2">Total do Período</div>
+                              <div className="text-right text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
+                              <div className="text-right text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
+                              <div className={`text-right ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
+                              </div>
+                              <div className={`text-right pr-2 font-bold ${totalSaldoDemonstrativo >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -2317,14 +2335,24 @@ export function Transactions() {
                                   variant="neutral"
                                   title="Editar"
                                   className="!p-2"
-                                  onClick={() => console.log('Edit', item.id)}
+                                  onClick={() => {
+                                    const tx = transactions.find(t => t.id === item.id);
+                                    if (tx) {
+                                      setEditingTransaction(tx);
+                                      setActiveMovimentacoesSubTab('a-pagar');
+                                      setTransactionModalOpen(true);
+                                    }
+                                  }}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
                                   variant="teal"
                                   title="Visualizar"
                                   className="!p-2"
-                                  onClick={() => console.log('View', item.id)}
+                                  onClick={() => {
+                                    const tx = transactions.find(t => t.id === item.id);
+                                    if (tx) setViewingTransaction(tx);
+                                  }}
                                 />
                                 <IButtonPrime
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
@@ -2358,18 +2386,20 @@ export function Transactions() {
                         <CardContent className="space-y-3">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-700">À pagar</span>
-                            <span className="text-sm font-bold text-red-600">-2.805,23</span>
+                            <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
                           </div>
 
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-gray-700">À receber</span>
-                            <span className="text-sm font-bold text-green-600">4.430,00</span>
+                            <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
                           </div>
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Resultado</span>
-                              <span className="text-sm font-bold text-green-600">1.624,77</span>
+                              <span className={`text-sm font-bold ${resultMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {resultMonth >= 0 ? '+' : ''}{formatCurrencyNumber(resultMonth)}
+                              </span>
                             </div>
                           </div>
                         </CardContent>
@@ -2657,14 +2687,24 @@ export function Transactions() {
                                   variant="neutral"
                                   title="Editar"
                                   className="!p-2"
-                                  onClick={() => console.log('Edit', item.id)}
+                                  onClick={() => {
+                                    const tx = transactions.find(t => t.id === item.id);
+                                    if (tx) {
+                                      setEditingTransaction(tx);
+                                      setActiveMovimentacoesSubTab('a-receber');
+                                      setTransactionModalOpen(true);
+                                    }
+                                  }}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
                                   variant="teal"
                                   title="Visualizar"
                                   className="!p-2"
-                                  onClick={() => console.log('View', item.id)}
+                                  onClick={() => {
+                                    const tx = transactions.find(t => t.id === item.id);
+                                    if (tx) setViewingTransaction(tx);
+                                  }}
                                 />
                                 <IButtonPrime
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
@@ -3133,6 +3173,14 @@ export function Transactions() {
               }
             ]
           ]}
+      />
+
+      {/* Modal de Visualização de Transação */}
+      <TransactionViewModal
+        open={!!viewingTransaction}
+        onClose={() => setViewingTransaction(null)}
+        transaction={viewingTransaction}
+        userName={(user as any)?.name}
       />
 
       {/* Dialogs são renderizados pelos hooks personalizados */}
@@ -4014,8 +4062,6 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
-
-      {/* Modal será renderizado no componente principal */}
 
       {/* Componentes de Diálogo */}
       <SuccessDialog />
