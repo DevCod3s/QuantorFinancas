@@ -20,6 +20,7 @@ Identificamos que a lista estava procurando o campo `account_type`, mas o banco 
 
 // Importações React
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
@@ -63,6 +64,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SuccessDialog, useSuccessDialog } from "@/components/ui/success-dialog";
@@ -209,6 +211,9 @@ export function Transactions() {
   // Estados para modo "Período"
   const [periodStartDate, setPeriodStartDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
   const [periodEndDate, setPeriodEndDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0));
+  const [periodModalOpen, setPeriodModalOpen] = useState(false);
+  const [tempPeriodStart, setTempPeriodStart] = useState('');
+  const [tempPeriodEnd, setTempPeriodEnd] = useState('');
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
@@ -1192,11 +1197,28 @@ export function Transactions() {
     }
   };
 
+  const openPeriodModal = () => {
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setTempPeriodStart(fmt(periodStartDate));
+    setTempPeriodEnd(fmt(periodEndDate));
+    setPeriodModalOpen(true);
+  };
+
   const handleFilterChange = (period: string) => {
     setFilterPeriod(period);
     if (period === 'Período') {
-      setIsCalendarOpen(true);
+      openPeriodModal();
     }
+  };
+
+  const handlePeriodConfirm = () => {
+    if (tempPeriodStart && tempPeriodEnd) {
+      const startParts = tempPeriodStart.split('-');
+      const endParts = tempPeriodEnd.split('-');
+      setPeriodStartDate(new Date(+startParts[0], +startParts[1] - 1, +startParts[2]));
+      setPeriodEndDate(new Date(+endParts[0], +endParts[1] - 1, +endParts[2]));
+    }
+    setPeriodModalOpen(false);
   };
 
   // Título de exibição do período na barra de navegação
@@ -1391,39 +1413,33 @@ export function Transactions() {
                               </div>
 
                               {/* Ícone do calendário */}
-                              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                <PopoverTrigger asChild>
-                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                    <Calendar className="h-4 w-4" />
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end">
-                                  {filterPeriod === 'Período' ? (
-                                    <CalendarComponent
-                                      mode="range"
-                                      selected={{ from: periodStartDate, to: periodEndDate }}
-                                      onSelect={(range: any) => {
-                                        if (range?.from) setPeriodStartDate(range.from);
-                                        if (range?.to) {
-                                          setPeriodEndDate(range.to);
-                                          setIsCalendarOpen(false);
-                                        }
-                                      }}
-                                      initialFocus
-                                    />
-                                  ) : (
+                              {filterPeriod === 'Período' ? (
+                                <button
+                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                  onClick={openPeriodModal}
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                </button>
+                              ) : (
+                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                  <PopoverTrigger asChild>
+                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                      <Calendar className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="end">
                                     <CalendarComponent
                                       mode="single"
                                       selected={selectedDate}
                                       onSelect={handleDateSelect}
                                       initialFocus
                                     />
-                                  )}
-                                </PopoverContent>
-                              </Popover>
+                                  </PopoverContent>
+                                </Popover>
+                              )}
 
                               {/* Ícone de engrenagem com dropdown */}
-                              <DropdownMenu>
+                              <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
                                   <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
                                     <Settings className="h-4 w-4" />
@@ -1808,39 +1824,33 @@ export function Transactions() {
                             </div>
 
                             {/* Ícone do calendário */}
-                            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                              <PopoverTrigger asChild>
-                                <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                  <Calendar className="h-4 w-4" />
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0" align="end">
-                                {filterPeriod === 'Período' ? (
-                                  <CalendarComponent
-                                    mode="range"
-                                    selected={{ from: periodStartDate, to: periodEndDate }}
-                                    onSelect={(range: any) => {
-                                      if (range?.from) setPeriodStartDate(range.from);
-                                      if (range?.to) {
-                                        setPeriodEndDate(range.to);
-                                        setIsCalendarOpen(false);
-                                      }
-                                    }}
-                                    initialFocus
-                                  />
-                                ) : (
+                            {filterPeriod === 'Período' ? (
+                              <button
+                                className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                onClick={openPeriodModal}
+                              >
+                                <Calendar className="h-4 w-4" />
+                              </button>
+                            ) : (
+                              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                <PopoverTrigger asChild>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Calendar className="h-4 w-4" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
                                   <CalendarComponent
                                     mode="single"
                                     selected={selectedDate}
                                     onSelect={handleDateSelect}
                                     initialFocus
                                   />
-                                )}
-                              </PopoverContent>
-                            </Popover>
+                                </PopoverContent>
+                              </Popover>
+                            )}
 
                             {/* Ícone de engrenagem com dropdown */}
-                            <DropdownMenu>
+                            <DropdownMenu modal={false}>
                               <DropdownMenuTrigger asChild>
                                 <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
                                   <Settings className="h-4 w-4" />
@@ -2145,56 +2155,62 @@ export function Transactions() {
                               <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
                               <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
                             </div>
-                            <div className="flex items-center gap-1">
-                              {filterPeriod !== 'Período' && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('prev')}>
-                                  <ChevronLeft className="h-3 w-3" />
-                                </Button>
-                              )}
+                            <div className="flex items-center gap-3">
+                              {/* Navegação de período */}
+                              <div className="flex items-center gap-1">
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('prev')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronLeft className="h-4 w-4" />
+                                  </button>
+                                )}
+                                <span className="text-sm font-medium min-w-[100px] text-center">
+                                  {displayTitle}
+                                </span>
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('next')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
 
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                                    {displayTitle}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end">
-                                  {filterPeriod === 'Período' ? (
-                                    <CalendarComponent
-                                      mode="range"
-                                      selected={{ from: periodStartDate, to: periodEndDate }}
-                                      onSelect={(range: any) => {
-                                        if (range?.from) setPeriodStartDate(range.from);
-                                        if (range?.to) setPeriodEndDate(range.to);
-                                      }}
-                                      locale={ptBR}
-                                      initialFocus
-                                    />
-                                  ) : (
+                              {/* Ícone do calendário */}
+                              {filterPeriod === 'Período' ? (
+                                <button
+                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                  onClick={openPeriodModal}
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                </button>
+                              ) : (
+                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                  <PopoverTrigger asChild>
+                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                      <Calendar className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="end">
                                     <CalendarComponent
                                       mode="single"
                                       selected={selectedDate}
-                                      onSelect={(date) => {
-                                        if (date) setSelectedDate(date);
-                                      }}
-                                      locale={ptBR}
+                                      onSelect={handleDateSelect}
                                       initialFocus
                                     />
-                                  )}
-                                </PopoverContent>
-                              </Popover>
-
-                              {filterPeriod !== 'Período' && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('next')}>
-                                  <ChevronRight className="h-3 w-3" />
-                                </Button>
+                                  </PopoverContent>
+                                </Popover>
                               )}
 
-                              <DropdownMenu>
+                              {/* Ícone de engrenagem com dropdown */}
+                              <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                    <Settings className="h-3 w-3" />
-                                  </Button>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Settings className="h-4 w-4" />
+                                  </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
                                   <DropdownMenuItem onClick={() => handleFilterChange('Diário')} className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Diário</DropdownMenuItem>
@@ -2495,56 +2511,62 @@ export function Transactions() {
                               <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
                               <CardDescription>Receitas e entradas programadas</CardDescription>
                             </div>
-                            <div className="flex items-center gap-1">
-                              {filterPeriod !== 'Período' && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('prev')}>
-                                  <ChevronLeft className="h-3 w-3" />
-                                </Button>
-                              )}
+                            <div className="flex items-center gap-3">
+                              {/* Navegação de período */}
+                              <div className="flex items-center gap-1">
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('prev')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronLeft className="h-4 w-4" />
+                                  </button>
+                                )}
+                                <span className="text-sm font-medium min-w-[100px] text-center">
+                                  {displayTitle}
+                                </span>
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('next')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
 
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
-                                    {displayTitle}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end">
-                                  {filterPeriod === 'Período' ? (
-                                    <CalendarComponent
-                                      mode="range"
-                                      selected={{ from: periodStartDate, to: periodEndDate }}
-                                      onSelect={(range: any) => {
-                                        if (range?.from) setPeriodStartDate(range.from);
-                                        if (range?.to) setPeriodEndDate(range.to);
-                                      }}
-                                      locale={ptBR}
-                                      initialFocus
-                                    />
-                                  ) : (
+                              {/* Ícone do calendário */}
+                              {filterPeriod === 'Período' ? (
+                                <button
+                                  className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                                  onClick={openPeriodModal}
+                                >
+                                  <Calendar className="h-4 w-4" />
+                                </button>
+                              ) : (
+                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                  <PopoverTrigger asChild>
+                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                      <Calendar className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="end">
                                     <CalendarComponent
                                       mode="single"
                                       selected={selectedDate}
-                                      onSelect={(date) => {
-                                        if (date) setSelectedDate(date);
-                                      }}
-                                      locale={ptBR}
+                                      onSelect={handleDateSelect}
                                       initialFocus
                                     />
-                                  )}
-                                </PopoverContent>
-                              </Popover>
-
-                              {filterPeriod !== 'Período' && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => navigatePeriod('next')}>
-                                  <ChevronRight className="h-3 w-3" />
-                                </Button>
+                                  </PopoverContent>
+                                </Popover>
                               )}
 
-                              <DropdownMenu>
+                              {/* Ícone de engrenagem com dropdown */}
+                              <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                    <Settings className="h-3 w-3" />
-                                  </Button>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Settings className="h-4 w-4" />
+                                  </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
                                   <DropdownMenuItem onClick={() => handleFilterChange('Diário')} className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Diário</DropdownMenuItem>
@@ -4067,6 +4089,47 @@ function ChartOfAccountsContent({
       <SuccessDialog />
       <ErrorDialog />
       <ConfirmDialog />
+
+      {/* Modal de seleção de período - Portal para renderizar no body */}
+      {periodModalOpen && createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* Backdrop */}
+          <div
+            style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.6)' }}
+            onClick={() => setPeriodModalOpen(false)}
+          />
+          {/* Modal */}
+          <div style={{ position: 'relative', backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 25px 50px rgba(0,0,0,0.25)', width: '360px', padding: '24px' }}>
+            <h3 className="text-lg font-semibold text-[#1D3557] mb-4">Selecionar Período</h3>
+            <div className="space-y-4 mb-6">
+              <DateInput
+                label="Data Inicial"
+                value={tempPeriodStart}
+                onChange={setTempPeriodStart}
+                required
+              />
+              <DateInput
+                label="Data Final"
+                value={tempPeriodEnd}
+                onChange={setTempPeriodEnd}
+                required
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setPeriodModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                onClick={handlePeriodConfirm}
+                className="bg-[#1D3557] hover:bg-[#2A4A6B] text-white"
+              >
+                Aplicar
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

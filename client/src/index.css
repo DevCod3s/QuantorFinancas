@@ -148,6 +148,12 @@
   transform-origin: top center;
 }
 
+/* Dropdown menu - hover/focus styling */
+[data-radix-menu-content] [data-highlighted] {
+  background-color: rgba(181, 147, 99, 0.12) !important;
+  color: #1D3557 !important;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -157,6 +163,121 @@
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   }
+}
+
+/* Calendar - Dias normais: texto #1D3557, sem fundo */
+.rdp button.rdp-day {
+  color: #1D3557;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+/* Calendar - Hover em qualquer dia: texto #B59363 negrito, sem fundo */
+.rdp button.rdp-day:hover,
+.rdp .rdp-day:hover,
+button.rdp-day:hover {
+  color: #B59363 !important;
+  font-weight: 700 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+/* Calendar - Dia atual: texto #B59363 negrito-itálico, sem fundo, com sombra */
+.rdp-day_today,
+.rdp-day_today:hover {
+  background-color: transparent !important;
+  color: #B59363 !important;
+  font-weight: 700 !important;
+  font-style: italic !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: 0 3px 8px rgba(181, 147, 99, 0.4), 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 50% !important;
+}
+
+/* Calendar - Dia selecionado: texto #B59363 negrito-itálico, sem fundo */
+.rdp-day_selected,
+.rdp-day_selected:hover,
+.rdp-day_selected:focus {
+  background-color: transparent !important;
+  color: #B59363 !important;
+  font-weight: 700 !important;
+  font-style: italic !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Calendar - Domingos: fundo #1D3557 arredondado, texto #E6E7E8, elevação com sombra */
+.rdp-day_sunday:not(.rdp-day_today):not([aria-selected="true"]) {
+  background-color: #1D3557 !important;
+  color: #E6E7E8 !important;
+  border-radius: 50% !important;
+  border: none !important;
+  box-shadow: 0 3px 8px rgba(29, 53, 87, 0.45), 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+}
+.rdp-day_sunday:not(.rdp-day_today):not([aria-selected="true"]):hover {
+  background-color: #2A4A6B !important;
+  color: #E6E7E8 !important;
+  box-shadow: 0 5px 12px rgba(29, 53, 87, 0.55), 0 2px 4px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Calendar - Feriados e datas comemorativas: texto #E6E7E8, fundo #4D4E48 */
+.rdp-day_holiday:not(.rdp-day_today):not([aria-selected="true"]) {
+  background-color: #4D4E48 !important;
+  color: #E6E7E8 !important;
+  border-radius: 6px;
+}
+.rdp-day_holiday:not(.rdp-day_today):not([aria-selected="true"]):hover {
+  background-color: #5D5E58 !important;
+  color: #E6E7E8 !important;
+}
+
+/* Calendar - Tooltip para feriados e datas comemorativas */
+.rdp-tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rdp-tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1D3557;
+  color: #E6E7E8;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.3;
+  padding: 4px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  z-index: 9999;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.rdp-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: #1D3557;
+}
+
+.rdp-tooltip-wrapper:hover .rdp-tooltip {
+  display: block;
+}
+
+/* Domingos/feriados fora do mês atual: mais sutis */
+.day-outside.rdp-day_sunday:not([aria-selected="true"]),
+.day-outside.rdp-day_holiday:not([aria-selected="true"]) {
+  opacity: 0.4;
 }
 
 @layer components {
