@@ -363,33 +363,34 @@ export class DatabaseStorage implements IStorage {
   }): Promise<Transaction[]> {
     const transferId = crypto.randomUUID();
 
-    // Create expense from source
-    const expense = await this.createTransaction({
+    // Base transaction layout for required schema fields
+    const baseTx = {
       userId: data.userId,
-      bankAccountId: data.sourceAccountId,
       amount: data.amount,
       description: data.description,
-      type: "expense",
       date: data.date,
       liquidationDate: data.liquidationDate || null,
       transferId,
       status: "pago",
-    });
+      aplicarJuros: false,
+      periodicidade: "Única"
+    };
+
+    // Create expense from source
+    const [expense] = await db.insert(schema.transactions).values({
+      ...baseTx,
+      bankAccountId: data.sourceAccountId,
+      type: "transfer-out"
+    }).returning();
 
     // Create income to destination
-    const income = await this.createTransaction({
-      userId: data.userId,
+    const [income] = await db.insert(schema.transactions).values({
+      ...baseTx,
       bankAccountId: data.destinationAccountId,
-      amount: data.amount,
-      description: data.description,
-      type: "income",
-      date: data.date,
-      liquidationDate: data.liquidationDate || null,
-      transferId,
-      status: "pago",
-    });
+      type: "transfer-in"
+    }).returning();
 
-    return [expense, income];
+    return [expense as Transaction, income as Transaction];
   }
 
   async updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode: 'single' | 'future' | 'all' = 'single'): Promise<Transaction> {

@@ -23,9 +23,10 @@ import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
+import { motion, AnimatePresence } from "framer-motion";
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -474,6 +475,8 @@ export function Transactions() {
   const [showAccountFlow, setShowAccountFlow] = useState(false);
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
+  const [showPaidPayables, setShowPaidPayables] = useState(false);
+  const [showPaidReceivables, setShowPaidReceivables] = useState(false);
 
   // Calcula o range de datas para filtragem baseado no período selecionado
   const getFilterDateRange = (): { start: Date; end: Date } => {
@@ -559,12 +562,13 @@ export function Transactions() {
           buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
         }
         dailyTransactions.forEach(t => {
+          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
           const d = toLocalDate(t.date);
           const diffDays = Math.floor((d.getTime() - chartStart.getTime()) / 86400000);
           if (diffDays >= 0 && diffDays < 7) {
             const val = Math.abs(parseFloat(t.amount) || 0);
             if (t.type === 'income') buckets[diffDays].income += val;
-            else buckets[diffDays].expense += val;
+            else if (t.type === 'expense') buckets[diffDays].expense += val;
           }
         });
         break;
@@ -580,12 +584,13 @@ export function Transactions() {
           buckets.push({ label: `${dayNames[d.getDay()]} ${format(d, 'dd')}`, income: 0, expense: 0 });
         }
         weekTransactions.forEach(t => {
+          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
           const d = toLocalDate(t.date);
           const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
           if (diffDays >= 0 && diffDays < 7) {
             const val = Math.abs(parseFloat(t.amount) || 0);
             if (t.type === 'income') buckets[diffDays].income += val;
-            else buckets[diffDays].expense += val;
+            else if (t.type === 'expense') buckets[diffDays].expense += val;
           }
         });
         break;
@@ -600,12 +605,13 @@ export function Transactions() {
           buckets.push({ label: String(i), income: 0, expense: 0 });
         }
         monthTransactions.forEach(t => {
+          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
           const d = toLocalDate(t.date);
           const day = d.getDate();
           if (day >= 1 && day <= daysInMonth) {
             const val = Math.abs(parseFloat(t.amount) || 0);
             if (t.type === 'income') buckets[day - 1].income += val;
-            else buckets[day - 1].expense += val;
+            else if (t.type === 'expense') buckets[day - 1].expense += val;
           }
         });
         break;
@@ -619,11 +625,12 @@ export function Transactions() {
           buckets.push({ label: monthShort[i], income: 0, expense: 0 });
         }
         yearTransactions.forEach(t => {
+          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
           const d = toLocalDate(t.date);
           const m = d.getMonth();
           const val = Math.abs(parseFloat(t.amount) || 0);
           if (t.type === 'income') buckets[m].income += val;
-          else buckets[m].expense += val;
+          else if (t.type === 'expense') buckets[m].expense += val;
         });
         break;
       }
@@ -642,12 +649,13 @@ export function Transactions() {
             buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
           }
           periodTransactions.forEach(t => {
+            if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
             const d = toLocalDate(t.date);
             const idx = Math.floor((d.getTime() - start.getTime()) / 86400000);
             if (idx >= 0 && idx < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
               if (t.type === 'income') buckets[idx].income += val;
-              else buckets[idx].expense += val;
+              else if (t.type === 'expense') buckets[idx].expense += val;
             }
           });
         } else if (diffDays <= 180) {
@@ -658,13 +666,14 @@ export function Transactions() {
             weekStart.setDate(weekStart.getDate() + 7);
           }
           periodTransactions.forEach(t => {
+            if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
             const d = toLocalDate(t.date);
             const daysSinceStart = Math.floor((d.getTime() - start.getTime()) / 86400000);
             const bIdx = Math.floor(daysSinceStart / 7);
             if (bIdx >= 0 && bIdx < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
               if (t.type === 'income') buckets[bIdx].income += val;
-              else buckets[bIdx].expense += val;
+              else if (t.type === 'expense') buckets[bIdx].expense += val;
             }
           });
         } else {
@@ -674,12 +683,13 @@ export function Transactions() {
             current.setMonth(current.getMonth() + 1);
           }
           periodTransactions.forEach(t => {
+            if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
             const d = toLocalDate(t.date);
             const monthDiff = (d.getFullYear() - start.getFullYear()) * 12 + d.getMonth() - start.getMonth();
             if (monthDiff >= 0 && monthDiff < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
               if (t.type === 'income') buckets[monthDiff].income += val;
-              else buckets[monthDiff].expense += val;
+              else if (t.type === 'expense') buckets[monthDiff].expense += val;
             }
           });
         }
@@ -704,7 +714,7 @@ export function Transactions() {
 
   // Dados reais para À Pagar
   const payablesData = filteredTransactions
-    .filter(t => t.type === 'expense' && t.status !== 'pago')
+    .filter(t => t.type === 'expense' && (showPaidPayables ? t.status === 'pago' : t.status !== 'pago'))
     .map(t => ({
       id: t.id,
       company: t.relationship?.socialName || 'Diversos',
@@ -712,13 +722,13 @@ export function Transactions() {
       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
       product: t.description,
       type: t.repeticao,
-      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      status: t.status === 'pago' ? 'Pago' : (toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente'),
       value: parseFloat(t.amount)
     }));
 
   // Dados reais para À Receber
   const receivablesData = filteredTransactions
-    .filter(t => t.type === 'income' && t.status !== 'pago')
+    .filter(t => t.type === 'income' && (showPaidReceivables ? t.status === 'pago' : t.status !== 'pago'))
     .map(t => ({
       id: t.id,
       company: t.relationship?.socialName || 'Diversos',
@@ -726,7 +736,7 @@ export function Transactions() {
       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
       product: t.description,
       type: t.repeticao,
-      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      status: t.status === 'pago' ? 'Recebido' : (toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente'),
       value: parseFloat(t.amount)
     }));
 
@@ -767,9 +777,9 @@ export function Transactions() {
     }
 
     const amount = parseFloat(t.amount || '0');
-    if (t.type === 'income') {
+    if (t.type === 'income' || t.type === 'transfer-in') {
       day.entrada += amount;
-    } else {
+    } else if (t.type === 'expense' || t.type === 'transfer-out') {
       day.saida += amount;
     }
     day.resultado = day.entrada - day.saida;
@@ -794,9 +804,9 @@ export function Transactions() {
   
   transactionsAfterStart.forEach(t => {
       const amount = parseFloat(t.amount || '0');
-      if (t.type === 'income') {
+      if (t.type === 'income' || t.type === 'transfer-in') {
           initialBankBalance -= amount; // Desfazendo a entrada
-      } else {
+      } else if (t.type === 'expense' || t.type === 'transfer-out') {
           initialBankBalance += amount; // Desfazendo a saída
       }
   });
@@ -2192,12 +2202,12 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À pagar</span>
+                            <span className="text-xs text-gray-700">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
                             <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À receber</span>
+                            <span className="text-xs text-gray-700">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
                             <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
                           </div>
 
@@ -2298,10 +2308,35 @@ export function Transactions() {
                       <Card className="shadow-lg">
                         <CardHeader>
                           <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
-                              <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
-                            </div>
+                            <AnimatePresence mode="wait">
+                              <motion.div
+                                key={showPaidPayables ? 'pagas' : 'apagar'}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex items-center gap-3"
+                              >
+                                <div>
+                                  <CardTitle className="text-lg font-semibold flex items-center">
+                                    <span className="mr-4">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
+                                    <button 
+                                      onClick={() => {
+                                        setShowPaidPayables(!showPaidPayables);
+                                        setShowPaidReceivables(!showPaidPayables);
+                                      }}
+                                      className="flex items-center justify-center bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 rounded px-2.5 py-1.5 transition-all shadow-sm group"
+                                      title={showPaidPayables ? "Alternar para pendentes" : "Alternar para pagas"}
+                                    >
+                                      <Scale className={`h-4 w-4 transition-transform duration-500 ease-in-out ${showPaidPayables ? 'text-green-600 rotate-180' : 'text-slate-600 group-hover:text-slate-800'}`} />
+                                    </button>
+                                  </CardTitle>
+                                  <CardDescription>
+                                    {showPaidPayables ? 'Histórico de obrigações quitadas' : 'Suas obrigações financeiras pendentes'}
+                                  </CardDescription>
+                                </div>
+                              </motion.div>
+                            </AnimatePresence>
                             <div className="flex items-center gap-3">
                               {/* Navegação de período */}
                               <div className="flex items-center gap-1">
@@ -2485,7 +2520,7 @@ export function Transactions() {
                                 render: (item: any) => (
                                   <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                      item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
+                                      (item.status === 'Em dia' || item.status === 'Pago') ? 'bg-green-100 text-green-800' :
                                         'bg-gray-100 text-gray-800'
                                     }`}>
                                     {item.status}
@@ -2570,12 +2605,12 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À pagar</span>
+                            <span className="text-xs text-gray-700">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
                             <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À receber</span>
+                            <span className="text-xs text-gray-700">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
                             <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
                           </div>
 
@@ -2676,10 +2711,35 @@ export function Transactions() {
                       <Card className="shadow-lg">
                         <CardHeader>
                           <div className="flex items-center justify-between">
-                            <div>
-                              <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
-                              <CardDescription>Receitas e entradas programadas</CardDescription>
-                            </div>
+                            <AnimatePresence mode="wait">
+                              <motion.div
+                                key={showPaidReceivables ? 'recebidas' : 'areceber'}
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 20 }}
+                                transition={{ duration: 0.3 }}
+                                className="flex items-center gap-3"
+                              >
+                                <div>
+                                  <CardTitle className="text-lg font-semibold flex items-center">
+                                    <span className="mr-4">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
+                                    <button 
+                                      onClick={() => {
+                                        setShowPaidReceivables(!showPaidReceivables);
+                                        setShowPaidPayables(!showPaidReceivables);
+                                      }}
+                                      className="flex items-center justify-center bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 rounded px-2.5 py-1.5 transition-all shadow-sm group"
+                                      title={showPaidReceivables ? "Alternar para pendentes" : "Alternar para recebidos"}
+                                    >
+                                      <Scale className={`h-4 w-4 transition-transform duration-500 ease-in-out ${showPaidReceivables ? 'text-blue-600 rotate-180' : 'text-slate-600 group-hover:text-slate-800'}`} />
+                                    </button>
+                                  </CardTitle>
+                                  <CardDescription>
+                                    {showPaidReceivables ? 'Histórico de recebimentos quitados' : 'Receitas e entradas programadas'}
+                                  </CardDescription>
+                                </div>
+                              </motion.div>
+                            </AnimatePresence>
                             <div className="flex items-center gap-3">
                               {/* Navegação de período */}
                               <div className="flex items-center gap-1">
@@ -2863,9 +2923,9 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                      item.status === 'Automático' ? 'bg-green-100 text-green-800' :
+                                      (item.status === 'Confirmado' || item.status === 'Automático' || item.status === 'Recebido') ? 'bg-green-100 text-green-800' :
                                         'bg-gray-100 text-gray-800'
                                     }`}>
                                     {item.status}

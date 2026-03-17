@@ -34,9 +34,11 @@ declare global {
 import { storage } from "./storage";
 
 // Schemas de validação
-import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema, insertChartOfAccountsSchema, insertProductServiceSchema, insertProductUnitSchema } from "@shared/schema";
+import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, insertRelationshipSchema, insertChartOfAccountsSchema, insertProductServiceSchema, insertProductUnitSchema, transactions } from "@shared/schema";
 import * as schema from "@shared/schema";
 import { z } from "zod";
+import { db } from "./db";
+import { eq, and, or, ilike } from "drizzle-orm";
 
 /**
  * Parseia uma string de data para Date local (Brasília)
@@ -591,6 +593,48 @@ router.delete("/transactions/:id", requireAuth, async (req: any, res) => {
   } catch (error) {
     console.error("Erro ao excluir transação:", error);
     res.status(500).json({ error: "Falhou ao excluir transação" });
+  }
+});
+
+// ROUTE TEMPORARIA PARA MIGRAÇÃO DE TRANSFERÊNCIAS ANTIGAS
+router.get("/migrate-old-transfers", async (req: any, res) => {
+  try {
+    // Buscar despesas que contenham 'transfer' na descricao ou categoria
+    const antigasDespesas = await db.select().from(transactions).where(
+      and(
+        eq(transactions.type, "expense"),
+        or(
+          ilike(transactions.description, "%transfer%"),
+          ilike(transactions.description, "%transf%")
+        )
+      )
+    );
+    
+    let updatedExpenses = 0;
+    for (const t of antigasDespesas) {
+      await db.update(transactions).set({ type: "transfer-out" }).where(eq(transactions.id, t.id));
+      updatedExpenses++;
+    }
+
+    const antigasReceitas = await db.select().from(transactions).where(
+      and(
+        eq(transactions.type, "income"),
+        or(
+          ilike(transactions.description, "%transfer%"),
+          ilike(transactions.description, "%transf%")
+        )
+      )
+    );
+
+    let updatedIncomes = 0;
+    for (const t of antigasReceitas) {
+      await db.update(transactions).set({ type: "transfer-in" }).where(eq(transactions.id, t.id));
+      updatedIncomes++;
+    }
+
+    res.json({ success: true, message: `Migração concluída. Despesas atualizadas: ${updatedExpenses}. Receitas atualizadas: ${updatedIncomes}.` });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
 });
 
