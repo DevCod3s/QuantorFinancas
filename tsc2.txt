@@ -1,0 +1,57 @@
+
+> rest-express@1.0.0 check
+> tsc
+
+client/src/pages/Transactions.tsx(207,10): error TS2451: Cannot redeclare block-scoped variable 'activeMovimentacoesSubTab'.
+client/src/pages/Transactions.tsx(207,37): error TS2451: Cannot redeclare block-scoped variable 'setActiveMovimentacoesSubTab'.
+client/src/pages/Transactions.tsx(208,10): error TS2451: Cannot redeclare block-scoped variable 'transactionModalOpen'.
+client/src/pages/Transactions.tsx(208,32): error TS2451: Cannot redeclare block-scoped variable 'setTransactionModalOpen'.
+client/src/pages/Transactions.tsx(209,10): error TS2451: Cannot redeclare block-scoped variable 'editingTransaction'.
+client/src/pages/Transactions.tsx(209,30): error TS2451: Cannot redeclare block-scoped variable 'setEditingTransaction'.
+client/src/pages/Transactions.tsx(210,10): error TS2451: Cannot redeclare block-scoped variable 'viewingTransaction'.
+client/src/pages/Transactions.tsx(210,30): error TS2451: Cannot redeclare block-scoped variable 'setViewingTransaction'.
+client/src/pages/Transactions.tsx(211,10): error TS2451: Cannot redeclare block-scoped variable 'liquidateModalOpen'.
+client/src/pages/Transactions.tsx(211,30): error TS2451: Cannot redeclare block-scoped variable 'setLiquidateModalOpen'.
+client/src/pages/Transactions.tsx(212,10): error TS2451: Cannot redeclare block-scoped variable 'transactionToLiquidate'.
+client/src/pages/Transactions.tsx(212,34): error TS2451: Cannot redeclare block-scoped variable 'setTransactionToLiquidate'.
+client/src/pages/Transactions.tsx(438,10): error TS2451: Cannot redeclare block-scoped variable 'transactionModalOpen'.
+client/src/pages/Transactions.tsx(438,32): error TS2451: Cannot redeclare block-scoped variable 'setTransactionModalOpen'.
+client/src/pages/Transactions.tsx(439,10): error TS2451: Cannot redeclare block-scoped variable 'editingTransaction'.
+client/src/pages/Transactions.tsx(439,30): error TS2451: Cannot redeclare block-scoped variable 'setEditingTransaction'.
+client/src/pages/Transactions.tsx(440,10): error TS2451: Cannot redeclare block-scoped variable 'viewingTransaction'.
+client/src/pages/Transactions.tsx(440,30): error TS2451: Cannot redeclare block-scoped variable 'setViewingTransaction'.
+client/src/pages/Transactions.tsx(441,10): error TS2451: Cannot redeclare block-scoped variable 'liquidateModalOpen'.
+client/src/pages/Transactions.tsx(441,30): error TS2451: Cannot redeclare block-scoped variable 'setLiquidateModalOpen'.
+client/src/pages/Transactions.tsx(442,10): error TS2451: Cannot redeclare block-scoped variable 'transactionToLiquidate'.
+client/src/pages/Transactions.tsx(442,34): error TS2451: Cannot redeclare block-scoped variable 'setTransactionToLiquidate'.
+client/src/pages/Transactions.tsx(443,10): error TS2451: Cannot redeclare block-scoped variable 'activeMovimentacoesSubTab'.
+client/src/pages/Transactions.tsx(443,37): error TS2451: Cannot redeclare block-scoped variable 'setActiveMovimentacoesSubTab'.
+client/src/pages/Transactions.tsx(4219,15): error TS2552: Cannot find name 'transactionModalOpen'. Did you mean 'TransactionModal'?
+client/src/pages/Transactions.tsx(4221,11): error TS2552: Cannot find name 'setTransactionModalOpen'. Did you mean 'TransactionModal'?
+client/src/pages/Transactions.tsx(4222,11): error TS2304: Cannot find name 'setEditingTransaction'.
+client/src/pages/Transactions.tsx(4224,9): error TS2322: Type '{ open: any; onClose: () => void; transaction: any; type: string; }' is not assignable to type 'IntrinsicAttributes & TransactionModalProps'.
+  Property 'transaction' does not exist on type 'IntrinsicAttributes & TransactionModalProps'.
+client/src/pages/Transactions.tsx(4224,22): error TS2304: Cannot find name 'editingTransaction'.
+client/src/pages/Transactions.tsx(4225,15): error TS2304: Cannot find name 'activeMovimentacoesSubTab'.
+client/src/pages/Transactions.tsx(4229,17): error TS2552: Cannot find name 'viewingTransaction'. Did you mean 'ViewTransition'?
+client/src/pages/Transactions.tsx(4230,24): error TS2304: Cannot find name 'setViewingTransaction'.
+client/src/pages/Transactions.tsx(4231,22): error TS2552: Cannot find name 'viewingTransaction'. Did you mean 'ViewTransition'?
+client/src/pages/Transactions.tsx(4232,19): error TS2304: Cannot find name 'user'.
+client/src/pages/Transactions.tsx(4236,15): error TS2304: Cannot find name 'liquidateModalOpen'.
+client/src/pages/Transactions.tsx(4238,11): error TS2304: Cannot find name 'setLiquidateModalOpen'.
+client/src/pages/Transactions.tsx(4239,11): error TS2304: Cannot find name 'setTransactionToLiquidate'.
+client/src/pages/Transactions.tsx(4241,22): error TS2304: Cannot find name 'transactionToLiquidate'.
+client/src/pages/Transactions.tsx(4242,23): error TS2304: Cannot find name 'bankAccounts'.
+client/src/pages/Transactions.tsx(4243,20): error TS2304: Cannot find name 'confirmLiquidation'.
+client/src/types/ChartOfAccountsTree.ts(217,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(218,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(221,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(222,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(223,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(224,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(227,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(228,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(229,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(230,13): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(231,13): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(232,13): error TS2322: Type 'string' is not assignable to type 'number'.

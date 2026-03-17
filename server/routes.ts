@@ -345,6 +345,35 @@ router.delete("/categories/:id", requireAuth, async (req: any, res) => {
   }
 });
 
+// Payment Methods
+router.get("/payment-methods", requireAuth, async (req: any, res) => {
+  try {
+    const methods = await storage.getPaymentMethodsByUserId(req.user.id);
+    res.json(methods);
+  } catch (error) {
+    console.error("Erro ao buscar formas de pagamento:", error);
+    res.status(500).json({ error: "Falhou ao buscar formas de pagamento" });
+  }
+});
+
+router.post("/payment-methods", requireAuth, async (req: any, res) => {
+  try {
+    const validatedData = schema.insertPaymentMethodSchema.parse({
+      ...req.body,
+      userId: req.user.id,
+    });
+    const method = await storage.createPaymentMethod(validatedData);
+    res.status(201).json(method);
+  } catch (error) {
+    console.error("Erro ao criar forma de pagamento:", error);
+    if (error instanceof z.ZodError) {
+      res.status(400).json({ error: "Dados inválidos", details: error.errors });
+    } else {
+      res.status(500).json({ error: "Falhou ao criar forma de pagamento" });
+    }
+  }
+});
+
 // Transactions
 router.get("/transactions", requireAuth, async (req: any, res) => {
   try {

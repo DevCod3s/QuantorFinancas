@@ -24,6 +24,7 @@ import * as schema from "@shared/schema";
 import type {
   User,
   Category,
+  PaymentMethod,
   Transaction,
   Budget,
   AiInteraction,
@@ -32,6 +33,7 @@ import type {
   BankAccount,
   InsertUser,
   InsertCategory,
+  InsertPaymentMethod,
   InsertTransaction,
   InsertBudget,
   InsertAiInteraction,
@@ -67,6 +69,10 @@ export interface IStorage {
   createCategory(category: InsertCategory): Promise<Category>;
   updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
   deleteCategory(id: number): Promise<void>;
+
+  // Formas de Pagamento
+  getPaymentMethodsByUserId(userId: string): Promise<PaymentMethod[]>;
+  createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod>;
 
   // Transações
   getTransactionsByUserId(userId: string): Promise<any[]>;
@@ -226,6 +232,22 @@ export class DatabaseStorage implements IStorage {
     await db.delete(schema.categories).where(eq(schema.categories.id, id));
   }
 
+  async getPaymentMethodsByUserId(userId: string): Promise<PaymentMethod[]> {
+    return await db
+      .select()
+      .from(schema.paymentMethods)
+      .where(eq(schema.paymentMethods.userId, parseInt(userId)))
+      .orderBy(schema.paymentMethods.name);
+  }
+
+  async createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod> {
+    const [newMethod] = await db
+      .insert(schema.paymentMethods)
+      .values(method)
+      .returning();
+    return newMethod;
+  }
+
   async getTransactionsByUserId(userId: string): Promise<any[]> {
     return await db
       .select({
@@ -243,6 +265,7 @@ export class DatabaseStorage implements IStorage {
         categoryId: schema.transactions.categoryId,
         chartAccountId: schema.transactions.chartAccountId,
         bankAccountId: schema.transactions.bankAccountId,
+        paymentMethodId: schema.transactions.paymentMethodId,
         relationshipId: schema.transactions.relationshipId,
         productServiceId: schema.transactions.productServiceId,
         businessCategoryId: schema.transactions.businessCategoryId,

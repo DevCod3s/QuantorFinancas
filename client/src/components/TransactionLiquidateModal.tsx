@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
 import { Box, Typography } from "@mui/material";
 import { IButtonPrime } from "./ui/i-ButtonPrime";
-import { X, Calendar, DollarSign, FileText, CheckCheck, TrendingDown, TrendingUp, AlertTriangle } from "lucide-react";
+import { X, Calendar, DollarSign, FileText, CheckCheck, TrendingDown, TrendingUp, AlertTriangle, LogOut, Save, Plus } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toLocalDate } from "@/lib/utils";
 import { Transaction } from "@shared/schema";
-import CustomInput from "./CustomInput";
+import CustomInput, { CustomSelect } from "./CustomInput";
 import MenuItem from '@mui/material/MenuItem';
 
 interface TransactionLiquidateModalProps {
@@ -15,6 +15,8 @@ interface TransactionLiquidateModalProps {
   onClose: () => void;
   transaction: any;
   bankAccounts: any[];
+  paymentMethods?: any[];
+  onAddPaymentMethod?: (name: string) => void;
   onConfirm: (data: any) => void;
 }
 
@@ -23,21 +25,46 @@ export function TransactionLiquidateModal({
   onClose,
   transaction,
   bankAccounts,
+  paymentMethods,
+  onAddPaymentMethod,
   onConfirm
 }: TransactionLiquidateModalProps) {
   const [bankAccountId, setBankAccountId] = useState<string>("");
+  const [paymentMethodId, setPaymentMethodId] = useState<string>("");
+  const [isAddingPayment, setIsAddingPayment] = useState(false);
+  const [newPaymentName, setNewPaymentName] = useState("");
   const [discountType, setDiscountType] = useState<"valor" | "percentual">("valor");
   const [discountValue, setDiscountValue] = useState<string>("");
-  const [interestType, setInterestType] = useState<"valor" | "percentual">("valor");
-  const [interestValue, setInterestValue] = useState<string>("");
+  const [jurosType, setJurosType] = useState<"valor" | "percentual">("percentual");
+  const [jurosValue, setJurosValue] = useState<string>("");
+  const [moraType, setMoraType] = useState<"valor" | "percentual">("percentual");
+  const [moraValue, setMoraValue] = useState<string>("");
 
   useEffect(() => {
     if (open && transaction) {
       setBankAccountId(transaction.bankAccountId?.toString() || "");
+      setPaymentMethodId(transaction.paymentMethodId?.toString() || "");
       setDiscountType("valor");
       setDiscountValue("");
-      setInterestType("valor");
-      setInterestValue("");
+      
+      const isRecurrentOrInstallment = transaction.repeticao === 'Recorrente' || transaction.repeticao === 'Parcelado';
+      const hasPreConfig = transaction.aplicarEncargos === true || transaction.aplicarJuros === true;
+      
+      if (isRecurrentOrInstallment && hasPreConfig) {
+         const jMes = transaction.jurosMes ? parseFloat(transaction.jurosMes) : (transaction.valorJuros ? parseFloat(transaction.valorJuros) : 0);
+         const mDia = transaction.moraDia ? parseFloat(transaction.moraDia) : 0;
+         
+         setJurosType("percentual");
+         setJurosValue(jMes > 0 ? jMes.toString().replace('.', ',') : ""); 
+         
+         setMoraType("percentual");
+         setMoraValue(mDia > 0 ? mDia.toString().replace('.', ',') : "");
+      } else {
+         setJurosType("percentual");
+         setJurosValue("");
+         setMoraType("percentual");
+         setMoraValue("");
+      }
     }
   }, [open, transaction]);
 
@@ -56,20 +83,48 @@ export function TransactionLiquidateModal({
   const daysOverdue = isOverdue ? differenceInDays(today, compareDate) : 0;
   const isEarlyOrOnTime = !isOverdue;
 
-  // Calcula o valor numérico dos modificadores (desconto ou juros)
-  const calculateModifier = (type: "valor" | "percentual", valStr: string) => {
-    const valObj = valStr.replace(/\D/g, "");
-    if (!valObj) return 0;
-    const num = parseFloat(valObj) / 100;
-    
-    if (type === "percentual") {
-      return amount * (num / 100);
+  const parseNum = (valStr: string) => {
+    if (!valStr) return 0;
+    if (valStr.includes(',')) {
+       const cleaned = valStr.replace(/\./g, '').replace(',', '.');
+       return parseFloat(cleaned) || 0;
     }
-    return num;
+    return parseFloat(valStr) || 0;
   };
 
-  const discountAmount = isEarlyOrOnTime ? calculateModifier(discountType, discountValue) : 0;
-  const interestAmount = isOverdue ? calculateModifier(interestType, interestValue) : 0;
+  const calculateDiscount = () => {
+    const val = parseNum(discountValue);
+    if (!val) return 0;
+    if (discountType === "percentual") {
+      return amount * (val / 100);
+    }
+    return val;
+  };
+
+  const calculatePenalty = () => {
+    let total = 0;
+    const jVal = parseNum(jurosValue);
+    if (jVal > 0) {
+      if (jurosType === "percentual") {
+        const txDiaria = (jVal / 100) / 30; // Juros a.m.
+        total += amount * txDiaria * daysOverdue;
+      } else {
+        total += jVal;
+      }
+    }
+    const mVal = parseNum(moraValue);
+    if (mVal > 0) {
+      if (moraType === "percentual") {
+        total += amount * (mVal / 100) * daysOverdue; // Mora a.d.
+      } else {
+        total += mVal * daysOverdue;
+      }
+    }
+    return total;
+  };
+
+  const discountAmount = isEarlyOrOnTime ? calculateDiscount() : 0;
+  const interestAmount = isOverdue ? calculatePenalty() : 0;
 
   // Valor final atualizado
   const finalAmount = amount - discountAmount + interestAmount;
@@ -84,6 +139,7 @@ export function TransactionLiquidateModal({
 
     onConfirm({
       bankAccountId: parseInt(bankAccountId),
+      paymentMethodId: paymentMethodId ? parseInt(paymentMethodId) : undefined,
       finalAmount,
       discountAmount,
       interestAmount
@@ -93,6 +149,7 @@ export function TransactionLiquidateModal({
   const accentColor = isExpense ? '#dc2626' : '#16a34a';
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden bg-white gap-0 rounded-xl">
         {/* Header Customizado */}
@@ -108,9 +165,6 @@ export function TransactionLiquidateModal({
               Liquidar {isExpense ? 'Despesa' : 'Receita'}
             </Typography>
           </Box>
-          <button onClick={onClose} className="text-white hover:bg-white/20 p-1 rounded-full transition-colors">
-            <X className="h-4 w-4" />
-          </button>
         </Box>
 
         <div className="p-4 space-y-4">
@@ -164,24 +218,45 @@ export function TransactionLiquidateModal({
           {/* Linha de Entradas (Conta + Juros/Desconto) lado a lado para evitar scroll */}
           <div className="grid grid-cols-12 gap-3 items-start">
             
-            {/* Conta Bancária (Ocupa 5 colunas) */}
-            <div className="col-span-5">
-              <CustomInput
-                type="select"
+            {/* Esquerda (Conta e Forma Pag) - Ocupa 5 colunas */}
+            <div className="col-span-5 flex flex-col gap-3">
+              <CustomSelect
                 label="Conta Bancária Origem/Destino *"
                 value={bankAccountId}
                 onChange={(e: any) => setBankAccountId(e.target.value)}
                 required
-                size="small"
-                fullWidth
               >
-                <MenuItem value="" disabled>Selecione uma conta</MenuItem>
+                <option value="" disabled>Selecione uma conta</option>
                 {bankAccounts.map((account) => (
-                  <MenuItem key={account.id} value={account.id.toString()}>
+                  <option key={account.id} value={account.id.toString()}>
                     {account.name}
-                  </MenuItem>
+                  </option>
                 ))}
-              </CustomInput>
+              </CustomSelect>
+              
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <CustomSelect
+                    label="Forma de Pagamento"
+                    value={paymentMethodId}
+                    onChange={(e: any) => setPaymentMethodId(e.target.value)}
+                  >
+                    <option value="">Selecione...</option>
+                    {paymentMethods?.map((method) => (
+                      <option key={method.id} value={method.id.toString()}>
+                        {method.name}
+                      </option>
+                    ))}
+                  </CustomSelect>
+                </div>
+                <IButtonPrime
+                  variant="neutral"
+                  icon={<Plus className="h-5 w-5" />}
+                  title="Nova Forma"
+                  onClick={() => setIsAddingPayment(true)}
+                  className="px-2"
+                />
+              </div>
             </div>
 
             {/* Modificadores (Desconto ou Juros) - Ocupam 7 colunas */}
@@ -190,64 +265,71 @@ export function TransactionLiquidateModal({
                 // DESCONTO
                 <>
                   <div className="w-[40%]">
-                    <CustomInput
-                      type="select"
+                    <CustomSelect
                       label="Tipo Desconto"
                       value={discountType}
                       onChange={(e: any) => {
                          setDiscountType(e.target.value as "valor" | "percentual");
                          setDiscountValue("");
                       }}
-                      size="small"
-                      fullWidth
                     >
-                      <MenuItem value="valor">Valor (R$)</MenuItem>
-                      <MenuItem value="percentual">Percentual (%)</MenuItem>
-                    </CustomInput>
+                      <option value="valor">Valor (R$)</option>
+                      <option value="percentual">Percentual (%)</option>
+                    </CustomSelect>
                   </div>
                   <div className="w-[60%]">
                     <CustomInput
                       label="Desconto Concedido"
                       value={discountValue}
                       onChange={(e: any) => setDiscountValue(e.target.value)}
-                      size="small"
                       placeholder={discountType === "valor" ? "R$ 0,00" : "0,00 %"}
-                      numericType={discountType === "percentual" ? "percentage" : "currency"}
-                      fullWidth
                     />
                   </div>
                 </>
               ) : (
-                // JUROS / MULTA
-                <>
-                  <div className="w-[40%]">
-                    <CustomInput
-                      type="select"
-                      label="Tipo Encargo"
-                      value={interestType}
-                      onChange={(e: any) => {
-                        setInterestType(e.target.value as "valor" | "percentual");
-                        setInterestValue("");
-                      }}
-                      size="small"
-                      fullWidth
-                    >
-                      <MenuItem value="valor">Valor (R$)</MenuItem>
-                      <MenuItem value="percentual">Percentual (%)</MenuItem>
-                    </CustomInput>
+                // JUROS E MORA
+                <div className="flex flex-col w-full gap-3">
+                  <div className="flex w-full gap-2">
+                    <div className="w-[40%]">
+                      <CustomSelect
+                        label="Taxa de Juros"
+                        value={jurosType}
+                        onChange={(e: any) => setJurosType(e.target.value as "valor" | "percentual")}
+                      >
+                        <option value="percentual">Percentual (%)</option>
+                        <option value="valor">Valor (R$)</option>
+                      </CustomSelect>
+                    </div>
+                    <div className="w-[60%]">
+                      <CustomInput
+                        label={jurosType === 'percentual' ? "Juros a.m. (%)" : "Juros Total (R$)"}
+                        value={jurosValue}
+                        onChange={(e: any) => setJurosValue(e.target.value)}
+                        placeholder={jurosType === "valor" ? "R$ 0,00" : "0,00 %"}
+                      />
+                    </div>
                   </div>
-                  <div className="w-[60%]">
-                    <CustomInput
-                      label="Multa / Juros Cobrado"
-                      value={interestValue}
-                      onChange={(e: any) => setInterestValue(e.target.value)}
-                      size="small"
-                      placeholder={interestType === "valor" ? "R$ 0,00" : "0,00 %"}
-                      numericType={interestType === "percentual" ? "percentage" : "currency"}
-                      fullWidth
-                    />
+                  <div className="flex w-full gap-2">
+                    <div className="w-[40%]">
+                      <CustomSelect
+                        label="Taxa de Mora"
+                        value={moraType}
+                        onChange={(e: any) => setMoraType(e.target.value as "valor" | "percentual")}
+                      >
+                        <option value="percentual">Percentual (%)</option>
+                        <option value="valor">Valor (R$)</option>
+                      </CustomSelect>
+                    </div>
+                    <div className="w-[60%]">
+                      <CustomInput
+                        label={moraType === 'percentual' ? "Mora a.d. (%)" : "Mora / Dia (R$)"}
+                        value={moraValue}
+                        onChange={(e: any) => setMoraValue(e.target.value)}
+                        placeholder={moraType === "valor" ? "R$ 0,00" : "0,00 %"}
+                      />
+                    </div>
                   </div>
-                </>
+                </div>
               )}
             </div>
             
@@ -277,23 +359,52 @@ export function TransactionLiquidateModal({
 
         </div>
 
-        {/* Rodapé e Ações */}
         <Box sx={{ px: 2.5, py: 2, borderTop: '1px solid #e0e0e0', display: 'flex', justifyContent: 'flex-end', gap: 2, backgroundColor: '#f9fafb' }}>
           <IButtonPrime
-            icon={<X className="h-4 w-4" />}
-            variant="neutral"
-            title="Cancelar"
+            icon={<LogOut className="h-4 w-4" />}
+            variant="red"
+            title="Sair"
             onClick={onClose}
+            className="w-auto h-auto min-w-[100px]"
           />
           <IButtonPrime
-            icon={<CheckCheck className="h-4 w-4" />}
-            variant="primary"
-            title="Confirmar Liquidação"
+            icon={<Save className="h-4 w-4" />}
+            variant="gold"
+            title="Salvar"
             onClick={handleConfirm}
             disabled={!bankAccountId || finalAmount < 0}
+            className="w-auto h-auto min-w-[100px]"
           />
         </Box>
       </DialogContent>
     </Dialog>
+
+    {/* Modal para Adicionar Nova Forma de Pagamento */}
+    <Dialog open={isAddingPayment} onOpenChange={setIsAddingPayment}>
+      <DialogContent className="sm:max-w-[400px] p-0 overflow-hidden bg-white gap-0 rounded-xl">
+        <DialogHeader className="p-4 border-b border-gray-100 bg-gray-50/50">
+          <DialogTitle className="text-sm font-semibold text-[#1D3557]">Nova Forma de Pagamento</DialogTitle>
+        </DialogHeader>
+        <div className="p-4">
+          <CustomInput
+            label="Nome (Ex: Pix, Cartão)"
+            value={newPaymentName}
+            onChange={(e: any) => setNewPaymentName(e.target.value)}
+            autoFocus
+          />
+        </div>
+        <DialogFooter className="p-4 bg-gray-50/50 border-t border-gray-100 flex gap-2 sm:justify-end">
+          <IButtonPrime icon={<X className="h-4 w-4" />} variant="neutral" title="Cancelar" onClick={() => setIsAddingPayment(false)} className="w-auto min-w-[100px]" />
+          <IButtonPrime icon={<Save className="h-4 w-4" />} variant="primary" title="Salvar" onClick={() => {
+            if (newPaymentName.trim() && onAddPaymentMethod) {
+              onAddPaymentMethod(newPaymentName);
+              setNewPaymentName("");
+              setIsAddingPayment(false);
+            }
+          }} className="w-auto min-w-[100px]" />
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }

@@ -217,6 +217,14 @@ export function Transactions() {
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
+  
+  // Modal states perdidos na compilação do HEAD das 14:20hs
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
+  const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
+  const [viewingTransaction, setViewingTransaction] = useState<any>(null);
+  
   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
   const [bankAccountData, setBankAccountData] = useState({
     initialBalanceDate: localDateStr(),
@@ -241,6 +249,28 @@ export function Transactions() {
   const { data: bankAccounts = [], isLoading: isLoadingBankAccounts, refetch: refetchBankAccounts } = useQuery<any[]>({
     queryKey: ["/api/bank-accounts"],
     queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
+  });
+
+  const { data: paymentMethods = [] } = useQuery<any[]>({
+    queryKey: ["/api/payment-methods"],
+    queryFn: () => fetch('/api/payment-methods', { credentials: 'include' }).then(res => res.json()),
+  });
+
+  // Mutation para criar forma de pagamento
+  const createPaymentMethodMutation = useMutation({
+    mutationFn: (name: string) =>
+      fetch('/api/payment-methods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      }).then(res => res.json()),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/payment-methods'] });
+      showSuccess('Forma de pagamento adicionada com sucesso!', "");
+    },
+    onError: (error: any) => {
+      showError('Erro ao adicionar forma de pagamento', error.message || 'Tente novamente.');
+    }
   });
 
   // Mutation para criar conta bancária
@@ -427,12 +457,6 @@ export function Transactions() {
   const [receivablesCurrentPage, setReceivablesCurrentPage] = useState(1);
   const [receivablesItemsPerPage] = useState(10);
 
-  // Estado para modal de transação
-  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<any>(null);
-  const [viewingTransaction, setViewingTransaction] = useState<any>(null);
-  const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
-  const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
@@ -3041,6 +3065,20 @@ export function Transactions() {
         entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
       />
 
+      {/* Modal de Liquidação */}
+      <TransactionLiquidateModal
+        open={liquidateModalOpen}
+        onClose={() => {
+          setLiquidateModalOpen(false);
+          setTransactionToLiquidate(null);
+        }}
+        transaction={transactionToLiquidate}
+        bankAccounts={bankAccounts}
+        paymentMethods={paymentMethods}
+        onAddPaymentMethod={(name: string) => createPaymentMethodMutation.mutate(name)}
+        onConfirm={confirmLiquidation}
+      />
+
       < DynamicModal
         isOpen={bankAccountModalOpen}
         onClose={() => {
@@ -4199,35 +4237,6 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
-
-      {/* Transaction Modals */}
-      <TransactionModal
-        open={transactionModalOpen}
-        onClose={() => {
-          setTransactionModalOpen(false);
-          setEditingTransaction(null);
-        }}
-        transaction={editingTransaction}
-        type={activeMovimentacoesSubTab === 'a-receber' ? 'income' : 'expense'}
-      />
-
-      <TransactionViewModal
-        open={!!viewingTransaction}
-        onClose={() => setViewingTransaction(null)}
-        transaction={viewingTransaction}
-        userName={user?.name}
-      />
-
-      <TransactionLiquidateModal
-        open={liquidateModalOpen}
-        onClose={() => {
-          setLiquidateModalOpen(false);
-          setTransactionToLiquidate(null);
-        }}
-        transaction={transactionToLiquidate}
-        bankAccounts={bankAccounts}
-        onConfirm={confirmLiquidation}
-      />
 
       {/* Componentes de Diálogo */}
       <SuccessDialog />

@@ -213,21 +213,21 @@ export class ChartOfAccountsTree {
  * Dados de exemplo para demonstração
  */
 export const SAMPLE_CHART_OF_ACCOUNTS: ChartOfAccount[] = [
-  // Nível 1 - Categorias principais
-  { id: 1, userId: '1', parentId: null, code: '1', name: 'Receitas', type: 'receita', level: 1, isActive: true, category: 'Receitas', subcategory: null, description: 'Todas as receitas da empresa', createdAt: new Date() },
-  { id: 2, userId: '1', parentId: null, code: '2', name: 'Despesas', type: 'despesa', level: 1, isActive: true, category: 'Despesas', subcategory: null, description: 'Todas as despesas da empresa', createdAt: new Date() },
-  
-  // Nível 2 - Subcategorias
-  { id: 3, userId: '1', parentId: 1, code: '1.1', name: 'Receitas Operacionais', type: 'receita', level: 2, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receitas da atividade principal', createdAt: new Date() },
-  { id: 4, userId: '1', parentId: 1, code: '1.2', name: 'Receitas Não Operacionais', type: 'receita', level: 2, isActive: true, category: 'Receitas', subcategory: 'Receitas Não Operacionais', description: 'Receitas de outras atividades', createdAt: new Date() },
-  { id: 5, userId: '1', parentId: 2, code: '2.1', name: 'Despesas Administrativas', type: 'despesa', level: 2, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Gastos administrativos', createdAt: new Date() },
-  { id: 6, userId: '1', parentId: 2, code: '2.2', name: 'Despesas Operacionais', type: 'despesa', level: 2, isActive: true, category: 'Despesas', subcategory: 'Despesas Operacionais', description: 'Gastos operacionais', createdAt: new Date() },
-  
-  // Nível 3 - Contas específicas
-  { id: 7, userId: '1', parentId: 3, code: '1.1.001', name: 'Vendas de Produtos', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receita com vendas de produtos', createdAt: new Date() },
-  { id: 8, userId: '1', parentId: 3, code: '1.1.002', name: 'Prestação de Serviços', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Operacionais', description: 'Receita com serviços prestados', createdAt: new Date() },
-  { id: 9, userId: '1', parentId: 4, code: '1.2.001', name: 'Rendimentos Financeiros', type: 'receita', level: 3, isActive: true, category: 'Receitas', subcategory: 'Receitas Não Operacionais', description: 'Juros e rendimentos', createdAt: new Date() },
-  { id: 10, userId: '1', parentId: 5, code: '2.1.001', name: 'Material de Escritório', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Gastos com material de escritório', createdAt: new Date() },
-  { id: 11, userId: '1', parentId: 5, code: '2.1.002', name: 'Salários e Encargos', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Administrativas', description: 'Folha de pagamento', createdAt: new Date() },
-  { id: 12, userId: '1', parentId: 6, code: '2.2.001', name: 'Energia Elétrica', type: 'despesa', level: 3, isActive: true, category: 'Despesas', subcategory: 'Despesas Operacionais', description: 'Conta de energia elétrica', createdAt: new Date() },
+  { id: 1, type: "receita", name: "Receitas Operacionais", level: 1, userId: 1, code: '1', isActive: true, createdAt: new Date(), parentId: null, category: null, subcategory: null, description: null },
+  { id: 2, type: "receita", name: "Serviços Contábeis", parentId: 1, level: 2, userId: 1, code: '1.1', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 3, type: "receita", name: "Honorários Mensais", parentId: 2, level: 3, userId: 1, code: '1.1.001', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 4, type: "receita", name: "Consultoria", parentId: 2, level: 3, userId: 1, code: '1.1.002', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 5, type: "despesa", name: "Despesas Operacionais", level: 1, userId: 1, code: '2', isActive: true, createdAt: new Date(), parentId: null, category: null, subcategory: null, description: null },
+  { id: 6, type: "despesa", name: "Pessoal", parentId: 5, level: 2, userId: 1, code: '2.1', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 7, type: "despesa", name: "Salários", parentId: 6, level: 3, userId: 1, code: '2.1.001', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 8, type: "despesa", name: "Encargos Sociais", parentId: 6, level: 3, userId: 1, code: '2.1.002', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 9, type: "despesa", name: "Administrativas", parentId: 5, level: 2, userId: 1, code: '2.2', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 10, type: "despesa", name: "Aluguel", parentId: 9, level: 3, userId: 1, code: '2.2.001', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 11, type: "despesa", name: "Energia Elétrica", parentId: 9, level: 3, userId: 1, code: '2.2.002', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 12, type: "despesa", name: "Internet e Telefonia", parentId: 9, level: 3, userId: 1, code: '2.2.003', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 13, type: "despesa", name: "Impostos e Taxas", level: 1, userId: 1, code: '3', isActive: true, createdAt: new Date(), parentId: null, category: null, subcategory: null, description: null },
+  { id: 14, type: "despesa", name: "Simples Nacional", parentId: 13, level: 2, userId: 1, code: '3.1', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 15, type: "despesa", name: "ISS", parentId: 13, level: 2, userId: 1, code: '3.2', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null },
+  { id: 16, type: "despesa", name: "Despesas Financeiras", level: 1, userId: 1, code: '4', isActive: true, createdAt: new Date(), parentId: null, category: null, subcategory: null, description: null },
+  { id: 17, type: "despesa", name: "Tarifas Bancárias", parentId: 16, level: 2, userId: 1, code: '4.1', isActive: true, createdAt: new Date(), category: null, subcategory: null, description: null }
 ];

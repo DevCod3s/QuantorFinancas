@@ -51,6 +51,16 @@ export const users = pgTable("users", {
 });
 
 /**
+ * Tabela de Formas de Pagamento
+ */
+export const paymentMethods = pgTable("payment_methods", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().references(() => users.id),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+/**
  * Tabela de categorias
  * 
  * Define categorias personalizáveis para classificação de transações.
@@ -95,6 +105,7 @@ export const transactions = pgTable("transactions", {
   categoryId: integer("category_id").references(() => categories.id),
   chartAccountId: integer("chart_account_id").references(() => chartOfAccounts.id),
   bankAccountId: integer("bank_account_id").references(() => bankAccounts.id),
+  paymentMethodId: integer("payment_method_id").references(() => paymentMethods.id),
   relationshipId: integer("relationship_id").references(() => relationships.id),
   productServiceId: integer("product_service_id").references(() => productsServices.id), // Produto/Serviço vinculado (receitas)
   businessCategoryId: integer("business_category_id").references(() => businessCategories.id), // Categoria de Negócio (DRE gerencial)
@@ -219,6 +230,11 @@ export const insertUserSchema = createInsertSchema(users).omit({
   createdAt: true, // Definido automaticamente
 });
 
+export const insertPaymentMethodSchema = createInsertSchema(paymentMethods).omit({
+  id: true,
+  createdAt: true,
+});
+
 /**
  * Schema de inserção para categorias
  * 
@@ -286,6 +302,7 @@ export const insertAiInteractionSchema = createInsertSchema(aiInteractions).omit
 // Tipos para dados selecionados do banco (incluem todos os campos)
 export type User = typeof users.$inferSelect;
 export type Category = typeof categories.$inferSelect;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Budget = typeof budgets.$inferSelect;
 export type AiInteraction = typeof aiInteractions.$inferSelect;
@@ -294,6 +311,7 @@ export type Session = typeof sessions.$inferSelect;
 // Tipos para inserção de dados (sem campos auto-gerados)
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
+export type InsertPaymentMethod = z.infer<typeof insertPaymentMethodSchema>;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type InsertBudget = z.infer<typeof insertBudgetSchema>;
 export type InsertAiInteraction = z.infer<typeof insertAiInteractionSchema>;

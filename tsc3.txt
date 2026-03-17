@@ -1,0 +1,8 @@
+
+> rest-express@1.0.0 check
+> tsc
+
+client/src/pages/Transactions.tsx(3338,9): error TS2322: Type '{ open: boolean; onClose: () => void; transaction: any; type: string; }' is not assignable to type 'IntrinsicAttributes & TransactionModalProps'.
+  Property 'transaction' does not exist on type 'IntrinsicAttributes & TransactionModalProps'.
+client/src/pages/Transactions.tsx(3353,8): error TS2739: Type '{}' is missing the following properties from type 'SuccessDialogProps': isOpen, onClose, title, message
+client/src/pages/Transactions.tsx(3354,8): error TS2739: Type '{}' is missing the following properties from type 'ErrorDialogProps': open, onClose, title, message

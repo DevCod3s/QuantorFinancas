@@ -1,0 +1,33 @@
+
+> rest-express@1.0.0 check
+> tsc
+
+client/src/pages/Transactions.tsx(4212,15): error TS2552: Cannot find name 'transactionModalOpen'. Did you mean 'TransactionModal'?
+client/src/pages/Transactions.tsx(4214,11): error TS2552: Cannot find name 'setTransactionModalOpen'. Did you mean 'TransactionModal'?
+client/src/pages/Transactions.tsx(4215,11): error TS2304: Cannot find name 'setEditingTransaction'.
+client/src/pages/Transactions.tsx(4217,9): error TS2322: Type '{ open: any; onClose: () => void; transaction: any; type: string; }' is not assignable to type 'IntrinsicAttributes & TransactionModalProps'.
+  Property 'transaction' does not exist on type 'IntrinsicAttributes & TransactionModalProps'.
+client/src/pages/Transactions.tsx(4217,22): error TS2304: Cannot find name 'editingTransaction'.
+client/src/pages/Transactions.tsx(4218,15): error TS2304: Cannot find name 'activeMovimentacoesSubTab'.
+client/src/pages/Transactions.tsx(4222,17): error TS2552: Cannot find name 'viewingTransaction'. Did you mean 'ViewTransition'?
+client/src/pages/Transactions.tsx(4223,24): error TS2304: Cannot find name 'setViewingTransaction'.
+client/src/pages/Transactions.tsx(4224,22): error TS2552: Cannot find name 'viewingTransaction'. Did you mean 'ViewTransition'?
+client/src/pages/Transactions.tsx(4225,19): error TS2304: Cannot find name 'user'.
+client/src/pages/Transactions.tsx(4229,15): error TS2304: Cannot find name 'liquidateModalOpen'.
+client/src/pages/Transactions.tsx(4231,11): error TS2304: Cannot find name 'setLiquidateModalOpen'.
+client/src/pages/Transactions.tsx(4232,11): error TS2304: Cannot find name 'setTransactionToLiquidate'.
+client/src/pages/Transactions.tsx(4234,22): error TS2304: Cannot find name 'transactionToLiquidate'.
+client/src/pages/Transactions.tsx(4235,23): error TS2304: Cannot find name 'bankAccounts'.
+client/src/pages/Transactions.tsx(4236,20): error TS2304: Cannot find name 'confirmLiquidation'.
+client/src/types/ChartOfAccountsTree.ts(217,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(218,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(221,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(222,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(223,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(224,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(227,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(228,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(229,12): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(230,13): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(231,13): error TS2322: Type 'string' is not assignable to type 'number'.
+client/src/types/ChartOfAccountsTree.ts(232,13): error TS2322: Type 'string' is not assignable to type 'number'.
