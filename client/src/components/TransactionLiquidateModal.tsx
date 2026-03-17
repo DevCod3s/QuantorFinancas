@@ -8,6 +8,7 @@ import { ptBR } from "date-fns/locale";
 import { toLocalDate } from "@/lib/utils";
 import { Transaction } from "@shared/schema";
 import CustomInput, { CustomSelect } from "./CustomInput";
+import { DateInput } from "./DateInput";
 import MenuItem from '@mui/material/MenuItem';
 
 interface TransactionLiquidateModalProps {
@@ -39,11 +40,14 @@ export function TransactionLiquidateModal({
   const [jurosValue, setJurosValue] = useState<string>("");
   const [moraType, setMoraType] = useState<"valor" | "percentual">("percentual");
   const [moraValue, setMoraValue] = useState<string>("");
+  const [liquidationDate, setLiquidationDate] = useState<string>("");
 
   useEffect(() => {
     if (open && transaction) {
       setBankAccountId(transaction.bankAccountId?.toString() || "");
       setPaymentMethodId(transaction.paymentMethodId?.toString() || "");
+      const todayISO = new Date().toISOString().split('T')[0];
+      setLiquidationDate(todayISO);
       setDiscountType("valor");
       setDiscountValue("");
       
@@ -142,7 +146,8 @@ export function TransactionLiquidateModal({
       paymentMethodId: paymentMethodId ? parseInt(paymentMethodId) : undefined,
       finalAmount,
       discountAmount,
-      interestAmount
+      interestAmount,
+      liquidationDate
     });
   };
 
@@ -219,7 +224,7 @@ export function TransactionLiquidateModal({
           <div className="grid grid-cols-12 gap-3 items-start">
             
             {/* Esquerda (Conta e Forma Pag) - Ocupa 5 colunas */}
-            <div className="col-span-5 flex flex-col gap-3">
+            <div className="col-span-6 flex flex-col gap-3">
               <CustomSelect
                 label="Conta Bancária Origem/Destino *"
                 value={bankAccountId}

@@ -115,6 +115,7 @@ export const transactions = pgTable("transactions", {
   type: text("type").notNull(), // 'income' | 'expense'
   status: text("status").notNull().default("pago"), // 'pago' | 'pendente'
   date: timestamp("date").notNull(), // Data da transação
+  liquidationDate: timestamp("liquidation_date"), // Data em que foi realmente pago/recebido
   // Campos de repetição/parcelamento
   repeticao: text("repeticao").default("Única"), // 'Única' | 'Parcelado' | 'Recorrente'
   periodicidade: text("periodicidade"), // 'Diário' | 'Semanal' | 'Mensal' | 'Anual'
@@ -124,6 +125,7 @@ export const transactions = pgTable("transactions", {
   parcelaAtual: integer("parcela_atual"), // Parcela atual (ex: 1 de 12)
   parcelamentoId: text("parcelamento_id"), // UUID para agrupar parcelas
   recorrenciaId: text("recorrencia_id"), // UUID para agrupar recorrências
+  transferId: text("transfer_id"), // UUID para agrupar entradas e saídas de transferência
   // Campos de juros/encargos (parcelamento)
   aplicarJuros: boolean("aplicar_juros").default(false),
   tipoJuros: text("tipo_juros"), // 'percentual' | 'valor'
@@ -255,6 +257,7 @@ export const insertCategorySchema = createInsertSchema(categories).omit({
 export const insertTransactionSchema = createInsertSchema(transactions, {
   amount: z.coerce.string(),
   date: z.coerce.date(),
+  liquidationDate: z.coerce.date().optional().nullable(),
   dataTermino: z.coerce.date().optional().nullable(),
   valorJuros: z.coerce.string().optional().nullable(),
   jurosMes: z.coerce.string().optional().nullable(),

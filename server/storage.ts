@@ -78,6 +78,15 @@ export interface IStorage {
   getTransactionsByUserId(userId: string): Promise<any[]>;
   getTransactionById(id: number): Promise<Transaction | null>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  createTransfer(data: {
+    userId: number;
+    sourceAccountId: number;
+    destinationAccountId: number;
+    amount: string;
+    description: string;
+    date: Date;
+    liquidationDate?: Date | null;
+  }): Promise<Transaction[]>;
   updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode?: 'single' | 'future' | 'all'): Promise<Transaction>;
   deleteTransaction(id: number, deleteMode?: 'single' | 'future' | 'all'): Promise<void>;
 
@@ -256,6 +265,7 @@ export class DatabaseStorage implements IStorage {
         type: schema.transactions.type,
         status: schema.transactions.status,
         date: schema.transactions.date,
+        liquidationDate: schema.transactions.liquidationDate,
         description: schema.transactions.description,
         repeticao: schema.transactions.repeticao,
         numeroParcelas: schema.transactions.numeroParcelas,
@@ -340,6 +350,46 @@ export class DatabaseStorage implements IStorage {
       .values(transaction)
       .returning();
     return newTransaction;
+  }
+
+  async createTransfer(data: {
+    userId: number;
+    sourceAccountId: number;
+    destinationAccountId: number;
+    amount: string;
+    description: string;
+    date: Date;
+    liquidationDate?: Date | null;
+  }): Promise<Transaction[]> {
+    const transferId = crypto.randomUUID();
+
+    // Create expense from source
+    const expense = await this.createTransaction({
+      userId: data.userId,
+      bankAccountId: data.sourceAccountId,
+      amount: data.amount,
+      description: data.description,
+      type: "expense",
+      date: data.date,
+      liquidationDate: data.liquidationDate || null,
+      transferId,
+      status: "pago",
+    });
+
+    // Create income to destination
+    const income = await this.createTransaction({
+      userId: data.userId,
+      bankAccountId: data.destinationAccountId,
+      amount: data.amount,
+      description: data.description,
+      type: "income",
+      date: data.date,
+      liquidationDate: data.liquidationDate || null,
+      transferId,
+      status: "pago",
+    });
+
+    return [expense, income];
   }
 
   async updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode: 'single' | 'future' | 'all' = 'single'): Promise<Transaction> {

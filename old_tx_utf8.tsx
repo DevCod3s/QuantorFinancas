@@ -1,33 +1,32 @@
-/**
- * @fileoverview Página de gestão financeira do sistema Quantor
+﻿/**
+ * @fileoverview P├ígina de gest├úo financeira do sistema Quantor
  * 
- * Renomeada de "Transações" para "Finanças" com funcionalidades avançadas:
-### 4. Correção Visual do Tipo de Conta
-Identificamos que a lista estava procurando o campo `account_type`, mas o banco de dados estava entregando `accountType`. Fizemos a padronização para que o tipo (Conta Corrente, Poupança, etc.) apareça corretamente na listagem, assim como o número da conta.
- * - Sistema de 4 abas principais: Visão Geral, Movimentações, Contas, Centro de Custo
- * - Sub-abas inteligentes com barra de progressão animada
- * - Gráficos avançados com Chart.js (linha, rosca, barras)
- * - Controles temporais completos (navegação, calendário, filtros de período)
+ * Renomeada de "Transa├º├Áes" para "Finan├ºas" com funcionalidades avan├ºadas:
+### 4. Corre├º├úo Visual do Tipo de Conta
+Identificamos que a lista estava procurando o campo `account_type`, mas o banco de dados estava entregando `accountType`. Fizemos a padroniza├º├úo para que o tipo (Conta Corrente, Poupan├ºa, etc.) apare├ºa corretamente na listagem, assim como o n├║mero da conta.
+ * - Sistema de 4 abas principais: Vis├úo Geral, Movimenta├º├Áes, Contas, Centro de Custo
+ * - Sub-abas inteligentes com barra de progress├úo animada
+ * - Gr├íficos avan├ºados com Chart.js (linha, rosca, barras)
+ * - Controles temporais completos (navega├º├úo, calend├írio, filtros de per├¡odo)
  * - Dashboard visual de fluxo de caixa
- * - Demonstrativo diário com dados tabulares
- * - Centro de custo com categorização e barras de progresso
+ * - Demonstrativo di├írio com dados tabulares
+ * - Centro de custo com categoriza├º├úo e barras de progresso
  * - Design responsivo e profissional
- * - Dados demonstrativos baseados em referências visuais
+ * - Dados demonstrativos baseados em refer├¬ncias visuais
  * 
  * @author Equipe Quantor
  * @version 1.0.0
  */
 
-// Importações React
+// Importa├º├Áes React
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from '../lib/queryClient';
 
-// Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers } from "lucide-react";
+// Importa├º├Áes de ├¡cones Lucide
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, Download, AlertTriangle, Building2, FolderDown, LogOut } from "lucide-react";
 
-// Importações Material-UI
+// Importa├º├Áes Material-UI
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -35,7 +34,7 @@ import InputLabel from '@mui/material/InputLabel';
 import Select from '@mui/material/Select';
 import Autocomplete from '@mui/material/Autocomplete';
 
-// Importações de componentes UI
+// Importa├º├Áes de componentes UI
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -44,11 +43,8 @@ import { SubTabs } from "@/components/SubTabs";
 import { DynamicModal, DynamicField } from "@/components/DynamicModal";
 import { TabelaItens } from "@/components/ui/TabelaItens";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
-import { MoneyBagIcon } from "@/components/icons/MoneyBagIcon";
-import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
-import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 
-// Importações de tipos
+// Importa├º├Áes de tipos
 import { Transaction } from "@shared/schema";
 import { DashboardData } from "@/types";
 import { ChartOfAccountsTree, ChartOfAccountNode, SAMPLE_CHART_OF_ACCOUNTS } from "@/types/ChartOfAccountsTree";
@@ -64,21 +60,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { SuccessDialog, useSuccessDialog } from "@/components/ui/success-dialog";
-import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
+import { useSuccessDialog } from "@/components/ui/success-dialog";
+import { useErrorDialog } from "@/components/ui/error-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
-import { TransactionViewModal } from "@/components/TransactionViewModal";
-import { TransactionLiquidateModal } from "@/components/TransactionLiquidateModal";
-import { TransactionModal } from "@/components/TransactionModal";
-import { MultiActionButton } from "@/components/MultiActionButton";
-import { TransactionTransferModal } from "@/components/TransactionTransferModal";
 import { DateInput } from "@/components/DateInput";
-import { localDateStr, toLocalDateStr, toLocalDate } from "@/lib/utils";
-import { useAuth } from "@/hooks/useAuth";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -109,14 +97,14 @@ const formatCurrencyValue = (value: string, currencyCode: string) => {
   // Se o valor estiver vazio, apenas retornar vazio
   if (!value) return '';
 
-  // Extrair apenas os números
+  // Extrair apenas os n├║meros
   const numericString = value.replace(/\D/g, '');
   if (!numericString) return '';
 
   // Converter para valor em centavos
   const numberValue = parseInt(numericString, 10) / 100;
 
-  // Retornar o valor formatado com o símbolo da moeda correto
+  // Retornar o valor formatado com o s├¡mbolo da moeda correto
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: currencyCode,
@@ -141,25 +129,25 @@ const formatCurrency = (amount: string | number) => {
 const BRAZILIAN_BANKS = [
   { code: '001', name: 'Banco do Brasil S.A.' },
   { code: '033', name: 'Banco Santander (Brasil) S.A.' },
-  { code: '104', name: 'Caixa Econômica Federal' },
+  { code: '104', name: 'Caixa Econ├┤mica Federal' },
   { code: '237', name: 'Banco Bradesco S.A.' },
-  { code: '341', name: 'Itaú Unibanco S.A.' },
+  { code: '341', name: 'Ita├║ Unibanco S.A.' },
   { code: '077', name: 'Banco Inter S.A.' },
   { code: '260', name: 'Nu Pagamentos S.A. (Nubank)' },
   { code: '212', name: 'Banco Original S.A.' },
   { code: '336', name: 'Banco C6 S.A.' },
   { code: '290', name: 'PagSeguro Internet S.A.' },
-  { code: '380', name: 'PicPay Serviços S.A.' },
-  { code: '332', name: 'Acesso Soluções de Pagamento S.A. (Banco BS2)' },
+  { code: '380', name: 'PicPay Servi├ºos S.A.' },
+  { code: '332', name: 'Acesso Solu├º├Áes de Pagamento S.A. (Banco BS2)' },
   { code: '655', name: 'Banco Votorantim S.A. (Neon)' },
   { code: '074', name: 'Banco J. Safra S.A.' },
   { code: '422', name: 'Banco Safra S.A.' },
   { code: '748', name: 'Banco Cooperativo Sicredi S.A.' },
   { code: '756', name: 'Banco Cooperativo do Brasil S.A. (SICOOB)' },
   { code: '047', name: 'Banco do Estado de Sergipe S.A. (Banese)' },
-  { code: '021', name: 'Banestes S.A. Banco do Estado do Espírito Santo' },
+  { code: '021', name: 'Banestes S.A. Banco do Estado do Esp├¡rito Santo' },
   { code: '041', name: 'Banco do Estado do Rio Grande do Sul S.A. (Banrisul)' },
-  { code: '070', name: 'BRB - Banco de Brasília S.A.' },
+  { code: '070', name: 'BRB - Banco de Bras├¡lia S.A.' },
   { code: '653', name: 'Banco Indusval S.A.' },
   { code: '604', name: 'Banco Industrial do Brasil S.A.' },
   { code: '389', name: 'Banco Mercantil do Brasil S.A.' },
@@ -170,7 +158,7 @@ const BRAZILIAN_BANKS = [
   { code: '633', name: 'Banco Rendimento S.A.' },
   { code: '752', name: 'Banco BNP Paribas Brasil S.A.' },
   { code: '208', name: 'Banco BTG Pactual S.A.' },
-  { code: '003', name: 'Banco da Amazônia S.A.' },
+  { code: '003', name: 'Banco da Amaz├┤nia S.A.' },
   { code: '004', name: 'Banco do Nordeste do Brasil S.A.' },
   { code: '036', name: 'Banco Bradesco BBI S.A.' },
   { code: '121', name: 'Banco Agibank S.A.' },
@@ -183,55 +171,34 @@ const BRAZILIAN_BANKS = [
   { code: '600', name: 'Banco Luso Brasileiro S.A.' },
   { code: '318', name: 'Banco BMG S.A.' },
   { code: '626', name: 'Banco Ficsa S.A.' },
-  { code: '079', name: 'Banco Original do Agronegócio S.A.' },
-  { code: '254', name: 'Paraná Banco S.A.' },
+  { code: '079', name: 'Banco Original do Agroneg├│cio S.A.' },
+  { code: '254', name: 'Paran├í Banco S.A.' },
   { code: '477', name: 'Citibank N.A.' },
   { code: '999', name: 'Outro Banco' }
 ].sort((a, b) => parseInt(a.code) - parseInt(b.code));
 
 export function Transactions() {
   const queryClient = useQueryClient();
-  const { showSuccess, successDialogProps } = useSuccessDialog();
-  const { showError, errorDialogProps } = useErrorDialog();
+  const { showSuccess, SuccessDialog } = useSuccessDialog();
+  const { showError, ErrorDialog } = useErrorDialog();
   const { showConfirm, ConfirmDialog } = useConfirmDialog();
-  const { user } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState<"all" | "income" | "expense">("all");
   const [activeTab, setActiveTab] = useState("visao-geral");
   const [progressWidth, setProgressWidth] = useState(0);
   const tabListRef = useRef<HTMLDivElement>(null);
-  
-  // Mês atual dinâmico para não sumir com os dados
-  const monthNames = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-  const todayDate = new Date();
+  const [currentMonth, setCurrentMonth] = useState("julho 2025");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterPeriod, setFilterPeriod] = useState("Mensal");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
-  // Derived current month from selectedDate
-  const currentMonth = selectedDate ? format(selectedDate, 'MMMM yyyy', { locale: ptBR }) : `${monthNames[todayDate.getMonth()]} ${todayDate.getFullYear()}`;
-
-  // Estados para modo "Período"
-  const [periodStartDate, setPeriodStartDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1));
-  const [periodEndDate, setPeriodEndDate] = useState<Date>(new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0));
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
-  
-  // Modal states perdidos na compilação do HEAD das 14:20hs
-  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
-  const [transactionModalType, setTransactionModalType] = useState<'Nova receita' | 'Nova despesa'>('Nova receita');
-  const [editingTransaction, setEditingTransaction] = useState<any>(null);
-  const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
-  const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
-  const [viewingTransaction, setViewingTransaction] = useState<any>(null);
-  const [transferModalOpen, setTransferModalOpen] = useState(false);
-  
   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
   const [bankAccountData, setBankAccountData] = useState({
-    initialBalanceDate: localDateStr(),
+    initialBalanceDate: new Date().toISOString().split('T')[0],
     currentBalance: '',
     balanceType: 'credor',
     accountType: 'conta_corrente',
@@ -247,37 +214,13 @@ export function Transactions() {
 
   const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery<any[]>({
     queryKey: ["/api/transactions"],
-    queryFn: () => fetch('/api/transactions', { credentials: 'include' }).then(res => res.json()),
   });
 
   const { data: bankAccounts = [], isLoading: isLoadingBankAccounts, refetch: refetchBankAccounts } = useQuery<any[]>({
     queryKey: ["/api/bank-accounts"],
-    queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
   });
 
-  const { data: paymentMethods = [] } = useQuery<any[]>({
-    queryKey: ["/api/payment-methods"],
-    queryFn: () => fetch('/api/payment-methods', { credentials: 'include' }).then(res => res.json()),
-  });
-
-  // Mutation para criar forma de pagamento
-  const createPaymentMethodMutation = useMutation({
-    mutationFn: (name: string) =>
-      fetch('/api/payment-methods', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/payment-methods'] });
-      showSuccess('Forma de pagamento adicionada com sucesso!', "");
-    },
-    onError: (error: any) => {
-      showError('Erro ao adicionar forma de pagamento', error.message || 'Tente novamente.');
-    }
-  });
-
-  // Mutation para criar conta bancária
+  // Mutation para criar conta banc├íria
   const createBankAccountMutation = useMutation({
     mutationFn: (bankAccountData: any) =>
       fetch('/api/bank-accounts', {
@@ -286,19 +229,19 @@ export function Transactions() {
         body: JSON.stringify(bankAccountData),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      showSuccess('Conta bancária criada com sucesso!', "");
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Conta banc├íria criada com sucesso!', "");
       setBankAccountModalOpen(false);
       resetBankAccountData();
     },
     onError: (error: any) => {
-      showError('Erro ao criar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+      showError('Erro ao criar conta banc├íria', error.message || 'Verifique os dados e tente novamente.');
     }
   });
 
-  // Mutation para atualizar conta bancária
+  // Mutation para atualizar conta banc├íria
   const updateBankAccountMutation = useMutation({
     mutationFn: ({ id, data }: { id: number, data: any }) =>
       fetch(`/api/bank-accounts/${id}`, {
@@ -307,39 +250,39 @@ export function Transactions() {
         body: JSON.stringify(data),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      showSuccess('Conta bancária atualizada com sucesso!', "");
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Conta banc├íria atualizada com sucesso!', "");
       setBankAccountModalOpen(false);
       setEditingBankAccount(null);
       resetBankAccountData();
     },
     onError: (error: any) => {
-      showError('Erro ao atualizar conta bancária', error.message || 'Verifique os dados e tente novamente.');
+      showError('Erro ao atualizar conta banc├íria', error.message || 'Verifique os dados e tente novamente.');
     }
   });
 
-  // Mutation para excluir conta bancária
+  // Mutation para excluir conta banc├íria
   const deleteBankAccountMutation = useMutation({
     mutationFn: (id: number) =>
       fetch(`/api/bank-accounts/${id}`, {
         method: 'DELETE',
       }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
     onSuccess: () => {
-       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-       showSuccess('Conta bancária excluída com sucesso!', "");
+       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+       showSuccess('Conta banc├íria exclu├¡da com sucesso!', "");
     },
     onError: (error: any) => {
-       showError('Erro ao excluir conta bancária', error.message || 'Tente novamente mais tarde.');
+       showError('Erro ao excluir conta banc├íria', error.message || 'Tente novamente mais tarde.');
     }
   });
 
   const resetBankAccountData = () => {
     setBankAccountData({
-      initialBalanceDate: localDateStr(),
+      initialBalanceDate: new Date().toISOString().split('T')[0],
       currentBalance: '',
       balanceType: 'credor',
       accountType: 'conta_corrente',
@@ -372,7 +315,7 @@ export function Transactions() {
     onSuccess: (newBank) => {
       queryClient.invalidateQueries({ queryKey: ['/api/custom-banks'] });
       setBankAccountData(prev => ({ ...prev, bank: newBank.code }));
-      showSuccess('Banco cadastrado', 'Novo banco adicionado à lista com sucesso.');
+      showSuccess('Banco cadastrado', 'Novo banco adicionado ├á lista com sucesso.');
       setNewBankModalOpen(false);
       setNewBankData({ code: '', name: '' });
     },
@@ -384,7 +327,7 @@ export function Transactions() {
   // Handler para salvar novo banco na lista
   const handleNewBankSave = (data: any) => {
     if (!data.code || !data.name) {
-      showError('Campos obrigatórios', 'O Código do Banco e o Nome da Instituição são obrigatórios.');
+      showError('Campos obrigat├│rios', 'O C├│digo do Banco e o Nome da Institui├º├úo s├úo obrigat├│rios.');
       return;
     }
 
@@ -392,7 +335,7 @@ export function Transactions() {
     const isDuplicate = banksList.some(b => b.code.trim() === cleanedCode);
 
     if (isDuplicate) {
-      showError('Código Duplicado', 'Já existe um banco cadastrado com esse código.');
+      showError('C├│digo Duplicado', 'J├í existe um banco cadastrado com esse c├│digo.');
       return;
     }
 
@@ -402,31 +345,31 @@ export function Transactions() {
     });
   };
 
-  // Handler para salvar conta bancária (Criação ou Edição)
+  // Handler para salvar conta banc├íria (Cria├º├úo ou Edi├º├úo)
   const handleBankAccountSave = async (data: any) => {
     if (!data.name) {
-      showError('Campo obrigatório', 'O nome da conta é obrigatório.');
+      showError('Campo obrigat├│rio', 'O nome da conta ├® obrigat├│rio.');
       return;
     }
 
     if (!data.currentBalance) {
-      showError('Campo obrigatório', 'O saldo inicial é obrigatório.');
+      showError('Campo obrigat├│rio', 'O saldo inicial ├® obrigat├│rio.');
       return;
     }
 
     if (!data.bank) {
-      showError('Campo obrigatório', 'O banco é obrigatório.');
+      showError('Campo obrigat├│rio', 'O banco ├® obrigat├│rio.');
       return;
     }
 
     try {
-      // Limpar formatação de valores antes de enviar preservando decimais
+      // Limpar formata├º├úo de valores antes de enviar preservando decimais
       const parseMoeda = (val: any) => {
         if (!val) return '0';
         const str = val.toString();
-        // Se já é um número (ou string numérica sem formatação pt-BR), mantemos
+        // Se j├í ├® um n├║mero (ou string num├®rica sem formata├º├úo pt-BR), mantemos
         if (/^\d+(\.\d+)?$/.test(str)) return str;
-        // Remove R$, espaços e pontos de milhar, troca vírgula por ponto
+        // Remove R$, espa├ºos e pontos de milhar, troca v├¡rgula por ponto
         return str.replace(/[R$\s.]/g, '').replace(',', '.');
       };
 
@@ -442,7 +385,7 @@ export function Transactions() {
         await createBankAccountMutation.mutateAsync(cleanedData);
       }
     } catch (error) {
-      console.error('Erro ao salvar conta bancária:', error);
+      console.error('Erro ao salvar conta banc├íria:', error);
     }
   };
 
@@ -450,7 +393,7 @@ export function Transactions() {
 
 
 
-  // Estados para controle de ordenação e paginação
+  // Estados para controle de ordena├º├úo e pagina├º├úo
   const [payablesSortField, setPayablesSortField] = useState<string>('');
   const [payablesSortDirection, setPayablesSortDirection] = useState<'asc' | 'desc'>('asc');
   const [payablesCurrentPage, setPayablesCurrentPage] = useState(1);
@@ -461,272 +404,58 @@ export function Transactions() {
   const [receivablesCurrentPage, setReceivablesCurrentPage] = useState(1);
   const [receivablesItemsPerPage] = useState(10);
 
+  // Estado para modal de transa├º├úo
+  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
   const [newTransactions, setNewTransactions] = useState<any[]>([]);
 
-  // Estados para seleção múltipla (Baixa em Lote)
+  // Estados para sele├º├úo m├║ltipla (Baixa em Lote)
   const [selectedPayables, setSelectedPayables] = useState<any[]>([]);
   const [selectedReceivables, setSelectedReceivables] = useState<any[]>([]);
   const [batchPaymentModalOpen, setBatchPaymentModalOpen] = useState(false);
   const [batchPaymentType, setBatchPaymentType] = useState<'payable' | 'receivable'>('payable');
-  const [showExpenseSubcategory, setShowExpenseSubcategory] = useState(false);
-  const [showIncomeSubcategory, setShowIncomeSubcategory] = useState(false);
-  const [showAccountFlow, setShowAccountFlow] = useState(false);
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
 
-  // Calcula o range de datas para filtragem baseado no período selecionado
-  const getFilterDateRange = (): { start: Date; end: Date } => {
-    const refDate = selectedDate || new Date();
-
-    switch (filterPeriod) {
-      case 'Diário': {
-        const start = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate());
-        const end = new Date(refDate.getFullYear(), refDate.getMonth(), refDate.getDate(), 23, 59, 59, 999);
-        return { start, end };
-      }
-      case 'Semanal': {
-        const day = refDate.getDay();
-        const monday = new Date(refDate);
-        monday.setDate(refDate.getDate() - (day === 0 ? 6 : day - 1));
-        monday.setHours(0, 0, 0, 0);
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        sunday.setHours(23, 59, 59, 999);
-        return { start: monday, end: sunday };
-      }
-      case 'Mensal': {
-        const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
-        const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0, 23, 59, 59, 999);
-        return { start, end };
-      }
-      case 'Anual': {
-        const start = new Date(refDate.getFullYear(), 0, 1);
-        const end = new Date(refDate.getFullYear(), 11, 31, 23, 59, 59, 999);
-        return { start, end };
-      }
-      case 'Período': {
-        const start = new Date(periodStartDate.getFullYear(), periodStartDate.getMonth(), periodStartDate.getDate());
-        const end = new Date(periodEndDate.getFullYear(), periodEndDate.getMonth(), periodEndDate.getDate(), 23, 59, 59, 999);
-        return { start, end };
-      }
-      default: {
-        const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
-        const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0, 23, 59, 59, 999);
-        return { start, end };
-      }
-    }
-  };
-
-  // Filtrar transações por mês, busca e tipo
+  // Filtrar transa├º├Áes por m├¬s, busca e tipo
   const filteredTransactions = transactions.filter(t => {
-    const tDate = toLocalDate(t.date);
-    const { start, end } = getFilterDateRange();
-    const matchesPeriod = tDate >= start && tDate <= end;
+    const tDate = new Date(t.date);
+    const monthNames = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const tMonthYear = `${monthNames[tDate.getMonth()]} ${tDate.getFullYear()}`;
+    const matchesMonth = tMonthYear === currentMonth;
 
     const matchesSearch = t.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === "all" || t.type === filterType;
 
-    return matchesPeriod && matchesSearch && matchesFilter;
+    return matchesMonth && matchesSearch && matchesFilter;
   });
 
-  // Gera labels e datasets do gráfico de Fluxo de Caixa baseado no filtro ativo
-  const getChartData = () => {
-    const { start, end } = getFilterDateRange();
-    const monthShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-
-    type Bucket = { label: string; income: number; expense: number };
-    let buckets: Bucket[] = [];
-
-    switch (filterPeriod) {
-      case 'Diário': {
-        // Mostra os últimos 7 dias até o dia selecionado para ter linhas no gráfico
-        const chartStart = new Date(start);
-        chartStart.setDate(chartStart.getDate() - 6);
-        chartStart.setHours(0, 0, 0, 0);
-        const chartEnd = new Date(start);
-        chartEnd.setHours(23, 59, 59, 999);
-
-        const dailyTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
-          return d >= chartStart && d <= chartEnd;
-        });
-
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(chartStart);
-          d.setDate(chartStart.getDate() + i);
-          buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
-        }
-        dailyTransactions.forEach(t => {
-          const d = toLocalDate(t.date);
-          const diffDays = Math.floor((d.getTime() - chartStart.getTime()) / 86400000);
-          if (diffDays >= 0 && diffDays < 7) {
-            const val = Math.abs(parseFloat(t.amount) || 0);
-            if (t.type === 'income') buckets[diffDays].income += val;
-            else buckets[diffDays].expense += val;
-          }
-        });
-        break;
-      }
-      case 'Semanal': {
-        const weekTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
-          return d >= start && d <= end;
-        });
-        for (let i = 0; i < 7; i++) {
-          const d = new Date(start);
-          d.setDate(start.getDate() + i);
-          buckets.push({ label: `${dayNames[d.getDay()]} ${format(d, 'dd')}`, income: 0, expense: 0 });
-        }
-        weekTransactions.forEach(t => {
-          const d = toLocalDate(t.date);
-          const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
-          if (diffDays >= 0 && diffDays < 7) {
-            const val = Math.abs(parseFloat(t.amount) || 0);
-            if (t.type === 'income') buckets[diffDays].income += val;
-            else buckets[diffDays].expense += val;
-          }
-        });
-        break;
-      }
-      case 'Mensal': {
-        const monthTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
-          return d >= start && d <= end;
-        });
-        const daysInMonth = end.getDate();
-        for (let i = 1; i <= daysInMonth; i++) {
-          buckets.push({ label: String(i), income: 0, expense: 0 });
-        }
-        monthTransactions.forEach(t => {
-          const d = toLocalDate(t.date);
-          const day = d.getDate();
-          if (day >= 1 && day <= daysInMonth) {
-            const val = Math.abs(parseFloat(t.amount) || 0);
-            if (t.type === 'income') buckets[day - 1].income += val;
-            else buckets[day - 1].expense += val;
-          }
-        });
-        break;
-      }
-      case 'Anual': {
-        const yearTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
-          return d >= start && d <= end;
-        });
-        for (let i = 0; i < 12; i++) {
-          buckets.push({ label: monthShort[i], income: 0, expense: 0 });
-        }
-        yearTransactions.forEach(t => {
-          const d = toLocalDate(t.date);
-          const m = d.getMonth();
-          const val = Math.abs(parseFloat(t.amount) || 0);
-          if (t.type === 'income') buckets[m].income += val;
-          else buckets[m].expense += val;
-        });
-        break;
-      }
-      case 'Período': {
-        const periodTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
-          return d >= start && d <= end;
-        });
-        const diffTime = end.getTime() - start.getTime();
-        const diffDays = Math.ceil(diffTime / 86400000);
-
-        if (diffDays <= 31) {
-          for (let i = 0; i <= diffDays; i++) {
-            const d = new Date(start);
-            d.setDate(start.getDate() + i);
-            buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
-          }
-          periodTransactions.forEach(t => {
-            const d = toLocalDate(t.date);
-            const idx = Math.floor((d.getTime() - start.getTime()) / 86400000);
-            if (idx >= 0 && idx < buckets.length) {
-              const val = Math.abs(parseFloat(t.amount) || 0);
-              if (t.type === 'income') buckets[idx].income += val;
-              else buckets[idx].expense += val;
-            }
-          });
-        } else if (diffDays <= 180) {
-          let weekStart = new Date(start);
-          while (weekStart <= end) {
-            buckets.push({ label: format(weekStart, 'dd/MM'), income: 0, expense: 0 });
-            weekStart = new Date(weekStart);
-            weekStart.setDate(weekStart.getDate() + 7);
-          }
-          periodTransactions.forEach(t => {
-            const d = toLocalDate(t.date);
-            const daysSinceStart = Math.floor((d.getTime() - start.getTime()) / 86400000);
-            const bIdx = Math.floor(daysSinceStart / 7);
-            if (bIdx >= 0 && bIdx < buckets.length) {
-              const val = Math.abs(parseFloat(t.amount) || 0);
-              if (t.type === 'income') buckets[bIdx].income += val;
-              else buckets[bIdx].expense += val;
-            }
-          });
-        } else {
-          let current = new Date(start.getFullYear(), start.getMonth(), 1);
-          while (current <= end) {
-            buckets.push({ label: `${monthShort[current.getMonth()]}/${String(current.getFullYear()).slice(2)}`, income: 0, expense: 0 });
-            current.setMonth(current.getMonth() + 1);
-          }
-          periodTransactions.forEach(t => {
-            const d = toLocalDate(t.date);
-            const monthDiff = (d.getFullYear() - start.getFullYear()) * 12 + d.getMonth() - start.getMonth();
-            if (monthDiff >= 0 && monthDiff < buckets.length) {
-              const val = Math.abs(parseFloat(t.amount) || 0);
-              if (t.type === 'income') buckets[monthDiff].income += val;
-              else buckets[monthDiff].expense += val;
-            }
-          });
-        }
-        break;
-      }
-    }
-
-    const totalIncome = buckets.reduce((s, b) => s + b.income, 0);
-    const totalExpense = buckets.reduce((s, b) => s + b.expense, 0);
-
-    return {
-      labels: buckets.map(b => b.label),
-      incomeData: buckets.map(b => b.income),
-      expenseData: buckets.map(b => b.expense),
-      totalIncome,
-      totalExpense,
-      balance: totalIncome - totalExpense,
-    };
-  };
-
-  const chartFluxoData = getChartData();
-
-  // Dados reais para À Pagar
+  // Dados reais para ├Ç Pagar
   const payablesData = filteredTransactions
     .filter(t => t.type === 'expense' && t.status !== 'pago')
     .map(t => ({
       id: t.id,
       company: t.relationship?.socialName || 'Diversos',
       cnpj: t.relationship?.document || '-',
-      dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
+      dueDate: format(new Date(t.date), 'dd/MM/yyyy'),
       product: t.description,
       type: t.repeticao,
-      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      status: new Date(t.date) < new Date() ? 'Vencida' : 'Pendente',
       value: parseFloat(t.amount)
     }));
 
-  // Dados reais para À Receber
+  // Dados reais para ├Ç Receber
   const receivablesData = filteredTransactions
     .filter(t => t.type === 'income' && t.status !== 'pago')
     .map(t => ({
       id: t.id,
       company: t.relationship?.socialName || 'Diversos',
       cnpj: t.relationship?.document || '-',
-      dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
+      dueDate: format(new Date(t.date), 'dd/MM/yyyy'),
       product: t.description,
       type: t.repeticao,
-      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
+      status: new Date(t.date) < new Date() ? 'Vencida' : 'Pendente',
       value: parseFloat(t.amount)
     }));
 
@@ -735,33 +464,20 @@ export function Transactions() {
   const totalReceivablesMonth = receivablesData.reduce((sum, t) => sum + t.value, 0);
   const resultMonth = totalReceivablesMonth - totalPayablesMonth;
 
-  // AGREGAÇÕES DINÂMICAS PARA CARDS E GRÁFICOS
-  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
-  
-  // Apenas transações que já foram liquidadas (Regime de Caixa)
-  const demonstrativoTransactions = transactions.filter(t => t.status === 'pago');
-
-  const { start: filterRangeStart, end: filterRangeEnd } = getFilterDateRange();
-
-  const dailySummary = demonstrativoTransactions.filter(t => {
-      // Filtrar apenas o período para construir o fluxo diário
-      const tDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
-      return tDate >= filterRangeStart && tDate <= filterRangeEnd;
-  }).reduce((acc: any[], t) => {
-    // Usar a data de liquidação se houver, senão a data original
-    const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
-    const dateStr = format(effectiveDate, 'dd/MM/yyyy');
+  // AGREGA├ç├òES DIN├éMICAS PARA CARDS E GR├üFICOS
+  // 1. Resumo Di├írio (para Demonstrativo e Gr├ífico de Barras)
+  const dailySummary = filteredTransactions.reduce((acc: any[], t) => {
+    const dateStr = format(new Date(t.date), 'dd/MM/yyyy');
     let day = acc.find(d => d.date === dateStr);
 
     if (!day) {
       day = {
         date: dateStr,
-        dateLabel: format(effectiveDate, 'dd/MM'),
+        dateLabel: format(new Date(t.date), 'dd/MM'),
         entrada: 0,
         saida: 0,
         resultado: 0,
-        saldo: 0,
-        tempDateForSort: effectiveDate.getTime()
+        saldo: 0
       };
       acc.push(day);
     }
@@ -775,51 +491,34 @@ export function Transactions() {
     day.resultado = day.entrada - day.saida;
 
     return acc;
-  }, []).sort((a, b) => a.tempDateForSort - b.tempDateForSort);
-
-  // Cálculo de Saldo Acumulado Inicial (Engenharia Reversa)
-  // 1. Pega o saldo Real de Hoje em todas as contas.
-  const currentTotalBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
-  
-  // 2. Encontrar o saldo exato que existia um ms antes do 'start' do filtro.
-  // Para isso, pegamos tudo que foi pago "DEPOIS" do start (inclusive no start) até Hoje, e desfazemos:
-  // Se entrou dinheiro: Subtrai do saldo de hoje.
-  // Se saiu dinheiro: Soma ao saldo de hoje.
-  const transactionsAfterStart = demonstrativoTransactions.filter(t => {
-      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
-      return effectiveDate >= filterRangeStart; 
+  }, []).sort((a, b) => {
+    const parseDate = (d: string) => {
+      const [day, month, year] = d.split('/').map(Number);
+      return new Date(year, month - 1, day).getTime();
+    };
+    return parseDate(a.date) - parseDate(b.date);
   });
 
-  let initialBankBalance = currentTotalBankBalance;
-  
-  transactionsAfterStart.forEach(t => {
-      const amount = parseFloat(t.amount || '0');
-      if (t.type === 'income') {
-          initialBankBalance -= amount; // Desfazendo a entrada
-      } else {
-          initialBankBalance += amount; // Desfazendo a saída
-      }
-  });
-
-  let runningBalance = initialBankBalance;
+  // C├ílculo de Saldo Acumulado (Simulado no per├¡odo)
+  let runningBalance = 0;
   dailySummary.forEach(day => {
     runningBalance += day.resultado;
     day.saldo = runningBalance;
   });
 
-  // Cálculos de Totais para o Demonstrativo Diário
+  // C├ílculos de Totais para o Demonstrativo Di├írio
   const totalEntradasDemonstrativo = dailySummary.reduce((sum, d) => sum + d.entrada, 0);
   const totalSaidasDemonstrativo = dailySummary.reduce((sum, d) => sum + d.saida, 0);
   const totalResultadoDemonstrativo = dailySummary.reduce((sum, d) => sum + d.resultado, 0);
   const totalSaldoDemonstrativo = dailySummary.length > 0 ? dailySummary[dailySummary.length - 1].saldo : 0;
 
-  // 2. Agregação por Categoria (para Gráficos de Rosca)
+  // 2. Agrega├º├úo por Categoria (para Gr├íficos de Rosca)
   const getStatsByCategory = (type: 'income' | 'expense') => {
     const data = filteredTransactions.filter(t => t.type === type);
     const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
 
     const categories = data.reduce((acc: any, t) => {
-      const cat = t.businessCategory?.name || t.category?.name || 'Geral';
+      const cat = t.category || 'Geral';
       acc[cat] = (acc[cat] || 0) + parseFloat(t.amount || '0');
       return acc;
     }, {});
@@ -834,31 +533,10 @@ export function Transactions() {
   const incomeStats = getStatsByCategory('income');
   const expenseStats = getStatsByCategory('expense');
 
-  // Agregação por Subcategoria
-  const getStatsBySubcategory = (type: 'income' | 'expense') => {
-    const data = filteredTransactions.filter(t => t.type === type);
-    const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
+  // Cores para os gr├íficos
+  const chartColors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#6b7280', '#ec4899', '#06b6d4'];
 
-    const subcategories = data.reduce((acc: any, t) => {
-      const subcat = t.businessSubcategory?.name || 'Geral';
-      acc[subcat] = (acc[subcat] || 0) + parseFloat(t.amount || '0');
-      return acc;
-    }, {});
-
-    return Object.entries(subcategories).map(([name, value]: [string, any]) => ({
-      name,
-      value,
-      percent: total > 0 ? (value / total) * 100 : 0
-    })).sort((a, b) => b.value - a.value);
-  };
-
-  const incomeSubStats = getStatsBySubcategory('income');
-  const expenseSubStats = getStatsBySubcategory('expense');
-
-  // Cores para os gráficos
-  const chartColors = ['#10b981', '#1D3557', '#f59e0b', '#8b5cf6', '#6b7280', '#ec4899', '#06b6d4'];
-
-  // Funções de ordenação
+  // Fun├º├Áes de ordena├º├úo
   const handlePayablesSort = (field: string) => {
     const direction = payablesSortField === field && payablesSortDirection === 'asc' ? 'desc' : 'asc';
     setPayablesSortField(field);
@@ -871,7 +549,7 @@ export function Transactions() {
     setReceivablesSortDirection(direction);
   };
 
-  // Função para ordenar dados
+  // Fun├º├úo para ordenar dados
   const sortData = (data: any[], sortField: string, sortDirection: 'asc' | 'desc') => {
     if (!sortField) return data;
 
@@ -910,7 +588,7 @@ export function Transactions() {
     receivablesCurrentPage * receivablesItemsPerPage
   );
 
-  // Cálculos de paginação
+  // C├ílculos de pagina├º├úo
   const payablesTotalPages = Math.ceil(sortedPayables.length / payablesItemsPerPage);
   const receivablesTotalPages = Math.ceil(sortedReceivables.length / receivablesItemsPerPage);
 
@@ -933,120 +611,16 @@ export function Transactions() {
     queryFn: () => fetch('/api/dashboard', { credentials: 'include' }).then(res => res.json()),
   });
 
-  // Movimentação por conta bancária no período filtrado
-  const buildAccountFlow = (typeFilter?: 'income' | 'expense') => {
-    const flowByAccount: Record<number, { name: string; flow: number }> = {};
-    filteredTransactions.forEach(t => {
-      if (typeFilter && t.type !== typeFilter) return;
-      const accId = t.bankAccountId;
-      if (!accId) return;
-      const account = dashboardData?.bankAccounts?.find((a: any) => a.id === accId);
-      if (!account) return;
-      if (!flowByAccount[accId]) {
-        flowByAccount[accId] = { name: account.name, flow: 0 };
-      }
-      const amount = parseFloat(t.amount || '0');
-      // Sem filtro (Visão Geral): despesas subtraem do fluxo
-      // Com filtro: sempre soma (o sinal é tratado no template)
-      if (!typeFilter && t.type === 'expense') {
-        flowByAccount[accId].flow -= amount;
-      } else {
-        flowByAccount[accId].flow += amount;
-      }
-    });
-    return Object.entries(flowByAccount).map(([id, data]) => ({
-      id: Number(id),
-      name: data.name,
-      flow: data.flow,
-    }));
-  };
-
-  const accountFlowStats = buildAccountFlow();
-  const accountFlowExpenseStats = buildAccountFlow('expense');
-  const accountFlowIncomeStats = buildAccountFlow('income');
-
-  const safeCustomBanks = Array.isArray(customBanks) ? customBanks : [];
-  const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...safeCustomBanks].map(item => [item.code, item])).values())
+  const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...customBanks].map(item => [item.code, item])).values())
     .sort((a, b) => parseInt(a.code) - parseInt(b.code));
 
   // Garantir que chartAccounts seja sempre um array
   const safeChartAccountsData: any[] = Array.isArray(chartAccounts) ? chartAccounts : [];
 
-  // Para compatibilidade com o código de renderização que usa safeChartAccounts
+  // Para compatibilidade com o c├│digo de renderiza├º├úo que usa safeChartAccounts
   const safeChartAccounts = safeChartAccountsData;
 
-  // Mutation para liquidar transação (Adicionada manualmente por recuperação)
-  const liquidateTransactionMutation = useMutation({
-    mutationFn: (id: number) =>
-      fetch(`/api/transactions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ status: 'pago' }),
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      showSuccess('Lançamento liquidado com sucesso!', "");
-    },
-    onError: (error: any) => {
-      showError('Erro ao liquidar lançamento', error.message || 'Tente novamente.');
-    }
-  });
-
-  const handleLiquidateTransaction = (item: any, type: string) => {
-    console.log("Liquidar clicado. Item recebido:", item);
-    const tx = transactions.find(t => t.id == item.id);
-    console.log("Transação encontrada:", tx);
-    if (tx) {
-      setTransactionToLiquidate(tx);
-      setLiquidateModalOpen(true);
-      console.log("Abrindo o modal de liquidação...");
-    } else {
-      console.error("Transação não encontrada para o id:", item.id);
-    }
-  };
-
-  const confirmLiquidation = async (data: any) => {
-    if (!transactionToLiquidate) return;
-    
-    // Calcula o valor mantendo os centavos como string para a API
-    const amountStr = data.finalAmount.toFixed(2).replace('.', ',');
-    const parsedAmount = parseFloat(amountStr.replace(',', '.'));
-    
-    // Determina encargos se houver
-    let interestDetails = {};
-    if (data.interestAmount > 0) {
-      interestDetails = {
-        aplicarEncargos: true,
-        tipoEncargo: 'valor',
-        moraDia: data.interestAmount.toString(),
-      };
-    }
-
-    const payload = {
-      status: 'pago',
-      amount: parsedAmount.toString(),
-      bankAccountId: data.bankAccountId,
-      liquidationDate: data.liquidationDate,
-      ...interestDetails
-    };
-
-    try {
-      await updateTransactionMutation.mutateAsync({
-        id: transactionToLiquidate.id,
-        data: payload
-      });
-      setLiquidateModalOpen(false);
-      setTransactionToLiquidate(null);
-      showSuccess('Lançamento liquidado com sucesso!', "");
-    } catch (error: any) {
-      showError('Erro ao liquidar lançamento', error.message || 'Tente novamente.');
-    }
-  };
-
-  // Mutation para atualizar transação
+  // Mutation para atualizar transa├º├úo
   const updateTransactionMutation = useMutation({
     mutationFn: ({ id, data }: { id: number, data: any }) =>
       fetch(`/api/transactions/${id}`, {
@@ -1056,19 +630,19 @@ export function Transactions() {
         body: JSON.stringify(data),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Transa├º├úo atualizada com sucesso!', "");
       setTransactionModalOpen(false);
       setEditingTransaction(null);
-      showSuccess('Transação atualizada com sucesso!', 'Os dados foram salvos no sistema.');
     },
     onError: (error: any) => {
-      showError('Erro ao atualizar transação', error.message || 'Verifique os dados e tente novamente.');
+      showError('Erro ao atualizar transa├º├úo', error.message || 'Verifique os dados e tente novamente.');
     }
   });
 
-  // Mutation para excluir transação
+  // Mutation para excluir transa├º├úo
   const deleteTransactionMutation = useMutation({
     mutationFn: (id: number) =>
       fetch(`/api/transactions/${id}`, {
@@ -1076,17 +650,17 @@ export function Transactions() {
         credentials: 'include',
       }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      showSuccess('Transação excluída com sucesso!', "");
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Transa├º├úo exclu├¡da com sucesso!', "");
     },
     onError: (error: any) => {
-      showError('Erro ao excluir transação', error.message || 'Tente novamente mais tarde.');
+      showError('Erro ao excluir transa├º├úo', error.message || 'Tente novamente mais tarde.');
     }
   });
 
-  // Mutation para criar transação
+  // Mutation para criar transa├º├úo
   const createTransactionMutation = useMutation({
     mutationFn: (transactionData: any) =>
       fetch('/api/transactions', {
@@ -1096,41 +670,21 @@ export function Transactions() {
         body: JSON.stringify(transactionData),
       }).then(res => res.json()),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Transa├º├úo salva com sucesso!', "");
       setTransactionModalOpen(false);
-      showSuccess('Transação salva com sucesso!', 'O lançamento foi registrado no sistema.');
     },
     onError: (error: any) => {
-      showError('Erro ao salvar transação', error.message || 'Verifique os dados e tente novamente.');
+      showError('Erro ao salvar transa├º├úo', error.message || 'Verifique os dados e tente novamente.');
     }
   });
 
-  const createTransferMutation = useMutation({
-    mutationFn: (transferData: any) =>
-      fetch('/api/transactions/transfer', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(transferData),
-      }).then(res => res.json()),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      setTransferModalOpen(false);
-      showSuccess('Transferência concluída', 'Valores atualizados em ambas as contas.');
-    },
-    onError: (error: any) => {
-      showError('Erro na transferência', error.message || 'Verifique os dados e tente novamente.');
-    }
-  });
-
-  // Função para salvar transação (Criação ou Edição)
+  // Fun├º├úo para salvar transa├º├úo (Cria├º├úo ou Edi├º├úo)
   const handleSaveTransaction = async (transactionData: any) => {
     try {
-      // Limpar formatação de valores preservando decimais (padrão parseMoeda)
+      // Limpar formata├º├úo de valores preservando decimais (padr├úo parseMoeda)
       const parseMoeda = (val: any) => {
         if (!val) return 0;
         const str = val.toString();
@@ -1141,34 +695,27 @@ export function Transactions() {
 
       const valorNumerico = parseMoeda(transactionData.valor);
 
-      // Mapear os dados do formulário para o formato esperado pelo backend
+      // Mapear os dados do formul├írio para o formato esperado pelo backend
       const transactionPayload = {
         amount: valorNumerico,
-        description: transactionData.descricao || 'Lançamento',
+        description: transactionData.descricao || 'Lan├ºamento',
         type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
-        date: transactionData.data ? transactionData.data.split('/').reverse().join('-') : localDateStr(),
+        date: transactionData.data ? new Date(transactionData.data.split('/').reverse().join('-')).toISOString() : new Date().toISOString(),
         categoryId: null, // Desativado em favor do Plano de Contas (chartAccountId)
         chartAccountId: transactionData.chartAccountId ? parseInt(transactionData.chartAccountId) : null,
         bankAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
         relationshipId: transactionData.contato ? parseInt(transactionData.contato) : null,
         status: transactionData.status || 'pago',
 
-        // Campos de repetição e parcelamento
-        repeticao: transactionData.repeticao || 'Única',
+        // Campos de repeti├º├úo e parcelamento
+        repeticao: transactionData.repeticao || '├Ünica',
         numeroParcelas: transactionData.numeroParcelas ? parseInt(transactionData.numeroParcelas) : null,
         dataPrimeiraParcela: transactionData.dataPrimeiraParcela || null,
         aplicarJuros: transactionData.aplicarJuros || false,
         tipoJuros: transactionData.tipoJuros || null,
         valorJuros: transactionData.valorJuros ? parseFloat(transactionData.valorJuros) : null,
         aplicarJurosEm: transactionData.aplicarJurosEm || null,
-        aplicarEncargos: transactionData.aplicarEncargos || false,
-        jurosMes: transactionData.jurosMes ? parseFloat(transactionData.jurosMes) : null,
-        moraDia: transactionData.moraDia ? parseFloat(transactionData.moraDia) : null,
-        tipoEncargo: transactionData.tipoEncargo || null,
-        aplicarMultaEm: transactionData.aplicarMultaEm || null,
         periodicidade: transactionData.periodicidade || null,
-        intervalo: transactionData.intervalo ? parseInt(transactionData.intervalo) : null,
-        dataTermino: transactionData.dataTermino || null,
 
         // Outros campos
         observacoes: transactionData.observacoes || null,
@@ -1183,13 +730,12 @@ export function Transactions() {
       } else {
         await createTransactionMutation.mutateAsync(transactionPayload);
       }
-    } catch (error: any) {
-      console.error('Erro ao salvar transação:', error);
-      showError('Erro ao salvar transação', error?.message || 'Ocorreu um erro inesperado. Verifique os dados e tente novamente.');
+    } catch (error) {
+      console.error('Erro ao salvar transa├º├úo:', error);
     }
   };
 
-  // Função para processar baixa em lote
+  // Fun├º├úo para processar baixa em lote
   const handleBatchPayment = async (paymentData: any) => {
     try {
       const selectedItems = batchPaymentType === 'payable' ? selectedPayables : selectedReceivables;
@@ -1200,7 +746,7 @@ export function Transactions() {
       const desconto = parseFloat(paymentData.desconto?.replace(/\D/g, '') || '0') / 100;
       const totalFinal = totalOriginal + jurosMulta - desconto;
 
-      // Aqui você processaria a baixa no backend
+      // Aqui voc├¬ processaria a baixa no backend
       console.log('Processando baixa em lote:', {
         tipo: batchPaymentType,
         contaBancariaId: paymentData.contaBancaria,
@@ -1214,7 +760,7 @@ export function Transactions() {
         itens: selectedItems
       });
 
-      // Limpar seleção e desativar modo após processar
+      // Limpar sele├º├úo e desativar modo ap├│s processar
       if (batchPaymentType === 'payable') {
         setSelectedPayables([]);
         setBatchModePayables(false);
@@ -1227,7 +773,7 @@ export function Transactions() {
 
       showSuccess(
         'Baixa em lote realizada',
-        `${selectedItems.length} ${selectedItems.length === 1 ? 'lançamento processado' : 'lançamentos processados'} com sucesso!`
+        `${selectedItems.length} ${selectedItems.length === 1 ? 'lan├ºamento processado' : 'lan├ºamentos processados'} com sucesso!`
       );
     } catch (error) {
       console.error('Erro ao processar baixa em lote:', error);
@@ -1239,7 +785,7 @@ export function Transactions() {
 
 
 
-  // Calcula a posição e largura da barra de progressão
+  // Calcula a posi├º├úo e largura da barra de progress├úo
   useEffect(() => {
     const updateProgressBar = () => {
       if (!tabListRef.current) return;
@@ -1252,26 +798,26 @@ export function Transactions() {
         const leftOffset = activeTabRect.left - tabListRect.left;
         const width = activeTabRect.width;
 
-        // Define a posição e largura da barra
+        // Define a posi├º├úo e largura da barra
         setProgressWidth(width);
 
-        // Aplica a posição através de CSS custom properties
+        // Aplica a posi├º├úo atrav├®s de CSS custom properties
         const progressBar = tabListRef.current.querySelector('.progress-bar') as HTMLElement;
         if (progressBar) {
-          // Aplica a cor do texto ativo e ícone
+          // Aplica a cor do texto ativo e ├¡cone
           activeTabElement.style.color = '#4D4E48';
           const icon = activeTabElement.querySelector('svg');
           if (icon) icon.style.color = '#4D4E48';
 
-          // Define a posição e largura final
+          // Define a posi├º├úo e largura final
           progressBar.style.setProperty('--progress-left', `${leftOffset}px`);
           progressBar.style.setProperty('--progress-width', `${width}px`);
 
-          // Remove animação anterior e força reset
+          // Remove anima├º├úo anterior e for├ºa reset
           progressBar.style.animation = 'none';
-          progressBar.offsetHeight; // Força repaint
+          progressBar.offsetHeight; // For├ºa repaint
 
-          // Aplica nova animação
+          // Aplica nova anima├º├úo
           progressBar.style.animation = 'progressFill 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
           progressBar.style.backgroundColor = '#B59363';
         }
@@ -1283,145 +829,110 @@ export function Transactions() {
     return () => clearTimeout(timer);
   }, [activeTab]);
 
-  // Lógica de transactions e filteredTransactions consolidada no topo
+  // L├│gica de transactions e filteredTransactions consolidada no topo
 
-  // Funções para navegação temporal
-  const navigatePeriod = (direction: 'prev' | 'next') => {
-    const refDate = selectedDate || new Date();
-    const newDate = new Date(refDate);
-    const step = direction === 'next' ? 1 : -1;
+  // Fun├º├Áes para navega├º├úo temporal
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    const months = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+    const [monthName, year] = currentMonth.split(' ');
+    const currentIndex = months.indexOf(monthName);
 
-    switch (filterPeriod) {
-      case 'Diário':
-        newDate.setDate(newDate.getDate() + step);
-        break;
-      case 'Semanal':
-        newDate.setDate(newDate.getDate() + (step * 7));
-        break;
-      case 'Mensal':
-        newDate.setMonth(newDate.getMonth() + step);
-        break;
-      case 'Anual':
-        newDate.setFullYear(newDate.getFullYear() + step);
-        break;
-      case 'Período':
-        return; // Sem navegação por setas no modo Período
+    let newIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
+    let newYear = parseInt(year);
+
+    if (newIndex > 11) {
+      newIndex = 0;
+      newYear++;
+    } else if (newIndex < 0) {
+      newIndex = 11;
+      newYear--;
     }
 
-    setSelectedDate(newDate);
+    setCurrentMonth(`${months[newIndex]} ${newYear}`);
   };
 
   const handleDateSelect = (date: Date | undefined) => {
     if (date) {
       setSelectedDate(date);
+      const monthName = format(date, 'MMMM yyyy', { locale: ptBR });
+      setCurrentMonth(monthName);
       setIsCalendarOpen(false);
     }
   };
-
-
 
   const handleFilterChange = (period: string) => {
     setFilterPeriod(period);
   };
 
-
-
-  // Título de exibição do período na barra de navegação
-  const getDisplayTitle = (): string => {
-    const refDate = selectedDate || new Date();
-    switch (filterPeriod) {
-      case 'Diário':
-        return format(refDate, "d 'de' MMMM yyyy", { locale: ptBR });
-      case 'Semanal': {
-        const day = refDate.getDay();
-        const monday = new Date(refDate);
-        monday.setDate(refDate.getDate() - (day === 0 ? 6 : day - 1));
-        const sunday = new Date(monday);
-        sunday.setDate(monday.getDate() + 6);
-        if (monday.getMonth() === sunday.getMonth()) {
-          return `${format(monday, 'd', { locale: ptBR })} a ${format(sunday, "d 'de' MMM yyyy", { locale: ptBR })}`;
-        }
-        return `${format(monday, "d 'de' MMM", { locale: ptBR })} a ${format(sunday, "d 'de' MMM yyyy", { locale: ptBR })}`;
-      }
-      case 'Mensal':
-        return currentMonth;
-      case 'Anual':
-        return format(refDate, 'yyyy');
-      case 'Período':
-        return `${format(periodStartDate, 'dd/MM/yyyy')} a ${format(periodEndDate, 'dd/MM/yyyy')}`;
-      default:
-        return currentMonth;
-    }
-  };
-
-  const displayTitle = getDisplayTitle();
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Finanças</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Finan├ºas</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Gerencie suas finanças de forma inteligente e organizada
+            Gerencie suas finan├ºas de forma inteligente e organizada
           </p>
         </div>
         <div className="relative">
-          {activeTab === "movimentacoes" ? (
-            <MultiActionButton 
-              onAction={(action) => {
-                if (action === 'transfer') {
-                  setTransferModalOpen(true);
-                } else if (action === 'income') {
-                  setTransactionModalType('Nova receita');
-                  setTransactionModalOpen(true);
-                } else if (action === 'expense') {
-                  setTransactionModalType('Nova despesa');
-                  setTransactionModalOpen(true);
-                }
-              }} 
-            />
-          ) : (
-            <button
-              onClick={() => {
-                console.log("Active tab:", activeTab);
-                if (activeTab === "centro-custo") {
-                  setChartAccountModalOpen(true);
-                } else if (activeTab === "contas") {
-                  setBankAccountModalOpen(true);
-                }
-              }}
-              className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
-              title={
-                activeTab === "centro-custo"
-                  ? "Nova Conta - Plano de Contas"
-                  : activeTab === "contas"
-                    ? "Nova Conta Bancária"
-                    : "Adicionar Novo"
+          <button
+            onClick={() => {
+              console.log("Active tab:", activeTab);
+              if (activeTab === "centro-custo") {
+                // Dispara o modal do Plano de Contas que agora ├® controlado pelo estado local de ChartOfAccountsContent
+                // mas como o bot├úo est├í no pai, precisamos de um mecanismo.
+                // Vou redefinir o setIsModalOpen ou usar o estado que j├í existe se poss├¡vel.
+                // Como n├úo tenho acesso direto ao estado interno, vou usar uma solu├º├úo comum:
+                // O pai controla o estado de abertura e passa para o filho.
+                setChartAccountModalOpen(true);
+              } else if (activeTab === "movimentacoes") {
+                console.log("Opening transaction modal");
+                setTransactionModalOpen(true);
+              } else if (activeTab === "contas") {
+                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
+                setBankAccountModalOpen(true);
+                console.log("Bank account modal state set to true");
               }
-              style={{
-                boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
-              }}
-            >
-              <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
-              <div className="absolute inset-0 rounded-full overflow-hidden">
-                <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
-              </div>
-            </button>
-          )}
+            }}
+            className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
+            title={
+              activeTab === "centro-custo"
+                ? "Nova Conta - Plano de Contas"
+                : activeTab === "movimentacoes"
+                  ? "Novo Lan├ºamento Financeiro"
+                  : activeTab === "contas"
+                    ? "Nova Conta Banc├íria"
+                    : "Adicionar Novo"
+            }
+            style={{
+              boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+            }}
+          >
+            {/* Efeito de brilho interno */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
-          {activeTab !== "movimentacoes" && (
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-              {
-                activeTab === "centro-custo"
-                  ? "Nova Conta - Plano de Contas"
-                  : activeTab === "contas"
-                    ? "Nova Conta Bancária"
-                    : "Adicionar Novo"
-              }
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+            {/* ├ìcone Plus com anima├º├úo */}
+            <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
+
+            {/* Ripple effect */}
+            <div className="absolute inset-0 rounded-full overflow-hidden">
+              <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
             </div>
-          )}
+          </button>
+
+          {/* Tooltip */}
+          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+            {
+              activeTab === "centro-custo"
+                ? "Nova Conta - Plano de Contas"
+                : activeTab === "movimentacoes"
+                  ? "Novo Lan├ºamento Financeiro"
+                  : activeTab === "contas"
+                    ? "Nova Conta Banc├íria"
+                    : "Adicionar Novo"
+            }
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+          </div>
         </div>
       </div>
 
@@ -1433,14 +944,14 @@ export function Transactions() {
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <Eye className="h-4 w-4 mr-2" />
-              Visão Geral
+              Vis├úo Geral
             </TabsTrigger>
             <TabsTrigger
               value="movimentacoes"
               className="data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#4D4E48] font-medium px-6 py-2 transition-all relative overflow-hidden"
             >
               <TrendingUp className="h-4 w-4 mr-2" />
-              Movimentações
+              Movimenta├º├Áes
             </TabsTrigger>
             <TabsTrigger
               value="contas"
@@ -1458,7 +969,7 @@ export function Transactions() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Barra de progressão inteligente e animada */}
+          {/* Barra de progress├úo inteligente e animada */}
           <div className="absolute bottom-1 left-1 right-1 h-0.5 overflow-hidden">
             <div
               className="progress-bar absolute bottom-0 h-full bg-[#B59363] rounded-full"
@@ -1487,84 +998,47 @@ export function Transactions() {
                           <div className="flex items-center justify-between">
                             <div>
                               <CardTitle className="text-lg font-semibold">Fluxo de caixa</CardTitle>
-                              <CardDescription className="text-sm text-gray-500">
-                                {filterPeriod === 'Diário' ? 'Evolução diária' : filterPeriod === 'Semanal' ? 'Evolução semanal' : filterPeriod === 'Anual' ? 'Evolução anual' : filterPeriod === 'Período' ? 'Evolução do período' : 'Evolução mensal'}
-                              </CardDescription>
+                              <CardDescription className="text-sm text-gray-500">Evolu├º├úo mensal</CardDescription>
                             </div>
                             <div className="flex items-center gap-3">
-                              {/* Navegação de período */}
+                              {/* Navega├º├úo de m├¬s */}
                               <div className="flex items-center gap-1">
-                                {filterPeriod !== 'Período' && (
-                                  <button
-                                    onClick={() => navigatePeriod('prev')}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    <ChevronLeft className="h-4 w-4" />
-                                  </button>
-                                )}
-                                {filterPeriod !== 'Período' && (
-                                  <span className="text-sm font-medium min-w-[100px] text-center">
-                                    {displayTitle}
-                                  </span>
-                                )}
-                                {filterPeriod !== 'Período' && (
-                                  <button
-                                    onClick={() => navigatePeriod('next')}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    <ChevronRight className="h-4 w-4" />
-                                  </button>
-                                )}
+                                <button
+                                  onClick={() => navigateMonth('prev')}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                  <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                <span className="text-sm font-medium min-w-[100px] text-center">
+                                  {currentMonth}
+                                </span>
+                                <button
+                                  onClick={() => navigateMonth('next')}
+                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                >
+                                  <ChevronRight className="h-4 w-4" />
+                                </button>
                               </div>
 
-                              {/* Filtro de Datas Inline ou Calendário */}
-                              {filterPeriod === 'Período' ? (
-                                <div className="flex items-center gap-3">
-                                  <div className="flex flex-col w-36">
-                                    <DateInput
-                                      label="Data Inicial"
-                                      value={format(periodStartDate, 'yyyy-MM-dd')}
-                                      onChange={(val) => {
-                                        if (val) {
-                                          const dt = new Date(val + 'T12:00:00');
-                                          setPeriodStartDate(dt);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex flex-col w-36">
-                                    <DateInput
-                                      label="Data Final"
-                                      value={format(periodEndDate, 'yyyy-MM-dd')}
-                                      onChange={(val) => {
-                                        if (val) {
-                                          const dt = new Date(val + 'T12:00:00');
-                                          setPeriodEndDate(dt);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              ) : (
-                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                  <PopoverTrigger asChild>
-                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                      <Calendar className="h-4 w-4" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="end">
-                                    <CalendarComponent
-                                      mode="single"
-                                      selected={selectedDate}
-                                      onSelect={handleDateSelect}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              )}
+                              {/* ├ìcone do calend├írio */}
+                              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                <PopoverTrigger asChild>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Calendar className="h-4 w-4" />
+                                  </button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={handleDateSelect}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
 
-                              {/* Ícone de engrenagem com dropdown */}
-                              <DropdownMenu modal={false}>
+                              {/* ├ìcone de engrenagem com dropdown */}
+                              <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                   <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
                                     <Settings className="h-4 w-4" />
@@ -1572,34 +1046,40 @@ export function Transactions() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-40">
                                   <DropdownMenuItem
-                                    onClick={() => handleFilterChange('Diário')}
-                                    className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                  >
-                                    Diário
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Semanal')}
-                                    className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                    className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Semanal
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleFilterChange('Mensal')}
-                                    className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                    className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Mensal
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Trimestral')}
+                                    className={filterPeriod === 'Trimestral' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
+                                  >
+                                    Trimestral
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Semestral')}
+                                    className={filterPeriod === 'Semestral' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
+                                  >
+                                    Semestral
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
                                     onClick={() => handleFilterChange('Anual')}
-                                    className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                    className={filterPeriod === 'Anual' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
                                     Anual
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() => handleFilterChange('Período')}
-                                    className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                    onClick={() => handleFilterChange('Personalizar')}
+                                    className={filterPeriod === 'Personalizar' ? 'bg-[#B59363]/5 text-[#4D4E48]' : ''}
                                   >
-                                    Período
+                                    Personalizar
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -1610,11 +1090,11 @@ export function Transactions() {
                           <div className="h-64">
                             <Line
                               data={{
-                                labels: chartFluxoData.labels,
+                                labels: dashboardData?.monthlyTrends?.map(item => item.month) || ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
                                 datasets: [
                                   {
                                     label: 'Receitas',
-                                    data: chartFluxoData.incomeData,
+                                    data: dashboardData?.monthlyTrends?.map(item => item.income) || [0, 0, 0, 0, 0, 0],
                                     borderColor: '#B59363',
                                     backgroundColor: 'transparent',
                                     tension: 0.4,
@@ -1622,7 +1102,7 @@ export function Transactions() {
                                   },
                                   {
                                     label: 'Despesas',
-                                    data: chartFluxoData.expenseData,
+                                    data: dashboardData?.monthlyTrends?.map(item => item.expenses) || [0, 0, 0, 0, 0, 0],
                                     borderColor: '#ef4444',
                                     backgroundColor: 'transparent',
                                     tension: 0.4,
@@ -1661,19 +1141,19 @@ export function Transactions() {
                                 <div className="w-3 h-3 bg-[#B59363] rounded-full"></div>
                                 <span>Receitas</span>
                               </div>
-                              <span className="font-medium text-[#B59363]">{formatCurrency(chartFluxoData.totalIncome.toString())}</span>
+                              <span className="font-medium text-[#B59363]">{formatCurrency((dashboardData?.monthlyIncome || 0).toString())}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
                                 <div className="w-3 h-3 bg-red-500 rounded-full"></div>
                                 <span>Despesas</span>
                               </div>
-                              <span className="font-medium text-red-500">{formatCurrency(chartFluxoData.totalExpense.toString())}</span>
+                              <span className="font-medium text-red-500">{formatCurrency((dashboardData?.monthlyExpenses || 0).toString())}</span>
                             </div>
                             <div className="flex items-center justify-between text-sm font-semibold border-t pt-2">
                               <span>Saldo Acumulado</span>
-                              <span className={chartFluxoData.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                {formatCurrency(chartFluxoData.balance.toString())}
+                              <span className={dashboardData?.balance && dashboardData.balance >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {formatCurrency((dashboardData?.balance || 0).toString())}
                               </span>
                             </div>
                           </div>
@@ -1682,83 +1162,40 @@ export function Transactions() {
 
                     {/* 3 cards resumo em colunas iguais */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                      {/* Card Contas - Saldo / Movimentação */}
+                      {/* Card Saldos em Contas */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
                         <CardHeader className="pb-2 pt-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-sm font-semibold">
-                              {showAccountFlow ? 'Movimentação' : 'Saldos em Contas'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showAccountFlow ? 'gold' : 'primary'}
-                              onClick={() => setShowAccountFlow(!showAccountFlow)}
-                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
-                              className="p-1"
-                            />
-                          </div>
-                          <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : filterPeriod === 'Diário' ? 'Posição acumulada diária' : filterPeriod === 'Semanal' ? 'Posição acumulada semanal' : filterPeriod === 'Anual' ? 'Posição acumulada anual' : filterPeriod === 'Período' ? 'Posição acumulada do período' : 'Posição acumulada mensal'}
-                          </CardDescription>
+                          <CardTitle className="text-sm font-semibold">Saldos em Contas</CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          <div className="space-y-1 curtain-enter" key={showAccountFlow ? 'flow' : 'balance'}>
-                            {showAccountFlow ? (
-                              accountFlowStats.length > 0 ? (
-                                accountFlowStats.map((account) => (
-                                  <div key={account.id} className="flex items-center justify-between py-0.5 animate-in fade-in duration-300">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
-                                      <span className="text-xs truncate">{account.name}</span>
-                                    </div>
-                                    <div className={`text-xs font-medium ${account.flow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                      {account.flow >= 0 ? '+' : ''}{formatCurrency(account.flow.toString())}
-                                    </div>
+                          <div className="space-y-1">
+                            {dashboardData?.bankAccounts && dashboardData.bankAccounts.length > 0 ? (
+                              dashboardData.bankAccounts.map((account) => (
+                                <div key={account.id} className="flex items-center justify-between py-0.5">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
+                                    <span className="text-xs">{account.name}</span>
                                   </div>
-                                ))
-                              ) : (
-                                <div className="text-center py-2 text-xs text-gray-500">
-                                  Sem movimentações no período
+                                  <div className={`text-xs font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                    {formatCurrency(account.realBalance.toString())}
+                                  </div>
                                 </div>
-                              )
+                              ))
                             ) : (
-                              dashboardData?.bankAccounts && dashboardData.bankAccounts.length > 0 ? (
-                                dashboardData.bankAccounts.map((account) => (
-                                  <div key={account.id} className="flex items-center justify-between py-0.5 animate-in fade-in duration-300">
-                                    <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
-                                      <span className="text-xs truncate">{account.name}</span>
-                                    </div>
-                                    <div className={`text-xs font-medium ${account.realBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                                      {formatCurrency(account.realBalance.toString())}
-                                    </div>
-                                  </div>
-                                ))
-                              ) : (
-                                <div className="text-center py-2 text-xs text-gray-500">
-                                  Nenhuma conta bancária cadastrada
-                                </div>
-                              )
+                              <div className="text-center py-2 text-xs text-gray-500">
+                                Nenhuma conta banc├íria cadastrada
+                              </div>
                             )}
                             <div className="border-t pt-1 mt-1">
                               <div className="flex items-center justify-between font-semibold text-xs">
-                                <span>{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
+                                <span>Total</span>
                                 {(() => {
-                                  if (showAccountFlow) {
-                                    const totalFlow = accountFlowStats.reduce((sum, acc) => sum + acc.flow, 0);
-                                    return (
-                                      <span className={totalFlow >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                        {totalFlow >= 0 ? '+' : ''}{formatCurrency(totalFlow.toString())}
-                                      </span>
-                                    );
-                                  } else {
-                                    const totalReal = dashboardData?.bankAccounts?.reduce((sum, acc) => sum + (acc.realBalance || 0), 0) || 0;
-                                    return (
-                                      <span className={totalReal >= 0 ? 'text-gray-900' : 'text-red-600'}>
-                                        {formatCurrency(totalReal.toString())}
-                                      </span>
-                                    );
-                                  }
+                                  const totalReal = dashboardData?.bankAccounts?.reduce((sum, acc) => sum + (acc.realBalance || 0), 0) || 0;
+                                  return (
+                                    <span className={totalReal >= 0 ? 'text-gray-900' : 'text-red-600'}>
+                                      {formatCurrency(totalReal.toString())}
+                                    </span>
+                                  );
                                 })()}
                               </div>
                             </div>
@@ -1766,139 +1203,95 @@ export function Transactions() {
                         </CardContent>
                       </Card>
 
-                      {/* Card Despesas por Categoria / Subcategoria */}
+                      {/* Card Despesas por Categoria */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
-                        <CardHeader className="pb-0 pt-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-sm font-semibold">
-                              {showExpenseSubcategory ? 'Despesas por subcategoria' : 'Despesas por categoria'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showExpenseSubcategory ? 'gold' : 'primary'}
-                              onClick={() => setShowExpenseSubcategory(!showExpenseSubcategory)}
-                              title={showExpenseSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
-                              className="p-1"
-                            />
-                          </div>
+                        <CardHeader className="pb-1 pt-3 px-4">
+                          <CardTitle className="text-sm font-semibold">Despesas por categoria</CardTitle>
                           <CardDescription className="text-xs text-gray-500">Gastos projetados</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          {(() => {
-                            const currentExpenseStats = showExpenseSubcategory ? expenseSubStats : expenseStats;
-                            const totalExpense = currentExpenseStats.reduce((sum, s) => sum + s.value, 0);
-                            return (
-                              <div className="flex items-center gap-3">
-                                <div className="flex-1 min-w-0 curtain-enter" key={showExpenseSubcategory ? 'sub' : 'cat'}>
-                                  <div className="space-y-1 text-xs">
-                                    {currentExpenseStats.length > 0 ? currentExpenseStats.map((stat, idx) => (
-                                      <div key={idx} className="flex items-center gap-1.5 animate-in fade-in duration-300">
-                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
-                                        <span className="truncate">{stat.name}</span>
-                                        <span className="text-gray-500 flex-shrink-0">{stat.percent.toFixed(1).replace('.', ',')}%</span>
-                                      </div>
-                                    )) : (
-                                      <div className="py-2 text-gray-500">Sem despesas no período</div>
-                                    )}
-                                  </div>
+                          <div className="h-32">
+                            <Doughnut
+                              data={{
+                                labels: expenseStats.length > 0 ? expenseStats.map(s => s.name) : ['Nenhuma'],
+                                datasets: [{
+                                  data: expenseStats.length > 0 ? expenseStats.map(s => s.percent) : [100],
+                                  backgroundColor: expenseStats.length > 0 ? chartColors.slice(0, expenseStats.length) : ['#f3f4f6'],
+                                  borderWidth: 0,
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '60%',
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="mt-2 space-y-1 text-xs">
+                            {expenseStats.length > 0 ? expenseStats.map((stat, idx) => (
+                              <div key={idx} className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                  <span className="truncate">{stat.name}</span>
+                                  <span className="text-gray-500">{stat.percent.toFixed(1).replace('.', ',')}%</span>
                                 </div>
-                                <div className="flex flex-col items-center flex-shrink-0">
-                                  <div className="w-28 h-28">
-                                    <Doughnut
-                                      data={{
-                                        labels: currentExpenseStats.length > 0 ? currentExpenseStats.map(s => s.name) : ['Nenhuma'],
-                                        datasets: [{
-                                          data: currentExpenseStats.length > 0 ? currentExpenseStats.map(s => s.percent) : [100],
-                                          backgroundColor: currentExpenseStats.length > 0 ? chartColors.slice(0, currentExpenseStats.length) : ['#f3f4f6'],
-                                          borderWidth: 0,
-                                        }]
-                                      }}
-                                      options={{
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        cutout: '60%',
-                                        plugins: {
-                                          legend: { display: false },
-                                          tooltip: { enabled: true }
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="text-sm font-medium text-red-600 mt-1">
-                                    -{formatCurrency(totalExpense.toString())}
-                                  </span>
-                                </div>
+                                <span className="font-medium text-red-600">-{formatCurrency(stat.value.toString())}</span>
                               </div>
-                            );
-                          })()}
+                            )) : (
+                              <div className="text-center py-2 text-gray-500">Sem despesas no per├¡odo</div>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
 
-                      {/* Card Receitas por Categoria / Subcategoria */}
+                      {/* Card Receitas por Categoria */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
-                        <CardHeader className="pb-0 pt-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-sm font-semibold">
-                              {showIncomeSubcategory ? 'Receitas por subcategoria' : 'Receitas por Categoria'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showIncomeSubcategory ? 'gold' : 'primary'}
-                              onClick={() => setShowIncomeSubcategory(!showIncomeSubcategory)}
-                              title={showIncomeSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
-                              className="p-1"
-                            />
-                          </div>
+                        <CardHeader className="pb-1 pt-3 px-4">
+                          <CardTitle className="text-sm font-semibold">Receitas por Categoria</CardTitle>
                           <CardDescription className="text-xs text-gray-500">Entradas projetadas</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          {(() => {
-                            const currentIncomeStats = showIncomeSubcategory ? incomeSubStats : incomeStats;
-                            const totalIncome = currentIncomeStats.reduce((sum, s) => sum + s.value, 0);
-                            return (
-                              <div className="flex items-center gap-3">
-                                <div className="flex-1 min-w-0 curtain-enter" key={showIncomeSubcategory ? 'sub' : 'cat'}>
-                                  <div className="space-y-1 text-xs">
-                                    {currentIncomeStats.length > 0 ? currentIncomeStats.map((stat, idx) => (
-                                      <div key={idx} className="flex items-center gap-1.5 animate-in fade-in duration-300">
-                                        <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
-                                        <span className="truncate">{stat.name}</span>
-                                        <span className="text-gray-500 flex-shrink-0">{stat.percent.toFixed(1).replace('.', ',')}%</span>
-                                      </div>
-                                    )) : (
-                                      <div className="py-2 text-gray-500">Sem receitas no período</div>
-                                    )}
-                                  </div>
+                          <div className="h-32">
+                            <Doughnut
+                              data={{
+                                labels: incomeStats.length > 0 ? incomeStats.map(s => s.name) : ['Nenhuma'],
+                                datasets: [{
+                                  data: incomeStats.length > 0 ? incomeStats.map(s => s.percent) : [100],
+                                  backgroundColor: incomeStats.length > 0 ? chartColors.slice(0, incomeStats.length) : ['#f3f4f6'],
+                                  borderWidth: 0,
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                cutout: '60%',
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  }
+                                }
+                              }}
+                            />
+                          </div>
+                          <div className="mt-2 space-y-1 text-xs">
+                            {incomeStats.length > 0 ? incomeStats.map((stat, idx) => (
+                              <div key={idx} className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: chartColors[idx % chartColors.length] }}></div>
+                                  <span className="truncate">{stat.name}</span>
+                                  <span className="text-gray-500">{stat.percent.toFixed(1).replace('.', ',')}%</span>
                                 </div>
-                                <div className="flex flex-col items-center flex-shrink-0">
-                                  <div className="w-28 h-28">
-                                    <Doughnut
-                                      data={{
-                                        labels: currentIncomeStats.length > 0 ? currentIncomeStats.map(s => s.name) : ['Nenhuma'],
-                                        datasets: [{
-                                          data: currentIncomeStats.length > 0 ? currentIncomeStats.map(s => s.percent) : [100],
-                                          backgroundColor: currentIncomeStats.length > 0 ? chartColors.slice(0, currentIncomeStats.length) : ['#f3f4f6'],
-                                          borderWidth: 0,
-                                        }]
-                                      }}
-                                      options={{
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        cutout: '60%',
-                                        plugins: {
-                                          legend: { display: false },
-                                          tooltip: { enabled: true }
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <span className="text-sm font-medium text-green-600 mt-1">
-                                    +{formatCurrency(totalIncome.toString())}
-                                  </span>
-                                </div>
+                                <span className="font-medium text-green-600">+{formatCurrency(stat.value.toString())}</span>
                               </div>
-                            );
-                          })()}
+                            )) : (
+                              <div className="text-center py-2 text-gray-500">Sem receitas no per├¡odo</div>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
@@ -1907,109 +1300,63 @@ export function Transactions() {
               },
               {
                 value: "lancamentos",
-                label: "Lançamentos",
+                label: "Lan├ºamentos",
                 icon: <FileText className="h-4 w-4" />,
                 content: (
                   <div className="space-y-6">
-                    {/* Card Demonstrativo Diário com controles temporais */}
+                    {/* Card Demonstrativo Di├írio com controles temporais */}
                     <Card className="shadow-md border-gray-100/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 ease-in-out">
                       <CardHeader>
                         <div className="flex items-center justify-between">
                           <div>
-                            <CardTitle className="text-lg font-semibold">Demonstrativo Diário</CardTitle>
-                            <CardDescription className="text-sm text-gray-500">
-                              Saldo em {format(getFilterDateRange().end, "dd 'de' MMM", { locale: ptBR })}:{' '}
-                              <span className={`font-semibold ${totalSaldoDemonstrativo >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
-                              </span>
-                            </CardDescription>
+                            <CardTitle className="text-lg font-semibold">Demonstrativo Di├írio</CardTitle>
+                            <CardDescription className="text-sm text-gray-500">Saldo em 31 jul</CardDescription>
                           </div>
                           <div className="flex items-center gap-3">
-                            {/* Navegação de período */}
+                            {/* Navega├º├úo de m├¬s */}
                             <div className="flex items-center gap-1">
-                              {filterPeriod !== 'Período' && (
-                                <button
-                                  onClick={() => navigatePeriod('prev')}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                >
-                                  <ChevronLeft className="h-4 w-4" />
-                                </button>
-                              )}
-                              {filterPeriod !== 'Período' && (
-                                <span className="text-sm font-medium min-w-[100px] text-center">
-                                  {displayTitle}
-                                </span>
-                              )}
-                              {filterPeriod !== 'Período' && (
-                                <button
-                                  onClick={() => navigatePeriod('next')}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                >
-                                  <ChevronRight className="h-4 w-4" />
-                                </button>
-                              )}
+                              <button
+                                onClick={() => navigateMonth('prev')}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </button>
+                              <span className="text-sm font-medium min-w-[100px] text-center">
+                                {currentMonth}
+                              </span>
+                              <button
+                                onClick={() => navigateMonth('next')}
+                                className="p-1 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </button>
                             </div>
 
-                            {/* Filtro de Datas Inline ou Calendário */}
-                            {filterPeriod === 'Período' ? (
-                              <div className="flex items-center gap-3">
-                                <div className="flex flex-col w-36">
-                                  <DateInput
-                                    label="Data Inicial"
-                                    value={format(periodStartDate, 'yyyy-MM-dd')}
-                                    onChange={(val) => {
-                                      if (val) {
-                                        const dt = new Date(val + 'T12:00:00');
-                                        setPeriodStartDate(dt);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex flex-col w-36">
-                                  <DateInput
-                                    label="Data Final"
-                                    value={format(periodEndDate, 'yyyy-MM-dd')}
-                                    onChange={(val) => {
-                                      if (val) {
-                                        const dt = new Date(val + 'T12:00:00');
-                                        setPeriodEndDate(dt);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                <PopoverTrigger asChild>
-                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                    <Calendar className="h-4 w-4" />
-                                  </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={handleDateSelect}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            )}
+                            {/* ├ìcone do calend├írio */}
+                            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                              <PopoverTrigger asChild>
+                                <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                  <Calendar className="h-4 w-4" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="end">
+                                <CalendarComponent
+                                  mode="single"
+                                  selected={selectedDate}
+                                  onSelect={handleDateSelect}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
 
-                            {/* Ícone de engrenagem com dropdown */}
-                            <DropdownMenu modal={false}>
+                            {/* ├ìcone de engrenagem com dropdown */}
+                            <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
                                   <Settings className="h-4 w-4" />
                                 </button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Diário')}
-                                  className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                >
-                                  Diário
-                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleFilterChange('Semanal')}
                                   className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
@@ -2023,16 +1370,28 @@ export function Transactions() {
                                   Mensal
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
+                                  onClick={() => handleFilterChange('Trimestral')}
+                                  className={filterPeriod === 'Trimestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Trimestral
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleFilterChange('Semestral')}
+                                  className={filterPeriod === 'Semestral' ? 'bg-blue-50 text-blue-600' : ''}
+                                >
+                                  Semestral
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
                                   onClick={() => handleFilterChange('Anual')}
-                                  className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  className={filterPeriod === 'Anual' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
                                   Anual
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Período')}
-                                  className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  onClick={() => handleFilterChange('Personalizar')}
+                                  className={filterPeriod === 'Personalizar' ? 'bg-blue-50 text-blue-600' : ''}
                                 >
-                                  Período
+                                  Personalizar
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -2040,73 +1399,80 @@ export function Transactions() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="space-y-0">
+                        <div className="space-y-4">
                           {/* Header das colunas */}
-                          <div className="grid grid-cols-5 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider border-b pb-2 mb-1">
-                            <div>Data</div>
-                            <div className="text-right">Entradas (R$)</div>
-                            <div className="text-right">Saídas (R$)</div>
-                            <div className="text-right">Resultado (R$)</div>
-                            <div className="text-right">Saldo (R$)</div>
+                          <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-600 border-b pb-2">
+                            <div></div>
+                            <div className="text-center">Entradas (R$)</div>
+                            <div className="text-center">Sa├¡das (R$)</div>
+                            <div className="text-center">Resultado (R$)</div>
+                            <div className="text-center">Saldo (R$)</div>
+                            <div></div>
                           </div>
 
-                          {/* Linha 1 - Saldo Inicial */}
-                          <div className="grid grid-cols-5 gap-4 text-sm py-2 bg-gray-50 rounded font-semibold border-b">
-                            <div className="text-gray-700 flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                              Saldo Inicial
-                            </div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className={`text-right font-bold ${initialBankBalance >= 0 ? "text-gray-900" : "text-red-600"}`}>
-                              {formatCurrencyNumber(initialBankBalance)}
+                          {/* Contas resumo */}
+                          <div className="space-y-2">
+                            <div className="grid grid-cols-6 gap-4 text-sm items-center border-t pt-2 font-semibold">
+                              <div>Total</div>
+                              <div className="text-center text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
+                              <div className="text-center text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
+                              <div className={`text-center ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
+                              </div>
+                              <div className={`text-right ${totalSaldoDemonstrativo >= 0 ? "text-gray-900" : "text-red-600"}`}>
+                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
+                              </div>
+                              <div></div>
                             </div>
                           </div>
 
-                          {/* Lançamentos por data */}
-                          <div className="space-y-0">
+                          {/* Lan├ºamentos por data */}
+                          <div className="space-y-1 mt-6">
                             {dailySummary.length > 0 ? dailySummary.map((item, index) => (
-                              <div key={index} className="grid grid-cols-5 gap-4 text-sm py-2 hover:bg-gray-50 rounded transition-colors group border-b border-gray-100 last:border-0">
+                              <div key={index} className="grid grid-cols-6 gap-4 text-sm py-1 hover:bg-gray-100 rounded transition-colors group">
                                 <div className="text-gray-700 flex items-center gap-2">
                                   <div className={`w-1.5 h-1.5 rounded-full ${item.resultado >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                   {item.date}
                                 </div>
-                                <div className="text-right text-green-600">{item.entrada > 0 ? formatCurrencyNumber(item.entrada) : ""}</div>
-                                <div className="text-right text-red-600">{item.saida > 0 ? formatCurrencyNumber(item.saida) : ""}</div>
-                                <div className={`text-right font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                <div className="text-center text-green-600">{item.entrada > 0 ? formatCurrencyNumber(item.entrada) : ""}</div>
+                                <div className="text-center text-red-600">{item.saida > 0 ? formatCurrencyNumber(item.saida) : ""}</div>
+                                <div className={`text-center font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
                                   {item.resultado >= 0 ? '+' : ''}{formatCurrencyNumber(item.resultado)}
                                 </div>
                                 <div className={`text-right font-medium ${item.saldo >= 0 ? "text-gray-900" : "text-red-600"}`}>
                                   {formatCurrencyNumber(item.saldo)}
                                 </div>
+                                <div className="flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button className="p-1 hover:text-[#B59363]">
+                                    <Eye className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
                               </div>
                             )) : (
-                              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed mt-2">
-                                Nenhum lançamento para o período selecionado
+                              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed">
+                                Nenhum lan├ºamento para o per├¡odo selecionado
+                              </div>
+                            )}
+
+                            {/* Total */}
+                            {dailySummary.length > 0 && (
+                              <div className="grid grid-cols-6 gap-4 text-sm py-2 border-t font-semibold bg-[#B59363]/5 rounded mt-4">
+                                <div className="pl-2">Total do Per├¡odo</div>
+                                <div className="text-center text-green-600">{formatCurrencyNumber(dailySummary.reduce((s, i) => s + i.entrada, 0))}</div>
+                                <div className="text-center text-red-600">{formatCurrencyNumber(dailySummary.reduce((s, i) => s + i.saida, 0))}</div>
+                                <div className={`text-center ${resultMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                  {resultMonth >= 0 ? '+' : ''}{formatCurrencyNumber(resultMonth)}
+                                </div>
+                                <div className="text-right pr-2">Total Final</div>
+                                <div></div>
                               </div>
                             )}
                           </div>
-
-                          {/* Total do Período */}
-                          {dailySummary.length > 0 && (
-                            <div className="grid grid-cols-5 gap-4 text-sm py-3 border-t-2 border-[#B59363]/30 font-semibold bg-[#B59363]/5 rounded mt-2">
-                              <div className="pl-2">Total do Período</div>
-                              <div className="text-right text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
-                              <div className="text-right text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
-                              <div className={`text-right ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
-                              </div>
-                              <div className={`text-right pr-2 font-bold ${totalSaldoDemonstrativo >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </CardContent>
                     </Card>
 
-                    {/* Card Gráfico Resultado de Caixa */}
+                    {/* Card Gr├ífico Resultado de Caixa */}
                     <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
                       <CardHeader>
                         <CardTitle className="text-lg font-semibold">Resultado de caixa</CardTitle>
@@ -2179,25 +1545,25 @@ export function Transactions() {
             tabs={[
               {
                 value: "a-pagar",
-                label: "À Pagar",
+                label: "├Ç Pagar",
                 icon: <Clock className="h-4 w-4" />,
                 content: (
                   <div className="flex gap-6">
                     {/* Coluna esquerda - Cards pequenos */}
                     <div className="w-80 flex-shrink-0 space-y-6">
-                      {/* Card 1 - Resultado do período */}
+                      {/* Card 1 - Resultado do per├¡odo */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-base font-semibold">Resultado do período</CardTitle>
+                          <CardTitle className="text-base font-semibold">Resultado do per├¡odo</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À pagar</span>
+                            <span className="text-xs text-gray-700">├Ç pagar</span>
                             <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À receber</span>
+                            <span className="text-xs text-gray-700">├Ç receber</span>
                             <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
                           </div>
 
@@ -2215,79 +1581,38 @@ export function Transactions() {
                       {/* Card 2 - Bancos e saldos */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-base font-semibold">
-                              {showAccountFlow ? 'Movimentação' : 'Contas'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showAccountFlow ? 'gold' : 'primary'}
-                              onClick={() => setShowAccountFlow(!showAccountFlow)}
-                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
-                              className="p-1"
-                            />
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
+                            <div className="flex items-center gap-2">
+
+                              <span className="text-xs text-gray-500">Total a pagar</span>
+                            </div>
                           </div>
-                          <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Total a pagar'}
-                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="curtain-enter space-y-3" key={showAccountFlow ? 'flow' : 'balance'}>
-                          {showAccountFlow ? (
-                            accountFlowExpenseStats.length > 0 ? accountFlowExpenseStats.map((account) => (
-                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
-                                <div className="flex items-center gap-2">
-                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
-                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
-                                    {account.name}
-                                  </span>
-                                </div>
-                                <span className="text-xs font-bold text-red-600">
-                                  -{formatCurrencyNumber(account.flow)}
+                          {bankAccounts.length > 0 ? bankAccounts.map((account) => (
+                            <div key={account.id} className="flex items-center justify-between group">
+                              <div className="flex items-center gap-2">
+                                <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
+                                <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
+                                  {account.name}
                                 </span>
                               </div>
-                            )) : (
-                              <div className="text-center py-2 text-[10px] text-gray-500">Sem movimentações no período</div>
-                            )
-                          ) : (
-                            bankAccounts.length > 0 ? bankAccounts.map((account) => (
-                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
-                                <div className="flex items-center gap-2">
-                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
-                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
-                                    {account.name}
-                                  </span>
-                                </div>
-                                <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {formatCurrencyNumber(account.projectedBalance)}
-                                </span>
-                              </div>
-                            )) : (
-                              <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
-                            )
+                              <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {formatCurrencyNumber(account.projectedBalance)}
+                              </span>
+                            </div>
+                          )) : (
+                            <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
                           )}
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
-                              {(() => {
-                                if (showAccountFlow) {
-                                  const totalFlow = accountFlowExpenseStats.reduce((sum, acc) => sum + acc.flow, 0);
-                                  return (
-                                    <span className="text-xs font-bold text-red-600">
-                                      -{formatCurrencyNumber(totalFlow)}
-                                    </span>
-                                  );
-                                } else {
-                                  return (
-                                    <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                      {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
-                                    </span>
-                                  );
-                                }
-                              })()}
+                              <span className="text-xs text-gray-700 font-medium">Total Geral</span>
+                              <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
+                              </span>
                             </div>
-                          </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -2299,101 +1624,75 @@ export function Transactions() {
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
-                              <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
+                              <CardTitle className="text-lg font-semibold">Contas ├Ç Pagar</CardTitle>
+                              <CardDescription>Suas obriga├º├Áes financeiras pendentes</CardDescription>
                             </div>
-                            <div className="flex items-center gap-3">
-                              {/* Navegação de período */}
-                              <div className="flex items-center gap-1">
-                                {filterPeriod !== 'Período' && (
-                                  <button
-                                    onClick={() => navigatePeriod('prev')}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    <ChevronLeft className="h-4 w-4" />
-                                  </button>
-                                )}
-                                {filterPeriod !== 'Período' && (
-                                  <span className="text-sm font-medium min-w-[100px] text-center">
-                                    {displayTitle}
-                                  </span>
-                                )}
-                                {filterPeriod !== 'Período' && (
-                                  <button
-                                    onClick={() => navigatePeriod('next')}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    <ChevronRight className="h-4 w-4" />
-                                  </button>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
+                                const [month, year] = prevMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex--;
+                                if (currentMonthIndex < 0) {
+                                  currentMonthIndex = 11;
+                                  currentYear--;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
 
-                              {/* Filtro de Datas Inline ou Calendário */}
-                              {filterPeriod === 'Período' ? (
-                                <div className="flex items-center gap-3">
-                                  <div className="flex flex-col w-36">
-                                    <DateInput
-                                      label="Data Inicial"
-                                      value={format(periodStartDate, 'yyyy-MM-dd')}
-                                      onChange={(val) => {
-                                        if (val) {
-                                          const dt = new Date(val + 'T12:00:00');
-                                          setPeriodStartDate(dt);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex flex-col w-36">
-                                    <DateInput
-                                      label="Data Final"
-                                      value={format(periodEndDate, 'yyyy-MM-dd')}
-                                      onChange={(val) => {
-                                        if (val) {
-                                          const dt = new Date(val + 'T12:00:00');
-                                          setPeriodEndDate(dt);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              ) : (
-                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                  <PopoverTrigger asChild>
-                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                      <Calendar className="h-4 w-4" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="end">
-                                    <CalendarComponent
-                                      mode="single"
-                                      selected={selectedDate}
-                                      onSelect={handleDateSelect}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              )}
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                                    {currentMonth}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={(date) => {
+                                      setSelectedDate(date);
+                                      if (date) {
+                                        const monthNames = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                        setCurrentMonth(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
+                                      }
+                                    }}
+                                    locale={ptBR}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
 
-                              {/* Ícone de engrenagem com dropdown */}
-                              <DropdownMenu modal={false}>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                    <Settings className="h-4 w-4" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Diário')} className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Diário</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Semanal')} className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Semanal</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Mensal')} className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Mensal</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Anual')} className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Anual</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Período')} className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Período</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
+                                const [month, year] = nextMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex++;
+                                if (currentMonthIndex > 11) {
+                                  currentMonthIndex = 0;
+                                  currentYear++;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Calendar className="h-3 w-3" />
+                              </Button>
+
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Settings className="h-3 w-3" />
+                              </Button>
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4">
-                          {/* Botão para ativar modo de baixa em lote */}
+                          {/* Bot├úo para ativar modo de baixa em lote */}
                           <div className="mb-4 flex justify-end">
                             <IButtonPrime
                               icon={<FolderDown className="h-4 w-4" />}
@@ -2403,7 +1702,7 @@ export function Transactions() {
                               onClick={() => {
                                 setBatchModePayables(!batchModePayables);
                                 if (batchModePayables) {
-                                  // Ao desativar, limpa seleção
+                                  // Ao desativar, limpa sele├º├úo
                                   setSelectedPayables([]);
                                 }
                               }}
@@ -2435,7 +1734,7 @@ export function Transactions() {
                             onSelectionChange={setSelectedPayables}
                             columns={[
                               {
-                                label: "Razão Social",
+                                label: "Raz├úo Social",
                                 key: "company",
                                 align: "left",
                                 width: "22%",
@@ -2468,7 +1767,7 @@ export function Transactions() {
                                 width: "10%",
                                 sortable: true,
                                 render: (item: any) => (
-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Parcela' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
+                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
                                     item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
                                       'bg-gray-100 text-gray-800'
                                     }`}>
@@ -2509,35 +1808,25 @@ export function Transactions() {
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
-                                  icon={<CurrencyExchangeIcon style={{ fontSize: 14 }} />}
-                                  variant="gold"
-                                  title="Liquidação"
-                                  className="!p-2"
-                                  onClick={() => handleLiquidateTransaction(item, 'payable')}
-                                />
-                                <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
-                                  variant="neutral"
+                                  variant="gold"
                                   title="Editar"
                                   className="!p-2"
-                                  onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
-                                    if (tx) {
-                                      setEditingTransaction(tx);
-                                      setActiveMovimentacoesSubTab('a-pagar');
-                                      setTransactionModalOpen(true);
-                                    }
-                                  }}
+                                  onClick={() => console.log('Edit', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
-                                  variant="teal"
+                                  variant="gold"
                                   title="Visualizar"
                                   className="!p-2"
-                                  onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
-                                    if (tx) setViewingTransaction(tx);
-                                  }}
+                                  onClick={() => console.log('View', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Download className="h-3.5 w-3.5" />}
+                                  variant="gold"
+                                  title="Baixar Documento"
+                                  className="!p-2"
+                                  onClick={() => console.log('Download', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
@@ -2557,34 +1846,32 @@ export function Transactions() {
               },
               {
                 value: "a-receber",
-                label: "À Receber",
+                label: "├Ç Receber",
                 icon: <CheckCircle className="h-4 w-4" />,
                 content: (
                   <div className="flex gap-6">
                     {/* Coluna esquerda - Cards pequenos */}
                     <div className="w-80 flex-shrink-0 space-y-6">
-                      {/* Card 1 - Resultado do período */}
+                      {/* Card 1 - Resultado do per├¡odo */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <CardTitle className="text-base font-semibold">Resultado do período</CardTitle>
+                          <CardTitle className="text-base font-semibold">Resultado do per├¡odo</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À pagar</span>
-                            <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
+                            <span className="text-xs text-gray-700">├Ç pagar</span>
+                            <span className="text-sm font-bold text-red-600">-2.805,23</span>
                           </div>
 
                           <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-700">À receber</span>
-                            <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
+                            <span className="text-xs text-gray-700">├Ç receber</span>
+                            <span className="text-sm font-bold text-green-600">4.430,00</span>
                           </div>
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">Resultado</span>
-                              <span className={`text-sm font-bold ${resultMonth >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                {resultMonth >= 0 ? '+' : ''}{formatCurrencyNumber(resultMonth)}
-                              </span>
+                              <span className="text-sm font-bold text-green-600">1.624,77</span>
                             </div>
                           </div>
                         </CardContent>
@@ -2593,79 +1880,17 @@ export function Transactions() {
                       {/* Card 2 - Bancos e saldos */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-base font-semibold">
-                              {showAccountFlow ? 'Movimentação' : 'Contas'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showAccountFlow ? 'gold' : 'primary'}
-                              onClick={() => setShowAccountFlow(!showAccountFlow)}
-                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
-                              className="p-1"
-                            />
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-base font-semibold">Contas</CardTitle>
+                            <span className="text-xs text-gray-500">Total a receber</span>
                           </div>
-                          <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Total a receber'}
-                          </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="curtain-enter space-y-3" key={showAccountFlow ? 'flow-r' : 'balance-r'}>
-                          {showAccountFlow ? (
-                            accountFlowIncomeStats.length > 0 ? accountFlowIncomeStats.map((account) => (
-                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
-                                <div className="flex items-center gap-2">
-                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
-                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
-                                    {account.name}
-                                  </span>
-                                </div>
-                                <span className="text-xs font-bold text-green-600">
-                                  +{formatCurrencyNumber(account.flow)}
-                                </span>
-                              </div>
-                            )) : (
-                              <div className="text-center py-2 text-[10px] text-gray-500">Sem movimentações no período</div>
-                            )
-                          ) : (
-                            bankAccounts.length > 0 ? bankAccounts.map((account) => (
-                              <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
-                                <div className="flex items-center gap-2">
-                                  <input type="checkbox" defaultChecked className="text-[#B59363]" readOnly />
-                                  <span className="text-xs text-gray-700 truncate max-w-[120px]" title={account.name}>
-                                    {account.name}
-                                  </span>
-                                </div>
-                                <span className={`text-xs font-bold ${account.projectedBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                  {formatCurrencyNumber(account.projectedBalance)}
-                                </span>
-                              </div>
-                            )) : (
-                              <div className="text-center py-2 text-[10px] text-gray-500">Nenhuma conta</div>
-                            )
-                          )}
-
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
-                              {(() => {
-                                if (showAccountFlow) {
-                                  const totalFlow = accountFlowIncomeStats.reduce((sum, acc) => sum + acc.flow, 0);
-                                  return (
-                                    <span className="text-xs font-bold text-green-600">
-                                      +{formatCurrencyNumber(totalFlow)}
-                                    </span>
-                                  );
-                                } else {
-                                  return (
-                                    <span className={`text-xs font-bold ${(dashboardData?.totalBalance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                      {formatCurrencyNumber(dashboardData?.totalBalance || 0)}
-                                    </span>
-                                  );
-                                }
-                              })()}
+                              <span className="text-xs text-gray-700 font-medium">Total</span>
+                              <span className="text-xs font-bold text-green-600">{formatCurrencyNumber(totalReceivablesMonth)}</span>
                             </div>
-                          </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -2677,101 +1902,75 @@ export function Transactions() {
                         <CardHeader>
                           <div className="flex items-center justify-between">
                             <div>
-                              <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
+                              <CardTitle className="text-lg font-semibold">Valores ├Ç Receber</CardTitle>
                               <CardDescription>Receitas e entradas programadas</CardDescription>
                             </div>
-                            <div className="flex items-center gap-3">
-                              {/* Navegação de período */}
-                              <div className="flex items-center gap-1">
-                                {filterPeriod !== 'Período' && (
-                                  <button
-                                    onClick={() => navigatePeriod('prev')}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    <ChevronLeft className="h-4 w-4" />
-                                  </button>
-                                )}
-                                {filterPeriod !== 'Período' && (
-                                  <span className="text-sm font-medium min-w-[100px] text-center">
-                                    {displayTitle}
-                                  </span>
-                                )}
-                                {filterPeriod !== 'Período' && (
-                                  <button
-                                    onClick={() => navigatePeriod('next')}
-                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                  >
-                                    <ChevronRight className="h-4 w-4" />
-                                  </button>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(prevMonth => {
+                                const [month, year] = prevMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex--;
+                                if (currentMonthIndex < 0) {
+                                  currentMonthIndex = 11;
+                                  currentYear--;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronLeft className="h-3 w-3" />
+                              </Button>
 
-                              {/* Filtro de Datas Inline ou Calendário */}
-                              {filterPeriod === 'Período' ? (
-                                <div className="flex items-center gap-3">
-                                  <div className="flex flex-col w-36">
-                                    <DateInput
-                                      label="Data Inicial"
-                                      value={format(periodStartDate, 'yyyy-MM-dd')}
-                                      onChange={(val) => {
-                                        if (val) {
-                                          const dt = new Date(val + 'T12:00:00');
-                                          setPeriodStartDate(dt);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                  <div className="flex flex-col w-36">
-                                    <DateInput
-                                      label="Data Final"
-                                      value={format(periodEndDate, 'yyyy-MM-dd')}
-                                      onChange={(val) => {
-                                        if (val) {
-                                          const dt = new Date(val + 'T12:00:00');
-                                          setPeriodEndDate(dt);
-                                        }
-                                      }}
-                                    />
-                                  </div>
-                                </div>
-                              ) : (
-                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                  <PopoverTrigger asChild>
-                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                      <Calendar className="h-4 w-4" />
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0" align="end">
-                                    <CalendarComponent
-                                      mode="single"
-                                      selected={selectedDate}
-                                      onSelect={handleDateSelect}
-                                      initialFocus
-                                    />
-                                  </PopoverContent>
-                                </Popover>
-                              )}
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 text-xs font-medium text-gray-700 hover:bg-gray-100">
+                                    {currentMonth}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="end">
+                                  <CalendarComponent
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={(date) => {
+                                      setSelectedDate(date);
+                                      if (date) {
+                                        const monthNames = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                        setCurrentMonth(`${monthNames[date.getMonth()]} ${date.getFullYear()}`);
+                                      }
+                                    }}
+                                    locale={ptBR}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
 
-                              {/* Ícone de engrenagem com dropdown */}
-                              <DropdownMenu modal={false}>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                    <Settings className="h-4 w-4" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-40">
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Diário')} className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Diário</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Semanal')} className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Semanal</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Mensal')} className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Mensal</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Anual')} className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Anual</DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleFilterChange('Período')} className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}>Período</DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setCurrentMonth(nextMonth => {
+                                const [month, year] = nextMonth.split(' ');
+                                const months = ['janeiro', 'fevereiro', 'mar├ºo', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+                                let currentMonthIndex = months.indexOf(month);
+                                let currentYear = parseInt(year);
+                                currentMonthIndex++;
+                                if (currentMonthIndex > 11) {
+                                  currentMonthIndex = 0;
+                                  currentYear++;
+                                }
+                                return `${months[currentMonthIndex]} ${currentYear}`;
+                              })}>
+                                <ChevronRight className="h-3 w-3" />
+                              </Button>
+
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Calendar className="h-3 w-3" />
+                              </Button>
+
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <Settings className="h-3 w-3" />
+                              </Button>
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-4">
-                          {/* Botão para ativar modo de baixa em lote */}
+                          {/* Bot├úo para ativar modo de baixa em lote */}
                           <div className="mb-4 flex justify-end">
                             <IButtonPrime
                               icon={<FolderDown className="h-4 w-4" />}
@@ -2781,7 +1980,7 @@ export function Transactions() {
                               onClick={() => {
                                 setBatchModeReceivables(!batchModeReceivables);
                                 if (batchModeReceivables) {
-                                  // Ao desativar, limpa seleção
+                                  // Ao desativar, limpa sele├º├úo
                                   setSelectedReceivables([]);
                                 }
                               }}
@@ -2813,7 +2012,7 @@ export function Transactions() {
                             onSelectionChange={setSelectedReceivables}
                             columns={[
                               {
-                                label: "Razão Social",
+                                label: "Raz├úo Social",
                                 key: "company",
                                 align: "left",
                                 width: "22%",
@@ -2847,7 +2046,7 @@ export function Transactions() {
                                 sortable: true,
                                 render: (item: any) => (
                                   <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.type === 'Mensal' ? 'bg-green-100 text-green-800' :
-                                    item.type === 'Parcela' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
+                                    item.type === 'Parcela' ? 'bg-blue-100 text-blue-800' :
                                       item.type === 'Rendimento' ? 'bg-purple-100 text-purple-800' :
                                         item.type === 'Cashback' ? 'bg-orange-100 text-orange-800' :
                                           'bg-gray-100 text-gray-800'
@@ -2865,7 +2064,7 @@ export function Transactions() {
                                 render: (item: any) => (
                                   <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
-                                      item.status === 'Automático' ? 'bg-green-100 text-green-800' :
+                                      item.status === 'Autom├ítico' ? 'bg-green-100 text-green-800' :
                                         'bg-gray-100 text-gray-800'
                                     }`}>
                                     {item.status}
@@ -2889,35 +2088,25 @@ export function Transactions() {
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
                                 <IButtonPrime
-                                  icon={<PointOfSaleIcon style={{ fontSize: 14 }} />}
-                                  variant="gold"
-                                  title="Liquidação"
-                                  className="!p-2"
-                                  onClick={() => handleLiquidateTransaction(item, 'receivable')}
-                                />
-                                <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
-                                  variant="neutral"
+                                  variant="gold"
                                   title="Editar"
                                   className="!p-2"
-                                  onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
-                                    if (tx) {
-                                      setEditingTransaction(tx);
-                                      setActiveMovimentacoesSubTab('a-receber');
-                                      setTransactionModalOpen(true);
-                                    }
-                                  }}
+                                  onClick={() => console.log('Edit', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Eye className="h-3.5 w-3.5" />}
-                                  variant="teal"
+                                  variant="gold"
                                   title="Visualizar"
                                   className="!p-2"
-                                  onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
-                                    if (tx) setViewingTransaction(tx);
-                                  }}
+                                  onClick={() => console.log('View', item.id)}
+                                />
+                                <IButtonPrime
+                                  icon={<Download className="h-3.5 w-3.5" />}
+                                  variant="gold"
+                                  title="Baixar Documento"
+                                  className="!p-2"
+                                  onClick={() => console.log('Download', item.id)}
                                 />
                                 <IButtonPrime
                                   icon={<Trash2 className="h-3.5 w-3.5" />}
@@ -2941,7 +2130,7 @@ export function Transactions() {
 
         <TabsContent value="contas" className="space-y-6">
 
-          {/* Tabela de Contas Bancárias */}
+          {/* Tabela de Contas Banc├írias */}
           <TabelaItens
             data={bankAccounts || []}
             columns={[
@@ -2953,36 +2142,36 @@ export function Transactions() {
                   <div className="font-medium text-gray-900">
                     {banksList.find(b => b.code === account.bank)?.name ||
                       (account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
-                        account.bank === 'caixa' ? 'Caixa Econômica Federal' :
+                        account.bank === 'caixa' ? 'Caixa Econ├┤mica Federal' :
                           account.bank === 'santander' ? 'Santander' :
-                            account.bank === 'itau' ? 'Itaú' :
+                            account.bank === 'itau' ? 'Ita├║' :
                               account.bank === 'bradesco' ? 'Bradesco' :
                                 account.bank === 'nubank' ? 'Nubank' :
                                   account.bank === 'inter' ? 'Banco Inter' :
-                                    account.bank || 'Banco não informado')}
+                                    account.bank || 'Banco n├úo informado')}
                   </div>
                 )
               },
               {
-                label: "Nome da Conta Bancária",
+                label: "Nome da Conta Banc├íria",
                 key: "name",
                 width: "35%",
                 render: (account: any) => (
                   <div>
-                     <div className="font-medium text-gray-900">{account.name || 'Nome não informado'}</div>
+                     <div className="font-medium text-gray-900">{account.name || 'Nome n├úo informado'}</div>
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider">
                       {account.accountType === 'conta_corrente' ? 'Conta Corrente' :
-                        account.accountType === 'conta_poupanca' ? 'Conta Poupança' :
+                        account.accountType === 'conta_poupanca' ? 'Conta Poupan├ºa' :
                           account.accountType === 'conta_investimento' ? 'Conta de Investimento' :
-                            'Tipo não informado'}
-                      {account.agency && ` • AG ${account.agency}`}
-                      {account.accountNumber && ` • CC ${account.accountNumber}`}
+                            'Tipo n├úo informado'}
+                      {account.agency && ` ÔÇó AG ${account.agency}`}
+                      {account.accountNumber && ` ÔÇó CC ${account.accountNumber}`}
                     </div>
                   </div>
                 )
               },
               {
-                label: "Data da Criação",
+                label: "Data da Cria├º├úo",
                 key: "created_at",
                 align: "center",
                 width: "15%",
@@ -3014,14 +2203,14 @@ export function Transactions() {
                   className="!p-2"
                   onClick={() => {
                     setEditingBankAccount(account);
-                    // Converter valores numéricos para formato de exibição no modal
+                    // Converter valores num├®ricos para formato de exibi├º├úo no modal
                     const formatForModal = (val: any) => {
                       if (val === null || val === undefined) return '';
                       return formatCurrencyValue(val.toString().replace('.', ''), 'BRL');
                     };
 
                     setBankAccountData({
-                      initialBalanceDate: account.initialBalanceDate ? toLocalDateStr(account.initialBalanceDate) : localDateStr(),
+                      initialBalanceDate: account.initialBalanceDate ? new Date(account.initialBalanceDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                       currentBalance: formatForModal(account.currentBalance),
                       balanceType: account.balanceType || ((account.balance || 0) >= 0 ? 'credor' : 'devedor'),
                       accountType: account.accountType || 'conta_corrente',
@@ -3044,8 +2233,8 @@ export function Transactions() {
                   className="!p-2"
                   onClick={() => {
                     showConfirm(
-                      "Excluir Conta Bancária",
-                      `Tem certeza que deseja excluir a conta "${account.name || account.account_name}"? Esta ação não pode ser desfeita.`,
+                      "Excluir Conta Banc├íria",
+                      `Tem certeza que deseja excluir a conta "${account.name || account.account_name}"? Esta a├º├úo n├úo pode ser desfeita.`,
                       () => deleteBankAccountMutation.mutate(account.id)
                     );
                   }}
@@ -3053,7 +2242,7 @@ export function Transactions() {
                 />
               </div>
             )}
-            emptyMessage="Nenhuma conta bancária cadastrada."
+            emptyMessage="Nenhuma conta banc├íria cadastrada."
             emptyIcon={<CreditCard className="h-10 w-10 text-gray-300" />}
           />
         </TabsContent>
@@ -3086,13 +2275,13 @@ export function Transactions() {
                 icon: <Activity className="h-4 w-4" />,
                 content: (
                   <div className="space-y-6">
-                    {/* Conteúdo da aba Demonstrativo de Resultados será desenvolvido posteriormente */}
+                    {/* Conte├║do da aba Demonstrativo de Resultados ser├í desenvolvido posteriormente */}
                     <Card>
                       <CardContent className="flex flex-col items-center justify-center py-12">
                         <Activity className="h-12 w-12 text-gray-400 mb-4" />
                         <h3 className="text-lg font-medium text-gray-600 mb-2">Demonstrativo de Resultados</h3>
                         <p className="text-sm text-gray-500 text-center">
-                          Conteúdo em desenvolvimento
+                          Conte├║do em desenvolvimento
                         </p>
                       </CardContent>
                     </Card>
@@ -3104,7 +2293,7 @@ export function Transactions() {
         </TabsContent>
       </Tabs >
 
-      {/* Card de Nova Transação */}
+      {/* Card de Nova Transa├º├úo */}
       < TransactionCard
         open={transactionModalOpen}
         onClose={() => {
@@ -3115,20 +2304,6 @@ export function Transactions() {
         onSave={handleSaveTransaction}
         transaction={editingTransaction}
         entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
-      />
-
-      {/* Modal de Liquidação */}
-      <TransactionLiquidateModal
-        open={liquidateModalOpen}
-        onClose={() => {
-          setLiquidateModalOpen(false);
-          setTransactionToLiquidate(null);
-        }}
-        transaction={transactionToLiquidate}
-        bankAccounts={bankAccounts}
-        paymentMethods={paymentMethods}
-        onAddPaymentMethod={(name: string) => createPaymentMethodMutation.mutate(name)}
-        onConfirm={confirmLiquidation}
       />
 
       < DynamicModal
@@ -3184,7 +2359,7 @@ export function Transactions() {
                 colSpan: 4,
                 options: [
                   { value: 'conta_corrente', label: 'Conta Corrente' },
-                  { value: 'conta_poupanca', label: 'Conta Poupança' },
+                  { value: 'conta_poupanca', label: 'Conta Poupan├ºa' },
                   { value: 'conta_investimento', label: 'Conta de Investimento' }
                 ],
                 iconAction: {
@@ -3214,8 +2389,8 @@ export function Transactions() {
                 colSpan: 4,
                 options: [
                   { value: 'BRL', label: 'Real (R$)' },
-                  { value: 'USD', label: 'Dólar (US$)' },
-                  { value: 'EUR', label: 'Euro (€)' }
+                  { value: 'USD', label: 'D├│lar (US$)' },
+                  { value: 'EUR', label: 'Euro (Ôé¼)' }
                 ],
                 onChangeOverride: (val, currentData, setFormData) => {
                   const newBalance = currentData.currentBalance
@@ -3239,14 +2414,14 @@ export function Transactions() {
             ],
             // Quarta linha
             [
-              { name: 'agency', label: 'Agência', type: 'text', colSpan: 6 },
+              { name: 'agency', label: 'Ag├¬ncia', type: 'text', colSpan: 6 },
               { name: 'accountNumber', label: 'Conta', type: 'text', colSpan: 6 }
             ],
             // Quinta linha
             [
               {
                 name: 'creditLimit',
-                label: (data) => `Limite de crédito (${data.currency === 'USD' ? 'US$' : data.currency === 'EUR' ? '€' : 'R$'})`,
+                label: (data) => `Limite de cr├®dito (${data.currency === 'USD' ? 'US$' : data.currency === 'EUR' ? 'Ôé¼' : 'R$'})`,
                 type: 'currency',
                 colSpan: 6,
                 onChangeOverride: (val, currentData, setFormData) => {
@@ -3280,7 +2455,7 @@ export function Transactions() {
             [
               {
                 name: 'code',
-                label: 'Código do Banco *',
+                label: 'C├│digo do Banco *',
                 type: 'text',
                 colSpan: 6,
                 placeholder: 'Ex: 001',
@@ -3289,7 +2464,7 @@ export function Transactions() {
               },
               {
                 name: 'name',
-                label: 'Nome da Instituição *',
+                label: 'Nome da Institui├º├úo *',
                 type: 'text',
                 colSpan: 6,
                 placeholder: 'Ex: Banco do Brasil S.A.'
@@ -3314,12 +2489,12 @@ export function Transactions() {
           const total = selectedItems.reduce((sum, item) => sum + item.value, 0);
           const itemText = selectedItems.length === 1 ? 'item' : 'itens';
           const totalFormatted = `R$ ${total.toFixed(2).replace('.', ',')}`;
-          const type = batchPaymentType === 'payable' ? 'Contas à Pagar' : 'Valores à Receber';
+          const type = batchPaymentType === 'payable' ? 'Contas ├á Pagar' : 'Valores ├á Receber';
           return `Baixa em Lote - ${type} (${selectedItems.length} ${itemText} - ${totalFormatted})`;
         })()}
         initialData={{
           contaBancaria: '',
-          dataBaixa: localDateStr(),
+          dataBaixa: new Date().toISOString().split('T')[0],
           formaPagamento: 'transferencia',
           jurosMulta: '0,00',
           desconto: '0,00',
@@ -3334,7 +2509,7 @@ export function Transactions() {
             [
               {
                 name: 'contaBancaria',
-                label: 'Conta Bancária *',
+                label: 'Conta Banc├íria *',
                 type: 'select',
                 colSpan: 6,
                 options: bankAccounts.map((account: any) => ({
@@ -3363,11 +2538,11 @@ export function Transactions() {
                 colSpan: 12,
                 options: [
                   { value: 'dinheiro', label: 'Dinheiro' },
-                  { value: 'transferencia', label: 'Transferência Bancária' },
+                  { value: 'transferencia', label: 'Transfer├¬ncia Banc├íria' },
                   { value: 'boleto', label: 'Boleto' },
                   { value: 'pix', label: 'PIX' },
-                  { value: 'cartao_credito', label: 'Cartão de Crédito' },
-                  { value: 'cartao_debito', label: 'Cartão de Débito' },
+                  { value: 'cartao_credito', label: 'Cart├úo de Cr├®dito' },
+                  { value: 'cartao_debito', label: 'Cart├úo de D├®bito' },
                   { value: 'cheque', label: 'Cheque' }
                 ]
               }
@@ -3389,73 +2564,32 @@ export function Transactions() {
                 placeholder: 'R$ 0,00'
               }
             ],
-            // Quarta linha - Observações
+            // Quarta linha - Observa├º├Áes
             [
               {
                 name: 'observacoes',
-                label: 'Observações',
+                label: 'Observa├º├Áes',
                 type: 'text',
                 colSpan: 12,
-                placeholder: 'Informações adicionais sobre esta baixa em lote...'
+                placeholder: 'Informa├º├Áes adicionais sobre esta baixa em lote...'
               }
             ]
           ]}
       />
 
-      {/* Modal de Visualização de Transação */}
-      <TransactionViewModal
-        open={!!viewingTransaction}
-        onClose={() => setViewingTransaction(null)}
-        transaction={viewingTransaction}
-        userName={(user as any)?.name}
-      />
-
-      <TransactionCard
-        open={transactionModalOpen}
-        onClose={() => {
-          setTransactionModalOpen(false);
-          setEditingTransaction(null);
-        }}
-        onSave={handleSaveTransaction}
-        transaction={editingTransaction}
-        entryType={transactionModalType === 'Nova receita' ? 'receivable' : 'payable'}
-      />
-
-      <TransactionTransferModal
-        open={transferModalOpen}
-        onClose={() => setTransferModalOpen(false)}
-        onSave={async (data) => await createTransferMutation.mutateAsync(data)}
-        bankAccounts={bankAccounts}
-      />
-
-      <TransactionLiquidateModal
-        open={liquidateModalOpen}
-        onClose={() => {
-          setLiquidateModalOpen(false);
-          setTransactionToLiquidate(null);
-        }}
-        onConfirm={(data) => {
-          if (typeof confirmLiquidation === 'function') {
-            confirmLiquidation(data);
-          }
-        }}
-        transaction={transactionToLiquidate || undefined}
-        bankAccounts={bankAccounts}
-      />
-
-      {/* Dialogs são renderizados pelos hooks personalizados */}
+      {/* Dialogs s├úo renderizados pelos hooks personalizados */}
     </div >
   );
 }
 
 /**
  * Componente para gerenciamento do Plano de Contas
- * Inclui modal de cadastro, lista hierárquica e funcionalidades completas
+ * Inclui modal de cadastro, lista hier├írquica e funcionalidades completas
  */
 function ChartOfAccountsContent({
   isModalOpen: isModalOpenProp,
   setIsModalOpen: setIsModalOpenProp,
-  chartAccountModalOpen, // Adicionando prop para sincronizar com botão Plus do pai
+  chartAccountModalOpen, // Adicionando prop para sincronizar com bot├úo Plus do pai
   showSuccess,
   showError,
   showConfirm,
@@ -3469,27 +2603,27 @@ function ChartOfAccountsContent({
   showSuccess: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showError: (title: string, message: string, options?: { autoClose?: boolean; autoCloseDelay?: number; }) => void,
   showConfirm: (title: string, message: string, onConfirm: () => void) => void,
-  SuccessDialog: React.ComponentType<any>,
-  ErrorDialog: React.ComponentType<any>,
-  ConfirmDialog: React.ComponentType<any>
+  SuccessDialog: React.ComponentType,
+  ErrorDialog: React.ComponentType,
+  ConfirmDialog: React.ComponentType
 }) {
   const queryClient = useQueryClient();
   const [chartTree, setChartTree] = useState<ChartOfAccountsTree>(new ChartOfAccountsTree(SAMPLE_CHART_OF_ACCOUNTS));
-  const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padrão
+  const [expandedNodes, setExpandedNodes] = useState<Set<number>>(new Set([1, 2])); // Expande categorias principais por padr├úo
 
   // Estados do modal - usando props do componente pai
   const isModalOpen = isModalOpenProp || chartAccountModalOpen;
   const setIsModalOpen = (open: boolean) => {
     setIsModalOpenProp(open);
-    // Se o pai tiver o estado, atualizamos ele também
-    // Nota: Como não temos acesso direto ao setter do pai aqui via props padrão 
+    // Se o pai tiver o estado, atualizamos ele tamb├®m
+    // Nota: Como n├úo temos acesso direto ao setter do pai aqui via props padr├úo 
     // (a menos que passemos), vamos garantir que o fechamento limpe tudo.
   };
 
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
 
-  // Estados do formulário
+  // Estados do formul├írio
   const [formData, setFormData] = useState({
     tipo: '',
     nome: '',
@@ -3498,7 +2632,7 @@ function ChartOfAccountsContent({
     incluirComo: ''
   });
 
-  // Estados para ordenação
+  // Estados para ordena├º├úo
   const [chartSortField, setChartSortField] = useState<string>('');
   const [chartSortDirection, setChartSortDirection] = useState<'asc' | 'desc'>('asc');
 
@@ -3508,9 +2642,9 @@ function ChartOfAccountsContent({
     setChartSortDirection(direction);
   };
 
-  // --- FUNÇÕES AUXILIARES UNIFICADAS DO PLANO DE CONTAS ---
+  // --- FUN├ç├òES AUXILIARES UNIFICADAS DO PLANO DE CONTAS ---
 
-  // MAPEAMENTO AUTOMÁTICO DE CATEGORIAS PRINCIPAIS
+  // MAPEAMENTO AUTOM├üTICO DE CATEGORIAS PRINCIPAIS
   const mapearCategoriaParaTipo = (categoria: string): { type: string, code: string } => {
     const categoriaNormalizada = categoria.toLowerCase().trim();
 
@@ -3523,17 +2657,17 @@ function ChartOfAccountsContent({
     } else if (categoriaNormalizada.includes('passivo')) {
       return { type: 'passivo', code: '4' };
     } else {
-      // Para categorias personalizadas, usar sequência numérica
+      // Para categorias personalizadas, usar sequ├¬ncia num├®rica
       const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
-      const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Começar após os tipos padrão
+      const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 4; // Come├ºar ap├│s os tipos padr├úo
       return { type: categoria.toLowerCase(), code: (maxCode + 1).toString() };
     }
   };
 
-  // GERAÇÃO DE CÓDIGO HIERÁRQUICO
+  // GERA├ç├âO DE C├ôDIGO HIER├üRQUICO
   const generateHierarchicalCode = (level: number, parentId: number | null) => {
     if (level === 1) {
-      // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
+      // N├¡vel 1: C├│digos ├║nicos sequenciais (1, 2, 3, 4...)
       const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
       const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
       return (maxCode + 1).toString();
@@ -3543,7 +2677,7 @@ function ChartOfAccountsContent({
       const parentAccount = safeChartAccountsData?.find(acc => acc.id === parentId);
       const parentCode = parentAccount ? parentAccount.code : (level === 2 ? '1' : level === 3 ? '1.1' : '1.1.1');
 
-      // Contar filhos diretos do mesmo pai no mesmo nível
+      // Contar filhos diretos do mesmo pai no mesmo n├¡vel
       const childrenCount = safeChartAccountsData?.filter(acc =>
         acc.parentId === parentId && acc.level === level
       ).length || 0;
@@ -3554,7 +2688,7 @@ function ChartOfAccountsContent({
     return '1';
   };
 
-  // Função para ordenar dados
+  // Fun├º├úo para ordenar dados
   const sortData = (data: any[], sortField: string, sortDirection: 'asc' | 'desc') => {
     if (!sortField) return data;
 
@@ -3604,7 +2738,7 @@ function ChartOfAccountsContent({
       return response.json();
     },
     onSuccess: () => {
-      // Forçar atualização completa do cache
+      // For├ºar atualiza├º├úo completa do cache
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       queryClient.refetchQueries({ queryKey: ['/api/chart-accounts'] });
     },
@@ -3636,28 +2770,28 @@ function ChartOfAccountsContent({
         const errorData = await response.json().catch(() => ({ error: 'Erro desconhecido' }));
         throw new Error(errorData.error || 'Falha ao excluir conta');
       }
-      // Para DELETE 204, não há JSON para parsear
+      // Para DELETE 204, n├úo h├í JSON para parsear
       return response.status === 204 ? { success: true } : response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
     },
     onError: (error: any) => {
-      showError('Erro ao excluir', error.message || 'Não foi possível excluir a conta. Tente novamente.');
+      showError('Erro ao excluir', error.message || 'N├úo foi poss├¡vel excluir a conta. Tente novamente.');
     }
   });
 
   // Lista de categorias principais para os selects
   const categoriasPrincipais = chartTree.getCategories();
 
-  // Função para obter subcategorias com base na categoria selecionada
+  // Fun├º├úo para obter subcategorias com base na categoria selecionada
   const getSubcategorias = () => {
     if (!formData.categoria) return [];
     const categoria = categoriasPrincipais.find(cat => cat.name === formData.categoria);
     return categoria ? chartTree.getSubcategories(categoria.id) : [];
   };
 
-  // Função para alternar expansão de nós
+  // Fun├º├úo para alternar expans├úo de n├│s
   const toggleNode = (nodeId: number) => {
     const newExpanded = new Set(expandedNodes);
     if (expandedNodes.has(nodeId)) {
@@ -3668,7 +2802,7 @@ function ChartOfAccountsContent({
     setExpandedNodes(newExpanded);
   };
 
-  // Funções do modal
+  // Fun├º├Áes do modal
   const openCreateModal = () => {
     setModalMode('create');
     setSelectedAccount(null);
@@ -3683,10 +2817,10 @@ function ChartOfAccountsContent({
   };
 
   const openEditModal = (account: any) => {
-    // Verificar se a conta ainda existe antes de abrir modal de edição
+    // Verificar se a conta ainda existe antes de abrir modal de edi├º├úo
     const existingAccount = safeChartAccountsData.find(acc => acc.id === account.id);
     if (!existingAccount) {
-      showError("Conta não encontrada", "Esta conta pode ter sido excluída. Atualizando a lista...");
+      showError("Conta n├úo encontrada", "Esta conta pode ter sido exclu├¡da. Atualizando a lista...");
       queryClient.invalidateQueries({ queryKey: ['/api/chart-accounts'] });
       return;
     }
@@ -3694,15 +2828,15 @@ function ChartOfAccountsContent({
     setModalMode('edit');
     setSelectedAccount(existingAccount);
 
-    // Lógica inteligente para popular campos de hierarquia baseado no nível
+    // L├│gica inteligente para popular campos de hierarquia baseado no n├¡vel
     setFormData({
       tipo: existingAccount.type || '',
       nome: existingAccount.name || '',
-      // Nível 2 tem Categoria (Nível 1)
+      // N├¡vel 2 tem Categoria (N├¡vel 1)
       categoria: existingAccount.level === 2 ? (safeChartAccountsData.find(acc => acc.id === existingAccount.parentId)?.type || '') : '',
-      // Nível 3 tem Subcategoria (Nível 2)
+      // N├¡vel 3 tem Subcategoria (N├¡vel 2)
       subcategoria: existingAccount.level === 3 ? (safeChartAccountsData.find(acc => acc.id === existingAccount.parentId)?.name || '') : '',
-      // Nível 4 tem Incluir Como (Nível 3)
+      // N├¡vel 4 tem Incluir Como (N├¡vel 3)
       incluirComo: existingAccount.level === 4 ? (safeChartAccountsData.find(acc => acc.id === existingAccount.parentId)?.name || '') : ''
     });
     setIsModalOpen(true);
@@ -3722,28 +2856,28 @@ function ChartOfAccountsContent({
   };
 
   const handleSaveAccount = async () => {
-    // Validação - apenas Nome é obrigatório
+    // Valida├º├úo - apenas Nome ├® obrigat├│rio
     if (!formData.nome) {
-      alert('Nome é obrigatório');
+      alert('Nome ├® obrigat├│rio');
       return;
     }
 
-    // GERAÇÃO DE CÓDIGO HIERÁRQUICO DEFINITIVO
+    // GERA├ç├âO DE C├ôDIGO HIER├üRQUICO DEFINITIVO
     const generateHierarchicalCode = (targetLevel: number, targetParentId: number | null) => {
       if (targetLevel === 1) {
-        // Nível 1: Códigos únicos sequenciais (1, 2, 3, 4...)
+        // N├¡vel 1: C├│digos ├║nicos sequenciais (1, 2, 3, 4...)
         const level1Codes = safeChartAccountsData?.filter(acc => acc.level === 1).map(acc => parseInt(acc.code)) || [];
         const maxCode = level1Codes.length > 0 ? Math.max(...level1Codes) : 0;
         return (maxCode + 1).toString();
       }
 
       if (targetLevel === 2) {
-        // Nível 2: Código_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
+        // N├¡vel 2: C├│digo_do_pai.sequencial (ex: 3.1, 3.2, 3.3...)
         if (targetParentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === targetParentId);
           const parentCode = parentAccount ? parentAccount.code : '1';
 
-          // Contar filhos diretos do mesmo pai no nível 2
+          // Contar filhos diretos do mesmo pai no n├¡vel 2
           const childrenCount = safeChartAccountsData?.filter(acc =>
             acc.parentId === targetParentId && acc.level === 2
           ).length || 0;
@@ -3753,7 +2887,7 @@ function ChartOfAccountsContent({
       }
 
       if (targetLevel === 3) {
-        // Nível 3: Código_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
+        // N├¡vel 3: C├│digo_do_pai.sequencial (ex: 3.1.1, 3.1.2...)
         if (targetParentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === targetParentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1';
@@ -3767,7 +2901,7 @@ function ChartOfAccountsContent({
       }
 
       if (targetLevel === 4) {
-        // Nível 4: Código_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
+        // N├¡vel 4: C├│digo_do_pai.sequencial (ex: 3.1.1.1, 3.1.1.2...)
         if (targetParentId) {
           const parentAccount = safeChartAccountsData?.find(acc => acc.id === targetParentId);
           const parentCode = parentAccount ? parentAccount.code : '1.1.1';
@@ -3783,14 +2917,14 @@ function ChartOfAccountsContent({
       return '1';
     };
 
-    // LÓGICA HIERÁRQUICA CORRETA COM AUTO-MAPEAMENTO
+    // L├ôGICA HIER├üRQUICA CORRETA COM AUTO-MAPEAMENTO
     let level: number = 1;
     let parentId: number | null = null;
     let category: string | null = null;
     let subcategory: string | null = null;
     let type: string = formData.nome.toLowerCase();
 
-    // Se for EDIÇÃO e NÃO mudou nenhum campo de hierarquia, preservar nível e pai original
+    // Se for EDI├ç├âO e N├âO mudou nenhum campo de hierarquia, preservar n├¡vel e pai original
     const isEdit = modalMode === 'edit' && selectedAccount;
     const hierarquiaMudou = isEdit && (
       (selectedAccount.level === 1 && (formData.categoria || formData.subcategoria || formData.incluirComo)) ||
@@ -3805,7 +2939,7 @@ function ChartOfAccountsContent({
       subcategory = selectedAccount.subcategory;
       type = selectedAccount.type;
     } else {
-      // Lógica de detecção de nível normal (para novos ou mudança de hierarquia)
+      // L├│gica de detec├º├úo de n├¡vel normal (para novos ou mudan├ºa de hierarquia)
       if (formData.incluirComo) {
         level = 4;
         const parentAccount = safeChartAccountsData?.find(acc =>
@@ -3847,7 +2981,7 @@ function ChartOfAccountsContent({
       }
     }
 
-    // Função para gerar ou preservar código
+    // Fun├º├úo para gerar ou preservar c├│digo
     const finalCode = (isEdit && !hierarquiaMudou) ? selectedAccount.code : generateHierarchicalCode(level, parentId);
 
     const accountData = {
@@ -3870,7 +3004,7 @@ function ChartOfAccountsContent({
         await updateAccountMutation.mutateAsync({ id: selectedAccount.id, ...accountData });
       }
       setIsModalOpen(false);
-      // Resetar formulário e estados
+      // Resetar formul├írio e estados
       setFormData({
         tipo: '',
         nome: '',
@@ -3880,27 +3014,27 @@ function ChartOfAccountsContent({
       });
       setSelectedAccount(null);
       setModalMode('create');
-      showSuccess(modalMode === 'create' ? "Conta criada" : "Conta atualizada", "Operação realizada com sucesso.");
+      showSuccess(modalMode === 'create' ? "Conta criada" : "Conta atualizada", "Opera├º├úo realizada com sucesso.");
     } catch (error) {
       console.error('Erro ao salvar conta:', error);
-      showError("Erro ao salvar", "Não foi possível salvar a conta. Verifique os dados e tente novamente.");
+      showError("Erro ao salvar", "N├úo foi poss├¡vel salvar a conta. Verifique os dados e tente novamente.");
     }
   };
 
   const handleSaveAndContinue = async () => {
-    // Validação - apenas Nome é obrigatório
+    // Valida├º├úo - apenas Nome ├® obrigat├│rio
     if (!formData.nome) {
-      alert('Nome é obrigatório');
+      alert('Nome ├® obrigat├│rio');
       return;
     }
 
-    // Usar a mesma lógica de hierarquia (apenas para novas contas)
-    const level = 1; // Simplificando redeclaração para evitar erro de lint
+    // Usar a mesma l├│gica de hierarquia (apenas para novas contas)
+    const level = 1; // Simplificando redeclara├º├úo para evitar erro de lint
     const parentId = null;
     const type = mapearCategoriaParaTipo(formData.nome).type;
 
-    // Lógica completa de detecção (reutilizando a estrutura mas sem redeclarar no mesmo escopo de forma conflitante)
-    // Para simplificar e evitar erros de redeclaração, vamos apenas chamar a lógica de criação
+    // L├│gica completa de detec├º├úo (reutilizando a estrutura mas sem redeclarar no mesmo escopo de forma conflitante)
+    // Para simplificar e evitar erros de redeclara├º├úo, vamos apenas chamar a l├│gica de cria├º├úo
 
     let finalLevel: number = 1;
     let finalParentId: number | null = null;
@@ -3953,7 +3087,7 @@ function ChartOfAccountsContent({
       });
       setModalMode('create');
       setSelectedAccount(null);
-      showSuccess("Conta criada", "Você pode continuar adicionando novas contas.");
+      showSuccess("Conta criada", "Voc├¬ pode continuar adicionando novas contas.");
     } catch (error) {
       console.error('Erro ao salvar e continuar:', error);
       showError("Erro ao salvar", "Verifique os dados e tente novamente.");
@@ -3961,27 +3095,27 @@ function ChartOfAccountsContent({
   };
 
   const handleDeleteAccount = async (accountId: string) => {
-    // Previne cliques duplos verificando se já há uma operação em andamento
+    // Previne cliques duplos verificando se j├í h├í uma opera├º├úo em andamento
     if (deleteAccountMutation.isPending) {
       return;
     }
 
     showConfirm(
-      "Confirmar Exclusão",
+      "Confirmar Exclus├úo",
       "Tem certeza que deseja excluir esta conta?",
       async () => {
         try {
           await deleteAccountMutation.mutateAsync(accountId);
-          showSuccess("Conta excluída", "A conta foi excluída com sucesso.");
+          showSuccess("Conta exclu├¡da", "A conta foi exclu├¡da com sucesso.");
         } catch (error) {
           console.error('Erro ao excluir conta:', error);
-          // O erro já é tratado pela mutation através do onError
+          // O erro j├í ├® tratado pela mutation atrav├®s do onError
         }
       }
     );
   };
 
-  // Função para salvar conta (compatibilidade)
+  // Fun├º├úo para salvar conta (compatibilidade)
   const handleSave = (continueAdding = false) => {
     if (continueAdding) {
       handleSaveAndContinue();
@@ -3990,7 +3124,7 @@ function ChartOfAccountsContent({
     }
   };
 
-  // Função para fechar modal (compatibilidade)
+  // Fun├º├úo para fechar modal (compatibilidade)
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setFormData({
@@ -4004,11 +3138,11 @@ function ChartOfAccountsContent({
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho sem botão duplicado */}
+      {/* Cabe├ºalho sem bot├úo duplicado */}
       <div>
         <h3 className="text-lg font-semibold text-gray-900">Plano de Contas</h3>
         <p className="text-sm text-gray-600">
-          Organize suas contas em estrutura hierárquica
+          Organize suas contas em estrutura hier├írquica
         </p>
       </div>
 
@@ -4016,7 +3150,7 @@ function ChartOfAccountsContent({
 
       {/* Lista de contas em tabela - Modelo baseado na imagem */}
       <div className="bg-white rounded-lg border border-gray-200">
-        {/* Cabeçalho da tabela */}
+        {/* Cabe├ºalho da tabela */}
         <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -4043,7 +3177,7 @@ function ChartOfAccountsContent({
                   onClick={() => handleChartSort('code')}
                 >
                   <div className="flex items-center gap-1">
-                    Código
+                    C├│digo
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
@@ -4070,12 +3204,12 @@ function ChartOfAccountsContent({
                   onClick={() => handleChartSort('level')}
                 >
                   <div className="flex items-center gap-1">
-                    Nível
+                    N├¡vel
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
+                  A├º├Áes
                 </th>
               </tr>
             </thead>
@@ -4089,12 +3223,12 @@ function ChartOfAccountsContent({
               ) : safeChartAccounts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    Nenhuma conta cadastrada. Clique no botão "+" para criar a primeira conta.
+                    Nenhuma conta cadastrada. Clique no bot├úo "+" para criar a primeira conta.
                   </td>
                 </tr>
               ) : (
                 safeChartAccounts.map((account: any, index: number) => (
-                  <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-[#1D3557]/5 transition-colors`}>
+                  <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-blue-50 transition-colors`}>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {index + 1}
                     </td>
@@ -4107,7 +3241,7 @@ function ChartOfAccountsContent({
                       <div style={{ paddingLeft: `${(account.level || 1) * 20}px` }} className="flex items-center gap-2">
                         {(account.level || 1) > 1 && (
                           <div className="text-gray-400 text-sm">
-                            {'└─ '.repeat(1)}
+                            {'ÔööÔöÇ '.repeat(1)}
                           </div>
                         )}
                         <div>
@@ -4119,9 +3253,9 @@ function ChartOfAccountsContent({
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-[#1D3557]/15 text-[#1D3557]' :
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-blue-100 text-blue-800' :
                         (account.type === 'despesa' || account.type === 'despesas') ? 'bg-red-100 text-red-800' :
-                          account.type === 'ativo' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
+                          account.type === 'ativo' ? 'bg-blue-100 text-blue-800' :
                             'bg-purple-100 text-purple-800'
                         }`}>
                         {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
@@ -4129,7 +3263,7 @@ function ChartOfAccountsContent({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Nível {account.level || 1}
+                        N├¡vel {account.level || 1}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -4169,7 +3303,7 @@ function ChartOfAccountsContent({
           </table>
         </div>
 
-        {/* Rodapé com paginação similar à imagem */}
+        {/* Rodap├® com pagina├º├úo similar ├á imagem */}
         {safeChartAccounts.length > 0 && (
           <div className="bg-white px-6 py-3 border-t border-gray-200">
             <div className="flex items-center justify-between">
@@ -4193,7 +3327,7 @@ function ChartOfAccountsContent({
                   1
                 </button>
                 <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
-                  Próxima
+                  Pr├│xima
                 </button>
               </div>
             </div>
@@ -4210,12 +3344,12 @@ function ChartOfAccountsContent({
             style={{
               boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
             }}>
-            {/* Cabeçalho */}
+            {/* Cabe├ºalho */}
             <div className="flex items-center justify-between p-6 pb-2">
               <h2 className="text-xl font-bold text-[#1D3557]">Nova categoria</h2>
             </div>
 
-            {/* Campos do formulário */}
+            {/* Campos do formul├írio */}
             <div className="px-6 space-y-6">
               {/* Primeira linha: Categoria e Nome */}
               <div className="grid grid-cols-2 gap-4">
@@ -4231,7 +3365,7 @@ function ChartOfAccountsContent({
                     <MenuItem value="">
                       <em>Selecione...</em>
                     </MenuItem>
-                    {/* Categorias dinâmicas baseadas nos itens salvos nível 1 */}
+                    {/* Categorias din├ómicas baseadas nos itens salvos n├¡vel 1 */}
                     {safeChartAccountsData?.filter(acc => acc.level === 1)
                       .map(acc => (
                         <MenuItem key={acc.id} value={acc.type}>
@@ -4270,7 +3404,7 @@ function ChartOfAccountsContent({
                   <MenuItem value="">
                     <em>Selecione...</em>
                   </MenuItem>
-                  {/* Subcategorias: mostrar itens nível 2 */}
+                  {/* Subcategorias: mostrar itens n├¡vel 2 */}
                   {safeChartAccountsData?.filter(acc => acc.level === 2)
                     .map(acc => (
                       <MenuItem key={acc.id} value={acc.name}>
@@ -4292,7 +3426,7 @@ function ChartOfAccountsContent({
                   <MenuItem value="">
                     <em>Selecione...</em>
                   </MenuItem>
-                  {/* Incluir como filha de: mostrar itens nível 3 */}
+                  {/* Incluir como filha de: mostrar itens n├¡vel 3 */}
                   {safeChartAccountsData?.filter(acc => acc.level === 3)
                     .map(acc => (
                       <MenuItem key={acc.id} value={acc.name}>
@@ -4303,7 +3437,7 @@ function ChartOfAccountsContent({
               </FormControl>
             </div>
 
-            {/* Botões - posicionados conforme a nova diretiva */}
+            {/* Bot├Áes - posicionados conforme a nova diretiva */}
             <div className="flex justify-end items-center gap-3 p-6 pt-8">
               <IButtonPrime
                 icon={<Save className="h-4 w-4" />}
@@ -4323,11 +3457,12 @@ function ChartOfAccountsContent({
         </div>
       )}
 
-      {/* Componentes de Diálogo */}
+      {/* Modal ser├í renderizado no componente principal */}
+
+      {/* Componentes de Di├ílogo */}
       <SuccessDialog />
       <ErrorDialog />
       <ConfirmDialog />
-
     </div>
   );
 }

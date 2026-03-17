@@ -27,14 +27,22 @@ interface TransactionModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (transaction: any) => void;
+  initialType?: 'Nova receita' | 'Nova despesa';
 }
 
 /**
  * Modal para criação de novas transações financeiras
  * Layout baseado na imagem de referência com campos organizados em grid
  */
-export function TransactionModal({ open, onClose, onSave }: TransactionModalProps) {
-  const [tipo, setTipo] = useState('Nova receita');
+export function TransactionModal({ open, onClose, onSave, initialType = 'Nova receita' }: TransactionModalProps) {
+  const [tipo, setTipo] = useState(initialType);
+
+  // Keep type updated if initialType changes
+  React.useEffect(() => {
+    if (open) {
+      setTipo(initialType);
+    }
+  }, [open, initialType]);
   const [valor, setValor] = useState('0,00');
   const [data, setData] = useState(localDateStr()); // Formato ISO: YYYY-MM-DD
   const [repeticao, setRepeticao] = useState('Única');

@@ -531,6 +531,32 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
   }
 });
 
+router.post("/transactions/transfer", requireAuth, async (req: any, res) => {
+  try {
+    const { sourceAccountId, destinationAccountId, amount, date, description, liquidationDate } = req.body;
+    
+    // Quick validation
+    if (!sourceAccountId || !destinationAccountId || !amount || !date || !description) {
+      return res.status(400).json({ error: "Campos obrigatórios faltando na transferência" });
+    }
+
+    const transactions = await storage.createTransfer({
+      userId: req.user.id,
+      sourceAccountId: parseInt(sourceAccountId),
+      destinationAccountId: parseInt(destinationAccountId),
+      amount: amount.toString(),
+      description,
+      date: parseLocalDate(date),
+      liquidationDate: liquidationDate ? parseLocalDate(liquidationDate) : null,
+    });
+
+    res.status(201).json(transactions);
+  } catch (error: any) {
+    console.error("Erro ao criar transferência:", error);
+    res.status(500).json({ error: "Falhou ao criar transferência", message: error.message });
+  }
+});
+
 router.put("/transactions/:id", requireAuth, async (req: any, res) => {
   try {
     const id = parseInt(req.params.id);
