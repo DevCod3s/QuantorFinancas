@@ -230,6 +230,21 @@ export function Transactions() {
   const [viewingTransaction, setViewingTransaction] = useState<any>(null);
   const [transferModalOpen, setTransferModalOpen] = useState(false);
   
+  // Modal de Detalhes do Demonstrativo Diário (Drill-down)
+  const [dailyDetailsModalOpen, setDailyDetailsModalOpen] = useState(false);
+  const [dailyDetailsDate, setDailyDetailsDate] = useState<string | null>(null);
+  const [dailyDetailsType, setDailyDetailsType] = useState<'income' | 'expense' | null>(null);
+
+  console.log("Renderizando Transactions - Estado do Modal DailyDetails:", dailyDetailsModalOpen);
+
+  const handleOpenDailyDetails = (date: string, type: 'income' | 'expense') => {
+    console.log("=> Botão Clicado para abrir Dia/Tipo:", date, type);
+    setDailyDetailsDate(date);
+    setDailyDetailsType(type);
+    setDailyDetailsModalOpen(true);
+  };
+
+  
   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
   const [bankAccountData, setBankAccountData] = useState({
     initialBalanceDate: localDateStr(),
@@ -753,6 +768,30 @@ export function Transactions() {
 
   const { start: filterRangeStart, end: filterRangeEnd } = getFilterDateRange();
 
+  // 1. O saldo de abertura (da criação da conta) de todas as contas somadas
+  const totalStartingBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.currentBalance) || 0), 0);
+  
+  // 2. Transações pagas que ocorreram ANTES do período filtrado
+  const transactionsBeforeStart = demonstrativoTransactions.filter(t => {
+      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+      return effectiveDate < filterRangeStart; 
+  });
+
+  // 3. Resultado financeiro consolidado de todo o histórico anterior ao período
+  let pastAccumulatedResult = 0;
+  transactionsBeforeStart.forEach(t => {
+      const amount = parseFloat(t.amount || '0');
+      if (t.type === 'income' || t.type === 'transfer-in') {
+          pastAccumulatedResult += amount;
+      } else if (t.type === 'expense' || t.type === 'transfer-out') {
+          pastAccumulatedResult -= amount;
+      }
+  });
+
+  // 4. Saldo Inicial exato consolidado no 1º milissegundo do período filtrado
+  const initialBankBalance = totalStartingBalance + pastAccumulatedResult;
+
+  // 5. Resumo Diário do Período (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
   const dailySummary = demonstrativoTransactions.filter(t => {
       // Filtrar apenas o período para construir o fluxo diário
       const tDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
@@ -777,40 +816,24 @@ export function Transactions() {
     }
 
     const amount = parseFloat(t.amount || '0');
-    if (t.type === 'income' || t.type === 'transfer-in') {
+    
+    // VISÃO FINANCEIRA ESPECIALISTA:
+    // Transferências entre contas (transfer-in / transfer-out) refletem apenas movimentação interna da empresa.
+    // Elas NÃO entram no consolidado de "Entradas" e "Saídas" do fluxo de caixa global,
+    // pois inflariam artificialmente o faturamento e os custos.
+    if (t.type === 'income') {
       day.entrada += amount;
-    } else if (t.type === 'expense' || t.type === 'transfer-out') {
+    } else if (t.type === 'expense') {
       day.saida += amount;
     }
+    
+    // O resultado do dia reflete o caixa operacional real
     day.resultado = day.entrada - day.saida;
 
     return acc;
   }, []).sort((a, b) => a.tempDateForSort - b.tempDateForSort);
 
-  // Cálculo de Saldo Acumulado Inicial (Engenharia Reversa)
-  // 1. Pega o saldo Real de Hoje em todas as contas.
-  const currentTotalBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
-  
-  // 2. Encontrar o saldo exato que existia um ms antes do 'start' do filtro.
-  // Para isso, pegamos tudo que foi pago "DEPOIS" do start (inclusive no start) até Hoje, e desfazemos:
-  // Se entrou dinheiro: Subtrai do saldo de hoje.
-  // Se saiu dinheiro: Soma ao saldo de hoje.
-  const transactionsAfterStart = demonstrativoTransactions.filter(t => {
-      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
-      return effectiveDate >= filterRangeStart; 
-  });
-
-  let initialBankBalance = currentTotalBankBalance;
-  
-  transactionsAfterStart.forEach(t => {
-      const amount = parseFloat(t.amount || '0');
-      if (t.type === 'income' || t.type === 'transfer-in') {
-          initialBankBalance -= amount; // Desfazendo a entrada
-      } else if (t.type === 'expense' || t.type === 'transfer-out') {
-          initialBankBalance += amount; // Desfazendo a saída
-      }
-  });
-
+  // 6. Calcula o Saldo Acumulado projetando dia a dia no demonstrativo
   let runningBalance = initialBankBalance;
   dailySummary.forEach(day => {
     runningBalance += day.resultado;
@@ -829,7 +852,7 @@ export function Transactions() {
     const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
 
     const categories = data.reduce((acc: any, t) => {
-      const cat = t.businessCategory?.name || t.category?.name || 'Geral';
+      const cat = t.businessCategory?.name || t.category?.name || 'Não Categorizado';
       acc[cat] = (acc[cat] || 0) + parseFloat(t.amount || '0');
       return acc;
     }, {});
@@ -850,7 +873,7 @@ export function Transactions() {
     const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
 
     const subcategories = data.reduce((acc: any, t) => {
-      const subcat = t.businessSubcategory?.name || 'Geral';
+      const subcat = t.businessSubcategory?.name || 'Não Categorizado';
       acc[subcat] = (acc[subcat] || 0) + parseFloat(t.amount || '0');
       return acc;
     }, {});
@@ -1158,9 +1181,12 @@ export function Transactions() {
         type: transactionData.tipo.includes('receita') ? 'income' : 'expense',
         date: transactionData.data ? transactionData.data.split('/').reverse().join('-') : localDateStr(),
         categoryId: null, // Desativado em favor do Plano de Contas (chartAccountId)
-        chartAccountId: transactionData.chartAccountId ? parseInt(transactionData.chartAccountId) : null,
+        chartAccountId: transactionData.planoContas ? parseInt(transactionData.planoContas) : null,
         bankAccountId: transactionData.conta ? parseInt(transactionData.conta) : null,
         relationshipId: transactionData.contato ? parseInt(transactionData.contato) : null,
+        productServiceId: transactionData.produtoServico ? parseInt(transactionData.produtoServico) : null,
+        businessCategoryId: transactionData.businessCategoria ? parseInt(transactionData.businessCategoria) : null,
+        businessSubcategoryId: transactionData.businessSubcategoria ? parseInt(transactionData.businessSubcategoria) : null,
         status: transactionData.status || 'pago',
 
         // Campos de repetição e parcelamento
@@ -1210,20 +1236,34 @@ export function Transactions() {
       const desconto = parseFloat(paymentData.desconto?.replace(/\D/g, '') || '0') / 100;
       const totalFinal = totalOriginal + jurosMulta - desconto;
 
-      // Aqui você processaria a baixa no backend
-      console.log('Processando baixa em lote:', {
-        tipo: batchPaymentType,
-        contaBancariaId: paymentData.contaBancaria,
-        dataBaixa: paymentData.dataBaixa,
-        formaPagamento: paymentData.formaPagamento,
-        jurosMulta,
-        desconto,
-        totalOriginal,
-        totalFinal,
-        observacoes: paymentData.observacoes,
-        itens: selectedItems
-      });
+      // Lógica de distribuição e salvamento real no Backend
+      const targetStatus = 'pago'; // Status padrão do banco para ambos os lados
 
+      await Promise.all(selectedItems.map(async (item) => {
+        const currValue = item.value || 0;
+        const proportion = totalOriginal > 0 ? (currValue / totalOriginal) : 0;
+        const itemJuros = jurosMulta * proportion;
+        const itemDesconto = desconto * proportion;
+        const itemFinalValue = currValue + itemJuros - itemDesconto;
+
+        const payload = {
+          status: targetStatus,
+          amount: itemFinalValue.toString(),
+          bankAccountId: parseInt(paymentData.contaBancaria),
+          liquidationDate: paymentData.dataBaixa,
+          observacoes: paymentData.observacoes || item.observacoes || ''
+        };
+
+        return updateTransactionMutation.mutateAsync({
+           id: item.id,
+           data: payload
+        });
+      }));
+
+      // Forçar o refetch
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
+      
       // Limpar seleção e desativar modo após processar
       if (batchPaymentType === 'payable') {
         setSelectedPayables([]);
@@ -1390,7 +1430,7 @@ export function Transactions() {
                 }
               }} 
             />
-          ) : (
+          ) : activeTab !== "visao-geral" ? (
             <button
               onClick={() => {
                 console.log("Active tab:", activeTab);
@@ -1418,9 +1458,9 @@ export function Transactions() {
                 <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
               </div>
             </button>
-          )}
+          ) : null}
 
-          {activeTab !== "movimentacoes" && (
+          {activeTab !== "movimentacoes" && activeTab !== "visao-geral" && (
             <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
               {
                 activeTab === "centro-custo"
@@ -2082,8 +2122,38 @@ export function Transactions() {
                                   <div className={`w-1.5 h-1.5 rounded-full ${item.resultado >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
                                   {item.date}
                                 </div>
-                                <div className="text-right text-green-600">{item.entrada > 0 ? formatCurrencyNumber(item.entrada) : ""}</div>
-                                <div className="text-right text-red-600">{item.saida > 0 ? formatCurrencyNumber(item.saida) : ""}</div>
+                                <div className="text-right">
+                                  {item.entrada > 0 ? (
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleOpenDailyDetails(item.date, 'income');
+                                      }}
+                                      className="text-green-600 hover:text-green-800 hover:underline font-medium transition-colors cursor-pointer bg-transparent border-0 p-0"
+                                      title="Ver lançamentos que compõem este valor"
+                                    >
+                                      {formatCurrencyNumber(item.entrada)}
+                                    </button>
+                                  ) : ""}
+                                </div>
+                                <div className="text-right">
+                                  {item.saida > 0 ? (
+                                    <button 
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleOpenDailyDetails(item.date, 'expense');
+                                      }}
+                                      className="text-red-600 hover:text-red-800 hover:underline font-medium transition-colors cursor-pointer bg-transparent border-0 p-0"
+                                      title="Ver lançamentos que compõem este valor"
+                                    >
+                                      {formatCurrencyNumber(item.saida)}
+                                    </button>
+                                  ) : ""}
+                                </div>
                                 <div className={`text-right font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
                                   {item.resultado >= 0 ? '+' : ''}{formatCurrencyNumber(item.resultado)}
                                 </div>
@@ -2429,26 +2499,31 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent className="pt-4">
                           {/* Botão para ativar modo de baixa em lote */}
-                          <div className="mb-4 flex justify-end">
-                            <IButtonPrime
-                              icon={<FolderDown className="h-4 w-4" />}
-                              variant="gold"
-                              title={batchModePayables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
-                              className={`!px-4 !py-2 ${batchModePayables ? 'ring-2 ring-[#B59363]' : ''}`}
-                              onClick={() => {
-                                setBatchModePayables(!batchModePayables);
-                                if (batchModePayables) {
-                                  // Ao desativar, limpa seleção
-                                  setSelectedPayables([]);
-                                }
-                              }}
-                            />
-                          </div>
+                          {!showPaidPayables && (
+                            <div className="mb-4 flex justify-end">
+                              <IButtonPrime
+                                icon={<FolderDown className="h-4 w-4" />}
+                                variant="gold"
+                                title={batchModePayables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
+                                className={`!px-4 !py-2 ${batchModePayables ? 'ring-2 ring-[#B59363]' : ''}`}
+                                onClick={() => {
+                                  setBatchModePayables(!batchModePayables);
+                                  if (batchModePayables) {
+                                    // Ao desativar, limpa seleção
+                                    setSelectedPayables([]);
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
 
                           {batchModePayables && selectedPayables.length > 0 && (
                             <div className="mb-4 flex items-center justify-between bg-[#B59363]/5 border border-[#B59363]/20 rounded-lg p-3">
                               <span className="text-sm font-medium text-[#4D4E48]">
-                                {selectedPayables.length} {selectedPayables.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                                {selectedPayables.length} {selectedPayables.length === 1 ? 'item selecionado' : 'itens selecionados'} 
+                                <span className="ml-2 font-bold opacity-80 border-l border-[#B59363]/30 pl-2">
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedPayables.reduce((sum, item) => sum + (item.value || 0), 0))}
+                                </span>
                               </span>
                               <IButtonPrime
                                 icon={<CheckCheck className="h-4 w-4" />}
@@ -2465,7 +2540,7 @@ export function Transactions() {
                           <TabelaItens
                             data={payablesData}
                             initialPerPage={10}
-                            selectable={batchModePayables}
+                            selectable={batchModePayables && !showPaidPayables}
                             selectedItems={selectedPayables}
                             onSelectionChange={setSelectedPayables}
                             columns={[
@@ -2543,13 +2618,15 @@ export function Transactions() {
                             ]}
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
-                                <IButtonPrime
-                                  icon={<CurrencyExchangeIcon style={{ fontSize: 14 }} />}
-                                  variant="gold"
-                                  title="Liquidação"
-                                  className="!p-2"
-                                  onClick={() => handleLiquidateTransaction(item, 'payable')}
-                                />
+                                {item.status !== 'Pago' && item.status !== 'Recebido' && (
+                                  <IButtonPrime
+                                    icon={<CurrencyExchangeIcon style={{ fontSize: 14 }} />}
+                                    variant="gold"
+                                    title="Liquidação"
+                                    className="!p-2"
+                                    onClick={() => handleLiquidateTransaction(item, 'payable')}
+                                  />
+                                )}
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
                                   variant="neutral"
@@ -2832,26 +2909,31 @@ export function Transactions() {
                         </CardHeader>
                         <CardContent className="pt-4">
                           {/* Botão para ativar modo de baixa em lote */}
-                          <div className="mb-4 flex justify-end">
-                            <IButtonPrime
-                              icon={<FolderDown className="h-4 w-4" />}
-                              variant="gold"
-                              title={batchModeReceivables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
-                              className={`!px-4 !py-2 ${batchModeReceivables ? 'ring-2 ring-[#B59363]' : ''}`}
-                              onClick={() => {
-                                setBatchModeReceivables(!batchModeReceivables);
-                                if (batchModeReceivables) {
-                                  // Ao desativar, limpa seleção
-                                  setSelectedReceivables([]);
-                                }
-                              }}
-                            />
-                          </div>
+                          {!showPaidReceivables && (
+                            <div className="mb-4 flex justify-end">
+                              <IButtonPrime
+                                icon={<FolderDown className="h-4 w-4" />}
+                                variant="gold"
+                                title={batchModeReceivables ? "Desativar Baixa em Lote" : "Ativar Baixa em Lote"}
+                                className={`!px-4 !py-2 ${batchModeReceivables ? 'ring-2 ring-[#B59363]' : ''}`}
+                                onClick={() => {
+                                  setBatchModeReceivables(!batchModeReceivables);
+                                  if (batchModeReceivables) {
+                                    // Ao desativar, limpa seleção
+                                    setSelectedReceivables([]);
+                                  }
+                                }}
+                              />
+                            </div>
+                          )}
 
                           {batchModeReceivables && selectedReceivables.length > 0 && (
                             <div className="mb-4 flex items-center justify-between bg-green-50 border border-green-200 rounded-lg p-3">
                               <span className="text-sm font-medium text-green-900">
                                 {selectedReceivables.length} {selectedReceivables.length === 1 ? 'item selecionado' : 'itens selecionados'}
+                                <span className="ml-2 font-bold opacity-80 border-l border-green-300 pl-2">
+                                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedReceivables.reduce((sum, item) => sum + (item.value || 0), 0))}
+                                </span>
                               </span>
                               <IButtonPrime
                                 icon={<CheckCheck className="h-4 w-4" />}
@@ -2868,7 +2950,7 @@ export function Transactions() {
                           <TabelaItens
                             data={receivablesData}
                             initialPerPage={10}
-                            selectable={batchModeReceivables}
+                            selectable={batchModeReceivables && !showPaidReceivables}
                             selectedItems={selectedReceivables}
                             onSelectionChange={setSelectedReceivables}
                             columns={[
@@ -2948,13 +3030,15 @@ export function Transactions() {
                             ]}
                             actions={(item: any) => (
                               <div className="flex items-center justify-center gap-2">
-                                <IButtonPrime
-                                  icon={<PointOfSaleIcon style={{ fontSize: 14 }} />}
-                                  variant="gold"
-                                  title="Liquidação"
-                                  className="!p-2"
-                                  onClick={() => handleLiquidateTransaction(item, 'receivable')}
-                                />
+                                {item.status !== 'Recebido' && item.status !== 'Pago' && (
+                                  <IButtonPrime
+                                    icon={<PointOfSaleIcon style={{ fontSize: 14 }} />}
+                                    variant="gold"
+                                    title="Liquidação"
+                                    className="!p-2"
+                                    onClick={() => handleLiquidateTransaction(item, 'receivable')}
+                                  />
+                                )}
                                 <IButtonPrime
                                   icon={<Edit className="h-3.5 w-3.5" />}
                                   variant="neutral"
@@ -3395,11 +3479,11 @@ export function Transactions() {
               {
                 name: 'contaBancaria',
                 label: 'Conta Bancária *',
-                type: 'select',
+                type: 'autocomplete',
                 colSpan: 6,
                 options: bankAccounts.map((account: any) => ({
                   value: account.id,
-                  label: `${account.bank} - ${account.accountNumber}`
+                  label: `${account.name || 'Conta'} (${account.bank || 'Banco'} - Cc: ${account.accountNumber || 'S/N'})`
                 })),
                 iconAction: {
                   icon: <Plus className="h-5 w-5 mb-1 text-[#B59363] hover:text-[#4D4E48] transition-colors" />,
@@ -3502,6 +3586,108 @@ export function Transactions() {
         transaction={transactionToLiquidate || undefined}
         bankAccounts={bankAccounts}
       />
+
+      {/* Modal de Detalhes do Demonstrativo Diário */}
+      {dailyDetailsModalOpen && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setDailyDetailsModalOpen(false)}></div>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden relative z-10 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between p-6 border-b bg-gray-50/50">
+              <div className="flex flex-col gap-1">
+                <span className="text-xl font-semibold leading-none tracking-tight text-gray-900">
+                  Detalhes de {dailyDetailsType === 'income' ? 'Entradas' : 'Saídas'}
+                </span>
+                <span className="text-sm font-normal text-gray-500">
+                  Data: <span className="font-medium text-gray-900">{dailyDetailsDate}</span>
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setDailyDetailsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="bg-white rounded-lg border">
+                <div className="grid grid-cols-12 gap-4 p-4 border-b bg-gray-50/50 text-sm font-medium text-gray-500 rounded-t-lg">
+                  <div className="col-span-4">Descrição</div>
+                  <div className="col-span-3">Categoria</div>
+                  <div className="col-span-3">Cliente / Fornecedor</div>
+                  <div className="col-span-2 text-right">Valor</div>
+                </div>
+
+                <div className="divide-y max-h-[50vh] overflow-y-auto">
+                  {demonstrativoTransactions
+                    .filter((t: any) => {
+                      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+                      const dateStr = format(effectiveDate, 'dd/MM/yyyy');
+                      return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
+                    })
+                    .map((t: any, i: number) => (
+                      <div key={i} className="grid grid-cols-12 gap-4 p-4 text-sm hover:bg-gray-50 transition-colors items-center">
+                        <div className="col-span-4 font-medium truncate" title={t.description || ''}>
+                          {t.description || '-'}
+                        </div>
+                        <div className="col-span-3 truncate text-gray-600" title={t.chartAccount?.name || t.category?.name || t.businessCategory?.name || '-'}>
+                          {t.chartAccount?.name || t.category?.name || t.businessCategory?.name || '-'}
+                        </div>
+                        <div className="col-span-3 truncate text-gray-600" title={t.relationship?.socialName || '-'}>
+                          {t.relationship?.socialName || '-'}
+                        </div>
+                        <div className={`col-span-2 text-right font-medium ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency(t.amount || '0')}
+                        </div>
+                      </div>
+                    ))}
+                    {demonstrativoTransactions.filter((t: any) => {
+                      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+                      const dateStr = format(effectiveDate, 'dd/MM/yyyy');
+                      return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
+                    }).length === 0 && (
+                      <div className="p-8 text-center text-gray-500">
+                        Nenhuma transação encontrada para esta data.
+                      </div>
+                    )}
+                </div>
+                
+                {/* Totalizador no rodapé da tabela */}
+                {(() => {
+                  const filtered = demonstrativoTransactions.filter((t: any) => {
+                      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+                      const dateStr = format(effectiveDate, 'dd/MM/yyyy');
+                      return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
+                  });
+                  if (filtered.length > 0) {
+                    const total = filtered.reduce((acc: number, t: any) => acc + parseFloat(t.amount || '0'), 0);
+                    return (
+                      <div className="grid grid-cols-12 gap-4 p-4 border-t bg-gray-50 text-sm font-semibold rounded-b-lg">
+                        <div className="col-span-10 text-right">Total:</div>
+                        <div className={`col-span-2 text-right ${dailyDetailsType === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrencyNumber(total)}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            </div>
+            
+            {/* Rodapé do Modal */}
+            <div className="p-6 border-t bg-gray-50 flex justify-end">
+              <IButtonPrime
+                icon={<LogOut className="h-4 w-4" />}
+                variant="red"
+                title="Fechar"
+                onClick={() => setDailyDetailsModalOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Dialogs são renderizados pelos hooks personalizados */}
     </div >
@@ -4382,6 +4568,8 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
+
+
 
       {/* Componentes de Diálogo */}
       <SuccessDialog />

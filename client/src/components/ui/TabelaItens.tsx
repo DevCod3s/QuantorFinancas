@@ -126,7 +126,7 @@ export function TabelaItens({
     }
 
     return (
-        <div className="space-y-4">
+        <div className="space-y-2">
             {/* 1. Card de Cabeçalho Fixo */}
             <Card className="shadow-lg">
                 <CardContent className="p-0">
@@ -142,7 +142,7 @@ export function TabelaItens({
                             <thead className="bg-gray-50">
                                 <tr>
                                     {selectable && (
-                                        <th className="px-3 py-3 text-center">
+                                        <th className="px-2 py-2 text-center">
                                             <input
                                                 type="checkbox"
                                                 checked={isAllSelected}
@@ -155,7 +155,7 @@ export function TabelaItens({
                                     {columns.map((col, idx) => (
                                         <th
                                             key={idx}
-                                            className={`px-3 py-3 text-${col.align || 'left'} text-xs font-medium text-gray-500 uppercase tracking-wider ${col.sortable ? 'cursor-pointer hover:text-gray-700 transition-colors' : ''}`}
+                                            className={`px-2 py-2 text-${col.align || 'left'} text-[11px] font-medium text-gray-500 uppercase tracking-wider ${col.sortable ? 'cursor-pointer hover:text-gray-700 transition-colors' : ''}`}
                                             onClick={() => col.sortable && handleSort(col.key)}
                                         >
                                             <div className={`flex items-center justify-${col.align === 'center' ? 'center' : col.align === 'right' ? 'end' : 'start'} space-x-1`}>
@@ -165,7 +165,7 @@ export function TabelaItens({
                                         </th>
                                     ))}
                                     {actions && (
-                                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        <th className="px-2 py-2 text-center text-[11px] font-medium text-gray-500 uppercase tracking-wider">
                                             Ações
                                         </th>
                                     )}
@@ -179,7 +179,7 @@ export function TabelaItens({
             {/* 2. Card dos Dados com Scroll */}
             <Card className="shadow-lg">
                 <CardContent className="p-0">
-                    <div className="overflow-x-auto max-h-[640px] overflow-y-auto">
+                    <div className="overflow-x-auto max-h-[360px] overflow-y-auto">
                         <table className="w-full table-fixed">
                             <colgroup>
                                 {selectable && <col style={{ width: '50px' }} />}
@@ -192,7 +192,7 @@ export function TabelaItens({
                                 {paginatedData.map((item, rowIdx) => (
                                     <tr key={item.id || rowIdx} className="hover:bg-gray-50 transition-colors duration-150">
                                         {selectable && (
-                                            <td className="px-3 py-3 text-center">
+                                            <td className="px-2 py-2 text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={isSelected(item)}
@@ -203,12 +203,12 @@ export function TabelaItens({
                                             </td>
                                         )}
                                         {columns.map((col, colIdx) => (
-                                            <td key={colIdx} className={`px-3 py-3 text-${col.align || 'left'} text-xs text-gray-900 truncate`}>
+                                            <td key={colIdx} className={`px-2 py-1.5 text-${col.align || 'left'} text-xs text-gray-900 truncate`}>
                                                 {col.render ? col.render(item) : (item[col.key] || '-')}
                                             </td>
                                         ))}
                                         {actions && (
-                                            <td className="px-2 py-2 text-center">
+                                            <td className="px-1 py-1 text-center">
                                                 <div className="flex items-center justify-center space-x-0">
                                                     {typeof actions === 'function' ? (
                                                         actions(item)
@@ -237,7 +237,7 @@ export function TabelaItens({
 
             {/* 3. Card de Paginação Separado */}
             <Card className="shadow-lg">
-                <CardContent className="px-6 py-4">
+                <CardContent className="px-4 py-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <span className="text-sm text-gray-700">

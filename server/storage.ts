@@ -626,13 +626,13 @@ export class DatabaseStorage implements IStorage {
         .filter(t => t.status === 'pago')
         .reduce((sum, t) => {
           const val = parseFloat(t.amount || "0");
-          return t.type === 'income' ? sum + val : sum - val;
+          return (t.type === 'income' || t.type === 'transfer-in') ? sum + val : sum - val;
         }, 0);
 
       const projectedChange = accountTransactions
         .reduce((sum, t) => {
           const val = parseFloat(t.amount || "0");
-          return t.type === 'income' ? sum + val : sum - val;
+          return (t.type === 'income' || t.type === 'transfer-in') ? sum + val : sum - val;
         }, 0);
 
       return {

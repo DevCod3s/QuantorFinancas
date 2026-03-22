@@ -1,0 +1,301 @@
+commit bed6b26972bc2b4d86b708935a659a316b809a2c
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Tue Mar 17 17:10:05 2026 -0300
+
+    Funcionalidade: Implementar um sistema abrangente de gestão de transações financeiras, incluindo modelos de criação, transferência e liquidação, juntamente com páginas de suporte e infraestrutura de back-end.
+
+diff --git a/client/src/pages/Transactions.tsx b/client/src/pages/Transactions.tsx
+index d5c8e1c..50ae2ac 100644
+--- a/client/src/pages/Transactions.tsx
++++ b/client/src/pages/Transactions.tsx
+@@ -74,6 +74,8 @@ import { TransactionCard } from "@/components/TransactionCard";
+ import { TransactionViewModal } from "@/components/TransactionViewModal";
+ import { TransactionLiquidateModal } from "@/components/TransactionLiquidateModal";
+ import { TransactionModal } from "@/components/TransactionModal";
++import { MultiActionButton } from "@/components/MultiActionButton";
++import { TransactionTransferModal } from "@/components/TransactionTransferModal";
+ import { DateInput } from "@/components/DateInput";
+ import { localDateStr, toLocalDateStr, toLocalDate } from "@/lib/utils";
+ import { useAuth } from "@/hooks/useAuth";
+@@ -220,10 +222,12 @@ export function Transactions() {
+   
+   // Modal states perdidos na compilação do HEAD das 14:20hs
+   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
++  const [transactionModalType, setTransactionModalType] = useState<'Nova receita' | 'Nova despesa'>('Nova receita');
+   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+   const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
+   const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
+   const [viewingTransaction, setViewingTransaction] = useState<any>(null);
++  const [transferModalOpen, setTransferModalOpen] = useState(false);
+   
+   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
+   const [bankAccountData, setBankAccountData] = useState({
+@@ -732,19 +736,32 @@ export function Transactions() {
+   const resultMonth = totalReceivablesMonth - totalPayablesMonth;
+ 
+   // AGREGAÇÕES DINÂMICAS PARA CARDS E GRÁFICOS
+-  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras)
+-  const dailySummary = filteredTransactions.reduce((acc: any[], t) => {
+-    const dateStr = format(toLocalDate(t.date), 'dd/MM/yyyy');
++  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
++  
++  // Apenas transações que já foram liquidadas (Regime de Caixa)
++  const demonstrativoTransactions = transactions.filter(t => t.status === 'pago');
++
++  const { start: filterRangeStart, end: filterRangeEnd } = getFilterDateRange();
++
++  const dailySummary = demonstrativoTransactions.filter(t => {
++      // Filtrar apenas o período para construir o fluxo diário
++      const tDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
++      return tDate >= filterRangeStart && tDate <= filterRangeEnd;
++  }).reduce((acc: any[], t) => {
++    // Usar a data de liquidação se houver, senão a data original
++    const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
++    const dateStr = format(effectiveDate, 'dd/MM/yyyy');
+     let day = acc.find(d => d.date === dateStr);
+ 
+     if (!day) {
+       day = {
+         date: dateStr,
+-        dateLabel: format(toLocalDate(t.date), 'dd/MM'),
++        dateLabel: format(effectiveDate, 'dd/MM'),
+         entrada: 0,
+         saida: 0,
+         resultado: 0,
+-        saldo: 0
++        saldo: 0,
++        tempDateForSort: effectiveDate.getTime()
+       };
+       acc.push(day);
+     }
+@@ -758,16 +775,32 @@ export function Transactions() {
+     day.resultado = day.entrada - day.saida;
+ 
+     return acc;
+-  }, []).sort((a, b) => {
+-    const parseDate = (d: string) => {
+-      const [day, month, year] = d.split('/').map(Number);
+-      return new Date(year, month - 1, day).getTime();
+-    };
+-    return parseDate(a.date) - parseDate(b.date);
++  }, []).sort((a, b) => a.tempDateForSort - b.tempDateForSort);
++
++  // Cálculo de Saldo Acumulado Inicial (Engenharia Reversa)
++  // 1. Pega o saldo Real de Hoje em todas as contas.
++  const currentTotalBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
++  
++  // 2. Encontrar o saldo exato que existia um ms antes do 'start' do filtro.
++  // Para isso, pegamos tudo que foi pago "DEPOIS" do start (inclusive no start) até Hoje, e desfazemos:
++  // Se entrou dinheiro: Subtrai do saldo de hoje.
++  // Se saiu dinheiro: Soma ao saldo de hoje.
++  const transactionsAfterStart = demonstrativoTransactions.filter(t => {
++      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
++      return effectiveDate >= filterRangeStart; 
++  });
++
++  let initialBankBalance = currentTotalBankBalance;
++  
++  transactionsAfterStart.forEach(t => {
++      const amount = parseFloat(t.amount || '0');
++      if (t.type === 'income') {
++          initialBankBalance -= amount; // Desfazendo a entrada
++      } else {
++          initialBankBalance += amount; // Desfazendo a saída
++      }
+   });
+ 
+-  // Cálculo de Saldo Acumulado (começa pelo saldo real total das contas bancárias)
+-  const initialBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
+   let runningBalance = initialBankBalance;
+   dailySummary.forEach(day => {
+     runningBalance += day.resultado;
+@@ -996,6 +1029,7 @@ export function Transactions() {
+       status: 'pago',
+       amount: parsedAmount.toString(),
+       bankAccountId: data.bankAccountId,
++      liquidationDate: data.liquidationDate,
+       ...interestDetails
+     };
+ 
+@@ -1073,6 +1107,26 @@ export function Transactions() {
+     }
+   });
+ 
++  const createTransferMutation = useMutation({
++    mutationFn: (transferData: any) =>
++      fetch('/api/transactions/transfer', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        credentials: 'include',
++        body: JSON.stringify(transferData),
++      }).then(res => res.json()),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
++      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
++      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
++      setTransferModalOpen(false);
++      showSuccess('Transferência concluída', 'Valores atualizados em ambas as contas.');
++    },
++    onError: (error: any) => {
++      showError('Erro na transferência', error.message || 'Verifique os dados e tente novamente.');
++    }
++  });
++
+   // Função para salvar transação (Criação ou Edição)
+   const handleSaveTransaction = async (transactionData: any) => {
+     try {
+@@ -1312,64 +1366,62 @@ export function Transactions() {
+           </p>
+         </div>
+         <div className="relative">
+-          <button
+-            onClick={() => {
+-              console.log("Active tab:", activeTab);
+-              if (activeTab === "centro-custo") {
+-                // Dispara o modal do Plano de Contas que agora é controlado pelo estado local de ChartOfAccountsContent
+-                // mas como o botão está no pai, precisamos de um mecanismo.
+-                // Vou redefinir o setIsModalOpen ou usar o estado que já existe se possível.
+-                // Como não tenho acesso direto ao estado interno, vou usar uma solução comum:
+-                // O pai controla o estado de abertura e passa para o filho.
+-                setChartAccountModalOpen(true);
+-              } else if (activeTab === "movimentacoes") {
+-                console.log("Opening transaction modal");
+-                setTransactionModalOpen(true);
+-              } else if (activeTab === "contas") {
+-                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
+-                setBankAccountModalOpen(true);
+-                console.log("Bank account modal state set to true");
+-              }
+-            }}
+-            className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
+-            title={
+-              activeTab === "centro-custo"
+-                ? "Nova Conta - Plano de Contas"
+-                : activeTab === "movimentacoes"
+-                  ? "Novo Lançamento Financeiro"
++          {activeTab === "movimentacoes" ? (
++            <MultiActionButton 
++              onAction={(action) => {
++                if (action === 'transfer') {
++                  setTransferModalOpen(true);
++                } else if (action === 'income') {
++                  setTransactionModalType('Nova receita');
++                  setTransactionModalOpen(true);
++                } else if (action === 'expense') {
++                  setTransactionModalType('Nova despesa');
++                  setTransactionModalOpen(true);
++                }
++              }} 
++            />
++          ) : (
++            <button
++              onClick={() => {
++                console.log("Active tab:", activeTab);
++                if (activeTab === "centro-custo") {
++                  setChartAccountModalOpen(true);
++                } else if (activeTab === "contas") {
++                  setBankAccountModalOpen(true);
++                }
++              }}
++              className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
++              title={
++                activeTab === "centro-custo"
++                  ? "Nova Conta - Plano de Contas"
+                   : activeTab === "contas"
+                     ? "Nova Conta Bancária"
+                     : "Adicionar Novo"
+-            }
+-            style={{
+-              boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+-            }}
+-          >
+-            {/* Efeito de brilho interno */}
+-            <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+-
+-            {/* Ícone Plus com animação */}
+-            <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
+-
+-            {/* Ripple effect */}
+-            <div className="absolute inset-0 rounded-full overflow-hidden">
+-              <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
+-            </div>
+-          </button>
+-
+-          {/* Tooltip */}
+-          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+-            {
+-              activeTab === "centro-custo"
+-                ? "Nova Conta - Plano de Contas"
+-                : activeTab === "movimentacoes"
+-                  ? "Novo Lançamento Financeiro"
++              }
++              style={{
++                boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
++              }}
++            >
++              <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
++              <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
++              <div className="absolute inset-0 rounded-full overflow-hidden">
++                <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
++              </div>
++            </button>
++          )}
++
++          {activeTab !== "movimentacoes" && (
++            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
++              {
++                activeTab === "centro-custo"
++                  ? "Nova Conta - Plano de Contas"
+                   : activeTab === "contas"
+                     ? "Nova Conta Bancária"
+                     : "Adicionar Novo"
+-            }
+-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+-          </div>
++              }
++              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
++            </div>
++          )}
+         </div>
+       </div>
+ 
+@@ -3358,6 +3410,39 @@ export function Transactions() {
+         userName={(user as any)?.name}
+       />
+ 
++      <TransactionCard
++        open={transactionModalOpen}
++        onClose={() => {
++          setTransactionModalOpen(false);
++          setEditingTransaction(null);
++        }}
++        onSave={handleSaveTransaction}
++        transaction={editingTransaction}
++        entryType={transactionModalType === 'Nova receita' ? 'receivable' : 'payable'}
++      />
++
++      <TransactionTransferModal
++        open={transferModalOpen}
++        onClose={() => setTransferModalOpen(false)}
++        onSave={async (data) => await createTransferMutation.mutateAsync(data)}
++        bankAccounts={bankAccounts}
++      />
++
++      <TransactionLiquidateModal
++        open={liquidateModalOpen}
++        onClose={() => {
++          setLiquidateModalOpen(false);
++          setTransactionToLiquidate(null);
++        }}
++        onConfirm={(data) => {
++          if (typeof confirmLiquidation === 'function') {
++            confirmLiquidation(data);
++          }
++        }}
++        transaction={transactionToLiquidate || undefined}
++        bankAccounts={bankAccounts}
++      />
++
+       {/* Dialogs são renderizados pelos hooks personalizados */}
+     </div >
+   );

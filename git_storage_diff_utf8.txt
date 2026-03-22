@@ -1,0 +1,275 @@
+﻿commit 800b025332715859f261c7a6145838670897b9a5
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Tue Mar 17 20:41:02 2026 -0300
+
+    Funcionalidade: Implementar rotas de API principais para autentica├º├úo, painel de controle, categorias e unidades de produto, juntamente com uma nova p├ígina de Transa├º├Áes do lado do cliente e scripts de migra├º├úo de dados.
+
+diff --git a/server/storage.ts b/server/storage.ts
+index 00ccb0c..2824653 100644
+--- a/server/storage.ts
++++ b/server/storage.ts
+@@ -363,33 +363,34 @@ export class DatabaseStorage implements IStorage {
+   }): Promise<Transaction[]> {
+     const transferId = crypto.randomUUID();
+ 
+-    // Create expense from source
+-    const expense = await this.createTransaction({
++    // Base transaction layout for required schema fields
++    const baseTx = {
+       userId: data.userId,
+-      bankAccountId: data.sourceAccountId,
+       amount: data.amount,
+       description: data.description,
+-      type: "expense",
+       date: data.date,
+       liquidationDate: data.liquidationDate || null,
+       transferId,
+       status: "pago",
+-    });
++      aplicarJuros: false,
++      periodicidade: "├Ünica"
++    };
++
++    // Create expense from source
++    const [expense] = await db.insert(schema.transactions).values({
++      ...baseTx,
++      bankAccountId: data.sourceAccountId,
++      type: "transfer-out"
++    }).returning();
+ 
+     // Create income to destination
+-    const income = await this.createTransaction({
+-      userId: data.userId,
++    const [income] = await db.insert(schema.transactions).values({
++      ...baseTx,
+       bankAccountId: data.destinationAccountId,
+-      amount: data.amount,
+-      description: data.description,
+-      type: "income",
+-      date: data.date,
+-      liquidationDate: data.liquidationDate || null,
+-      transferId,
+-      status: "pago",
+-    });
++      type: "transfer-in"
++    }).returning();
+ 
+-    return [expense, income];
++    return [expense as Transaction, income as Transaction];
+   }
+ 
+   async updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode: 'single' | 'future' | 'all' = 'single'): Promise<Transaction> {
+
+commit bed6b26972bc2b4d86b708935a659a316b809a2c
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Tue Mar 17 17:10:05 2026 -0300
+
+    Funcionalidade: Implementar um sistema abrangente de gest├úo de transa├º├Áes financeiras, incluindo modelos de cria├º├úo, transfer├¬ncia e liquida├º├úo, juntamente com p├íginas de suporte e infraestrutura de back-end.
+
+diff --git a/server/storage.ts b/server/storage.ts
+index 240f163..00ccb0c 100644
+--- a/server/storage.ts
++++ b/server/storage.ts
+@@ -78,6 +78,15 @@ export interface IStorage {
+   getTransactionsByUserId(userId: string): Promise<any[]>;
+   getTransactionById(id: number): Promise<Transaction | null>;
+   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
++  createTransfer(data: {
++    userId: number;
++    sourceAccountId: number;
++    destinationAccountId: number;
++    amount: string;
++    description: string;
++    date: Date;
++    liquidationDate?: Date | null;
++  }): Promise<Transaction[]>;
+   updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode?: 'single' | 'future' | 'all'): Promise<Transaction>;
+   deleteTransaction(id: number, deleteMode?: 'single' | 'future' | 'all'): Promise<void>;
+ 
+@@ -256,6 +265,7 @@ export class DatabaseStorage implements IStorage {
+         type: schema.transactions.type,
+         status: schema.transactions.status,
+         date: schema.transactions.date,
++        liquidationDate: schema.transactions.liquidationDate,
+         description: schema.transactions.description,
+         repeticao: schema.transactions.repeticao,
+         numeroParcelas: schema.transactions.numeroParcelas,
+@@ -342,6 +352,46 @@ export class DatabaseStorage implements IStorage {
+     return newTransaction;
+   }
+ 
++  async createTransfer(data: {
++    userId: number;
++    sourceAccountId: number;
++    destinationAccountId: number;
++    amount: string;
++    description: string;
++    date: Date;
++    liquidationDate?: Date | null;
++  }): Promise<Transaction[]> {
++    const transferId = crypto.randomUUID();
++
++    // Create expense from source
++    const expense = await this.createTransaction({
++      userId: data.userId,
++      bankAccountId: data.sourceAccountId,
++      amount: data.amount,
++      description: data.description,
++      type: "expense",
++      date: data.date,
++      liquidationDate: data.liquidationDate || null,
++      transferId,
++      status: "pago",
++    });
++
++    // Create income to destination
++    const income = await this.createTransaction({
++      userId: data.userId,
++      bankAccountId: data.destinationAccountId,
++      amount: data.amount,
++      description: data.description,
++      type: "income",
++      date: data.date,
++      liquidationDate: data.liquidationDate || null,
++      transferId,
++      status: "pago",
++    });
++
++    return [expense, income];
++  }
++
+   async updateTransaction(id: number, transaction: Partial<InsertTransaction>, updateMode: 'single' | 'future' | 'all' = 'single'): Promise<Transaction> {
+     const [original] = await db.select().from(schema.transactions).where(eq(schema.transactions.id, id));
+     if (!original) throw new Error("Transaction not found");
+
+commit a5baff978803157698f19f5ae6ddd569a15f6614
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Mon Mar 16 21:03:13 2026 -0300
+
+    Funcionalidade: Implementar rotas de API principais para autentica├º├úo e dados financeiros, e adicionar gerenciamento de transa├º├Áes do lado do cliente com funcionalidade de liquida├º├úo.
+
+diff --git a/server/storage.ts b/server/storage.ts
+index 117b90d..240f163 100644
+--- a/server/storage.ts
++++ b/server/storage.ts
+@@ -24,6 +24,7 @@ import * as schema from "@shared/schema";
+ import type {
+   User,
+   Category,
++  PaymentMethod,
+   Transaction,
+   Budget,
+   AiInteraction,
+@@ -32,6 +33,7 @@ import type {
+   BankAccount,
+   InsertUser,
+   InsertCategory,
++  InsertPaymentMethod,
+   InsertTransaction,
+   InsertBudget,
+   InsertAiInteraction,
+@@ -68,6 +70,10 @@ export interface IStorage {
+   updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category>;
+   deleteCategory(id: number): Promise<void>;
+ 
++  // Formas de Pagamento
++  getPaymentMethodsByUserId(userId: string): Promise<PaymentMethod[]>;
++  createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod>;
++
+   // Transa├º├Áes
+   getTransactionsByUserId(userId: string): Promise<any[]>;
+   getTransactionById(id: number): Promise<Transaction | null>;
+@@ -226,6 +232,22 @@ export class DatabaseStorage implements IStorage {
+     await db.delete(schema.categories).where(eq(schema.categories.id, id));
+   }
+ 
++  async getPaymentMethodsByUserId(userId: string): Promise<PaymentMethod[]> {
++    return await db
++      .select()
++      .from(schema.paymentMethods)
++      .where(eq(schema.paymentMethods.userId, parseInt(userId)))
++      .orderBy(schema.paymentMethods.name);
++  }
++
++  async createPaymentMethod(method: InsertPaymentMethod): Promise<PaymentMethod> {
++    const [newMethod] = await db
++      .insert(schema.paymentMethods)
++      .values(method)
++      .returning();
++    return newMethod;
++  }
++
+   async getTransactionsByUserId(userId: string): Promise<any[]> {
+     return await db
+       .select({
+@@ -243,6 +265,7 @@ export class DatabaseStorage implements IStorage {
+         categoryId: schema.transactions.categoryId,
+         chartAccountId: schema.transactions.chartAccountId,
+         bankAccountId: schema.transactions.bankAccountId,
++        paymentMethodId: schema.transactions.paymentMethodId,
+         relationshipId: schema.transactions.relationshipId,
+         productServiceId: schema.transactions.productServiceId,
+         businessCategoryId: schema.transactions.businessCategoryId,
+
+commit 06e4dfc5153e8f7bec69e9174883da4137cb783d
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Sun Mar 15 21:38:19 2026 -0300
+
+    Recurso (transa├º├Áes): Adi├º├úo de campos de juros e multas ao modelo de transa├º├úo  - Esquema de transa├º├úo atualizado para incluir campos de juros e multas:  - aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm, aplicarEncargos, jurosMes, moraDia, tipoEncargo, aplicarMultaEm.  - Rotas de cria├º├úo e atualiza├º├úo de transa├º├Áes aprimoradas para lidar com os novos campos.  - Implementado um novo componente TransactionViewModal para exibir detalhes da transa├º├úo, incluindo juros e multas.  - Adicionado um script para corrigir problemas de fuso hor├írio com as datas das transa├º├Áes.  - Criados scripts de migra├º├úo para adicionar novas colunas ├á tabela de transa├º├Áes.
+
+diff --git a/server/storage.ts b/server/storage.ts
+index babac25..117b90d 100644
+--- a/server/storage.ts
++++ b/server/storage.ts
+@@ -247,6 +247,19 @@ export class DatabaseStorage implements IStorage {
+         productServiceId: schema.transactions.productServiceId,
+         businessCategoryId: schema.transactions.businessCategoryId,
+         businessSubcategoryId: schema.transactions.businessSubcategoryId,
++        createdAt: schema.transactions.createdAt,
++        aplicarJuros: schema.transactions.aplicarJuros,
++        tipoJuros: schema.transactions.tipoJuros,
++        valorJuros: schema.transactions.valorJuros,
++        aplicarJurosEm: schema.transactions.aplicarJurosEm,
++        aplicarEncargos: schema.transactions.aplicarEncargos,
++        jurosMes: schema.transactions.jurosMes,
++        moraDia: schema.transactions.moraDia,
++        tipoEncargo: schema.transactions.tipoEncargo,
++        aplicarMultaEm: schema.transactions.aplicarMultaEm,
++        periodicidade: schema.transactions.periodicidade,
++        intervalo: schema.transactions.intervalo,
++        dataTermino: schema.transactions.dataTermino,
+         relationship: {
+           id: schema.relationships.id,
+           socialName: schema.relationships.socialName,
+
+commit d846eedb60950ca25d915b02b250e41685b131f3
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Sun Mar 15 11:01:19 2026 -0300
+
+    Funcionalidade: Adi├º├úo do pacote de ├¡cones MUI e extens├úo da consulta de transa├º├Áes com detalhes de categoria.
+
+diff --git a/server/storage.ts b/server/storage.ts
+index 9450beb..babac25 100644
+--- a/server/storage.ts
++++ b/server/storage.ts
+@@ -272,6 +272,12 @@ export class DatabaseStorage implements IStorage {
+           name: schema.chartOfAccounts.name,
+           code: schema.chartOfAccounts.code,
+         },
++        category: {
++          id: schema.categories.id,
++          name: schema.categories.name,
++          color: schema.categories.color,
++          type: schema.categories.type,
++        },
+       })
+       .from(schema.transactions)
+       .leftJoin(schema.relationships, eq(schema.transactions.relationshipId, schema.relationships.id))
+@@ -279,6 +285,7 @@ export class DatabaseStorage implements IStorage {
+       .leftJoin(schema.businessCategories, eq(schema.transactions.businessCategoryId, schema.businessCategories.id))
+       .leftJoin(schema.businessSubcategories, eq(schema.transactions.businessSubcategoryId, schema.businessSubcategories.id))
+       .leftJoin(schema.chartOfAccounts, eq(schema.transactions.chartAccountId, schema.chartOfAccounts.id))
++      .leftJoin(schema.categories, eq(schema.transactions.categoryId, schema.categories.id))
+       .where(eq(schema.transactions.userId, parseInt(userId)))
+       .orderBy(desc(schema.transactions.date));
+   }

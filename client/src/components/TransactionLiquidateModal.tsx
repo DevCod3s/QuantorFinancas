@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "./ui/dialog";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Autocomplete, TextField } from "@mui/material";
 import { IButtonPrime } from "./ui/i-ButtonPrime";
 import { X, Calendar, DollarSign, FileText, CheckCheck, TrendingDown, TrendingUp, AlertTriangle, LogOut, Save, Plus } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
@@ -225,19 +225,29 @@ export function TransactionLiquidateModal({
             
             {/* Esquerda (Conta e Forma Pag) - Ocupa 5 colunas */}
             <div className="col-span-6 flex flex-col gap-3">
-              <CustomSelect
-                label="Conta Bancária Origem/Destino *"
-                value={bankAccountId}
-                onChange={(e: any) => setBankAccountId(e.target.value)}
-                required
-              >
-                <option value="" disabled>Selecione uma conta</option>
-                {bankAccounts.map((account) => (
-                  <option key={account.id} value={account.id.toString()}>
-                    {account.name}
-                  </option>
-                ))}
-              </CustomSelect>
+              <Autocomplete
+                options={bankAccounts}
+                getOptionLabel={(account: any) => `${account.name || 'Conta'} (${account.bank || 'Banco'} - Cc: ${account.accountNumber || 'S/N'})`}
+                value={(bankAccounts || []).find((a: any) => a.id.toString() === bankAccountId.toString()) || null}
+                onChange={(_, newValue: any) => setBankAccountId(newValue ? newValue.id.toString() : '')}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    label="Conta Bancária Origem/Destino *" 
+                    required 
+                    variant="standard"
+                    sx={{
+                      '& .MuiInputLabel-root': { color: '#1D3557' },
+                      '& .MuiInputLabel-root.Mui-focused': { color: '#B59363' },
+                      '& .MuiInput-underline:after': { borderBottomColor: '#B59363' },
+                      '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottomColor: '#1D3557' },
+                      '& .MuiInputBase-input': { color: '#1D3557', fontWeight: 500 }
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                  />
+                )}
+                componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
+              />
               
               <div className="flex gap-2 items-end">
                 <div className="flex-1">

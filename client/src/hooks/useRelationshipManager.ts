@@ -235,6 +235,8 @@ export function useRelationshipManager() {
     onSuccess: () => {
       // Invalidar cache para atualizar listas
       queryClient.invalidateQueries({ queryKey: ['/api/relationships'] });
+      // Invalidar cache do dashboard para refletir o novo mapa
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/geographic'] });
       setError(null);
     },
     onError: (error: any) => {
@@ -271,6 +273,8 @@ export function useRelationshipManager() {
     onSuccess: () => {
       // Invalidar cache para atualizar listas
       queryClient.invalidateQueries({ queryKey: ['/api/relationships'] });
+      // Invalidar cache do dashboard para refletir o novo mapa
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/geographic'] });
       setError(null);
     },
     onError: (error: any) => {

@@ -1,0 +1,752 @@
+commit 800b025332715859f261c7a6145838670897b9a5
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Tue Mar 17 20:41:02 2026 -0300
+
+    Funcionalidade: Implementar rotas de API principais para autenticação, painel de controle, categorias e unidades de produto, juntamente com uma nova página de Transações do lado do cliente e scripts de migração de dados.
+
+diff --git a/client/src/pages/Transactions.tsx b/client/src/pages/Transactions.tsx
+index 50ae2ac..094a2a2 100644
+--- a/client/src/pages/Transactions.tsx
++++ b/client/src/pages/Transactions.tsx
+@@ -23,9 +23,10 @@ import { useState, useEffect, useRef } from "react";
+ import { createPortal } from "react-dom";
+ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+ import { apiRequest } from '../lib/queryClient';
++import { motion, AnimatePresence } from "framer-motion";
+ 
+ // Importações de ícones Lucide
+-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers } from "lucide-react";
++import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale } from "lucide-react";
+ 
+ // Importações Material-UI
+ import TextField from '@mui/material/TextField';
+@@ -474,6 +475,8 @@ export function Transactions() {
+   const [showAccountFlow, setShowAccountFlow] = useState(false);
+   const [batchModePayables, setBatchModePayables] = useState(false);
+   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
++  const [showPaidPayables, setShowPaidPayables] = useState(false);
++  const [showPaidReceivables, setShowPaidReceivables] = useState(false);
+ 
+   // Calcula o range de datas para filtragem baseado no período selecionado
+   const getFilterDateRange = (): { start: Date; end: Date } => {
+@@ -559,12 +562,13 @@ export function Transactions() {
+           buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
+         }
+         dailyTransactions.forEach(t => {
++          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+           const d = toLocalDate(t.date);
+           const diffDays = Math.floor((d.getTime() - chartStart.getTime()) / 86400000);
+           if (diffDays >= 0 && diffDays < 7) {
+             const val = Math.abs(parseFloat(t.amount) || 0);
+             if (t.type === 'income') buckets[diffDays].income += val;
+-            else buckets[diffDays].expense += val;
++            else if (t.type === 'expense') buckets[diffDays].expense += val;
+           }
+         });
+         break;
+@@ -580,12 +584,13 @@ export function Transactions() {
+           buckets.push({ label: `${dayNames[d.getDay()]} ${format(d, 'dd')}`, income: 0, expense: 0 });
+         }
+         weekTransactions.forEach(t => {
++          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+           const d = toLocalDate(t.date);
+           const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
+           if (diffDays >= 0 && diffDays < 7) {
+             const val = Math.abs(parseFloat(t.amount) || 0);
+             if (t.type === 'income') buckets[diffDays].income += val;
+-            else buckets[diffDays].expense += val;
++            else if (t.type === 'expense') buckets[diffDays].expense += val;
+           }
+         });
+         break;
+@@ -600,12 +605,13 @@ export function Transactions() {
+           buckets.push({ label: String(i), income: 0, expense: 0 });
+         }
+         monthTransactions.forEach(t => {
++          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+           const d = toLocalDate(t.date);
+           const day = d.getDate();
+           if (day >= 1 && day <= daysInMonth) {
+             const val = Math.abs(parseFloat(t.amount) || 0);
+             if (t.type === 'income') buckets[day - 1].income += val;
+-            else buckets[day - 1].expense += val;
++            else if (t.type === 'expense') buckets[day - 1].expense += val;
+           }
+         });
+         break;
+@@ -619,11 +625,12 @@ export function Transactions() {
+           buckets.push({ label: monthShort[i], income: 0, expense: 0 });
+         }
+         yearTransactions.forEach(t => {
++          if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+           const d = toLocalDate(t.date);
+           const m = d.getMonth();
+           const val = Math.abs(parseFloat(t.amount) || 0);
+           if (t.type === 'income') buckets[m].income += val;
+-          else buckets[m].expense += val;
++          else if (t.type === 'expense') buckets[m].expense += val;
+         });
+         break;
+       }
+@@ -642,12 +649,13 @@ export function Transactions() {
+             buckets.push({ label: format(d, 'dd/MM'), income: 0, expense: 0 });
+           }
+           periodTransactions.forEach(t => {
++            if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+             const d = toLocalDate(t.date);
+             const idx = Math.floor((d.getTime() - start.getTime()) / 86400000);
+             if (idx >= 0 && idx < buckets.length) {
+               const val = Math.abs(parseFloat(t.amount) || 0);
+               if (t.type === 'income') buckets[idx].income += val;
+-              else buckets[idx].expense += val;
++              else if (t.type === 'expense') buckets[idx].expense += val;
+             }
+           });
+         } else if (diffDays <= 180) {
+@@ -658,13 +666,14 @@ export function Transactions() {
+             weekStart.setDate(weekStart.getDate() + 7);
+           }
+           periodTransactions.forEach(t => {
++            if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+             const d = toLocalDate(t.date);
+             const daysSinceStart = Math.floor((d.getTime() - start.getTime()) / 86400000);
+             const bIdx = Math.floor(daysSinceStart / 7);
+             if (bIdx >= 0 && bIdx < buckets.length) {
+               const val = Math.abs(parseFloat(t.amount) || 0);
+               if (t.type === 'income') buckets[bIdx].income += val;
+-              else buckets[bIdx].expense += val;
++              else if (t.type === 'expense') buckets[bIdx].expense += val;
+             }
+           });
+         } else {
+@@ -674,12 +683,13 @@ export function Transactions() {
+             current.setMonth(current.getMonth() + 1);
+           }
+           periodTransactions.forEach(t => {
++            if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
+             const d = toLocalDate(t.date);
+             const monthDiff = (d.getFullYear() - start.getFullYear()) * 12 + d.getMonth() - start.getMonth();
+             if (monthDiff >= 0 && monthDiff < buckets.length) {
+               const val = Math.abs(parseFloat(t.amount) || 0);
+               if (t.type === 'income') buckets[monthDiff].income += val;
+-              else buckets[monthDiff].expense += val;
++              else if (t.type === 'expense') buckets[monthDiff].expense += val;
+             }
+           });
+         }
+@@ -704,7 +714,7 @@ export function Transactions() {
+ 
+   // Dados reais para À Pagar
+   const payablesData = filteredTransactions
+-    .filter(t => t.type === 'expense' && t.status !== 'pago')
++    .filter(t => t.type === 'expense' && (showPaidPayables ? t.status === 'pago' : t.status !== 'pago'))
+     .map(t => ({
+       id: t.id,
+       company: t.relationship?.socialName || 'Diversos',
+@@ -712,13 +722,13 @@ export function Transactions() {
+       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
+       product: t.description,
+       type: t.repeticao,
+-      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
++      status: t.status === 'pago' ? 'Pago' : (toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente'),
+       value: parseFloat(t.amount)
+     }));
+ 
+   // Dados reais para À Receber
+   const receivablesData = filteredTransactions
+-    .filter(t => t.type === 'income' && t.status !== 'pago')
++    .filter(t => t.type === 'income' && (showPaidReceivables ? t.status === 'pago' : t.status !== 'pago'))
+     .map(t => ({
+       id: t.id,
+       company: t.relationship?.socialName || 'Diversos',
+@@ -726,7 +736,7 @@ export function Transactions() {
+       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
+       product: t.description,
+       type: t.repeticao,
+-      status: toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente',
++      status: t.status === 'pago' ? 'Recebido' : (toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente'),
+       value: parseFloat(t.amount)
+     }));
+ 
+@@ -767,9 +777,9 @@ export function Transactions() {
+     }
+ 
+     const amount = parseFloat(t.amount || '0');
+-    if (t.type === 'income') {
++    if (t.type === 'income' || t.type === 'transfer-in') {
+       day.entrada += amount;
+-    } else {
++    } else if (t.type === 'expense' || t.type === 'transfer-out') {
+       day.saida += amount;
+     }
+     day.resultado = day.entrada - day.saida;
+@@ -794,9 +804,9 @@ export function Transactions() {
+   
+   transactionsAfterStart.forEach(t => {
+       const amount = parseFloat(t.amount || '0');
+-      if (t.type === 'income') {
++      if (t.type === 'income' || t.type === 'transfer-in') {
+           initialBankBalance -= amount; // Desfazendo a entrada
+-      } else {
++      } else if (t.type === 'expense' || t.type === 'transfer-out') {
+           initialBankBalance += amount; // Desfazendo a saída
+       }
+   });
+@@ -2192,12 +2202,12 @@ export function Transactions() {
+                         </CardHeader>
+                         <CardContent className="space-y-3">
+                           <div className="flex items-center justify-between">
+-                            <span className="text-xs text-gray-700">À pagar</span>
++                            <span className="text-xs text-gray-700">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
+                             <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
+                           </div>
+ 
+                           <div className="flex items-center justify-between">
+-                            <span className="text-xs text-gray-700">À receber</span>
++                            <span className="text-xs text-gray-700">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
+                             <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
+                           </div>
+ 
+@@ -2298,10 +2308,35 @@ export function Transactions() {
+                       <Card className="shadow-lg">
+                         <CardHeader>
+                           <div className="flex items-center justify-between">
+-                            <div>
+-                              <CardTitle className="text-lg font-semibold">Contas À Pagar</CardTitle>
+-                              <CardDescription>Suas obrigações financeiras pendentes</CardDescription>
+-                            </div>
++                            <AnimatePresence mode="wait">
++                              <motion.div
++                                key={showPaidPayables ? 'pagas' : 'apagar'}
++                                initial={{ opacity: 0, x: -20 }}
++                                animate={{ opacity: 1, x: 0 }}
++                                exit={{ opacity: 0, x: 20 }}
++                                transition={{ duration: 0.3 }}
++                                className="flex items-center gap-3"
++                              >
++                                <div>
++                                  <CardTitle className="text-lg font-semibold flex items-center">
++                                    <span className="mr-4">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
++                                    <button 
++                                      onClick={() => {
++                                        setShowPaidPayables(!showPaidPayables);
++                                        setShowPaidReceivables(!showPaidPayables);
++                                      }}
++                                      className="flex items-center justify-center bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 rounded px-2.5 py-1.5 transition-all shadow-sm group"
++                                      title={showPaidPayables ? "Alternar para pendentes" : "Alternar para pagas"}
++                                    >
++                                      <Scale className={`h-4 w-4 transition-transform duration-500 ease-in-out ${showPaidPayables ? 'text-green-600 rotate-180' : 'text-slate-600 group-hover:text-slate-800'}`} />
++                                    </button>
++                                  </CardTitle>
++                                  <CardDescription>
++                                    {showPaidPayables ? 'Histórico de obrigações quitadas' : 'Suas obrigações financeiras pendentes'}
++                                  </CardDescription>
++                                </div>
++                              </motion.div>
++                            </AnimatePresence>
+                             <div className="flex items-center gap-3">
+                               {/* Navegação de período */}
+                               <div className="flex items-center gap-1">
+@@ -2485,7 +2520,7 @@ export function Transactions() {
+                                 render: (item: any) => (
+                                   <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
+                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+-                                      item.status === 'Em dia' ? 'bg-green-100 text-green-800' :
++                                      (item.status === 'Em dia' || item.status === 'Pago') ? 'bg-green-100 text-green-800' :
+                                         'bg-gray-100 text-gray-800'
+                                     }`}>
+                                     {item.status}
+@@ -2570,12 +2605,12 @@ export function Transactions() {
+                         </CardHeader>
+                         <CardContent className="space-y-3">
+                           <div className="flex items-center justify-between">
+-                            <span className="text-xs text-gray-700">À pagar</span>
++                            <span className="text-xs text-gray-700">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
+                             <span className="text-sm font-bold text-red-600">-{formatCurrencyNumber(totalPayablesMonth)}</span>
+                           </div>
+ 
+                           <div className="flex items-center justify-between">
+-                            <span className="text-xs text-gray-700">À receber</span>
++                            <span className="text-xs text-gray-700">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
+                             <span className="text-sm font-bold text-green-600">+{formatCurrencyNumber(totalReceivablesMonth)}</span>
+                           </div>
+ 
+@@ -2676,10 +2711,35 @@ export function Transactions() {
+                       <Card className="shadow-lg">
+                         <CardHeader>
+                           <div className="flex items-center justify-between">
+-                            <div>
+-                              <CardTitle className="text-lg font-semibold">Valores À Receber</CardTitle>
+-                              <CardDescription>Receitas e entradas programadas</CardDescription>
+-                            </div>
++                            <AnimatePresence mode="wait">
++                              <motion.div
++                                key={showPaidReceivables ? 'recebidas' : 'areceber'}
++                                initial={{ opacity: 0, x: -20 }}
++                                animate={{ opacity: 1, x: 0 }}
++                                exit={{ opacity: 0, x: 20 }}
++                                transition={{ duration: 0.3 }}
++                                className="flex items-center gap-3"
++                              >
++                                <div>
++                                  <CardTitle className="text-lg font-semibold flex items-center">
++                                    <span className="mr-4">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
++                                    <button 
++                                      onClick={() => {
++                                        setShowPaidReceivables(!showPaidReceivables);
++                                        setShowPaidPayables(!showPaidReceivables);
++                                      }}
++                                      className="flex items-center justify-center bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 rounded px-2.5 py-1.5 transition-all shadow-sm group"
++                                      title={showPaidReceivables ? "Alternar para pendentes" : "Alternar para recebidos"}
++                                    >
++                                      <Scale className={`h-4 w-4 transition-transform duration-500 ease-in-out ${showPaidReceivables ? 'text-blue-600 rotate-180' : 'text-slate-600 group-hover:text-slate-800'}`} />
++                                    </button>
++                                  </CardTitle>
++                                  <CardDescription>
++                                    {showPaidReceivables ? 'Histórico de recebimentos quitados' : 'Receitas e entradas programadas'}
++                                  </CardDescription>
++                                </div>
++                              </motion.div>
++                            </AnimatePresence>
+                             <div className="flex items-center gap-3">
+                               {/* Navegação de período */}
+                               <div className="flex items-center gap-1">
+@@ -2863,9 +2923,9 @@ export function Transactions() {
+                                 width: "10%",
+                                 sortable: true,
+                                 render: (item: any) => (
+-                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Confirmado' ? 'bg-green-100 text-green-800' :
++                                  <span className={`px-2 py-0.5 rounded-full text-xs whitespace-nowrap ${item.status === 'Vencida' ? 'bg-red-100 text-red-800' :
+                                     item.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' :
+-                                      item.status === 'Automático' ? 'bg-green-100 text-green-800' :
++                                      (item.status === 'Confirmado' || item.status === 'Automático' || item.status === 'Recebido') ? 'bg-green-100 text-green-800' :
+                                         'bg-gray-100 text-gray-800'
+                                     }`}>
+                                     {item.status}
+
+commit bed6b26972bc2b4d86b708935a659a316b809a2c
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Tue Mar 17 17:10:05 2026 -0300
+
+    Funcionalidade: Implementar um sistema abrangente de gestão de transações financeiras, incluindo modelos de criação, transferência e liquidação, juntamente com páginas de suporte e infraestrutura de back-end.
+
+diff --git a/client/src/pages/Transactions.tsx b/client/src/pages/Transactions.tsx
+index d5c8e1c..50ae2ac 100644
+--- a/client/src/pages/Transactions.tsx
++++ b/client/src/pages/Transactions.tsx
+@@ -74,6 +74,8 @@ import { TransactionCard } from "@/components/TransactionCard";
+ import { TransactionViewModal } from "@/components/TransactionViewModal";
+ import { TransactionLiquidateModal } from "@/components/TransactionLiquidateModal";
+ import { TransactionModal } from "@/components/TransactionModal";
++import { MultiActionButton } from "@/components/MultiActionButton";
++import { TransactionTransferModal } from "@/components/TransactionTransferModal";
+ import { DateInput } from "@/components/DateInput";
+ import { localDateStr, toLocalDateStr, toLocalDate } from "@/lib/utils";
+ import { useAuth } from "@/hooks/useAuth";
+@@ -220,10 +222,12 @@ export function Transactions() {
+   
+   // Modal states perdidos na compilação do HEAD das 14:20hs
+   const [transactionModalOpen, setTransactionModalOpen] = useState(false);
++  const [transactionModalType, setTransactionModalType] = useState<'Nova receita' | 'Nova despesa'>('Nova receita');
+   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+   const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
+   const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
+   const [viewingTransaction, setViewingTransaction] = useState<any>(null);
++  const [transferModalOpen, setTransferModalOpen] = useState(false);
+   
+   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
+   const [bankAccountData, setBankAccountData] = useState({
+@@ -732,19 +736,32 @@ export function Transactions() {
+   const resultMonth = totalReceivablesMonth - totalPayablesMonth;
+ 
+   // AGREGAÇÕES DINÂMICAS PARA CARDS E GRÁFICOS
+-  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras)
+-  const dailySummary = filteredTransactions.reduce((acc: any[], t) => {
+-    const dateStr = format(toLocalDate(t.date), 'dd/MM/yyyy');
++  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
++  
++  // Apenas transações que já foram liquidadas (Regime de Caixa)
++  const demonstrativoTransactions = transactions.filter(t => t.status === 'pago');
++
++  const { start: filterRangeStart, end: filterRangeEnd } = getFilterDateRange();
++
++  const dailySummary = demonstrativoTransactions.filter(t => {
++      // Filtrar apenas o período para construir o fluxo diário
++      const tDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
++      return tDate >= filterRangeStart && tDate <= filterRangeEnd;
++  }).reduce((acc: any[], t) => {
++    // Usar a data de liquidação se houver, senão a data original
++    const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
++    const dateStr = format(effectiveDate, 'dd/MM/yyyy');
+     let day = acc.find(d => d.date === dateStr);
+ 
+     if (!day) {
+       day = {
+         date: dateStr,
+-        dateLabel: format(toLocalDate(t.date), 'dd/MM'),
++        dateLabel: format(effectiveDate, 'dd/MM'),
+         entrada: 0,
+         saida: 0,
+         resultado: 0,
+-        saldo: 0
++        saldo: 0,
++        tempDateForSort: effectiveDate.getTime()
+       };
+       acc.push(day);
+     }
+@@ -758,16 +775,32 @@ export function Transactions() {
+     day.resultado = day.entrada - day.saida;
+ 
+     return acc;
+-  }, []).sort((a, b) => {
+-    const parseDate = (d: string) => {
+-      const [day, month, year] = d.split('/').map(Number);
+-      return new Date(year, month - 1, day).getTime();
+-    };
+-    return parseDate(a.date) - parseDate(b.date);
++  }, []).sort((a, b) => a.tempDateForSort - b.tempDateForSort);
++
++  // Cálculo de Saldo Acumulado Inicial (Engenharia Reversa)
++  // 1. Pega o saldo Real de Hoje em todas as contas.
++  const currentTotalBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
++  
++  // 2. Encontrar o saldo exato que existia um ms antes do 'start' do filtro.
++  // Para isso, pegamos tudo que foi pago "DEPOIS" do start (inclusive no start) até Hoje, e desfazemos:
++  // Se entrou dinheiro: Subtrai do saldo de hoje.
++  // Se saiu dinheiro: Soma ao saldo de hoje.
++  const transactionsAfterStart = demonstrativoTransactions.filter(t => {
++      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
++      return effectiveDate >= filterRangeStart; 
++  });
++
++  let initialBankBalance = currentTotalBankBalance;
++  
++  transactionsAfterStart.forEach(t => {
++      const amount = parseFloat(t.amount || '0');
++      if (t.type === 'income') {
++          initialBankBalance -= amount; // Desfazendo a entrada
++      } else {
++          initialBankBalance += amount; // Desfazendo a saída
++      }
+   });
+ 
+-  // Cálculo de Saldo Acumulado (começa pelo saldo real total das contas bancárias)
+-  const initialBankBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.realBalance) || 0), 0);
+   let runningBalance = initialBankBalance;
+   dailySummary.forEach(day => {
+     runningBalance += day.resultado;
+@@ -996,6 +1029,7 @@ export function Transactions() {
+       status: 'pago',
+       amount: parsedAmount.toString(),
+       bankAccountId: data.bankAccountId,
++      liquidationDate: data.liquidationDate,
+       ...interestDetails
+     };
+ 
+@@ -1073,6 +1107,26 @@ export function Transactions() {
+     }
+   });
+ 
++  const createTransferMutation = useMutation({
++    mutationFn: (transferData: any) =>
++      fetch('/api/transactions/transfer', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        credentials: 'include',
++        body: JSON.stringify(transferData),
++      }).then(res => res.json()),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
++      queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
++      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
++      setTransferModalOpen(false);
++      showSuccess('Transferência concluída', 'Valores atualizados em ambas as contas.');
++    },
++    onError: (error: any) => {
++      showError('Erro na transferência', error.message || 'Verifique os dados e tente novamente.');
++    }
++  });
++
+   // Função para salvar transação (Criação ou Edição)
+   const handleSaveTransaction = async (transactionData: any) => {
+     try {
+@@ -1312,64 +1366,62 @@ export function Transactions() {
+           </p>
+         </div>
+         <div className="relative">
+-          <button
+-            onClick={() => {
+-              console.log("Active tab:", activeTab);
+-              if (activeTab === "centro-custo") {
+-                // Dispara o modal do Plano de Contas que agora é controlado pelo estado local de ChartOfAccountsContent
+-                // mas como o botão está no pai, precisamos de um mecanismo.
+-                // Vou redefinir o setIsModalOpen ou usar o estado que já existe se possível.
+-                // Como não tenho acesso direto ao estado interno, vou usar uma solução comum:
+-                // O pai controla o estado de abertura e passa para o filho.
+-                setChartAccountModalOpen(true);
+-              } else if (activeTab === "movimentacoes") {
+-                console.log("Opening transaction modal");
+-                setTransactionModalOpen(true);
+-              } else if (activeTab === "contas") {
+-                console.log("Opening bank account modal, current state:", bankAccountModalOpen);
+-                setBankAccountModalOpen(true);
+-                console.log("Bank account modal state set to true");
+-              }
+-            }}
+-            className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
+-            title={
+-              activeTab === "centro-custo"
+-                ? "Nova Conta - Plano de Contas"
+-                : activeTab === "movimentacoes"
+-                  ? "Novo Lançamento Financeiro"
++          {activeTab === "movimentacoes" ? (
++            <MultiActionButton 
++              onAction={(action) => {
++                if (action === 'transfer') {
++                  setTransferModalOpen(true);
++                } else if (action === 'income') {
++                  setTransactionModalType('Nova receita');
++                  setTransactionModalOpen(true);
++                } else if (action === 'expense') {
++                  setTransactionModalType('Nova despesa');
++                  setTransactionModalOpen(true);
++                }
++              }} 
++            />
++          ) : (
++            <button
++              onClick={() => {
++                console.log("Active tab:", activeTab);
++                if (activeTab === "centro-custo") {
++                  setChartAccountModalOpen(true);
++                } else if (activeTab === "contas") {
++                  setBankAccountModalOpen(true);
++                }
++              }}
++              className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
++              title={
++                activeTab === "centro-custo"
++                  ? "Nova Conta - Plano de Contas"
+                   : activeTab === "contas"
+                     ? "Nova Conta Bancária"
+                     : "Adicionar Novo"
+-            }
+-            style={{
+-              boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
+-            }}
+-          >
+-            {/* Efeito de brilho interno */}
+-            <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+-
+-            {/* Ícone Plus com animação */}
+-            <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
+-
+-            {/* Ripple effect */}
+-            <div className="absolute inset-0 rounded-full overflow-hidden">
+-              <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
+-            </div>
+-          </button>
+-
+-          {/* Tooltip */}
+-          <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+-            {
+-              activeTab === "centro-custo"
+-                ? "Nova Conta - Plano de Contas"
+-                : activeTab === "movimentacoes"
+-                  ? "Novo Lançamento Financeiro"
++              }
++              style={{
++                boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
++              }}
++            >
++              <div className="absolute inset-0 rounded-full bg-gradient-to-t from-transparent via-white/10 to-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
++              <Plus className="h-5 w-5 text-white absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group-hover:rotate-90 transition-transform duration-300 ease-out" />
++              <div className="absolute inset-0 rounded-full overflow-hidden">
++                <div className="absolute inset-0 bg-white/20 rounded-full scale-0 group-active:scale-100 group-active:opacity-30 transition-all duration-150 ease-out"></div>
++              </div>
++            </button>
++          )}
++
++          {activeTab !== "movimentacoes" && (
++            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
++              {
++                activeTab === "centro-custo"
++                  ? "Nova Conta - Plano de Contas"
+                   : activeTab === "contas"
+                     ? "Nova Conta Bancária"
+                     : "Adicionar Novo"
+-            }
+-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+-          </div>
++              }
++              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
++            </div>
++          )}
+         </div>
+       </div>
+ 
+@@ -3358,6 +3410,39 @@ export function Transactions() {
+         userName={(user as any)?.name}
+       />
+ 
++      <TransactionCard
++        open={transactionModalOpen}
++        onClose={() => {
++          setTransactionModalOpen(false);
++          setEditingTransaction(null);
++        }}
++        onSave={handleSaveTransaction}
++        transaction={editingTransaction}
++        entryType={transactionModalType === 'Nova receita' ? 'receivable' : 'payable'}
++      />
++
++      <TransactionTransferModal
++        open={transferModalOpen}
++        onClose={() => setTransferModalOpen(false)}
++        onSave={async (data) => await createTransferMutation.mutateAsync(data)}
++        bankAccounts={bankAccounts}
++      />
++
++      <TransactionLiquidateModal
++        open={liquidateModalOpen}
++        onClose={() => {
++          setLiquidateModalOpen(false);
++          setTransactionToLiquidate(null);
++        }}
++        onConfirm={(data) => {
++          if (typeof confirmLiquidation === 'function') {
++            confirmLiquidation(data);
++          }
++        }}
++        transaction={transactionToLiquidate || undefined}
++        bankAccounts={bankAccounts}
++      />
++
+       {/* Dialogs são renderizados pelos hooks personalizados */}
+     </div >
+   );
+
+commit a5baff978803157698f19f5ae6ddd569a15f6614
+Author: DevCod3s <develops@cod3s.com.br>
+Date:   Mon Mar 16 21:03:13 2026 -0300
+
+    Funcionalidade: Implementar rotas de API principais para autenticação e dados financeiros, e adicionar gerenciamento de transações do lado do cliente com funcionalidade de liquidação.
+
+diff --git a/client/src/pages/Transactions.tsx b/client/src/pages/Transactions.tsx
+index 67eaa3a..d5c8e1c 100644
+--- a/client/src/pages/Transactions.tsx
++++ b/client/src/pages/Transactions.tsx
+@@ -217,6 +217,14 @@ export function Transactions() {
+   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
+   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
+   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
++  
++  // Modal states perdidos na compilação do HEAD das 14:20hs
++  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
++  const [editingTransaction, setEditingTransaction] = useState<any>(null);
++  const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
++  const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
++  const [viewingTransaction, setViewingTransaction] = useState<any>(null);
++  
+   const [newBankData, setNewBankData] = useState({ code: '', name: '' });
+   const [bankAccountData, setBankAccountData] = useState({
+     initialBalanceDate: localDateStr(),
+@@ -243,6 +251,28 @@ export function Transactions() {
+     queryFn: () => fetch('/api/bank-accounts', { credentials: 'include' }).then(res => res.json()),
+   });
+ 
++  const { data: paymentMethods = [] } = useQuery<any[]>({
++    queryKey: ["/api/payment-methods"],
++    queryFn: () => fetch('/api/payment-methods', { credentials: 'include' }).then(res => res.json()),
++  });
++
++  // Mutation para criar forma de pagamento
++  const createPaymentMethodMutation = useMutation({
++    mutationFn: (name: string) =>
++      fetch('/api/payment-methods', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ name }),
++      }).then(res => res.json()),
++    onSuccess: () => {
++      queryClient.invalidateQueries({ queryKey: ['/api/payment-methods'] });
++      showSuccess('Forma de pagamento adicionada com sucesso!', "");
++    },
++    onError: (error: any) => {
++      showError('Erro ao adicionar forma de pagamento', error.message || 'Tente novamente.');
++    }
++  });
++
+   // Mutation para criar conta bancária
+   const createBankAccountMutation = useMutation({
+     mutationFn: (bankAccountData: any) =>
+@@ -427,12 +457,6 @@ export function Transactions() {
+   const [receivablesCurrentPage, setReceivablesCurrentPage] = useState(1);
+   const [receivablesItemsPerPage] = useState(10);
+ 
+-  // Estado para modal de transação
+-  const [transactionModalOpen, setTransactionModalOpen] = useState(false);
+-  const [editingTransaction, setEditingTransaction] = useState<any>(null);
+-  const [viewingTransaction, setViewingTransaction] = useState<any>(null);
+-  const [liquidateModalOpen, setLiquidateModalOpen] = useState(false);
+-  const [transactionToLiquidate, setTransactionToLiquidate] = useState<any>(null);
+   const [activeMovimentacoesSubTab, setActiveMovimentacoesSubTab] = useState<'a-pagar' | 'a-receber'>('a-pagar');
+   const [newTransactions, setNewTransactions] = useState<any[]>([]);
+ 
+@@ -3041,6 +3065,20 @@ export function Transactions() {
+         entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
+       />
+ 
++      {/* Modal de Liquidação */}
++      <TransactionLiquidateModal
++        open={liquidateModalOpen}
++        onClose={() => {
++          setLiquidateModalOpen(false);
++          setTransactionToLiquidate(null);
++        }}
++        transaction={transactionToLiquidate}
++        bankAccounts={bankAccounts}
++        paymentMethods={paymentMethods}
++        onAddPaymentMethod={(name: string) => createPaymentMethodMutation.mutate(name)}
++        onConfirm={confirmLiquidation}
++      />
++
+       < DynamicModal
+         isOpen={bankAccountModalOpen}
+         onClose={() => {
+@@ -4200,35 +4238,6 @@ function ChartOfAccountsContent({
+         </div>
+       )}
+ 
+-      {/* Transaction Modals */}
+-      <TransactionModal
+-        open={transactionModalOpen}
+-        onClose={() => {
+-          setTransactionModalOpen(false);
+-          setEditingTransaction(null);
+-        }}
+-        transaction={editingTransaction}
+-        type={activeMovimentacoesSubTab === 'a-receber' ? 'income' : 'expense'}
+-      />
+-
+-      <TransactionViewModal
+-        open={!!viewingTransaction}
+-        onClose={() => setViewingTransaction(null)}
+-        transaction={viewingTransaction}
+-        userName={user?.name}
+-      />
+-
+-      <TransactionLiquidateModal
+-        open={liquidateModalOpen}
+-        onClose={() => {
+-          setLiquidateModalOpen(false);
+-          setTransactionToLiquidate(null);
+-        }}
+-        transaction={transactionToLiquidate}
+-        bankAccounts={bankAccounts}
+-        onConfirm={confirmLiquidation}
+-      />
+-
+       {/* Componentes de Diálogo */}
+       <SuccessDialog />
+       <ErrorDialog />

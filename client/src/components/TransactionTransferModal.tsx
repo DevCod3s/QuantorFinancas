@@ -8,7 +8,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  IconButton
+  IconButton,
+  Autocomplete
 } from '@mui/material';
 import { Save, LogOut } from 'lucide-react';
 import { DateInput } from './DateInput';
@@ -172,30 +173,38 @@ export function TransactionTransferModal({ open, onClose, onSave, bankAccounts }
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
           <FormControl variant="standard" fullWidth required>
             <InputLabel sx={{ color: '#1D3557' }}>Conta Origem</InputLabel>
-            <Select
-              value={sourceAccount}
-              onChange={(e) => setSourceAccount(e.target.value)}
-              sx={{ '&:after': { borderBottomColor: '#B59363' } }}
-              MenuProps={{ PaperProps: { sx: { zIndex: 1400 } } }}
-            >
-              {bankAccounts.map((acc: any) => (
-                <MenuItem key={acc.id} value={acc.id}>{acc.name}</MenuItem>
-              ))}
-            </Select>
+            <Autocomplete
+              options={bankAccounts}
+              getOptionLabel={(acc: any) => `${acc.name || 'Conta'} (${acc.bank || 'Banco'} - Cc: ${acc.accountNumber || 'S/N'})`}
+              value={bankAccounts.find((a: any) => a.id.toString() === sourceAccount.toString()) || null}
+              onChange={(_, newValue: any) => setSourceAccount(newValue ? newValue.id.toString() : '')}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="standard"
+                  sx={{ '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
+                />
+              )}
+              componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
+            />
           </FormControl>
 
           <FormControl variant="standard" fullWidth required>
             <InputLabel sx={{ color: '#1D3557' }}>Conta Destino</InputLabel>
-            <Select
-              value={destinationAccount}
-              onChange={(e) => setDestinationAccount(e.target.value)}
-              sx={{ '&:after': { borderBottomColor: '#B59363' } }}
-              MenuProps={{ PaperProps: { sx: { zIndex: 1400 } } }}
-            >
-              {bankAccounts.map((acc: any) => (
-                <MenuItem key={acc.id} value={acc.id}>{acc.name}</MenuItem>
-              ))}
-            </Select>
+            <Autocomplete
+              options={bankAccounts}
+              getOptionLabel={(acc: any) => `${acc.name || 'Conta'} (${acc.bank || 'Banco'} - Cc: ${acc.accountNumber || 'S/N'})`}
+              value={bankAccounts.find((a: any) => a.id.toString() === destinationAccount.toString()) || null}
+              onChange={(_, newValue: any) => setDestinationAccount(newValue ? newValue.id.toString() : '')}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="standard"
+                  sx={{ '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
+                />
+              )}
+              componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
+            />
           </FormControl>
         </Box>
 
