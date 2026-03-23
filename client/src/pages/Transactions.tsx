@@ -48,6 +48,7 @@ import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 import { MoneyBagIcon } from "@/components/icons/MoneyBagIcon";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
+import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
@@ -70,6 +71,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SuccessDialog, useSuccessDialog } from "@/components/ui/success-dialog";
 import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
+import { AiLoadingDialog } from "@/components/ui/ai-loading-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
 import { TransactionViewModal } from "@/components/TransactionViewModal";
@@ -237,6 +239,9 @@ export function Transactions() {
   const [dailyDetailsDate, setDailyDetailsDate] = useState<string | null>(null);
   const [dailyDetailsType, setDailyDetailsType] = useState<'income' | 'expense' | null>(null);
 
+  // Controle flexível para "Salvar e Adicionar Novo"
+  const keepModalOpenRef = useRef(false);
+
   console.log("Renderizando Transactions - Estado do Modal DailyDetails:", dailyDetailsModalOpen);
 
   const handleOpenDailyDetails = (date: string, type: 'income' | 'expense') => {
@@ -294,6 +299,7 @@ export function Transactions() {
       showError('Erro ao adicionar forma de pagamento', error.message || 'Tente novamente.');
     }
   });
+  // Lógica de I.A foi movida para o componente ChartOfAccountsContent
 
   // Mutation para criar conta bancária
   const createBankAccountMutation = useMutation({
@@ -734,7 +740,7 @@ export function Transactions() {
     .filter(t => t.type === 'expense' && (showPaidPayables ? t.status === 'pago' : t.status !== 'pago'))
     .map(t => ({
       id: t.id,
-      company: t.relationship?.socialName || 'Diversos',
+      company: t.relationship?.socialName || 'Não Declarado',
       cnpj: t.relationship?.document || '-',
       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
       product: t.description,
@@ -748,7 +754,7 @@ export function Transactions() {
     .filter(t => t.type === 'income' && (showPaidReceivables ? t.status === 'pago' : t.status !== 'pago'))
     .map(t => ({
       id: t.id,
-      company: t.relationship?.socialName || 'Diversos',
+      company: t.relationship?.socialName || 'Não Declarado',
       cnpj: t.relationship?.document || '-',
       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
       product: t.description,
@@ -1094,7 +1100,9 @@ export function Transactions() {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      setTransactionModalOpen(false);
+      if (!keepModalOpenRef.current) {
+        setTransactionModalOpen(false);
+      }
       setEditingTransaction(null);
       showSuccess('Transação atualizada com sucesso!', 'Os dados foram salvos no sistema.');
     },
@@ -1134,7 +1142,9 @@ export function Transactions() {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
-      setTransactionModalOpen(false);
+      if (!keepModalOpenRef.current) {
+        setTransactionModalOpen(false);
+      }
       showSuccess('Transação salva com sucesso!', 'O lançamento foi registrado no sistema.');
     },
     onError: (error: any) => {
@@ -1163,7 +1173,8 @@ export function Transactions() {
   });
 
   // Função para salvar transação (Criação ou Edição)
-  const handleSaveTransaction = async (transactionData: any) => {
+  const handleSaveTransaction = async (transactionData: any, keepOpen = false) => {
+    keepModalOpenRef.current = keepOpen;
     try {
       // Limpar formatação de valores preservando decimais (padrão parseMoeda)
       const parseMoeda = (val: any) => {
@@ -1199,6 +1210,8 @@ export function Transactions() {
         tipoJuros: transactionData.tipoJuros || null,
         valorJuros: transactionData.valorJuros ? parseFloat(transactionData.valorJuros) : null,
         aplicarJurosEm: transactionData.aplicarJurosEm || null,
+        tipoRateio: transactionData.tipoRateio || null,
+        installmentsList: transactionData.installmentsList || null,
         aplicarEncargos: transactionData.aplicarEncargos || false,
         jurosMes: transactionData.jurosMes ? parseFloat(transactionData.jurosMes) : null,
         moraDia: transactionData.moraDia ? parseFloat(transactionData.moraDia) : null,
@@ -1224,6 +1237,7 @@ export function Transactions() {
     } catch (error: any) {
       console.error('Erro ao salvar transação:', error);
       showError('Erro ao salvar transação', error?.message || 'Ocorreu um erro inesperado. Verifique os dados e tente novamente.');
+      throw error; // Re-throw needed if child awaits and needs to know failure
     }
   };
 
@@ -1432,23 +1446,19 @@ export function Transactions() {
                 }
               }} 
             />
-          ) : activeTab !== "visao-geral" ? (
+          ) : activeTab !== "visao-geral" && activeTab !== "centro-custo" ? (
             <button
               onClick={() => {
                 console.log("Active tab:", activeTab);
-                if (activeTab === "centro-custo") {
-                  setChartAccountModalOpen(true);
-                } else if (activeTab === "contas") {
+                if (activeTab === "contas") {
                   setBankAccountModalOpen(true);
                 }
               }}
               className="group relative w-11 h-11 bg-gradient-to-r from-[#4D4E48] to-[#2a2a2a] hover:from-[#2a2a2a] hover:to-[#1a1a1a] rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 active:shadow-md"
               title={
-                activeTab === "centro-custo"
-                  ? "Nova Conta - Plano de Contas"
-                  : activeTab === "contas"
-                    ? "Nova Conta Bancária"
-                    : "Adicionar Novo"
+                activeTab === "contas"
+                  ? "Nova Conta Bancária"
+                  : "Adicionar Novo"
               }
               style={{
                 boxShadow: '0 6px 20px -6px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1) inset'
@@ -3623,6 +3633,8 @@ export function Transactions() {
         }}
         transaction={transactionToLiquidate || undefined}
         bankAccounts={bankAccounts}
+        paymentMethods={paymentMethods}
+        onAddPaymentMethod={(name: string) => createPaymentMethodMutation.mutate(name)}
       />
 
       {/* Modal de Detalhes do Demonstrativo Diário */}
@@ -3790,6 +3802,47 @@ function ChartOfAccountsContent({
     const direction = chartSortField === field && chartSortDirection === 'asc' ? 'desc' : 'asc';
     setChartSortField(field);
     setChartSortDirection(direction);
+  };
+
+  // Mutation para Gerar Plano de Contas com IA (Migrada do parent)
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  
+  const generateChartOfAccountsMutation = useMutation({
+    mutationFn: () =>
+      fetch('/api/ai/generate-chart-of-accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      }).then(res => {
+        if (!res.ok) {
+          return res.json().then(err => Promise.reject(err));
+        }
+        return res.json();
+      }),
+    onMutate: () => {
+      setIsAiLoading(true);
+    },
+    onSuccess: (data) => {
+      setIsAiLoading(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/chart-of-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Mágica Concluída! ✨', data.message || 'Plano de contas gerado com sucesso!');
+    },
+    onError: (error: any) => {
+      setIsAiLoading(false);
+      const errorMsg = error?.error || error?.message || 'A resposta do servidor falhou (Timeout ou chave de API). Tente novamente ou verifique se o terminal exibiu algum log.';
+      showError('Erro na Inteligência Artificial', errorMsg);
+    }
+  });
+
+  const handleGenerateAiChart = () => {
+    showConfirm(
+      'Gerar Plano de Contas com Inteligência Artificial?',
+      'A IA vai ler seu histórico financeiro, criar um Plano DRE para sua empresa e recategorizar todas movimentações automaticamente. O plano atual será reescrito. Deseja iniciar a mágica?',
+      () => generateChartOfAccountsMutation.mutate(),
+      'Continuar com I.A',
+      'Cancelar'
+    );
   };
 
   // --- FUNÇÕES AUXILIARES UNIFICADAS DO PLANO DE CONTAS ---
@@ -4287,205 +4340,134 @@ function ChartOfAccountsContent({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Cabeçalho sem botão duplicado */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900">Plano de Contas</h3>
-        <p className="text-sm text-gray-600">
-          Organize suas contas em estrutura hierárquica
-        </p>
-      </div>
-
-
-
-      {/* Lista de contas em tabela - Modelo baseado na imagem */}
-      <div className="bg-white rounded-lg border border-gray-200">
-        {/* Cabeçalho da tabela */}
-        <div className="border-b border-gray-200 bg-gray-50 px-6 py-3">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Estrutura do Plano de Contas
-          </h3>
-        </div>
-
-        {/* Tabela */}
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-white border-b border-gray-200">
-              <tr>
-                <th
-                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleChartSort('id')}
-                >
-                  <div className="flex items-center gap-1">
-                    #
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
-                </th>
-                <th
-                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleChartSort('code')}
-                >
-                  <div className="flex items-center gap-1">
-                    Código
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
-                </th>
-                <th
-                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleChartSort('name')}
-                >
-                  <div className="flex items-center gap-1">
-                    Nome da Conta
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
-                </th>
-                <th
-                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleChartSort('type')}
-                >
-                  <div className="flex items-center gap-1">
-                    Tipo
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
-                </th>
-                <th
-                  className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => handleChartSort('level')}
-                >
-                  <div className="flex items-center gap-1">
-                    Nível
-                    <ArrowUpDown className="h-3 w-3" />
-                  </div>
-                </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ações
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {isLoadingAccounts ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    Carregando contas...
-                  </td>
-                </tr>
-              ) : safeChartAccounts.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
-                    Nenhuma conta cadastrada. Clique no botão "+" para criar a primeira conta.
-                  </td>
-                </tr>
-              ) : (
-                safeChartAccounts.map((account: any, index: number) => (
-                  <tr key={account.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-[#1D3557]/5 transition-colors`}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {index + 1}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        {account.code || `${account.type.toUpperCase()}-${String(index + 1).padStart(3, '0')}`}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div style={{ paddingLeft: `${(account.level || 1) * 20}px` }} className="flex items-center gap-2">
-                        {(account.level || 1) > 1 && (
-                          <div className="text-gray-400 text-sm">
-                            {'└─ '.repeat(1)}
-                          </div>
-                        )}
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{account.name}</div>
-                          {account.description && (
-                            <div className="text-sm text-gray-500">{account.description}</div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-[#1D3557]/15 text-[#1D3557]' :
-                        (account.type === 'despesa' || account.type === 'despesas') ? 'bg-red-100 text-red-800' :
-                          account.type === 'ativo' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
-                            'bg-purple-100 text-purple-800'
-                        }`}>
-                        {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        Nível {account.level || 1}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => openEditModal(account)}
-                          className="text-[#B59363] hover:text-[#1D3557] p-1.5 hover:bg-[#B59363]/10 rounded transition-colors"
-                          title="Editar conta"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => openViewModal(account)}
-                          className="text-green-600 hover:text-green-900 p-1.5 hover:bg-green-100 rounded transition-colors"
-                          title="Visualizar conta"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAccount(account.id.toString())}
-                          disabled={deleteAccountMutation.isPending}
-                          className={`p-1.5 rounded transition-colors ${deleteAccountMutation.isPending
-                            ? 'text-gray-400 cursor-not-allowed bg-gray-100'
-                            : 'text-red-600 hover:text-red-900 hover:bg-red-100'
-                            }`}
-                          title={deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta"}
-                          data-testid={`button-delete-account-${account.id}`}
-                        >
-                          <Trash2 className={`h-4 w-4 ${deleteAccountMutation.isPending ? 'animate-pulse' : ''}`} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Rodapé com paginação similar à imagem */}
-        {safeChartAccounts.length > 0 && (
-          <div className="bg-white px-6 py-3 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <select className="border border-gray-300 rounded px-2 py-1 text-sm">
-                  <option value="10">10</option>
-                  <option value="20">20</option>
-                  <option value="50">50</option>
-                </select>
-              </div>
-
-              <div className="text-sm text-gray-700">
-                Mostrando 1 a {Math.min(10, safeChartAccounts.length)} de {safeChartAccounts.length} resultados
-              </div>
-
-              <div className="flex items-center gap-1">
-                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50" disabled>
-                  Anterior
-                </button>
-                <button className="px-3 py-1 text-sm bg-[#B59363] text-white rounded">
-                  1
-                </button>
-                <button className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700">
-                  Próxima
-                </button>
-              </div>
+    <>
+      <AiLoadingDialog open={isAiLoading} />
+      <Card className="border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-300 bg-white rounded-xl">
+      <CardContent className="p-6 space-y-6">
+        {/* Lista de contas em tabela - Migrado para TabelaItens Oficial */}
+        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden mt-2">
+          <div className="border-b border-gray-200 bg-gray-50 px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h3 className="text-base font-semibold text-gray-800 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-[#1D3557]" />
+                Estrutura do Plano de Contas
+              </h3>
+              <button
+                onClick={openCreateModal}
+                className="flex items-center justify-center p-1.5 bg-[#1D3557] text-white rounded-full hover:scale-110 active:scale-95 transition-all shadow-md hover:shadow-lg"
+                title="Nova Conta - Plano de Conta"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
+            <button
+              onClick={handleGenerateAiChart}
+              disabled={isAiLoading}
+              title="Assistente de Inteligência Artificial para Plano de Contas"
+              className={`flex items-center justify-center p-1 bg-transparent border-none outline-none transform transition-all duration-200 ${isAiLoading ? 'opacity-70 cursor-wait' : 'hover:scale-110 active:scale-95'}`}
+            >
+              <PsychologyAltIcon 
+                 sx={{ fontSize: 34 }} 
+                 className={`text-[#8B7355] drop-shadow-[2px_3px_2px_rgba(0,0,0,0.3)] hover:drop-shadow-[3px_5px_4px_rgba(0,0,0,0.4)] ${isAiLoading ? 'animate-pulse scale-110 brightness-150' : ''}`} 
+              />
+            </button>
           </div>
-        )}
-      </div>
-
-
+          
+          <div className="p-4 bg-white rounded-b-lg">
+            <TabelaItens
+              data={safeChartAccounts}
+              columns={[
+                {
+                  label: "#",
+                  key: "id",
+                  width: "5%",
+                  sortable: true,
+                  render: (account: any) => safeChartAccounts.findIndex((a: any) => a.id === account.id) + 1
+                },
+                {
+                  label: "Código",
+                  key: "code",
+                  width: "15%",
+                  sortable: true,
+                  render: (account: any) => (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      {account.code || `${account.type.toUpperCase()}-${String(safeChartAccounts.findIndex((a: any) => a.id === account.id) + 1).padStart(3, '0')}`}
+                    </span>
+                  )
+                },
+                {
+                  label: "Nome da Conta",
+                  key: "name",
+                  width: "40%",
+                  sortable: true,
+                  render: (account: any) => (
+                    <div style={{ paddingLeft: `${(account.level || 1) * 20}px` }} className="flex items-center gap-2">
+                      {(account.level || 1) > 1 && (
+                        <div className="text-gray-400 text-sm">
+                          {'└─ '.repeat(1)}
+                        </div>
+                      )}
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{account.name}</div>
+                        {account.description && (
+                          <div className="text-sm text-gray-500">{account.description}</div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                },
+                {
+                  label: "Tipo",
+                  key: "type",
+                  width: "15%",
+                  sortable: true,
+                  render: (account: any) => (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(account.type === 'receita' || account.type === 'receitas') ? 'bg-[#1D3557]/15 text-[#1D3557]' :
+                      (account.type === 'despesa' || account.type === 'despesas') ? 'bg-red-100 text-red-800' :
+                        account.type === 'ativo' ? 'bg-[#1D3557]/15 text-[#1D3557]' :
+                          'bg-purple-100 text-purple-800'
+                      }`}>
+                      {account.type.charAt(0).toUpperCase() + account.type.slice(1)}
+                    </span>
+                  )
+                },
+                {
+                  label: "Nível",
+                  key: "level",
+                  width: "10%",
+                  sortable: true,
+                  render: (account: any) => (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      Nível {account.level || 1}
+                    </span>
+                  )
+                }
+              ]}
+              actions={[
+                {
+                  icon: Edit,
+                  color: "text-[#B59363]",
+                  title: "Editar conta",
+                  onClick: (account: any) => openEditModal(account)
+                },
+                {
+                  icon: Eye,
+                  color: "text-green-600",
+                  title: "Visualizar conta",
+                  onClick: (account: any) => openViewModal(account)
+                },
+                {
+                  icon: Trash2,
+                  color: deleteAccountMutation.isPending ? "text-gray-400" : "text-red-600",
+                  title: deleteAccountMutation.isPending ? "Excluindo..." : "Excluir conta",
+                  onClick: (account: any) => !deleteAccountMutation.isPending && handleDeleteAccount(account.id.toString())
+                }
+              ]}
+              emptyMessage={isLoadingAccounts ? "Carregando contas do plano..." : "Nenhuma conta cadastrada. Clique no botão de nova conta para criar."}
+              initialPerPage={10}
+            />
+          </div>
+        </div>
 
       {/* Modal Nova categoria - Baseado na imagem exata */}
       {isModalOpen && (
@@ -4614,7 +4596,9 @@ function ChartOfAccountsContent({
       <ErrorDialog />
       <ConfirmDialog />
 
-    </div>
+      </CardContent>
+    </Card>
+    </>
   );
 }
 

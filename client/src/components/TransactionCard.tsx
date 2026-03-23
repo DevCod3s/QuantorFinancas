@@ -28,8 +28,10 @@ import {
   Typography,
   Autocomplete,
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut } from 'lucide-react';
-import { useQuery } from "@tanstack/react-query";
+import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut, Building2, Lock, AlertTriangle } from 'lucide-react';
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { DynamicModal, FieldType } from "@/components/DynamicModal";
 import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
 import { DateInput } from "./DateInput";
@@ -41,7 +43,7 @@ import { RecorrenciaModal } from "./RecorrenciaModal";
 interface TransactionCardProps {
   open: boolean;
   onClose: () => void;
-  onSave: (transaction: any) => void;
+  onSave: (transaction: any, keepOpen?: boolean) => Promise<void>;
   entryType?: 'payable' | 'receivable'; // Novo prop para definir tipo de lançamento
   transaction?: any; // Prop para edição
   viewOnly?: boolean; // Novo prop para modo visualização
@@ -152,6 +154,50 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
     }
   }, [open, transaction, entryType]);
 
+  const queryClient = useQueryClient();
+
+  // Estados do Modal Dinâmico de Categoria
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryData, setCategoryData] = useState({ name: '', type: 'expense', orderIndex: '', appliedTo: 'both' });
+  const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
+  const [subcategoryData, setSubcategoryData] = useState({ name: '', categoryId: '', type: 'expense', orderIndex: '' });
+
+  const createBusinessCategoryMutation = useMutation({
+    mutationFn: async (data: any) => {
+      // Usamos apiRequest que já retorna dados parseados como JSON
+      return await apiRequest('POST', '/api/business-categories', data);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/business-categories'] });
+      // Atribui o ID para autopreencher o filtro
+      if (data && data.id) setBusinessCategoria(data.id.toString());
+      setIsCategoryModalOpen(false);
+    }
+  });
+
+  const createBusinessSubcategoryMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest('POST', '/api/business-subcategories', data);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/business-subcategories'] });
+      if (data && data.id) setBusinessSubcategoria(data.id.toString());
+      setIsSubcategoryModalOpen(false);
+    }
+  });
+
+  const createRelationshipMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest('POST', '/api/relationships', data);
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/relationships'] });
+      if (data && data.id) setContato(data.id.toString());
+      setContactModalOpen(false);
+      // Opcional: toast de sucesso
+    }
+  });
+
   // Estados para parcelamento
   const [parcelamentoModalOpen, setParcelamentoModalOpen] = useState(false);
   const [recorrenciaModalOpen, setRecorrenciaModalOpen] = useState(false);
@@ -162,6 +208,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   const [valorJuros, setValorJuros] = useState('');
   const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela' | 'atraso'>('total');
   const [valorParcela, setValorParcela] = useState('0,00');
+  const [tipoRateio, setTipoRateio] = useState<'dividir' | 'multiplicar'>('dividir');
+  const [installmentsList, setInstallmentsList] = useState<any[]>([]);
 
   // Estados para modal de adicionar contato
   const [contactModalOpen, setContactModalOpen] = useState(false);
@@ -178,6 +226,12 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
     cidade: '',
     estado: ''
   });
+  
+  // Estado para o Dialog de Aviso de Duplicidade
+  const [duplicateWarningOpen, setDuplicateWarningOpen] = useState(false);
+  const [duplicateContactName, setDuplicateContactName] = useState('');
+  const [duplicateContactId, setDuplicateContactId] = useState('');
+  const [duplicateDocumentType, setDuplicateDocumentType] = useState('');
 
   // Função para buscar dados de CNPJ
   const fetchCNPJData = async (cnpj: string) => {
@@ -401,6 +455,11 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   };
 
   const handleSave = async () => {
+    if (isPaid && !conta) {
+      alert("Por favor, selecione uma conta bancária para liquidar o lançamento.");
+      return;
+    }
+
     // Lógica inteligente de status
     let finalStatus = 'pendente';
     if (isPaid) {
@@ -425,6 +484,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       repeticao,
       tags,
       status: finalStatus,
+      liquidationDate: isPaid ? data : undefined,
       descricao,
       conta,
       contato,
@@ -442,6 +502,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       tipoJuros: repeticao === 'Parcelado' ? tipoJuros : undefined,
       valorJuros: repeticao === 'Parcelado' ? valorJuros : undefined,
       aplicarJurosEm: repeticao === 'Parcelado' ? aplicarJurosEm : undefined,
+      tipoRateio: repeticao === 'Parcelado' ? tipoRateio : undefined,
+      installmentsList: repeticao === 'Parcelado' ? installmentsList : undefined,
       aplicarEncargos: repeticao === 'Recorrente' ? aplicarEncargos : undefined,
       jurosMes: repeticao === 'Recorrente' ? jurosMes : undefined,
       moraDia: repeticao === 'Recorrente' ? moraDia : undefined,
@@ -455,6 +517,88 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
     } catch (error) {
       // Erro tratado pelo onError da mutation em Transactions.tsx
       console.error('Erro ao salvar transação:', error);
+    }
+  };
+
+  const resetFields = () => {
+    setTipo(entryType === 'payable' ? 'Nova despesa' : 'Nova receita');
+    setValor('0,00');
+    setData(localDateStr());
+    setDescricao('');
+    setConta('');
+    setContato('');
+    setObservacoes('');
+    setRepeticao('Única');
+    setIsPaid(false);
+    setTags('');
+    setHasEndDate(false);
+    setPeriodicidade('Mensal');
+    setIntervaloRepeticao('1');
+    setProdutoServico('');
+    setBusinessCategoria('');
+    setBusinessSubcategoria('');
+    setPlanoContas('');
+    setNumeroParcelas('');
+    setDataPrimeiraParcela('');
+    setAplicarJuros(false);
+    setTipoJuros('percentual');
+    setValorJuros('');
+    setAplicarJurosEm('total');
+    setTipoRateio('dividir');
+    setInstallmentsList([]);
+    setAplicarEncargos(false);
+    setJurosMes('');
+    setMoraDia('');
+    setTipoEncargo('percentual');
+    setAplicarMultaEm('atrasados');
+  };
+
+  const handleSaveAndNew = async () => {
+    if (isPaid && !conta) {
+      alert("Por favor, selecione uma conta bancária para liquidar o lançamento.");
+      return;
+    }
+
+    // Mesmo payload base do handleSave tradicional
+    let finalStatus = 'pendente';
+    if (isPaid) {
+      finalStatus = 'pago';
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const transactionDate = new Date(data);
+      transactionDate.setHours(0, 0, 0, 0);
+      if (transactionDate < today) finalStatus = 'vencido';
+    }
+
+    const transaction = {
+      tipo, valor, data, repeticao, tags,
+      status: finalStatus, liquidationDate: isPaid ? data : undefined,
+      descricao, conta, contato, observacoes, planoContas,
+      produtoServico, businessCategoria, businessSubcategoria,
+      periodicidade: repeticao === 'Recorrente' ? periodicidade : undefined,
+      intervalo: repeticao === 'Recorrente' ? parseInt(intervaloRepeticao) : undefined,
+      dataTermino: (repeticao === 'Recorrente' && hasEndDate) ? dataTermino : undefined,
+      numeroParcelas: repeticao === 'Parcelado' ? numeroParcelas : undefined,
+      dataPrimeiraParcela: repeticao === 'Parcelado' ? dataPrimeiraParcela : undefined,
+      aplicarJuros: repeticao === 'Parcelado' ? aplicarJuros : undefined,
+      tipoJuros: repeticao === 'Parcelado' ? tipoJuros : undefined,
+      valorJuros: repeticao === 'Parcelado' ? valorJuros : undefined,
+      aplicarJurosEm: repeticao === 'Parcelado' ? aplicarJurosEm : undefined,
+      tipoRateio: repeticao === 'Parcelado' ? tipoRateio : undefined,
+      installmentsList: repeticao === 'Parcelado' ? installmentsList : undefined,
+      aplicarEncargos: repeticao === 'Recorrente' ? aplicarEncargos : undefined,
+      jurosMes: repeticao === 'Recorrente' ? jurosMes : undefined,
+      moraDia: repeticao === 'Recorrente' ? moraDia : undefined,
+      tipoEncargo: repeticao === 'Recorrente' ? tipoEncargo : undefined,
+      aplicarMultaEm: repeticao === 'Recorrente' ? aplicarMultaEm : undefined,
+    };
+
+    try {
+      await onSave(transaction, true); // keepOpen = true
+      resetFields(); // Limpa a UI logrando a requisição do cliente
+    } catch (error) {
+      console.error('Erro ao Salvar e Adicionar Novo:', error);
     }
   };
 
@@ -710,7 +854,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                 )}
                 noOptionsText="Nenhuma categoria"
               />
-              <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
+              <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }} onClick={() => setIsCategoryModalOpen(true)}>
                 <Plus className="h-4 w-4" />
               </IconButton>
             </Box>
@@ -740,7 +884,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                   )}
                   noOptionsText="Nenhuma subcategoria"
                 />
-                <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
+                <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }} onClick={() => setIsSubcategoryModalOpen(true)}>
                   <Plus className="h-4 w-4" />
                 </IconButton>
               </Box>
@@ -804,9 +948,9 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                   <IButtonPrime
                     icon={<Plus className="h-4 w-4" />}
                     variant="gold"
-                    title="Adicionar novo"
+                    title="Salvar e adicionar novo"
                     className="!p-2"
-                    onClick={() => console.log('Novo')}
+                    onClick={handleSaveAndNew}
                   />
                 </>
               )}
@@ -998,26 +1142,95 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                     variant="gold"
                     title="Salvar"
                     onClick={() => {
-                      console.log('Salvando contato:', contactFormData);
-                      setContactFormData({
-                        tipoRelacionamento: '',
-                        cpfCnpj: '',
-                        razaoSocial: '',
-                        inscricaoEstadual: '',
-                        cep: '',
-                        logradouro: '',
-                        numero: '',
-                        complemento: '',
-                        bairro: '',
-                        cidade: '',
-                        estado: ''
+                      // Validação básica
+                      if (!contactFormData.cpfCnpj || !contactFormData.razaoSocial || !contactFormData.tipoRelacionamento) {
+                        alert("Por favor, preencha o Tipo de Relacionamento, CPF/CNPJ e a Razão Social.");
+                        return;
+                      }
+
+                      const cleanDocument = contactFormData.cpfCnpj.replace(/\D/g, '');
+                      
+                      // 1. Verificar duplicidade na lista de contatos em cache
+                      const existingContact = relationships.find((rel: any) => 
+                        rel.document && rel.document.replace(/\D/g, '') === cleanDocument
+                      );
+
+                      if (existingContact) {
+                        setDuplicateContactName(existingContact.socialName);
+                        setDuplicateContactId(existingContact.id.toString());
+                        setDuplicateDocumentType(cleanDocument.length === 11 ? 'CPF' : 'CNPJ');
+                        setDuplicateWarningOpen(true);
+                        return;
+                      }
+
+                      // 2. Criar novo contato pelo mutation
+                      createRelationshipMutation.mutate({
+                        type: contactFormData.tipoRelacionamento,
+                        documentType: cleanDocument.length === 11 ? 'CPF' : 'CNPJ',
+                        document: contactFormData.cpfCnpj,
+                        socialName: contactFormData.razaoSocial,
+                        stateRegistration: contactFormData.inscricaoEstadual,
+                        zipCode: contactFormData.cep,
+                        street: contactFormData.logradouro,
+                        number: contactFormData.numero,
+                        complement: contactFormData.complemento,
+                        neighborhood: contactFormData.bairro,
+                        city: contactFormData.cidade,
+                        state: contactFormData.estado,
+                        status: 'ativo'
+                      }, {
+                        onSuccess: () => {
+                           // Reseta form após sucesso (a mutation já fecha o modal e seleciona)
+                           setContactFormData({
+                            tipoRelacionamento: '', cpfCnpj: '', razaoSocial: '', inscricaoEstadual: '',
+                            cep: '', logradouro: '', numero: '', complemento: '', bairro: '', cidade: '', estado: ''
+                           });
+                        }
                       });
-                      setContactModalOpen(false);
                     }}
                   />
                 </div>
               </div>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Aviso de Duplicidade */}
+      <Dialog
+        open={duplicateWarningOpen}
+        onClose={() => setDuplicateWarningOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          style: {
+            borderRadius: '12px',
+            padding: '16px',
+            backgroundColor: '#ffffff'
+          }
+        }}
+      >
+        <DialogContent className="p-4 overflow-hidden">
+          <div className="flex items-center gap-3 mb-4">
+            <AlertTriangle className="w-6 h-6 text-[#d97706]" />
+            <h2 className="text-xl font-semibold text-[#d97706]">Documento já cadastrado</h2>
+          </div>
+          
+          <p className="text-gray-700 text-base leading-relaxed mb-6">
+            O {duplicateDocumentType} que você tentou inserir já está vinculado ao relacionamento ativo "{duplicateContactName}". Para evitar inconsistências e dados duplicados, esta ação foi bloqueada. Por favor, confira o documento digitado ou utilize a busca para localizar o cadastro existente.
+          </p>
+          
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => {
+                setContato(duplicateContactId);
+                setDuplicateWarningOpen(false);
+                setContactModalOpen(false);
+              }}
+              className="px-6 py-2.5 bg-[#B59363] text-white font-medium rounded-md hover:bg-[#a08257] transition-colors"
+            >
+              Entendi
+            </button>
           </div>
         </DialogContent>
       </Dialog>
@@ -1033,6 +1246,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           setTipoJuros(config.tipoJuros);
           setValorJuros(config.valorJuros);
           setAplicarJurosEm(config.aplicarJurosEm);
+          setTipoRateio(config.tipoRateio);
+          setInstallmentsList(config.installments || []);
         }}
         initialConfig={{
           numeroParcelas,
@@ -1041,6 +1256,9 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           tipoJuros,
           valorJuros,
           aplicarJurosEm,
+          tipoRateio,
+          installments: installmentsList,
+          valorTotalFormatado: valor
         }}
         valorTotal={valor}
       />
@@ -1072,6 +1290,66 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           aplicarMultaEm,
         }}
       />
+
+      {/* Modal Dinâmico de Nova Categoria */}
+      <DynamicModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        title="Nova Categoria"
+        icon={<Building2 className="w-5 h-5 text-[#B59363]" />}
+        data={{ ...categoryData, type: tipo === 'Nova receita' ? 'income' : 'expense', id: 'Gerado Auto', appliedTo: 'both' }}
+        fields={[
+          [
+            { name: 'id', label: 'Id Categoria', type: 'text' as FieldType, colSpan: 4, disabled: true, endIcon: <Lock className="h-4 w-4 text-gray-400" /> },
+            { name: 'name', label: 'Nome *', type: 'text' as FieldType, colSpan: 8, autoFocus: true, helperText: (data) => !data.name ? 'Campo obrigatório' : '' }
+          ],
+          [
+            { name: 'orderIndex', label: 'Ordem', type: 'text' as FieldType, colSpan: 4, transform: (val: string) => val.replace(/\D/g, '') },
+            { name: 'type', label: 'Tipo', type: 'select' as FieldType, colSpan: 4, options: [ { value: 'income', label: 'Receita' }, { value: 'expense', label: 'Despesa' } ] },
+            { name: 'appliedTo', label: 'Aplicar em', type: 'select' as FieldType, colSpan: 4, options: [ { value: 'products', label: 'Produtos' }, { value: 'services', label: 'Serviços' }, { value: 'both', label: 'Ambos' } ] }
+          ]
+        ]}
+        onSave={(data) => {
+          if (!data.name || !data.type) return;
+          createBusinessCategoryMutation.mutate({
+            name: data.name,
+            type: data.type,
+            appliedTo: data.appliedTo || 'both',
+            orderIndex: data.orderIndex ? parseInt(data.orderIndex) : 0
+          });
+        }}
+        hideCloseButton={true}
+      />
+
+      {/* Modal Dinâmico de Nova Subcategoria */}
+      <DynamicModal
+        isOpen={isSubcategoryModalOpen}
+        onClose={() => setIsSubcategoryModalOpen(false)}
+        title="Nova Subcategoria"
+        icon={<Tag className="w-5 h-5 text-[#B59363]" />}
+        data={{ ...subcategoryData, categoryId: businessCategoria, id: 'Gerado Auto' }}
+        fields={[
+          [
+            { name: 'id', label: 'Id Subcategoria', type: 'text' as FieldType, colSpan: 4, disabled: true, endIcon: <Lock className="h-4 w-4 text-gray-400" /> },
+            { name: 'orderIndex', label: 'Ordem', type: 'text' as FieldType, colSpan: 8, transform: (val: string) => val.replace(/\D/g, '') }
+          ],
+          [
+            { name: 'categoryId', label: 'Categoria *', type: 'select' as FieldType, colSpan: 4, options: (businessCategories as any[]).map((c: any) => ({ value: c.id.toString(), label: c.name })), helperText: (data) => !data.categoryId ? 'Selecione uma categoria pai' : '' },
+            { name: 'name', label: 'Nome *', type: 'text' as FieldType, colSpan: 8, autoFocus: true, helperText: (data) => !data.name ? 'Campo obrigatório' : '' }
+          ]
+        ]}
+        onSave={(data) => {
+          const parentCategory = (businessCategories as any[]).find(c => c.id === parseInt(data.categoryId));
+          createBusinessSubcategoryMutation.mutate({
+            name: data.name,
+            categoryId: parseInt(data.categoryId),
+            type: parentCategory ? parentCategory.type : (tipo === 'Nova receita' ? 'income' : 'expense'),
+            orderIndex: data.orderIndex ? parseInt(data.orderIndex) : 0
+          });
+        }}
+        hideCloseButton={true}
+      />
+
     </Box >
   );
 }

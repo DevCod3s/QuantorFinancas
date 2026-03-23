@@ -38,7 +38,7 @@ import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, inse
 import * as schema from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
-import { eq, and, or, ilike } from "drizzle-orm";
+import { eq, and, or, ilike, desc } from "drizzle-orm";
 
 /**
  * Parseia uma string de data para Date local (Brasília)
@@ -389,25 +389,38 @@ router.get("/transactions", requireAuth, async (req: any, res) => {
 
 router.post("/transactions", requireAuth, async (req: any, res) => {
   try {
-    const { repeticao, numeroParcelas, periodicidade, intervalo, dataTermino, aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm, aplicarEncargos, jurosMes, moraDia, tipoEncargo, aplicarMultaEm, ...rest } = req.body;
+    const { repeticao, numeroParcelas, periodicidade, intervalo, dataTermino, aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm, aplicarEncargos, jurosMes, moraDia, tipoEncargo, aplicarMultaEm, tipoRateio, installmentsList, ...rest } = req.body;
 
-    // Se for parcelado, gerar múltiplas transações (uma por parcela)
+    // Se for parcelado, gerar múltiplas transações baseadas na Matriz enviada pelo Front
     if (repeticao === 'Parcelado' && numeroParcelas && parseInt(numeroParcelas) > 1) {
       const totalParcelas = parseInt(numeroParcelas);
-      const valorTotal = parseFloat(rest.amount);
-      const valorParcela = Math.round((valorTotal / totalParcelas) * 100) / 100;
-      // Ajuste na última parcela para cobrir arredondamento
-      const valorUltimaParcela = Math.round((valorTotal - valorParcela * (totalParcelas - 1)) * 100) / 100;
-
       const parcelamentoId = crypto.randomUUID();
-      const dataBase = parseLocalDate(rest.date);
       const criadas: any[] = [];
 
       for (let i = 0; i < totalParcelas; i++) {
-        const dataParcela = new Date(dataBase);
-        dataParcela.setMonth(dataParcela.getMonth() + i);
+        let valorDestaParcela = 0;
+        let dataParcela = new Date();
 
-        const valorDestaParcela = i === totalParcelas - 1 ? valorUltimaParcela : valorParcela;
+        if (installmentsList && installmentsList[i]) {
+          valorDestaParcela = parseFloat(installmentsList[i].value);
+          // O front envia date formatado como DD/MM/YYYY
+          if (typeof installmentsList[i].date === 'string' && installmentsList[i].date.includes('/')) {
+            const [d, m, y] = installmentsList[i].date.split('/');
+            dataParcela = new Date(parseInt(y), parseInt(m) - 1, parseInt(d), 12, 0, 0); // Preserva o dia inteiro sem afetar UTC timezone no DB
+          } else {
+             dataParcela = parseLocalDate(installmentsList[i].date || rest.date);
+          }
+        } else {
+          // Fallback legacy behavior
+          const valorTotalFallback = parseFloat(rest.amount);
+          const valorParcelaFallback = Math.round((valorTotalFallback / totalParcelas) * 100) / 100;
+          const valorUltimaParcelaFallback = Math.round((valorTotalFallback - valorParcelaFallback * (totalParcelas - 1)) * 100) / 100;
+          valorDestaParcela = i === totalParcelas - 1 ? valorUltimaParcelaFallback : valorParcelaFallback;
+          
+          dataParcela = parseLocalDate(rest.date);
+          dataParcela.setMonth(dataParcela.getMonth() + i);
+        }
+
         const descricaoParcela = `${rest.description || 'Parcelamento'} (${i + 1}/${totalParcelas})`;
 
         const validatedData = insertTransactionSchema.parse({
@@ -416,6 +429,7 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           amount: valorDestaParcela.toString(),
           description: descricaoParcela,
           date: new Date(dataParcela),
+          liquidationDate: rest.liquidationDate ? parseLocalDate(rest.liquidationDate) : undefined,
           repeticao: 'Parcelado',
           numeroParcelas: totalParcelas,
           parcelaAtual: i + 1,
@@ -456,6 +470,7 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           userId: req.user.id,
           amount: rest.amount.toString(),
           date: new Date(currentDate),
+          liquidationDate: rest.liquidationDate ? parseLocalDate(rest.liquidationDate) : undefined,
           repeticao: 'Recorrente',
           periodicidade: period,
           intervalo: interval,
@@ -497,6 +512,7 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
       repeticao: repeticao || 'Única',
       amount: req.body.amount?.toString(),
       date: req.body.date ? parseLocalDate(req.body.date) : new Date(),
+      liquidationDate: req.body.liquidationDate ? parseLocalDate(req.body.liquidationDate) : undefined,
       aplicarJuros: aplicarJuros || false,
       tipoJuros: tipoJuros || null,
       valorJuros: valorJuros ? valorJuros.toString() : null,
@@ -1704,6 +1720,149 @@ router.get("/debug-server-logs", async (req, res) => {
     }
   } catch (err) {
     res.status(500).send("Erro ao ler log");
+  }
+});
+
+// ==========================================
+// Rota da Inteligência Artificial (Plano de Contas)
+// ==========================================
+router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 1. Coleta das transações do usuário (Contexto Proposto)
+    // Limite superior de transações recentes para evitar extrapolar limite de tokens e de tempo 
+    const limit = 500;
+    const userTransactions = await db
+      .select({
+        id: schema.transactions.id,
+        description: schema.transactions.description,
+        type: schema.transactions.type,
+        amount: schema.transactions.amount,
+        date: schema.transactions.date,
+      })
+      .from(schema.transactions)
+      .where(eq(schema.transactions.userId, userId))
+      .orderBy(desc(schema.transactions.date))
+      .limit(limit);
+
+    if (!userTransactions || userTransactions.length === 0) {
+      return res.status(400).json({ error: "Você precisa ter transações cadastradas para a IA montar seu perfil." });
+    }
+
+    const transactionsContext = userTransactions.map(t => ({
+      id: t.id,
+      description: t.description || 'Sem descrição',
+      type: t.type,
+      amount: t.amount,
+      date: t.date ? new Date(t.date).toISOString().split('T')[0] : null
+    }));
+
+    // 2. Acionamento do Agente LLM (Especialista Contábil)
+    const openai = new OpenAI();
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: `Você é uma Especialista em Gestão Contábil DRE de alto nível.
+Seu trabalho é analisar o histórico de transações financeiras desta empresa e criar um Plano de Contas PERFEITO e EXAUSTIVO customizado para a sua natureza, totalmente focado no controle do DRE.
+Você DEVE retornar estritamente um JSON no seguinte formato:
+{
+  "chartOfAccounts": [
+    { "tempId": "temp1", "code": "1", "name": "Receitas", "type": "receita", "level": 1, "description": "Categoria raiz de receitas" },
+    { "tempId": "temp1_1", "code": "1.1", "name": "Vendas de Produtos", "type": "receita", "level": 2, "parentTempId": "temp1", "description": "" },
+    { "tempId": "temp2", "code": "2", "name": "Despesas", "type": "despesa", "level": 1, "description": "" },
+    { "tempId": "temp2_1", "code": "2.1", "name": "Custos Operacionais", "type": "despesa", "level": 2, "parentTempId": "temp2", "description": "" }
+  ],
+  "transactionMappings": [
+    { "transactionId": 12, "chartAccountTempId": "temp1_1" }
+  ]
+}
+
+Regras IMPORTANTES:
+1. O array 'chartOfAccounts' deve conter uma estrutura hierárquica dividindo as contas lógicas perfeitamente (níveis 1, 2, ou 3 se aplicável à empresa).
+2. O campo 'type' SÓ e SOMENTE SÓ pode ser: 'receita', 'despesa', 'ativo' ou 'passivo'.
+3. 'tempId' deve ser qualquer string única que mapeie os nós criados temporariamente.
+4. 'parentTempId' deve obrigatoriamente referenciar o 'tempId' de uma conta-pai existente neste mesmo array, exceto para root nodes em que ele não deve ser retornado (level 1).
+5. O array 'transactionMappings' DEVE tentar classificar inteligentemente todos os IDs do contexto repassado para o respectivo 'chartAccountTempId' do nível folha (nível mais baixo de subconta) respectivo.
+6. Nunca invente Ids que não existam ou dados lixo fora do array. Confie na formatação.
+`
+        },
+        {
+          role: "user",
+          content: `As transações conhecidas da empresa são estas:\n\n${JSON.stringify(transactionsContext)}`
+        }
+      ]
+    });
+
+    const aiResponse = response.choices[0].message.content;
+    if (!aiResponse) throw new Error("A Inteligência Artificial não retornou o formato JSON esperado.");
+    
+    const parsedData = JSON.parse(aiResponse);
+
+    if (!parsedData.chartOfAccounts || !parsedData.transactionMappings) {
+      throw new Error("Formato do Payload da IA não seguiu a hierarquia JSON forçada.");
+    }
+
+    // 3. Persistência em Lote (Database Transaction Drizzle)
+    await db.transaction(async (tx) => {
+      // 3.1) Limpar mapeamentos anteriores no sistema
+      await tx.update(schema.transactions)
+        .set({ chartAccountId: null })
+        .where(eq(schema.transactions.userId, userId));
+        
+      // 3.2) Destruir plano de contas anterior no banco de dados para injetar o 100% IA
+      // Atenção: O foreign key foi setado como nulo primeiro acima para evitar violações restrict
+      await tx.delete(schema.chartOfAccounts)
+        .where(eq(schema.chartOfAccounts.userId, userId));
+
+      // 3.3) Processamento de níveis (level 1 => level 2 => level 3...) para o pai nascer antes
+      const sortedAccounts = [...parsedData.chartOfAccounts].sort((a: any, b: any) => a.level - b.level);
+      const tempIdToRealIdMap = new Map();
+
+      for (const acc of sortedAccounts) {
+        let parentId = null;
+        if (acc.parentTempId && tempIdToRealIdMap.has(acc.parentTempId)) {
+          parentId = tempIdToRealIdMap.get(acc.parentTempId);
+        }
+
+        const [inserted] = await tx.insert(schema.chartOfAccounts).values({
+          userId: userId,
+          name: acc.name,
+          description: acc.description || null,
+          type: acc.type,
+          code: acc.code,
+          parentId: parentId,
+          level: acc.level,
+          isActive: true
+        }).returning({ id: schema.chartOfAccounts.id });
+
+        tempIdToRealIdMap.set(acc.tempId, inserted.id);
+      }
+
+      // 3.4) Relacionamento Retroativo de Mapeamento (Conciliação LLM-DB)
+      for (const mapping of parsedData.transactionMappings) {
+        const targetId = tempIdToRealIdMap.get(mapping.chartAccountTempId);
+        if (targetId && mapping.transactionId) {
+          await tx.update(schema.transactions)
+            .set({ chartAccountId: targetId })
+            .where(
+              and(
+                eq(schema.transactions.id, mapping.transactionId),
+                eq(schema.transactions.userId, userId)
+              )
+            );
+        }
+      }
+    });
+
+    res.json({ success: true, message: "A Máquina aprendeu de suas finanças e estruturou um plano DRE profissional com todas as categorias já linkadas entre si e aos lançamentos!" });
+  } catch (error) {
+    console.error("Erro drástico no workflow de IA (Chart of accounts):", error);
+    res.status(500).json({ error: "Ops, a magia da inteligência artificial falhou ou quebrou regras lógicas. Consulte o log do terminal." });
   }
 });
 
