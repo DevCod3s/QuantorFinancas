@@ -23,6 +23,15 @@ import CustomInput, { CustomSelect } from "../CustomInput";
 import AddRelationshipTypeModal from "../AddRelationshipTypeModal";
 import { DateInput } from "../DateInput";
 import { IButtonPrime } from "../ui/i-ButtonPrime";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 /**
  * Interface para dados do formulário da Etapa 1
@@ -173,6 +182,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
   // Estado para controlar modal e tipos customizados
   const [showModal, setShowModal] = useState(false);
   const [customTypes, setCustomTypes] = useState<Array<{ value: string, text: string }>>([]);
+  const [duplicateDialog, setDuplicateDialog] = useState({ show: false, message: '' });
 
   // Referências para navegação automática entre campos
   const socialNameRef = useRef<HTMLInputElement>(null);
@@ -242,15 +252,46 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
 
     updateFormData(updates);
 
-    // Se CNPJ válido, buscar dados automaticamente
-    if (isValid && detectedType === 'CNPJ') {
-      fetchCNPJData(value);
+    // Se documento for válido, verificar duplicidade primeiro
+    if (isValid && detectedType) {
+      checkDocumentDuplication(value, detectedType);
     }
-    // Se CPF válido, focar no próximo campo
-    else if (isValid && detectedType === 'CPF' && socialNameRef.current) {
-      setTimeout(() => {
-        socialNameRef.current?.focus();
-      }, 100);
+  };
+
+  /**
+   * Verifica se o documento já está cadastrado no backend
+   */
+  const checkDocumentDuplication = async (docValue: string, docType: 'CPF' | 'CNPJ') => {
+    try {
+      updateFormData({ isLoading: true });
+      const res = await fetch(`/api/relationships/check-document/${encodeURIComponent(docValue)}`);
+      
+      if (!res.ok) {
+        throw new Error("Erro na resposta da verificação");
+      }
+
+      const data = await res.json();
+      
+      if (data.exists) {
+        updateFormData({ document: '', documentType: null, isLoading: false });
+        setDuplicateDialog({
+          show: true, 
+          message: `O ${docType} que você tentou inserir já está vinculado ao relacionamento ativo "${data.relationship?.name || 'na base'}". Para evitar inconsistências e dados duplicados, esta ação foi bloqueada. Por favor, confira o documento digitado ou utilize a busca para localizar o cadastro existente.`
+        });
+      } else {
+        // Documento não existe, continua o fluxo normal
+        updateFormData({ isLoading: false });
+        if (docType === 'CNPJ') {
+          fetchCNPJData(docValue);
+        } else if (docType === 'CPF' && socialNameRef.current) {
+          setTimeout(() => {
+            socialNameRef.current?.focus();
+          }, 100);
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao verificar documento", error);
+      updateFormData({ isLoading: false });
     }
   };
 
@@ -346,10 +387,7 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
    * Manipula auto-preenchimento quando documento válido
    */
   const handleValidDocument = (documentData: any) => {
-    if (documentData.type === 'CNPJ') {
-      // Para CNPJ, buscar dados reais da API
-      fetchCNPJData(documentData.document);
-    } else {
+    if (documentData.type === 'CPF') {
       // Para CPF, limpar campos não aplicáveis
       updateFormData({
         fantasyName: '',
@@ -693,6 +731,29 @@ export default function Step1BasicInfo({ onDataChange, initialData = {}, readOnl
         onClose={() => setShowModal(false)}
         onSave={handleAddNewType}
       />
+
+      {/* Dialog de Duplicidade */}
+      <AlertDialog open={duplicateDialog.show} onOpenChange={(open) => !open && setDuplicateDialog({ ...duplicateDialog, show: false })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-amber-600">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+              Documento já cadastrado
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base text-gray-700 font-medium">
+              {duplicateDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => setDuplicateDialog({ ...duplicateDialog, show: false })}
+              className="bg-[#B59363] hover:bg-[#a08155] text-white"
+            >
+              Entendi
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

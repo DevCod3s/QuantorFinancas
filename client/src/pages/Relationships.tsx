@@ -21,8 +21,9 @@ import { useState, useEffect, useRef } from "react";
 // Importações React Query
 import { useQuery } from "@tanstack/react-query";
 
-// Importação do wizard de relacionamento
+// Importações de componentes de relacionamento
 import RelationshipWizard from "../components/relationship-wizard/RelationshipWizard";
+import EditRelationshipModal from "../components/relationship-wizard/EditRelationshipModal";
 
 // Importações de ícones
 import { Plus, Users, Building, Phone, Mail, MapPin, User, CheckCircle, XCircle, AlertCircle, Ban, Edit, Eye, Trash2, ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react";
@@ -62,6 +63,7 @@ export function Relationships() {
   const [isAddingRelationship, setIsAddingRelationship] = useState(false);
 
   // Estado para controlar edição
+  const [showEditModal, setShowEditModal] = useState(false);
   const [editingRelationship, setEditingRelationship] = useState<any>(null);
   const [viewingRelationship, setViewingRelationship] = useState<any>(null);
 
@@ -91,7 +93,7 @@ export function Relationships() {
     const nome = item.socialname || item.social_name || item.socialName || item.fantasyname || item.fantasy_name || item.fantasyName;
     console.log('Editando relacionamento:', item);
     setEditingRelationship(item);
-    setIsAddingRelationship(true);
+    setShowEditModal(true);
   };
 
   const handleView = (item: any, tipo: string) => {
@@ -543,6 +545,17 @@ export function Relationships() {
         </TabsContent>
 
       </Tabs>
+
+      {/* Modal Dedicado de Edição */}
+      <EditRelationshipModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        data={editingRelationship}
+        onSuccess={() => {
+          showSuccess("Relacionamento Atualizado", "As alterações permitidas foram salvas com segurança.");
+          refetch();
+        }}
+      />
 
       {/* Dialogs de Feedback */}
       <SuccessDialog />

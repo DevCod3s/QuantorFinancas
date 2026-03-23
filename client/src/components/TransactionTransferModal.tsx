@@ -175,7 +175,7 @@ export function TransactionTransferModal({ open, onClose, onSave, bankAccounts }
             <InputLabel sx={{ color: '#1D3557' }}>Conta Origem</InputLabel>
             <Autocomplete
               options={bankAccounts}
-              getOptionLabel={(acc: any) => `${acc.name || 'Conta'} (${acc.bank || 'Banco'} - Cc: ${acc.accountNumber || 'S/N'})`}
+              getOptionLabel={(acc: any) => acc.name || 'Conta'}
               value={bankAccounts.find((a: any) => a.id.toString() === sourceAccount.toString()) || null}
               onChange={(_, newValue: any) => setSourceAccount(newValue ? newValue.id.toString() : '')}
               renderInput={(params) => (
@@ -193,7 +193,7 @@ export function TransactionTransferModal({ open, onClose, onSave, bankAccounts }
             <InputLabel sx={{ color: '#1D3557' }}>Conta Destino</InputLabel>
             <Autocomplete
               options={bankAccounts}
-              getOptionLabel={(acc: any) => `${acc.name || 'Conta'} (${acc.bank || 'Banco'} - Cc: ${acc.accountNumber || 'S/N'})`}
+              getOptionLabel={(acc: any) => acc.name || 'Conta'}
               value={bankAccounts.find((a: any) => a.id.toString() === destinationAccount.toString()) || null}
               onChange={(_, newValue: any) => setDestinationAccount(newValue ? newValue.id.toString() : '')}
               renderInput={(params) => (

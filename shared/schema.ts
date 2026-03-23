@@ -333,6 +333,7 @@ export const relationships = pgTable("relationships", {
   document: text("document").notNull(),
   socialName: text("social_name").notNull(),
   fantasyName: text("fantasy_name"),
+  email: text("email"), // Novo campo adicionado para edição inteligente
   stateRegistration: text("state_registration"),
   birthDate: date("birth_date"),
   zipCode: text("zip_code").notNull(),

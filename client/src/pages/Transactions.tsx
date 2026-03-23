@@ -26,7 +26,7 @@ import { apiRequest } from '../lib/queryClient';
 import { motion, AnimatePresence } from "framer-motion";
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale, PieChart } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -209,6 +209,8 @@ export function Transactions() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [filterPeriod, setFilterPeriod] = useState("Mensal");
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [isExpensePieMode, setIsExpensePieMode] = useState(false);
+  const [isIncomePieMode, setIsIncomePieMode] = useState(false);
 
   // Derived current month from selectedDate
   const currentMonth = selectedDate ? format(selectedDate, 'MMMM yyyy', { locale: ptBR }) : `${monthNames[todayDate.getMonth()]} ${todayDate.getFullYear()}`;
@@ -1819,24 +1821,38 @@ export function Transactions() {
                       {/* Card Despesas por Categoria / Subcategoria */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
                         <CardHeader className="pb-0 pt-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-sm font-semibold">
-                              {showExpenseSubcategory ? 'Despesas por subcategoria' : 'Despesas por categoria'}
-                            </CardTitle>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <CardTitle className="text-sm font-semibold">
+                                  {showExpenseSubcategory ? 'Despesas por subcategoria' : 'Despesas por categoria'}
+                                </CardTitle>
+                                <IButtonPrime
+                                  icon={<Layers className="h-3.5 w-3.5" />}
+                                  variant={showExpenseSubcategory ? 'gold' : 'primary'}
+                                  onClick={() => setShowExpenseSubcategory(!showExpenseSubcategory)}
+                                  title={showExpenseSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
+                                  className="p-1"
+                                />
+                              </div>
+                              <CardDescription className="text-xs text-gray-500 mt-1">Gastos projetados</CardDescription>
+                            </div>
                             <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showExpenseSubcategory ? 'gold' : 'primary'}
-                              onClick={() => setShowExpenseSubcategory(!showExpenseSubcategory)}
-                              title={showExpenseSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
-                              className="p-1"
+                              icon={isExpensePieMode ? <PieChart className="h-4 w-4" /> : <PieChart className="h-4 w-4 text-gray-400" />}
+                              variant={isExpensePieMode ? 'gold' : 'neutral'}
+                              onClick={() => setIsExpensePieMode(!isExpensePieMode)}
+                              title={isExpensePieMode ? 'Voltar para Rosquinha' : 'Destacar maior fatia (Pizza)'}
+                              className="p-1.5 shadow-sm border border-gray-100 bg-white"
                             />
                           </div>
-                          <CardDescription className="text-xs text-gray-500">Gastos projetados</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
                           {(() => {
                             const currentExpenseStats = showExpenseSubcategory ? expenseSubStats : expenseStats;
                             const totalExpense = currentExpenseStats.reduce((sum, s) => sum + s.value, 0);
+                            const highestIndex = isExpensePieMode && currentExpenseStats.length > 0 
+                              ? currentExpenseStats.reduce((maxIdx, s, idx, arr) => s.percent > arr[maxIdx].percent ? idx : maxIdx, 0) 
+                              : -1;
                             return (
                               <div className="flex items-center gap-3">
                                 <div className="flex-1 min-w-0 curtain-enter" key={showExpenseSubcategory ? 'sub' : 'cat'}>
@@ -1860,13 +1876,17 @@ export function Transactions() {
                                         datasets: [{
                                           data: currentExpenseStats.length > 0 ? currentExpenseStats.map(s => s.percent) : [100],
                                           backgroundColor: currentExpenseStats.length > 0 ? chartColors.slice(0, currentExpenseStats.length) : ['#f3f4f6'],
-                                          borderWidth: 0,
+                                          borderWidth: isExpensePieMode ? 1 : 0,
+                                          borderColor: isExpensePieMode ? '#ffffff' : 'transparent',
+                                          hoverOffset: isExpensePieMode ? 15 : 4,
+                                          offset: currentExpenseStats.length > 0 ? currentExpenseStats.map((_, idx) => idx === highestIndex ? 20 : 0) : [0]
                                         }]
                                       }}
                                       options={{
+                                        layout: { padding: isExpensePieMode ? 10 : 0 },
                                         responsive: true,
                                         maintainAspectRatio: false,
-                                        cutout: '60%',
+                                        cutout: isExpensePieMode ? '0%' : '60%',
                                         plugins: {
                                           legend: { display: false },
                                           tooltip: { enabled: true }
@@ -1887,24 +1907,38 @@ export function Transactions() {
                       {/* Card Receitas por Categoria / Subcategoria */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
                         <CardHeader className="pb-0 pt-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-sm font-semibold">
-                              {showIncomeSubcategory ? 'Receitas por subcategoria' : 'Receitas por Categoria'}
-                            </CardTitle>
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <CardTitle className="text-sm font-semibold">
+                                  {showIncomeSubcategory ? 'Receitas por subcategoria' : 'Receitas por Categoria'}
+                                </CardTitle>
+                                <IButtonPrime
+                                  icon={<Layers className="h-3.5 w-3.5" />}
+                                  variant={showIncomeSubcategory ? 'gold' : 'primary'}
+                                  onClick={() => setShowIncomeSubcategory(!showIncomeSubcategory)}
+                                  title={showIncomeSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
+                                  className="p-1"
+                                />
+                              </div>
+                              <CardDescription className="text-xs text-gray-500 mt-1">Entradas projetadas</CardDescription>
+                            </div>
                             <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showIncomeSubcategory ? 'gold' : 'primary'}
-                              onClick={() => setShowIncomeSubcategory(!showIncomeSubcategory)}
-                              title={showIncomeSubcategory ? 'Ver categorias' : 'Ver subcategorias'}
-                              className="p-1"
+                              icon={isIncomePieMode ? <PieChart className="h-4 w-4" /> : <PieChart className="h-4 w-4 text-gray-400" />}
+                              variant={isIncomePieMode ? 'gold' : 'neutral'}
+                              onClick={() => setIsIncomePieMode(!isIncomePieMode)}
+                              title={isIncomePieMode ? 'Voltar para Rosquinha' : 'Destacar maior fatia (Pizza)'}
+                              className="p-1.5 shadow-sm border border-gray-100 bg-white"
                             />
                           </div>
-                          <CardDescription className="text-xs text-gray-500">Entradas projetadas</CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
                           {(() => {
                             const currentIncomeStats = showIncomeSubcategory ? incomeSubStats : incomeStats;
                             const totalIncome = currentIncomeStats.reduce((sum, s) => sum + s.value, 0);
+                            const highestIndex = isIncomePieMode && currentIncomeStats.length > 0 
+                              ? currentIncomeStats.reduce((maxIdx, s, idx, arr) => s.percent > arr[maxIdx].percent ? idx : maxIdx, 0) 
+                              : -1;
                             return (
                               <div className="flex items-center gap-3">
                                 <div className="flex-1 min-w-0 curtain-enter" key={showIncomeSubcategory ? 'sub' : 'cat'}>
@@ -1928,13 +1962,17 @@ export function Transactions() {
                                         datasets: [{
                                           data: currentIncomeStats.length > 0 ? currentIncomeStats.map(s => s.percent) : [100],
                                           backgroundColor: currentIncomeStats.length > 0 ? chartColors.slice(0, currentIncomeStats.length) : ['#f3f4f6'],
-                                          borderWidth: 0,
+                                          borderWidth: isIncomePieMode ? 1 : 0,
+                                          borderColor: isIncomePieMode ? '#ffffff' : 'transparent',
+                                          hoverOffset: isIncomePieMode ? 15 : 4,
+                                          offset: currentIncomeStats.length > 0 ? currentIncomeStats.map((_, idx) => idx === highestIndex ? 20 : 0) : [0]
                                         }]
                                       }}
                                       options={{
+                                        layout: { padding: isIncomePieMode ? 10 : 0 },
                                         responsive: true,
                                         maintainAspectRatio: false,
-                                        cutout: '60%',
+                                        cutout: isIncomePieMode ? '0%' : '60%',
                                         plugins: {
                                           legend: { display: false },
                                           tooltip: { enabled: true }
@@ -3483,7 +3521,7 @@ export function Transactions() {
                 colSpan: 6,
                 options: bankAccounts.map((account: any) => ({
                   value: account.id,
-                  label: `${account.name || 'Conta'} (${account.bank || 'Banco'} - Cc: ${account.accountNumber || 'S/N'})`
+                  label: account.name || 'Conta'
                 })),
                 iconAction: {
                   icon: <Plus className="h-5 w-5 mb-1 text-[#B59363] hover:text-[#4D4E48] transition-colors" />,

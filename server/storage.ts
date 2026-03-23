@@ -105,6 +105,7 @@ export interface IStorage {
   getRelationshipsByUserId(userId: string): Promise<Relationship[]>;
   getRelationshipsByType(userId: string, type: string): Promise<Relationship[]>;
   getRelationshipById(id: number): Promise<Relationship | null>;
+  getRelationshipByDocument(document: string, userId: string): Promise<Relationship | null>;
   createRelationship(relationship: InsertRelationship): Promise<Relationship>;
   updateRelationship(id: number, relationship: Partial<InsertRelationship>): Promise<Relationship>;
   deleteRelationship(id: number): Promise<void>;
@@ -546,6 +547,19 @@ export class DatabaseStorage implements IStorage {
 
   async getRelationshipById(id: number): Promise<Relationship | null> {
     const results = await db.select().from(schema.relationships).where(eq(schema.relationships.id, id));
+    return results[0] || null;
+  }
+
+  async getRelationshipByDocument(document: string, userId: string): Promise<Relationship | null> {
+    const results = await db.select()
+      .from(schema.relationships)
+      .where(
+        and(
+          eq(schema.relationships.userId, parseInt(userId)),
+          eq(schema.relationships.document, document)
+        )
+      )
+      .limit(1);
     return results[0] || null;
   }
 

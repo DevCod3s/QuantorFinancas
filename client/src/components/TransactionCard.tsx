@@ -26,6 +26,7 @@ import {
   Checkbox,
   FormControlLabel,
   Typography,
+  Autocomplete,
 } from '@mui/material';
 import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut } from 'lucide-react';
 import { useQuery } from "@tanstack/react-query";
@@ -575,25 +576,27 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           {/* Campo Produto/Serviço — visível apenas para RECEITAS */}
           {tipo.includes('receita') && (
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1, mb: 2 }}>
-              <FormControl variant="standard" sx={{ width: '100%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!produtoServico || undefined}>Produto / Serviço</InputLabel>
-                <Select
-                  value={produtoServico}
-                  disabled={viewOnly}
-                  onChange={(e) => {
-                    setProdutoServico(e.target.value);
-                    // Limpa subcategoria ao trocar produto
-                    setBusinessSubcategoria('');
-                  }}
-                >
-                  <MenuItem value=""><em>Nenhum</em></MenuItem>
-                  {(productsServices as any[]).filter((p: any) => p.status === 'active' || p.status === 'ativo').map((p: any) => (
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.type === 'service' ? '🛠 ' : '📦 '}{p.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={(productsServices as any[]).filter((p: any) => p.status === 'active' || p.status === 'ativo')}
+                getOptionLabel={(option: any) => option.name ? `${option.type === 'service' ? '🛠 ' : '📦 '}${option.name}` : ''}
+                value={(productsServices as any[]).find(p => p.id === produtoServico) || null}
+                onChange={(event, newValue) => {
+                  setProdutoServico(newValue ? newValue.id : '');
+                  setBusinessSubcategoria('');
+                }}
+                disabled={viewOnly}
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                sx={{ width: '100%' }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Produto / Serviço"
+                    variant="standard"
+                    InputLabelProps={{ shrink: !!produtoServico || undefined, sx: { color: '#666' } }}
+                  />
+                )}
+                noOptionsText="Nenhum produto encontrado"
+              />
             </Box>
           )}
 
@@ -610,59 +613,72 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           {/* Linha: Conta Bancária + Plano de Contas */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!conta || undefined}>Conta bancária</InputLabel>
-                <Select
-                  value={conta}
-                  onChange={(e) => setConta(e.target.value)}
-                  disabled={viewOnly}
-                >
-                  {(bankAccounts as any[]).map((account: any) => (
-                    <MenuItem key={account.id} value={account.id}>
-                      {account.name} ({account.bank} - {account.accountNumber})
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={bankAccounts as any[]}
+                getOptionLabel={(option: any) => option.name || ''}
+                value={(bankAccounts as any[]).find(acc => acc.id === conta) || null}
+                onChange={(_, newValue) => setConta(newValue ? newValue.id : '')}
+                disabled={viewOnly}
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                sx={{ width: '85%' }}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    label="Conta bancária" 
+                    variant="standard" 
+                    InputLabelProps={{ shrink: !!conta || undefined, sx: { color: '#666' } }}
+                  />
+                )}
+                noOptionsText="Nenhuma conta encontrada"
+              />
               <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
                 <CreditCard className="h-4 w-4" />
               </IconButton>
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ width: '100%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!planoContas || undefined}>Plano de Contas</InputLabel>
-                <Select
-                  value={planoContas}
-                  onChange={(e) => setPlanoContas(e.target.value)}
-                >
-                  <MenuItem value=""><em>Nenhum</em></MenuItem>
-                  {filteredPlanoContas.map((acc: any) => (
-                    <MenuItem key={acc.id} value={acc.id}>
-                      {acc.code} - {acc.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={filteredPlanoContas}
+                getOptionLabel={(option: any) => option.name ? `${option.code} - ${option.name}` : ''}
+                value={filteredPlanoContas.find((acc: any) => acc.id === planoContas) || null}
+                onChange={(_, newValue) => setPlanoContas(newValue ? newValue.id : '')}
+                disabled={viewOnly}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
+                sx={{ width: '100%' }}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    label="Plano de Contas" 
+                    variant="standard" 
+                    InputLabelProps={{ shrink: !!planoContas || undefined, sx: { color: '#666' } }}
+                  />
+                )}
+                noOptionsText="Nenhum plano encontrado"
+              />
             </Box>
           </Box>
 
           {/* Linha: Relacionamento + Categoria de Negócio */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!contato || undefined}>Relacionamento</InputLabel>
-                <Select
-                  value={contato}
-                  onChange={(e) => setContato(e.target.value)}
-                >
-                  {(relationships as any[]).map((rel: any) => (
-                    <MenuItem key={rel.id} value={rel.id}>
-                      {rel.fantasyName || rel.socialName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={relationships as any[]}
+                getOptionLabel={(option: any) => option.fantasyName || option.socialName || ''}
+                value={(relationships as any[]).find(rel => rel.id === contato) || null}
+                onChange={(_, newValue) => setContato(newValue ? newValue.id : '')}
+                disabled={viewOnly}
+                isOptionEqualToValue={(option, value) => option.id === value?.id}
+                sx={{ width: '85%' }}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    label="Relacionamento" 
+                    variant="standard" 
+                    InputLabelProps={{ shrink: !!contato || undefined, sx: { color: '#666' } }}
+                  />
+                )}
+                noOptionsText="Nenhum relacionamento"
+              />
               <IconButton
                 size="small"
                 sx={{ mb: 0.5, color: '#1D3557' }}
@@ -673,23 +689,27 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
             </Box>
 
             <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-              <FormControl variant="standard" sx={{ width: '85%' }}>
-                <InputLabel sx={{ color: '#666' }} shrink={!!businessCategoria || undefined}>Categoria</InputLabel>
-                <Select
-                  value={businessCategoria}
-                  onChange={(e) => {
-                    setBusinessCategoria(e.target.value);
-                    setBusinessSubcategoria('');
-                  }}
-                >
-                  <MenuItem value=""><em>Nenhuma</em></MenuItem>
-                  {filteredBusinessCategories.map((cat: any) => (
-                    <MenuItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={filteredBusinessCategories}
+                getOptionLabel={(option: any) => option.name || ''}
+                value={filteredBusinessCategories.find((cat: any) => cat.id === businessCategoria) || null}
+                onChange={(_, newValue) => {
+                  setBusinessCategoria(newValue ? newValue.id : '');
+                  setBusinessSubcategoria('');
+                }}
+                disabled={viewOnly}
+                isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
+                sx={{ width: '85%' }}
+                renderInput={(params) => (
+                  <TextField 
+                    {...params} 
+                    label="Categoria" 
+                    variant="standard" 
+                    InputLabelProps={{ shrink: !!businessCategoria || undefined, sx: { color: '#666' } }}
+                  />
+                )}
+                noOptionsText="Nenhuma categoria"
+              />
               <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
                 <Plus className="h-4 w-4" />
               </IconButton>
@@ -702,20 +722,24 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
               <Box /> {/* espaço vazio na esquerda */}
               <Box sx={{ display: 'flex', alignItems: 'end', gap: 1 }}>
-                <FormControl variant="standard" sx={{ width: '85%' }}>
-                  <InputLabel sx={{ color: '#666' }} shrink={!!businessSubcategoria || undefined}>Subcategoria</InputLabel>
-                  <Select
-                    value={businessSubcategoria}
-                    onChange={(e) => setBusinessSubcategoria(e.target.value)}
-                  >
-                    <MenuItem value=""><em>Nenhuma</em></MenuItem>
-                    {filteredBusinessSubcategories.map((sub: any) => (
-                      <MenuItem key={sub.id} value={sub.id}>
-                        {sub.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                <Autocomplete
+                  options={filteredBusinessSubcategories}
+                  getOptionLabel={(option: any) => option.name || ''}
+                  value={filteredBusinessSubcategories.find((sub: any) => sub.id === businessSubcategoria) || null}
+                  onChange={(_, newValue) => setBusinessSubcategoria(newValue ? newValue.id : '')}
+                  disabled={viewOnly}
+                  isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
+                  sx={{ width: '85%' }}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      label="Subcategoria" 
+                      variant="standard" 
+                      InputLabelProps={{ shrink: !!businessSubcategoria || undefined, sx: { color: '#666' } }}
+                    />
+                  )}
+                  noOptionsText="Nenhuma subcategoria"
+                />
                 <IconButton size="small" sx={{ mb: 0.5, color: '#1D3557' }}>
                   <Plus className="h-4 w-4" />
                 </IconButton>

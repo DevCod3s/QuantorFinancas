@@ -1077,6 +1077,31 @@ router.get("/relationships", requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/relationships/check-document/:document
+ * Verifica se um CPF ou CNPJ já está cadastrado
+ */
+router.get("/relationships/check-document/:document", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id?.toString();
+    if (!userId) {
+      return res.status(401).json({ error: "Usuário não autenticado" });
+    }
+
+    const document = req.params.document;
+    const relationship = await storage.getRelationshipByDocument(document, userId);
+
+    if (relationship) {
+      res.json({ exists: true, relationship: { id: relationship.id, name: relationship.socialName || relationship.fantasyName } });
+    } else {
+      res.json({ exists: false });
+    }
+  } catch (error) {
+    console.error("Erro ao verificar documento do relacionamento:", error);
+    res.status(500).json({ error: "Erro interno do servidor ao verificar documento" });
+  }
+});
+
+/**
  * GET /api/relationships/:type
  * Retorna relacionamentos por tipo (cliente, fornecedor, outros)
  */

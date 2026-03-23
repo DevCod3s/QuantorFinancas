@@ -227,7 +227,7 @@ export function TransactionLiquidateModal({
             <div className="col-span-6 flex flex-col gap-3">
               <Autocomplete
                 options={bankAccounts}
-                getOptionLabel={(account: any) => `${account.name || 'Conta'} (${account.bank || 'Banco'} - Cc: ${account.accountNumber || 'S/N'})`}
+                getOptionLabel={(account: any) => account.name || 'Conta'}
                 value={(bankAccounts || []).find((a: any) => a.id.toString() === bankAccountId.toString()) || null}
                 onChange={(_, newValue: any) => setBankAccountId(newValue ? newValue.id.toString() : '')}
                 renderInput={(params) => (
