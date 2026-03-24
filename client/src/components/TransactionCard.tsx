@@ -29,8 +29,10 @@ import {
   Autocomplete,
 } from '@mui/material';
 import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut, Building2, Lock, AlertTriangle, Edit, Layers } from 'lucide-react';
+import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { DynamicModal, FieldType } from "@/components/DynamicModal";
 import CpfCnpjInput from "./CpfCnpjInput";
 import CustomInput, { CustomSelect } from "./CustomInput";
@@ -57,6 +59,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   // Define o tipo inicial baseado no entryType
   const tipoInicial = entryType === 'payable' ? 'Nova despesa' : entryType === 'receivable' ? 'Nova receita' : 'Nova receita';
   const [tipo, setTipo] = useState(tipoInicial);
+  const { toast } = useToast();
+  const [isAiSuggesting, setIsAiSuggesting] = useState(false);
 
   // Atualiza tipo quando entryType muda
   React.useEffect(() => {
@@ -208,6 +212,44 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   const [valorJuros, setValorJuros] = useState('');
   const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela' | 'atraso'>('total');
   const [valorParcela, setValorParcela] = useState('0,00');
+
+  const handleAiSuggestCategory = async () => {
+    if (!descricao) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, preencha a descrição para que a IA possa sugerir uma categoria.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsAiSuggesting(true);
+    try {
+      const cleanAmount = parseFloat(valor.replace('R$', '').replace(/\./g, '').replace(',', '.').trim());
+      const data = await apiRequest('POST', '/api/ai/suggest-category', {
+        description: descricao,
+        amount: isNaN(cleanAmount) ? 0 : cleanAmount,
+        type: tipo === 'Nova receita' ? 'receita' : 'despesa'
+      });
+      
+      if (data && data.suggestedId) {
+        setPlanoContas(data.suggestedId.toString());
+        toast({
+          title: "Sugestão da IA aplicada",
+          description: data.reason || "Categoria selecionada com base na descrição.",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao sugerir categoria:", error);
+      toast({
+        title: "Falha na IA",
+        description: "Não foi possível obter uma sugestão da Inteligência Artificial no momento.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAiSuggesting(false);
+    }
+  };
   const [tipoRateio, setTipoRateio] = useState<'dividir' | 'multiplicar'>('dividir');
   const [installmentsList, setInstallmentsList] = useState<any[]>([]);
 
@@ -359,9 +401,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   // Produto selecionado (para auto-fill e filtragem)
   const selectedProduct = (productsServices as any[]).find((p: any) => String(p.id) === String(produtoServico));
 
-  // Filtragem do Plano de Contas (nível 1) por tipo da transação
+  // Filtragem do Plano de Contas por tipo da transação (inclui todos os níveis para permitir seleção precisa pela IA)
   const filteredPlanoContas = (chartOfAccounts as any[]).filter((account: any) => {
-    if (account.level !== 1) return false;
     const accountType = account.type?.toLowerCase();
     if (tipo.includes('receita')) return accountType === 'receita' || accountType === 'receitas';
     if (tipo.includes('despesa')) return accountType === 'despesa' || accountType === 'despesas';
@@ -822,6 +863,14 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                   />
                 )}
                 noOptionsText="Nenhum plano encontrado"
+              />
+              <IButtonPrime
+                icon={<PsychologyAltIcon sx={{ fontSize: 24 }} className={isAiSuggesting ? "animate-pulse" : ""} />}
+                variant="gold"
+                title="Sugestão de Categoria por IA"
+                disabled={isAiSuggesting || viewOnly}
+                className="!p-2 -mr-1"
+                onClick={handleAiSuggestCategory}
               />
             </Box>
           </Box>

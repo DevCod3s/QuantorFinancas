@@ -1,5 +1,6 @@
 import { Box, Card, Chip, IconButton, Typography } from "@mui/material";
 import { X, User, Calendar, Clock, DollarSign, FileText, Building2, AlertTriangle, Repeat, Layers, TrendingUp, TrendingDown, Tag, Percent, LogOut } from "lucide-react";
+import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { IButtonPrime } from "./ui/i-ButtonPrime";
@@ -226,7 +227,12 @@ export function TransactionViewModal({ open, onClose, transaction, userName }: T
               <Field
                 icon={<Layers className="h-3.5 w-3.5" />}
                 label="Plano de Contas"
-                value={`${transaction.chartAccount.code} — ${transaction.chartAccount.name}`}
+                value={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {`${transaction.chartAccount.code} — ${transaction.chartAccount.name}`}
+                    <PsychologyAltIcon sx={{ fontSize: 20, color: '#B59363', ml: 0.5 }} />
+                  </Box>
+                }
                 full
               />
             )}

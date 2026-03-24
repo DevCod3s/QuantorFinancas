@@ -1789,10 +1789,10 @@ router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res)
         error: "A chave de API do Anthropic (Claude) não foi configurada. Para ativar a Inteligência Artificial, adicione ANTHROPIC_API_KEY ao arquivo .env no diretório raiz do QuantorFinancas."
       });
     }
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim() });
     
     const response = await anthropic.messages.create({
-      model: "claude-sonnet-4-5-20250929",
+      model: "claude-3-haiku-20240307",
       max_tokens: 8192,
       system: `Você é uma Especialista em Gestão Contábil DRE de alto nível.
 Seu trabalho é analisar os tipos e descrições das transações fornecidas e criar um Plano de Contas PERFEITO e EXAUSTIVO para a empresa, totalmente focado no DRE.
@@ -1895,6 +1895,75 @@ Regras IMPORTANTES:
     res.status(500).json({ error: "Ops, a magia da inteligência artificial falhou ou quebrou regras lógicas. Consulte o log do terminal." });
   }
 });
+router.post("/ai/suggest-category", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+    const { description, amount, type } = req.body;
+
+    if (!description) {
+      return res.status(400).json({ error: "Descrição é obrigatória para sugestão." });
+    }
+
+    // 1. Buscar Plano de Contas do usuário
+    const userChart = await db
+      .select()
+      .from(schema.chartOfAccounts)
+      .where(and(
+        eq(schema.chartOfAccounts.userId, userId),
+        eq(schema.chartOfAccounts.isActive, true)
+      ));
+
+    if (!userChart || userChart.length === 0) {
+      return res.status(400).json({ error: "Plano de contas não encontrado. Gere um primeiro." });
+    }
+
+    // Filtra por tipo se fornecido
+    const filteredChart = type 
+      ? userChart.filter(acc => acc.type === type || acc.level === 1) 
+      : userChart;
+
+    // 2. Acionamento do Agente LLM
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(503).json({ error: "IA não configurada (.env)" });
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim() });
+    
+    const response = await anthropic.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 1024,
+      system: `Você é um assistente contábil. Sua tarefa é sugerir o ID da conta mais adequada do Plano de Contas para uma transação.
+Retorne APENAS o JSON: { "suggestedId": number, "reason": "breve explicação" }`,
+      messages: [
+        {
+          role: "user",
+          content: `Transação:
+Descrição: ${description}
+Valor: ${amount}
+Tipo: ${type}
+
+Plano de Contas disponível:
+${JSON.stringify(filteredChart.map(c => ({ id: c.id, code: c.code, name: c.name, type: c.type })))}
+
+Qual o ID da conta mais adequada?`
+        }
+      ]
+    });
+
+    const textBlock = response.content.find(block => block.type === 'text');
+    const aiResponse = textBlock && 'text' in textBlock ? textBlock.text : null;
+    
+    if (!aiResponse) throw new Error("Sem resposta da IA");
+    
+    const cleaned = aiResponse.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+    const result = JSON.parse(cleaned);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Erro na sugestão de categoria IA:", error);
+    res.status(500).json({ error: "Falha na sugestão da IA" });
+  }
+});
+
 router.get("/debug-txs", async (req, res) => {
   try {
     const dbTxs = await db.query.transactions.findMany({
