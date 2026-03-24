@@ -138,6 +138,8 @@ export const transactions = pgTable("transactions", {
   tipoEncargo: text("tipo_encargo"), // 'percentual' | 'valor'
   aplicarMultaEm: text("aplicar_multa_em"), // 'atrasados' | 'todos' | 'ambos'
   createdAt: timestamp("created_at").defaultNow().notNull(), // Data de criação
+  observacoes: text("observacoes"),
+  tags: text("tags"),
 });
 
 /**

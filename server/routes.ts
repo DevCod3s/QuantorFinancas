@@ -16,6 +16,7 @@
 
 // Importações do Express para roteamento
 import { Router, Request } from "express";
+import Anthropic from '@anthropic-ai/sdk';
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
@@ -1756,7 +1757,7 @@ router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res)
 
     // 1. Coleta das transações do usuário (Contexto Proposto)
     // Limite superior de transações recentes para evitar extrapolar limite de tokens e de tempo 
-    const limit = 500;
+    const limit = 150;
     const userTransactions = await db
       .select({
         id: schema.transactions.id,
@@ -1783,38 +1784,36 @@ router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res)
     }));
 
     // 2. Acionamento do Agente LLM (Especialista Contábil)
-    const openai = new OpenAI();
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(503).json({ 
+        error: "A chave de API do Anthropic (Claude) não foi configurada. Para ativar a Inteligência Artificial, adicione ANTHROPIC_API_KEY ao arquivo .env no diretório raiz do QuantorFinancas."
+      });
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: `Você é uma Especialista em Gestão Contábil DRE de alto nível.
-Seu trabalho é analisar o histórico de transações financeiras desta empresa e criar um Plano de Contas PERFEITO e EXAUSTIVO customizado para a sua natureza, totalmente focado no controle do DRE.
-Você DEVE retornar estritamente um JSON no seguinte formato:
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-5-20250929",
+      max_tokens: 8192,
+      system: `Você é uma Especialista em Gestão Contábil DRE de alto nível.
+Seu trabalho é analisar os tipos e descrições das transações fornecidas e criar um Plano de Contas PERFEITO e EXAUSTIVO para a empresa, totalmente focado no DRE.
+Você DEVE retornar APENAS um JSON puro, sem marcarções markdown, sem texto antes ou depois. Formato exigido:
 {
   "chartOfAccounts": [
-    { "tempId": "temp1", "code": "1", "name": "Receitas", "type": "receita", "level": 1, "description": "Categoria raiz de receitas" },
+    { "tempId": "temp1", "code": "1", "name": "Receitas", "type": "receita", "level": 1, "description": "Receitas operacionais" },
     { "tempId": "temp1_1", "code": "1.1", "name": "Vendas de Produtos", "type": "receita", "level": 2, "parentTempId": "temp1", "description": "" },
     { "tempId": "temp2", "code": "2", "name": "Despesas", "type": "despesa", "level": 1, "description": "" },
     { "tempId": "temp2_1", "code": "2.1", "name": "Custos Operacionais", "type": "despesa", "level": 2, "parentTempId": "temp2", "description": "" }
-  ],
-  "transactionMappings": [
-    { "transactionId": 12, "chartAccountTempId": "temp1_1" }
   ]
 }
 
 Regras IMPORTANTES:
-1. O array 'chartOfAccounts' deve conter uma estrutura hierárquica dividindo as contas lógicas perfeitamente (níveis 1, 2, ou 3 se aplicável à empresa).
-2. O campo 'type' SÓ e SOMENTE SÓ pode ser: 'receita', 'despesa', 'ativo' ou 'passivo'.
-3. 'tempId' deve ser qualquer string única que mapeie os nós criados temporariamente.
-4. 'parentTempId' deve obrigatoriamente referenciar o 'tempId' de uma conta-pai existente neste mesmo array, exceto para root nodes em que ele não deve ser retornado (level 1).
-5. O array 'transactionMappings' DEVE tentar classificar inteligentemente todos os IDs do contexto repassado para o respectivo 'chartAccountTempId' do nível folha (nível mais baixo de subconta) respectivo.
-6. Nunca invente Ids que não existam ou dados lixo fora do array. Confie na formatação.
-`
-        },
+1. Estrutura hierárquica com níveis 1, 2 e opcionalmente 3.
+2. O campo 'type' SÓ pode ser: 'receita', 'despesa', 'ativo' ou 'passivo'.
+3. 'tempId' deve ser uma string única.
+4. 'parentTempId' referencia o 'tempId' de uma conta-pai existente (não use em level 1).
+5. Não inclua nenhum array 'transactionMappings'. Retorne SOMENTE o 'chartOfAccounts'.
+6. Não invente dados. Retorne SOMENTE o JSON válido.`,
+      messages: [
         {
           role: "user",
           content: `As transações conhecidas da empresa são estas:\n\n${JSON.stringify(transactionsContext)}`
@@ -1822,56 +1821,63 @@ Regras IMPORTANTES:
       ]
     });
 
-    const aiResponse = response.choices[0].message.content;
+    const textBlock = response.content.find(block => block.type === 'text');
+    const aiResponse = textBlock && 'text' in textBlock ? textBlock.text : null;
+    
     if (!aiResponse) throw new Error("A Inteligência Artificial não retornou o formato JSON esperado.");
     
-    const parsedData = JSON.parse(aiResponse);
+    // Limpa blocos de markdown que o modelo pode incluir (```json ... ```)
+    const cleanedResponse = aiResponse
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```\s*$/i, '')
+      .trim();
+    
+    const parsedData = JSON.parse(cleanedResponse);
 
-    if (!parsedData.chartOfAccounts || !parsedData.transactionMappings) {
-      throw new Error("Formato do Payload da IA não seguiu a hierarquia JSON forçada.");
+    if (!parsedData.chartOfAccounts || !Array.isArray(parsedData.chartOfAccounts)) {
+      throw new Error("Formato do Payload da IA não retornou o array chartOfAccounts.");
     }
 
     // 3. Persistência em Lote (Database Transaction Drizzle)
-    await db.transaction(async (tx) => {
-      // 3.1) Limpar mapeamentos anteriores no sistema
-      await tx.update(schema.transactions)
-        .set({ chartAccountId: null })
-        .where(eq(schema.transactions.userId, userId));
-        
-      // 3.2) Destruir plano de contas anterior no banco de dados para injetar o 100% IA
-      // Atenção: O foreign key foi setado como nulo primeiro acima para evitar violações restrict
-      await tx.delete(schema.chartOfAccounts)
-        .where(eq(schema.chartOfAccounts.userId, userId));
+    // 3.1) Limpar mapeamentos anteriores no sistema
+    await db.update(schema.transactions)
+      .set({ chartAccountId: null })
+      .where(eq(schema.transactions.userId, userId));
+      
+    // 3.2) Destruir plano de contas anterior (FK já limpo acima para evitar violações)
+    await db.delete(schema.chartOfAccounts)
+      .where(eq(schema.chartOfAccounts.userId, userId));
 
-      // 3.3) Processamento de níveis (level 1 => level 2 => level 3...) para o pai nascer antes
-      const sortedAccounts = [...parsedData.chartOfAccounts].sort((a: any, b: any) => a.level - b.level);
-      const tempIdToRealIdMap = new Map();
+    // 3.3) Processamento de níveis (level 1 => level 2 => level 3...) para o pai nascer antes
+    const sortedAccounts = [...parsedData.chartOfAccounts].sort((a: any, b: any) => a.level - b.level);
+    const tempIdToRealIdMap = new Map();
 
-      for (const acc of sortedAccounts) {
-        let parentId = null;
-        if (acc.parentTempId && tempIdToRealIdMap.has(acc.parentTempId)) {
-          parentId = tempIdToRealIdMap.get(acc.parentTempId);
-        }
-
-        const [inserted] = await tx.insert(schema.chartOfAccounts).values({
-          userId: userId,
-          name: acc.name,
-          description: acc.description || null,
-          type: acc.type,
-          code: acc.code,
-          parentId: parentId,
-          level: acc.level,
-          isActive: true
-        }).returning({ id: schema.chartOfAccounts.id });
-
-        tempIdToRealIdMap.set(acc.tempId, inserted.id);
+    for (const acc of sortedAccounts) {
+      let parentId = null;
+      if (acc.parentTempId && tempIdToRealIdMap.has(acc.parentTempId)) {
+        parentId = tempIdToRealIdMap.get(acc.parentTempId);
       }
 
-      // 3.4) Relacionamento Retroativo de Mapeamento (Conciliação LLM-DB)
+      const [inserted] = await db.insert(schema.chartOfAccounts).values({
+        userId: userId,
+        name: acc.name,
+        description: acc.description || null,
+        type: acc.type,
+        code: acc.code,
+        parentId: parentId,
+        level: acc.level,
+        isActive: true
+      }).returning({ id: schema.chartOfAccounts.id });
+
+      tempIdToRealIdMap.set(acc.tempId, inserted.id);
+    }
+
+    // 3.4) Mapeamento opcional de transações (se a IA retornar transactionMappings)
+    if (parsedData.transactionMappings && Array.isArray(parsedData.transactionMappings)) {
       for (const mapping of parsedData.transactionMappings) {
         const targetId = tempIdToRealIdMap.get(mapping.chartAccountTempId);
         if (targetId && mapping.transactionId) {
-          await tx.update(schema.transactions)
+          await db.update(schema.transactions)
             .set({ chartAccountId: targetId })
             .where(
               and(
@@ -1881,7 +1887,7 @@ Regras IMPORTANTES:
             );
         }
       }
-    });
+    }
 
     res.json({ success: true, message: "A Máquina aprendeu de suas finanças e estruturou um plano DRE profissional com todas as categorias já linkadas entre si e aos lançamentos!" });
   } catch (error) {

@@ -502,10 +502,19 @@ export function Transactions() {
   const [showIncomeSubcategory, setShowIncomeSubcategory] = useState(false);
   const [showAccountFlow, setShowAccountFlow] = useState(false);
   const [accountFlowMode, setAccountFlowMode] = useState<'caixa' | 'competencia'>('caixa');
+  const [regimeContabil, setRegimeContabil] = useState<'caixa' | 'competencia'>('caixa');
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
   const [showPaidPayables, setShowPaidPayables] = useState(false);
   const [showPaidReceivables, setShowPaidReceivables] = useState(false);
+
+  // Helper centralizado que dita a Data baseada na contabilidade (Caixa / Competência)
+  const getEffectiveDate = (t: any): Date => {
+    if (regimeContabil === 'caixa' && t.status === 'pago' && t.liquidationDate) {
+      return toLocalDate(t.liquidationDate);
+    }
+    return toLocalDate(t.date);
+  };
 
   // Calcula o range de datas para filtragem baseado no período selecionado
   const getFilterDateRange = (): { start: Date; end: Date } => {
@@ -551,8 +560,9 @@ export function Transactions() {
   };
 
   // Filtrar transações por mês, busca e tipo
-  const filteredTransactions = transactions.filter(t => {
-    const tDate = toLocalDate(t.date);
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  const filteredTransactions = safeTransactions.filter(t => {
+    const tDate = getEffectiveDate(t);
     const { start, end } = getFilterDateRange();
     const matchesPeriod = tDate >= start && tDate <= end;
 
@@ -581,7 +591,7 @@ export function Transactions() {
         chartEnd.setHours(23, 59, 59, 999);
 
         const dailyTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           return d >= chartStart && d <= chartEnd;
         });
 
@@ -592,7 +602,7 @@ export function Transactions() {
         }
         dailyTransactions.forEach(t => {
           if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           const diffDays = Math.floor((d.getTime() - chartStart.getTime()) / 86400000);
           if (diffDays >= 0 && diffDays < 7) {
             const val = Math.abs(parseFloat(t.amount) || 0);
@@ -604,7 +614,7 @@ export function Transactions() {
       }
       case 'Semanal': {
         const weekTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
         for (let i = 0; i < 7; i++) {
@@ -614,7 +624,7 @@ export function Transactions() {
         }
         weekTransactions.forEach(t => {
           if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           const diffDays = Math.floor((d.getTime() - start.getTime()) / 86400000);
           if (diffDays >= 0 && diffDays < 7) {
             const val = Math.abs(parseFloat(t.amount) || 0);
@@ -626,7 +636,7 @@ export function Transactions() {
       }
       case 'Mensal': {
         const monthTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
         const daysInMonth = end.getDate();
@@ -635,7 +645,7 @@ export function Transactions() {
         }
         monthTransactions.forEach(t => {
           if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           const day = d.getDate();
           if (day >= 1 && day <= daysInMonth) {
             const val = Math.abs(parseFloat(t.amount) || 0);
@@ -647,7 +657,7 @@ export function Transactions() {
       }
       case 'Anual': {
         const yearTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
         for (let i = 0; i < 12; i++) {
@@ -655,7 +665,7 @@ export function Transactions() {
         }
         yearTransactions.forEach(t => {
           if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           const m = d.getMonth();
           const val = Math.abs(parseFloat(t.amount) || 0);
           if (t.type === 'income') buckets[m].income += val;
@@ -665,7 +675,7 @@ export function Transactions() {
       }
       case 'Período': {
         const periodTransactions = transactions.filter(t => {
-          const d = toLocalDate(t.date);
+          const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
         const diffTime = end.getTime() - start.getTime();
@@ -679,7 +689,7 @@ export function Transactions() {
           }
           periodTransactions.forEach(t => {
             if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-            const d = toLocalDate(t.date);
+            const d = getEffectiveDate(t);
             const idx = Math.floor((d.getTime() - start.getTime()) / 86400000);
             if (idx >= 0 && idx < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
@@ -696,7 +706,7 @@ export function Transactions() {
           }
           periodTransactions.forEach(t => {
             if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-            const d = toLocalDate(t.date);
+            const d = getEffectiveDate(t);
             const daysSinceStart = Math.floor((d.getTime() - start.getTime()) / 86400000);
             const bIdx = Math.floor(daysSinceStart / 7);
             if (bIdx >= 0 && bIdx < buckets.length) {
@@ -713,7 +723,7 @@ export function Transactions() {
           }
           periodTransactions.forEach(t => {
             if (t.type === 'transfer-in' || t.type === 'transfer-out') return;
-            const d = toLocalDate(t.date);
+            const d = getEffectiveDate(t);
             const monthDiff = (d.getFullYear() - start.getFullYear()) * 12 + d.getMonth() - start.getMonth();
             if (monthDiff >= 0 && monthDiff < buckets.length) {
               const val = Math.abs(parseFloat(t.amount) || 0);
@@ -780,7 +790,7 @@ export function Transactions() {
   // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
   
   // Apenas transações que já foram liquidadas (Regime de Caixa)
-  const demonstrativoTransactions = transactions.filter(t => t.status === 'pago');
+  const demonstrativoTransactions = safeTransactions.filter((t: any) => t.status === 'pago');
 
   const { start: filterRangeStart, end: filterRangeEnd } = getFilterDateRange();
 
@@ -807,14 +817,14 @@ export function Transactions() {
   // 4. Saldo Inicial exato consolidado no 1º milissegundo do período filtrado
   const initialBankBalance = totalStartingBalance + pastAccumulatedResult;
 
-  // 5. Resumo Diário do Período (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
+  // 5. Resumo Diário do Período (para Demonstrativo e Gráfico de Barras)
   const dailySummary = demonstrativoTransactions.filter(t => {
       // Filtrar apenas o período para construir o fluxo diário
-      const tDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+      const tDate = getEffectiveDate(t);
       return tDate >= filterRangeStart && tDate <= filterRangeEnd;
   }).reduce((acc: any[], t) => {
-    // Usar a data de liquidação se houver, senão a data original
-    const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+    // Usar a mesma lógica de data para o agrupador
+    const effectiveDate = getEffectiveDate(t);
     const dateStr = format(effectiveDate, 'dd/MM/yyyy');
     let day = acc.find(d => d.date === dateStr);
 
@@ -1057,7 +1067,7 @@ export function Transactions() {
 
   const handleLiquidateTransaction = (item: any, type: string) => {
     console.log("Liquidar clicado. Item recebido:", item);
-    const tx = transactions.find(t => t.id == item.id);
+    const tx = safeTransactions.find(t => t.id == item.id);
     console.log("Transação encontrada:", tx);
     if (tx) {
       setTransactionToLiquidate(tx);
@@ -2085,6 +2095,22 @@ export function Transactions() {
                             </CardDescription>
                           </div>
                           <div className="flex items-center gap-3">
+                            {/* Toggle de Regime Contábil */}
+                            <div className="hidden md:flex border shadow-sm rounded-lg overflow-hidden bg-white mx-2">
+                              <button 
+                                onClick={() => setRegimeContabil('caixa')}
+                                className={`px-4 py-1.5 text-xs font-semibold focus:outline-none transition-colors ${regimeContabil === 'caixa' ? 'bg-[#1D3557] text-white' : 'bg-transparent text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Regime de Caixa
+                              </button>
+                              <button 
+                                onClick={() => setRegimeContabil('competencia')}
+                                className={`px-4 py-1.5 text-xs font-semibold focus:outline-none border-l transition-colors ${regimeContabil === 'competencia' ? 'bg-[#1D3557] text-white' : 'bg-transparent text-gray-500 hover:bg-gray-50'}`}
+                              >
+                                Competência
+                              </button>
+                            </div>
+
                             {/* Navegação de período */}
                             <div className="flex items-center gap-1">
                               {filterPeriod !== 'Período' && (
@@ -2093,274 +2119,274 @@ export function Transactions() {
                                   className="p-1 hover:bg-gray-100 rounded transition-colors"
                                 >
                                   <ChevronLeft className="h-4 w-4" />
-                                </button>
-                              )}
-                              {filterPeriod !== 'Período' && (
-                                <span className="text-sm font-medium min-w-[100px] text-center">
-                                  {displayTitle}
-                                </span>
-                              )}
-                              {filterPeriod !== 'Período' && (
-                                <button
-                                  onClick={() => navigatePeriod('next')}
-                                  className="p-1 hover:bg-gray-100 rounded transition-colors"
-                                >
-                                  <ChevronRight className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Filtro de Datas Inline ou Calendário */}
-                            {filterPeriod === 'Período' ? (
-                              <div className="flex items-center gap-3">
-                                <div className="flex flex-col w-36">
-                                  <DateInput
-                                    label="Data Inicial"
-                                    value={format(periodStartDate, 'yyyy-MM-dd')}
-                                    onChange={(val) => {
-                                      if (val) {
-                                        const dt = new Date(val + 'T12:00:00');
-                                        setPeriodStartDate(dt);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                                <div className="flex flex-col w-36">
-                                  <DateInput
-                                    label="Data Final"
-                                    value={format(periodEndDate, 'yyyy-MM-dd')}
-                                    onChange={(val) => {
-                                      if (val) {
-                                        const dt = new Date(val + 'T12:00:00');
-                                        setPeriodEndDate(dt);
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            ) : (
-                              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                                <PopoverTrigger asChild>
-                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                    <Calendar className="h-4 w-4" />
                                   </button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="end">
-                                  <CalendarComponent
-                                    mode="single"
-                                    selected={selectedDate}
-                                    onSelect={handleDateSelect}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                            )}
+                                )}
+                                {filterPeriod !== 'Período' && (
+                                  <span className="text-sm font-medium min-w-[100px] text-center">
+                                    {displayTitle}
+                                  </span>
+                                )}
+                                {filterPeriod !== 'Período' && (
+                                  <button
+                                    onClick={() => navigatePeriod('next')}
+                                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                                  >
+                                    <ChevronRight className="h-4 w-4" />
+                                  </button>
+                                )}
+                              </div>
 
-                            {/* Ícone de engrenagem com dropdown */}
-                            <DropdownMenu modal={false}>
-                              <DropdownMenuTrigger asChild>
-                                <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
-                                  <Settings className="h-4 w-4" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Diário')}
-                                  className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                >
-                                  Diário
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Semanal')}
-                                  className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                >
-                                  Semanal
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Mensal')}
-                                  className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                >
-                                  Mensal
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Anual')}
-                                  className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                >
-                                  Anual
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleFilterChange('Período')}
-                                  className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
-                                >
-                                  Período
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-0">
-                          {/* Header das colunas */}
-                          <div className="grid grid-cols-5 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider border-b pb-2 mb-1">
-                            <div>Data</div>
-                            <div className="text-right">Entradas (R$)</div>
-                            <div className="text-right">Saídas (R$)</div>
-                            <div className="text-right">Resultado (R$)</div>
-                            <div className="text-right">Saldo (R$)</div>
-                          </div>
+                              {/* Filtro de Datas Inline ou Calendário */}
+                              {filterPeriod === 'Período' ? (
+                                <div className="flex items-center gap-3">
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Inicial"
+                                      value={format(periodStartDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodStartDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <div className="flex flex-col w-36">
+                                    <DateInput
+                                      label="Data Final"
+                                      value={format(periodEndDate, 'yyyy-MM-dd')}
+                                      onChange={(val) => {
+                                        if (val) {
+                                          const dt = new Date(val + 'T12:00:00');
+                                          setPeriodEndDate(dt);
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ) : (
+                                <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                                  <PopoverTrigger asChild>
+                                    <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                      <Calendar className="h-4 w-4" />
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="end">
+                                    <CalendarComponent
+                                      mode="single"
+                                      selected={selectedDate}
+                                      onSelect={handleDateSelect}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                              )}
 
-                          {/* Linha 1 - Saldo Inicial */}
-                          <div className="grid grid-cols-5 gap-4 text-sm py-2 bg-gray-50 rounded font-semibold border-b">
-                            <div className="text-gray-700 flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                              Saldo Inicial
+                              {/* Ícone de engrenagem com dropdown */}
+                              <DropdownMenu modal={false}>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1.5 hover:bg-gray-100 rounded transition-colors">
+                                    <Settings className="h-4 w-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-40">
+                                  <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Diário')}
+                                    className={filterPeriod === 'Diário' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  >
+                                    Diário
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Semanal')}
+                                    className={filterPeriod === 'Semanal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  >
+                                    Semanal
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Mensal')}
+                                    className={filterPeriod === 'Mensal' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  >
+                                    Mensal
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Anual')}
+                                    className={filterPeriod === 'Anual' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  >
+                                    Anual
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleFilterChange('Período')}
+                                    className={filterPeriod === 'Período' ? 'bg-[#B59363]/10 text-[#B59363]' : ''}
+                                  >
+                                    Período
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                            <div></div>
-                            <div></div>
-                            <div></div>
-                            <div className={`text-right font-bold ${initialBankBalance >= 0 ? "text-gray-900" : "text-red-600"}`}>
-                              {formatCurrencyNumber(initialBankBalance)}
-                            </div>
                           </div>
-
-                          {/* Lançamentos por data */}
+                        </CardHeader>
+                        <CardContent>
                           <div className="space-y-0">
-                            {dailySummary.length > 0 ? dailySummary.map((item, index) => (
-                              <div key={index} className="grid grid-cols-5 gap-4 text-sm py-2 hover:bg-gray-50 rounded transition-colors group border-b border-gray-100 last:border-0">
-                                <div className="text-gray-700 flex items-center gap-2">
-                                  <div className={`w-1.5 h-1.5 rounded-full ${item.resultado >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                  {item.date}
-                                </div>
-                                <div className="text-right">
-                                  {item.entrada > 0 ? (
-                                    <button 
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleOpenDailyDetails(item.date, 'income');
-                                      }}
-                                      className="text-green-600 hover:text-green-800 hover:underline font-medium transition-colors cursor-pointer bg-transparent border-0 p-0"
-                                      title="Ver lançamentos que compõem este valor"
-                                    >
-                                      {formatCurrencyNumber(item.entrada)}
-                                    </button>
-                                  ) : ""}
-                                </div>
-                                <div className="text-right">
-                                  {item.saida > 0 ? (
-                                    <button 
-                                      type="button"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleOpenDailyDetails(item.date, 'expense');
-                                      }}
-                                      className="text-red-600 hover:text-red-800 hover:underline font-medium transition-colors cursor-pointer bg-transparent border-0 p-0"
-                                      title="Ver lançamentos que compõem este valor"
-                                    >
-                                      {formatCurrencyNumber(item.saida)}
-                                    </button>
-                                  ) : ""}
-                                </div>
-                                <div className={`text-right font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                  {item.resultado >= 0 ? '+' : ''}{formatCurrencyNumber(item.resultado)}
-                                </div>
-                                <div className={`text-right font-medium ${item.saldo >= 0 ? "text-gray-900" : "text-red-600"}`}>
-                                  {formatCurrencyNumber(item.saldo)}
-                                </div>
+                            {/* Header das colunas */}
+                            <div className="grid grid-cols-5 gap-4 text-xs font-medium text-gray-500 uppercase tracking-wider border-b pb-2 mb-1">
+                              <div>Data</div>
+                              <div className="text-right">Entradas (R$)</div>
+                              <div className="text-right">Saídas (R$)</div>
+                              <div className="text-right">Resultado (R$)</div>
+                              <div className="text-right">Saldo (R$)</div>
+                            </div>
+
+                            {/* Linha 1 - Saldo Inicial */}
+                            <div className="grid grid-cols-5 gap-4 text-sm py-2 bg-gray-50 rounded font-semibold border-b">
+                              <div className="text-gray-700 flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                                Saldo Inicial
                               </div>
-                            )) : (
-                              <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed mt-2">
-                                Nenhum lançamento para o período selecionado
+                              <div></div>
+                              <div></div>
+                              <div></div>
+                              <div className={`text-right font-bold ${initialBankBalance >= 0 ? "text-gray-900" : "text-red-600"}`}>
+                                {formatCurrencyNumber(initialBankBalance)}
+                              </div>
+                            </div>
+
+                            {/* Lançamentos por data */}
+                            <div className="space-y-0">
+                              {dailySummary.length > 0 ? dailySummary.map((item, index) => (
+                                <div key={index} className="grid grid-cols-5 gap-4 text-sm py-2 hover:bg-gray-50 rounded transition-colors group border-b border-gray-100 last:border-0">
+                                  <div className="text-gray-700 flex items-center gap-2">
+                                    <div className={`w-1.5 h-1.5 rounded-full ${item.resultado >= 0 ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                    {item.date}
+                                  </div>
+                                  <div className="text-right">
+                                    {item.entrada > 0 ? (
+                                      <button 
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleOpenDailyDetails(item.date, 'income');
+                                        }}
+                                        className="text-green-600 hover:text-green-800 hover:underline font-medium transition-colors cursor-pointer bg-transparent border-0 p-0"
+                                        title="Ver lançamentos que compõem este valor"
+                                      >
+                                        {formatCurrencyNumber(item.entrada)}
+                                      </button>
+                                    ) : ""}
+                                  </div>
+                                  <div className="text-right">
+                                    {item.saida > 0 ? (
+                                      <button 
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          handleOpenDailyDetails(item.date, 'expense');
+                                        }}
+                                        className="text-red-600 hover:text-red-800 hover:underline font-medium transition-colors cursor-pointer bg-transparent border-0 p-0"
+                                        title="Ver lançamentos que compõem este valor"
+                                      >
+                                        {formatCurrencyNumber(item.saida)}
+                                      </button>
+                                    ) : ""}
+                                  </div>
+                                  <div className={`text-right font-medium ${item.resultado >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                    {item.resultado >= 0 ? '+' : ''}{formatCurrencyNumber(item.resultado)}
+                                  </div>
+                                  <div className={`text-right font-medium ${item.saldo >= 0 ? "text-gray-900" : "text-red-600"}`}>
+                                    {formatCurrencyNumber(item.saldo)}
+                                  </div>
+                                </div>
+                              )) : (
+                                <div className="text-center py-10 text-gray-500 bg-gray-50 rounded-lg border-2 border-dashed mt-2">
+                                  Nenhum lançamento para o período selecionado
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Total do Período */}
+                            {dailySummary.length > 0 && (
+                              <div className="grid grid-cols-5 gap-4 text-sm py-3 border-t-2 border-[#B59363]/30 font-semibold bg-[#B59363]/5 rounded mt-2">
+                                <div className="pl-2">Total do Período</div>
+                                <div className="text-right text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
+                                <div className="text-right text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
+                                <div className={`text-right ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                  {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
+                                </div>
+                                <div className={`text-right pr-2 font-bold ${totalSaldoDemonstrativo >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
+                                  {formatCurrencyNumber(totalSaldoDemonstrativo)}
+                                </div>
                               </div>
                             )}
                           </div>
+                        </CardContent>
+                      </Card>
 
-                          {/* Total do Período */}
-                          {dailySummary.length > 0 && (
-                            <div className="grid grid-cols-5 gap-4 text-sm py-3 border-t-2 border-[#B59363]/30 font-semibold bg-[#B59363]/5 rounded mt-2">
-                              <div className="pl-2">Total do Período</div>
-                              <div className="text-right text-green-600">{formatCurrencyNumber(totalEntradasDemonstrativo)}</div>
-                              <div className="text-right text-red-600">{formatCurrencyNumber(totalSaidasDemonstrativo)}</div>
-                              <div className={`text-right ${totalResultadoDemonstrativo >= 0 ? "text-green-600" : "text-red-600"}`}>
-                                {totalResultadoDemonstrativo >= 0 ? '+' : ''}{formatCurrencyNumber(totalResultadoDemonstrativo)}
-                              </div>
-                              <div className={`text-right pr-2 font-bold ${totalSaldoDemonstrativo >= 0 ? 'text-gray-900' : 'text-red-600'}`}>
-                                {formatCurrencyNumber(totalSaldoDemonstrativo)}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Card Gráfico Resultado de Caixa */}
-                    <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-                      <CardHeader>
-                        <CardTitle className="text-lg font-semibold">Resultado de caixa</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="h-64">
-                          <Bar
-                            data={{
-                              labels: dailySummary.map(d => d.dateLabel),
-                              datasets: [{
-                                data: dailySummary.map(d => d.resultado),
-                                backgroundColor: function (context: any) {
-                                  const value = context.parsed?.y ?? 0;
-                                  return value >= 0 ? '#10b981' : '#ef4444';
-                                },
-                                borderRadius: 4,
-                                borderSkipped: false,
-                              }]
-                            }}
-                            options={{
-                              responsive: true,
-                              maintainAspectRatio: false,
-                              plugins: {
-                                legend: {
-                                  display: false
-                                },
-                                tooltip: {
-                                  callbacks: {
-                                    label: function (context) {
-                                      const value = context.parsed.y;
-                                      return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
-                                    }
-                                  }
-                                }
-                              },
-                              scales: {
-                                y: {
-                                  beginAtZero: true,
-                                  grid: {
-                                    color: '#f3f4f6'
+                      {/* Card Gráfico Resultado de Caixa */}
+                      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                        <CardHeader>
+                          <CardTitle className="text-lg font-semibold">Resultado de caixa</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="h-64">
+                            <Bar
+                              data={{
+                                labels: dailySummary.map(d => d.dateLabel),
+                                datasets: [{
+                                  data: dailySummary.map(d => d.resultado),
+                                  backgroundColor: function (context: any) {
+                                    const value = context.parsed?.y ?? 0;
+                                    return value >= 0 ? '#10b981' : '#ef4444';
                                   },
-                                  ticks: {
-                                    callback: function (value) {
-                                      return 'R$ ' + Number(value).toLocaleString('pt-BR');
+                                  borderRadius: 4,
+                                  borderSkipped: false,
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                  legend: {
+                                    display: false
+                                  },
+                                  tooltip: {
+                                    callbacks: {
+                                      label: function (context) {
+                                        const value = context.parsed.y;
+                                        return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                                      }
                                     }
                                   }
                                 },
-                                x: {
-                                  grid: {
-                                    display: false
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                      color: '#f3f4f6'
+                                    },
+                                    ticks: {
+                                      callback: function (value) {
+                                        return 'R$ ' + Number(value).toLocaleString('pt-BR');
+                                      }
+                                    }
+                                  },
+                                  x: {
+                                    grid: {
+                                      display: false
+                                    }
                                   }
                                 }
-                              }
-                            }}
-                          />
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )
-              }
-            ]}
-          />
-        </TabsContent >
+                              }}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )
+                }
+              ]}
+            />
+          </TabsContent >
 
         <TabsContent value="movimentacoes" className="space-y-6">
           <SubTabs
@@ -2407,7 +2433,7 @@ export function Transactions() {
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                              <CardTitle className="text-base font-semibold">
+                              <CardTitle className="text-sm font-semibold">
                                 {showAccountFlow
                                   ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
                                   : 'Contas'}
@@ -2776,7 +2802,7 @@ export function Transactions() {
                                   title="Editar"
                                   className="!p-2"
                                   onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
+                                    const tx = safeTransactions.find(t => t.id === item.id);
                                     if (tx) {
                                       setEditingTransaction(tx);
                                       setActiveMovimentacoesSubTab('a-pagar');
@@ -2790,7 +2816,7 @@ export function Transactions() {
                                   title="Visualizar"
                                   className="!p-2"
                                   onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
+                                    const tx = safeTransactions.find(t => t.id === item.id);
                                     if (tx) setViewingTransaction(tx);
                                   }}
                                 />
@@ -2800,7 +2826,7 @@ export function Transactions() {
                                   title="Excluir"
                                   className="!p-2"
                                   onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
+                                    const tx = safeTransactions.find(t => t.id === item.id);
                                     if (tx) {
                                       setTransactionToDelete(tx);
                                       setDeleteMode('single'); // Reset manual
@@ -2857,7 +2883,7 @@ export function Transactions() {
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-1.5">
-                              <CardTitle className="text-base font-semibold">
+                              <CardTitle className="text-sm font-semibold">
                                 {showAccountFlow
                                   ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
                                   : 'Contas'}
@@ -3228,7 +3254,7 @@ export function Transactions() {
                                   title="Editar"
                                   className="!p-2"
                                   onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
+                                    const tx = safeTransactions.find(t => t.id === item.id);
                                     if (tx) {
                                       setEditingTransaction(tx);
                                       setActiveMovimentacoesSubTab('a-receber');
@@ -3242,7 +3268,7 @@ export function Transactions() {
                                   title="Visualizar"
                                   className="!p-2"
                                   onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
+                                    const tx = safeTransactions.find(t => t.id === item.id);
                                     if (tx) setViewingTransaction(tx);
                                   }}
                                 />
@@ -3252,7 +3278,7 @@ export function Transactions() {
                                   title="Excluir"
                                   className="!p-2"
                                   onClick={() => {
-                                    const tx = transactions.find(t => t.id === item.id);
+                                    const tx = safeTransactions.find(t => t.id === item.id);
                                     if (tx) {
                                       setTransactionToDelete(tx);
                                       setDeleteMode('single'); // Reset manual
@@ -3919,7 +3945,7 @@ export function Transactions() {
                 </div>
 
                 <div className="divide-y max-h-[50vh] overflow-y-auto">
-                  {demonstrativoTransactions
+                  {safeTransactions
                     .filter((t: any) => {
                       const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
                       const dateStr = format(effectiveDate, 'dd/MM/yyyy');
@@ -3941,7 +3967,7 @@ export function Transactions() {
                         </div>
                       </div>
                     ))}
-                    {demonstrativoTransactions.filter((t: any) => {
+                    {safeTransactions.filter((t: any) => {
                       const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
                       const dateStr = format(effectiveDate, 'dd/MM/yyyy');
                       return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
@@ -3954,7 +3980,7 @@ export function Transactions() {
                 
                 {/* Totalizador no rodapé da tabela */}
                 {(() => {
-                  const filtered = demonstrativoTransactions.filter((t: any) => {
+                  const filtered = safeTransactions.filter((t: any) => {
                       const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
                       const dateStr = format(effectiveDate, 'dd/MM/yyyy');
                       return dateStr === dailyDetailsDate && t.type === dailyDetailsType;

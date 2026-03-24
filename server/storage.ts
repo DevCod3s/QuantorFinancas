@@ -282,6 +282,8 @@ export class DatabaseStorage implements IStorage {
         businessCategoryId: schema.transactions.businessCategoryId,
         businessSubcategoryId: schema.transactions.businessSubcategoryId,
         createdAt: schema.transactions.createdAt,
+        observacoes: schema.transactions.observacoes,
+        tags: schema.transactions.tags,
         aplicarJuros: schema.transactions.aplicarJuros,
         tipoJuros: schema.transactions.tipoJuros,
         valorJuros: schema.transactions.valorJuros,

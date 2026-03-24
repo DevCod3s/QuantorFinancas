@@ -98,7 +98,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           style: 'currency',
           currency: 'BRL',
           minimumFractionDigits: 2
-        }).format(transaction.amount));
+        }).format(parseFloat(transaction.amount)));
         setData(transaction.date ? toLocalDateStr(transaction.date) : localDateStr());
         setDescricao(transaction.description || '');
         setConta(transaction.bankAccountId?.toString() || '');
@@ -747,7 +747,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               <Autocomplete
                 options={(productsServices as any[]).filter((p: any) => p.status === 'active' || p.status === 'ativo')}
                 getOptionLabel={(option: any) => option.name ? `${option.type === 'service' ? '🛠 ' : '📦 '}${option.name}` : ''}
-                value={(productsServices as any[]).find(p => p.id === produtoServico) || null}
+                value={(productsServices as any[]).find(p => String(p.id) === String(produtoServico)) || null}
                 onChange={(event, newValue) => {
                   setProdutoServico(newValue ? newValue.id : '');
                   setBusinessSubcategoria('');
@@ -784,7 +784,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               <Autocomplete
                 options={bankAccounts as any[]}
                 getOptionLabel={(option: any) => option.name || ''}
-                value={(bankAccounts as any[]).find(acc => acc.id === conta) || null}
+                value={(bankAccounts as any[]).find(acc => String(acc.id) === String(conta)) || null}
                 onChange={(_, newValue) => setConta(newValue ? newValue.id : '')}
                 disabled={viewOnly}
                 isOptionEqualToValue={(option, value) => option.id === value?.id}
@@ -808,7 +808,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               <Autocomplete
                 options={filteredPlanoContas}
                 getOptionLabel={(option: any) => option.name ? `${option.code} - ${option.name}` : ''}
-                value={filteredPlanoContas.find((acc: any) => acc.id === planoContas) || null}
+                value={filteredPlanoContas.find((acc: any) => String(acc.id) === String(planoContas)) || null}
                 onChange={(_, newValue) => setPlanoContas(newValue ? newValue.id : '')}
                 disabled={viewOnly}
                 isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
@@ -832,7 +832,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               <Autocomplete
                 options={relationships as any[]}
                 getOptionLabel={(option: any) => option.fantasyName || option.socialName || ''}
-                value={(relationships as any[]).find(rel => rel.id === contato) || null}
+                value={(relationships as any[]).find(rel => String(rel.id) === String(contato)) || null}
                 onChange={(_, newValue) => setContato(newValue ? newValue.id : '')}
                 disabled={viewOnly}
                 isOptionEqualToValue={(option, value) => option.id === value?.id}
@@ -860,7 +860,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               <Autocomplete
                 options={filteredBusinessCategories}
                 getOptionLabel={(option: any) => option.name || ''}
-                value={filteredBusinessCategories.find((cat: any) => cat.id === businessCategoria) || null}
+                value={filteredBusinessCategories.find((cat: any) => String(cat.id) === String(businessCategoria)) || null}
                 onChange={(_, newValue) => {
                   setBusinessCategoria(newValue ? newValue.id : '');
                   setBusinessSubcategoria('');
@@ -893,7 +893,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                 <Autocomplete
                   options={filteredBusinessSubcategories}
                   getOptionLabel={(option: any) => option.name || ''}
-                  value={filteredBusinessSubcategories.find((sub: any) => sub.id === businessSubcategoria) || null}
+                  value={filteredBusinessSubcategories.find((sub: any) => String(sub.id) === String(businessSubcategoria)) || null}
                   onChange={(_, newValue) => setBusinessSubcategoria(newValue ? newValue.id : '')}
                   disabled={viewOnly}
                   isOptionEqualToValue={(option: any, value: any) => option.id === value?.id}
