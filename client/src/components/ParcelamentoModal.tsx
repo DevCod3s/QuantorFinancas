@@ -39,6 +39,8 @@ export interface ParcelamentoConfig {
   valorJuros: string;
   aplicarJurosEm: 'total' | 'parcela' | 'atraso';
   tipoRateio: 'dividir' | 'multiplicar';
+  periodicidade?: 'Diário' | 'Semanal' | 'Quinzenal' | 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual';
+  intervaloRepeticao?: string;
   installments: InstallmentItem[];
   valorTotalFormatado?: string;
 }
@@ -66,6 +68,8 @@ export function ParcelamentoModal({
   const [tipoJuros, setTipoJuros] = useState<'percentual' | 'valor'>(initialConfig?.tipoJuros || 'percentual');
   const [valorJuros, setValorJuros] = useState(toDisplay(initialConfig?.valorJuros));
   const [aplicarJurosEm, setAplicarJurosEm] = useState<'total' | 'parcela' | 'atraso'>(initialConfig?.aplicarJurosEm || 'total');
+  const [periodicidade, setPeriodicidade] = useState<'Diário' | 'Semanal' | 'Quinzenal' | 'Mensal' | 'Bimestral' | 'Trimestral' | 'Semestral' | 'Anual'>(initialConfig?.periodicidade || 'Mensal');
+  const [intervaloRepeticao, setIntervaloRepeticao] = useState(initialConfig?.intervaloRepeticao || '1');
   
   // Novos estados da arquitetura dinâmica
   const [tipoRateio, setTipoRateio] = useState<'dividir' | 'multiplicar'>(initialConfig?.tipoRateio || 'dividir');
@@ -81,6 +85,8 @@ export function ParcelamentoModal({
       setValorJuros(toDisplay(initialConfig.valorJuros));
       setAplicarJurosEm(initialConfig.aplicarJurosEm || 'total');
       setTipoRateio(initialConfig.tipoRateio || 'dividir');
+      if (initialConfig.periodicidade) setPeriodicidade(initialConfig.periodicidade);
+      if (initialConfig.intervaloRepeticao) setIntervaloRepeticao(initialConfig.intervaloRepeticao);
       if (initialConfig.installments && initialConfig.installments.length > 0) {
         setInstallments(initialConfig.installments);
       }
@@ -137,15 +143,34 @@ export function ParcelamentoModal({
     setInstallments(prev => {
       const newInsts: InstallmentItem[] = [];
       for (let i = 0; i < num; i++) {
-        // Preserva formatação manual do usuário se existir no array antigo
         const existing = prev[i];
-        
         let parcelDateStr = "";
+        
         if (existing && existing.date) {
            parcelDateStr = existing.date;
         } else {
-           const d = new Date(baseDate);
-           d.setMonth(d.getMonth() + i);
+           const d = new Date(baseDate.getTime());
+           const multiplicador = parseInt(intervaloRepeticao) || 1;
+           const iteracaoTotal = i * multiplicador;
+
+           if (periodicidade === 'Diário') {
+             d.setDate(d.getDate() + iteracaoTotal);
+           } else if (periodicidade === 'Semanal') {
+             d.setDate(d.getDate() + (iteracaoTotal * 7));
+           } else if (periodicidade === 'Quinzenal') {
+             d.setDate(d.getDate() + (iteracaoTotal * 15));
+           } else if (periodicidade === 'Mensal') {
+             d.setMonth(d.getMonth() + iteracaoTotal);
+           } else if (periodicidade === 'Bimestral') {
+             d.setMonth(d.getMonth() + (iteracaoTotal * 2));
+           } else if (periodicidade === 'Trimestral') {
+             d.setMonth(d.getMonth() + (iteracaoTotal * 3));
+           } else if (periodicidade === 'Semestral') {
+             d.setMonth(d.getMonth() + (iteracaoTotal * 6));
+           } else if (periodicidade === 'Anual') {
+             d.setFullYear(d.getFullYear() + iteracaoTotal);
+           }
+
            const dd = String(d.getDate()).padStart(2, '0');
            const mm = String(d.getMonth() + 1).padStart(2, '0');
            const yy = d.getFullYear();
@@ -162,7 +187,7 @@ export function ParcelamentoModal({
       return newInsts;
     });
 
-  }, [numeroParcelas, dataPrimeiraParcela, valorTotal, tipoRateio, aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm, open]);
+  }, [numeroParcelas, dataPrimeiraParcela, valorTotal, tipoRateio, aplicarJuros, tipoJuros, valorJuros, aplicarJurosEm, periodicidade, intervaloRepeticao, open]);
 
   const handleInstallmentDateChange = (index: number, newDate: string) => {
     setInstallments(prev => {
@@ -183,6 +208,8 @@ export function ParcelamentoModal({
       valorJuros: valorJuros.replace(',', '.'),
       aplicarJurosEm,
       tipoRateio,
+      periodicidade,
+      intervaloRepeticao,
       installments,
     });
     onClose();
@@ -235,26 +262,64 @@ export function ParcelamentoModal({
            </RadioGroup>
         </Box>
 
-        {/* Primeira linha: Número de parcelas e Data */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 2, mb: 1 }}>
+        {/* Primeira linha: Configuração Base */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1.5, mb: 1 }}>
           <TextField
             variant="standard"
-            label="Número de parcelas *"
+            label="Nº parcelas *"
             type="number"
             value={numeroParcelas}
             onChange={(e) => {
               const val = e.target.value;
-              if (parseInt(val) > 120) return; // Limite arquitetural para não travar a UI (10 anos)
+              if (parseInt(val) > 120) return;
               setNumeroParcelas(val);
+              // reset installments when number changes to allow re-flow of dates if needed
+              setInstallments([]);
             }}
             fullWidth
             sx={{ '& .MuiInputLabel-root': { color: '#1D3557' }, '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
             inputProps={{ min: 1, max: 120 }}
           />
+          <FormControl variant="standard" fullWidth>
+            <InputLabel sx={{ color: '#1D3557', fontSize: '13px' }}>Periodicidade</InputLabel>
+            <Select 
+               value={periodicidade}
+               onChange={(e) => {
+                 setPeriodicidade(e.target.value as any);
+                 setInstallments([]);
+               }}
+               sx={{ fontSize: '14px' }}
+            >
+              <MenuItem value="Diário">Diário</MenuItem>
+              <MenuItem value="Semanal">Semanal</MenuItem>
+              <MenuItem value="Quinzenal">Quinzenal</MenuItem>
+              <MenuItem value="Mensal">Mensal</MenuItem>
+              <MenuItem value="Bimestral">Bimestral</MenuItem>
+              <MenuItem value="Trimestral">Trimestral</MenuItem>
+              <MenuItem value="Semestral">Semestral</MenuItem>
+              <MenuItem value="Anual">Anual</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            variant="standard"
+            label="Intervalo"
+            type="number"
+            value={intervaloRepeticao}
+            onChange={(e) => {
+              setIntervaloRepeticao(e.target.value);
+              setInstallments([]);
+            }}
+            fullWidth
+            sx={{ '& .MuiInputLabel-root': { color: '#1D3557' }, '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
+            inputProps={{ min: 1 }}
+          />
           <DateInput
             label="Data 1ª parcela *"
             value={dataPrimeiraParcela}
-            onChange={setDataPrimeiraParcela}
+            onChange={(val) => {
+              setDataPrimeiraParcela(val);
+              setInstallments([]);
+            }}
           />
         </Box>
 

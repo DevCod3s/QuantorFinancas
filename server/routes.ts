@@ -418,7 +418,26 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           valorDestaParcela = i === totalParcelas - 1 ? valorUltimaParcelaFallback : valorParcelaFallback;
           
           dataParcela = parseLocalDate(rest.date);
-          dataParcela.setMonth(dataParcela.getMonth() + i);
+          const multiplicador = parseInt(intervalo) || 1;
+          const iteracaoTotal = i * multiplicador;
+
+          if (periodicidade === 'Diário') {
+            dataParcela.setDate(dataParcela.getDate() + iteracaoTotal);
+          } else if (periodicidade === 'Semanal') {
+            dataParcela.setDate(dataParcela.getDate() + (iteracaoTotal * 7));
+          } else if (periodicidade === 'Quinzenal') {
+            dataParcela.setDate(dataParcela.getDate() + (iteracaoTotal * 15));
+          } else if (periodicidade === 'Mensal' || !periodicidade) {
+            dataParcela.setMonth(dataParcela.getMonth() + iteracaoTotal);
+          } else if (periodicidade === 'Bimestral') {
+            dataParcela.setMonth(dataParcela.getMonth() + (iteracaoTotal * 2));
+          } else if (periodicidade === 'Trimestral') {
+            dataParcela.setMonth(dataParcela.getMonth() + (iteracaoTotal * 3));
+          } else if (periodicidade === 'Semestral') {
+            dataParcela.setMonth(dataParcela.getMonth() + (iteracaoTotal * 6));
+          } else if (periodicidade === 'Anual') {
+            dataParcela.setFullYear(dataParcela.getFullYear() + iteracaoTotal);
+          }
         }
 
         const descricaoParcela = `${rest.description || 'Parcelamento'} (${i + 1}/${totalParcelas})`;
@@ -429,7 +448,11 @@ router.post("/transactions", requireAuth, async (req: any, res) => {
           amount: valorDestaParcela.toString(),
           description: descricaoParcela,
           date: new Date(dataParcela),
-          liquidationDate: rest.liquidationDate ? parseLocalDate(rest.liquidationDate) : undefined,
+          // Apenas a primeira parcela herda o status 'pago' e data de liquidação. As demais são sempre pendentes.
+          status: i === 0 && rest.status === 'pago' ? 'pago' : 'pendente',
+          liquidationDate: i === 0 && rest.status === 'pago' && rest.liquidationDate 
+            ? parseLocalDate(rest.liquidationDate) 
+            : undefined,
           repeticao: 'Parcelado',
           numeroParcelas: totalParcelas,
           parcelaAtual: i + 1,
@@ -582,6 +605,7 @@ router.put("/transactions/:id", requireAuth, async (req: any, res) => {
     const updateData = { ...req.body };
     if (updateData.amount !== undefined) updateData.amount = updateData.amount?.toString();
     if (updateData.date !== undefined) updateData.date = updateData.date ? parseLocalDate(updateData.date) : undefined;
+    if (updateData.liquidationDate !== undefined) updateData.liquidationDate = updateData.liquidationDate ? parseLocalDate(updateData.liquidationDate) : null;
     if (updateData.valorJuros !== undefined) updateData.valorJuros = updateData.valorJuros != null ? updateData.valorJuros.toString() : null;
     if (updateData.jurosMes !== undefined) updateData.jurosMes = updateData.jurosMes != null ? updateData.jurosMes.toString() : null;
     if (updateData.moraDia !== undefined) updateData.moraDia = updateData.moraDia != null ? updateData.moraDia.toString() : null;
@@ -1863,6 +1887,17 @@ Regras IMPORTANTES:
   } catch (error) {
     console.error("Erro drástico no workflow de IA (Chart of accounts):", error);
     res.status(500).json({ error: "Ops, a magia da inteligência artificial falhou ou quebrou regras lógicas. Consulte o log do terminal." });
+  }
+});
+router.get("/debug-txs", async (req, res) => {
+  try {
+    const dbTxs = await db.query.transactions.findMany({
+      orderBy: (tx, { desc }) => [desc(tx.id)],
+      limit: 15
+    });
+    res.json(dbTxs);
+  } catch(e) {
+    res.status(500).json({ error: String(e) });
   }
 });
 

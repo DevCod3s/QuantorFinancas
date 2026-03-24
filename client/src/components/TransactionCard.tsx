@@ -28,7 +28,7 @@ import {
   Typography,
   Autocomplete,
 } from '@mui/material';
-import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut, Building2, Lock, AlertTriangle } from 'lucide-react';
+import { X, Check, CheckCheck, Paperclip, Plus, CreditCard, Users, BookOpen, Settings, Tag, Save, LogOut, Building2, Lock, AlertTriangle, Edit, Layers } from 'lucide-react';
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { DynamicModal, FieldType } from "@/components/DynamicModal";
@@ -232,6 +232,12 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   const [duplicateContactName, setDuplicateContactName] = useState('');
   const [duplicateContactId, setDuplicateContactId] = useState('');
   const [duplicateDocumentType, setDuplicateDocumentType] = useState('');
+
+  // Estados para Modal de Edição Inteligente (Cascata)
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState<'single' | 'future' | 'all'>('single');
+  const [pendingTransactionData, setPendingTransactionData] = useState<any>(null);
+  const [isKeepOpenSave, setIsKeepOpenSave] = useState(false);
 
   // Função para buscar dados de CNPJ
   const fetchCNPJData = async (cnpj: string) => {
@@ -477,7 +483,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       }
     }
 
-    const transaction = {
+    const trPayload = {
       tipo,
       valor,
       data,
@@ -511,8 +517,17 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       aplicarMultaEm: repeticao === 'Recorrente' ? aplicarMultaEm : undefined,
     };
 
+    const isEditingSeries = transaction && !!transaction.id && (transaction.repeticao !== 'Única');
+    if (isEditingSeries) {
+      setPendingTransactionData(trPayload);
+      setIsKeepOpenSave(false);
+      setEditMode('single');
+      setEditModalOpen(true);
+      return;
+    }
+
     try {
-      await onSave(transaction);
+      await onSave(trPayload);
       // onClose é chamado pelo Transactions.tsx no onSuccess da mutation
     } catch (error) {
       // Erro tratado pelo onError da mutation em Transactions.tsx
@@ -571,7 +586,7 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       if (transactionDate < today) finalStatus = 'vencido';
     }
 
-    const transaction = {
+    const trPayload = {
       tipo, valor, data, repeticao, tags,
       status: finalStatus, liquidationDate: isPaid ? data : undefined,
       descricao, conta, contato, observacoes, planoContas,
@@ -594,8 +609,17 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       aplicarMultaEm: repeticao === 'Recorrente' ? aplicarMultaEm : undefined,
     };
 
+    const isEditingSeries = transaction && !!transaction.id && (transaction.repeticao !== 'Única');
+    if (isEditingSeries) {
+      setPendingTransactionData(trPayload);
+      setIsKeepOpenSave(true);
+      setEditMode('single');
+      setEditModalOpen(true);
+      return;
+    }
+
     try {
-      await onSave(transaction, true); // keepOpen = true
+      await onSave(trPayload, true); // keepOpen = true
       resetFields(); // Limpa a UI logrando a requisição do cliente
     } catch (error) {
       console.error('Erro ao Salvar e Adicionar Novo:', error);
@@ -1248,6 +1272,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           setAplicarJurosEm(config.aplicarJurosEm);
           setTipoRateio(config.tipoRateio);
           setInstallmentsList(config.installments || []);
+          if (config.periodicidade) setPeriodicidade(config.periodicidade);
+          if (config.intervaloRepeticao) setIntervaloRepeticao(config.intervaloRepeticao);
         }}
         initialConfig={{
           numeroParcelas,
@@ -1257,6 +1283,8 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
           valorJuros,
           aplicarJurosEm,
           tipoRateio,
+          periodicidade: periodicidade as any,
+          intervaloRepeticao,
           installments: installmentsList,
           valorTotalFormatado: valor
         }}
@@ -1349,6 +1377,110 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
         }}
         hideCloseButton={true}
       />
+
+      {/* Modal Inteligente de Edição em Lote (Série) */}
+      {editModalOpen && pendingTransactionData && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[9999] p-4 transition-opacity">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-blue-50 p-5 pt-6 border-b border-blue-100 flex gap-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Edit className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">Salvar Alterações</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Este lançamento faz parte de uma série ({repeticao}). Como deseja aplicar as alterações de <strong>Valor</strong>, <strong>Categoria</strong> e afins?
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <div className="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                  <Layers className="h-4 w-4 text-[#B59363]" />
+                  Opções de alteração em série:
+                </p>
+                
+                <label className="flex items-start gap-3 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-colors">
+                  <input 
+                    type="radio" 
+                    name="editMode" 
+                    value="single" 
+                    checked={editMode === 'single'} 
+                    onChange={() => setEditMode('single')}
+                    className="mt-1 flex-shrink-0 cursor-pointer text-[#B59363] focus:ring-[#B59363]"
+                  />
+                  <div>
+                    <span className="block text-sm font-medium text-gray-900">Somente esta ocorrência</span>
+                    <span className="block text-xs text-gray-500">As outras parcelas/ocorrências manterão os dados antigos originais.</span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-colors">
+                  <input 
+                    type="radio" 
+                    name="editMode" 
+                    value="future" 
+                    checked={editMode === 'future'} 
+                    onChange={() => setEditMode('future')}
+                    className="mt-1 flex-shrink-0 cursor-pointer text-[#B59363] focus:ring-[#B59363]"
+                  />
+                  <div>
+                    <span className="block text-sm font-medium text-gray-900">Esta e as próximas ocorrências</span>
+                    <span className="block text-xs text-gray-500">As datas de vencimento serão preservadas, mas os valores e categorias serão herdados para o futuro.</span>
+                  </div>
+                </label>
+
+                <label className="flex items-start gap-3 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-colors">
+                  <input 
+                    type="radio" 
+                    name="editMode" 
+                    value="all" 
+                    checked={editMode === 'all'} 
+                    onChange={() => setEditMode('all')}
+                    className="mt-1 flex-shrink-0 cursor-pointer text-[#B59363] focus:ring-[#B59363]"
+                  />
+                  <div>
+                    <span className="block text-sm font-medium text-gray-900">Todas as ocorrências</span>
+                    <span className="block text-xs text-orange-500">Aplica essa edição em todo o parcelamento/recorrência, afetando o passado e o futuro, sem alterar o cronograma de dias.</span>
+                  </div>
+                </label>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditModalOpen(false);
+                    setPendingTransactionData(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B59363] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      // Anexa o updateMode e dispara o prop para o formulário Pai
+                      const finalPayload = { ...pendingTransactionData, updateMode: editMode };
+                      await onSave(finalPayload, isKeepOpenSave);
+                      if (isKeepOpenSave) resetFields();
+                      setEditModalOpen(false);
+                      setPendingTransactionData(null);
+                    } catch (err) {
+                      console.error('Falha na Submissão em Cascata:', err);
+                    }
+                  }}
+                  className="px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium text-white bg-[#B59363] border border-transparent rounded hover:bg-[#a07c4e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B59363] transition-colors"
+                >
+                  Confirmar e Salvar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </Box >
   );

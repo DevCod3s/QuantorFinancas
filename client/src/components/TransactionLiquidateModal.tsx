@@ -5,7 +5,7 @@ import { IButtonPrime } from "./ui/i-ButtonPrime";
 import { X, Calendar, DollarSign, FileText, CheckCheck, TrendingDown, TrendingUp, AlertTriangle, LogOut, Save, Plus } from "lucide-react";
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { toLocalDate } from "@/lib/utils";
+import { toLocalDate, localDateStr } from "@/lib/utils";
 import { Transaction } from "@shared/schema";
 import CustomInput, { CustomSelect } from "./CustomInput";
 import { DateInput } from "./DateInput";
@@ -46,7 +46,7 @@ export function TransactionLiquidateModal({
     if (open && transaction) {
       setBankAccountId(transaction.bankAccountId?.toString() || "");
       setPaymentMethodId(transaction.paymentMethodId?.toString() || "");
-      const todayISO = new Date().toISOString().split('T')[0];
+      const todayISO = localDateStr(new Date()); // Helpers locais previnem offset bug > YYYY-MM-DD
       setLiquidationDate(todayISO);
       setDiscountType("valor");
       setDiscountValue("");
@@ -220,11 +220,11 @@ export function TransactionLiquidateModal({
             </div>
           </div>
 
-          {/* Linha de Entradas (Conta + Juros/Desconto) lado a lado para evitar scroll */}
+          {/* Linha de Entradas (Conta + Data Liquidação + Juros/Desconto) */}
           <div className="grid grid-cols-12 gap-3 items-start">
             
-            {/* Esquerda (Conta e Forma Pag) - Ocupa 5 colunas */}
-            <div className="col-span-6 flex flex-col gap-3">
+            {/* Esquerda (Conta, Data Liquidação e Forma Pag) - Ocupa 5 colunas */}
+            <div className="col-span-5 flex flex-col gap-3">
               <Autocomplete
                 options={bankAccounts}
                 getOptionLabel={(account: any) => account.name || 'Conta'}
@@ -247,6 +247,13 @@ export function TransactionLiquidateModal({
                   />
                 )}
                 componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
+              />
+
+              {/* Campo de Data da Liquidação */}
+              <DateInput
+                label="Data da Liquidação *"
+                value={liquidationDate}
+                onChange={(val) => setLiquidationDate(val || localDateStr())}
               />
               
               <div className="flex gap-2 items-end">

@@ -133,7 +133,16 @@ export function ConfirmDialog({
  * );
  * ```
  */
-export function useConfirmDialog() {
+export function useConfirmDialog(): {
+  showConfirm: (
+    title: string,
+    message: string,
+    onConfirm: () => void,
+    confirmText?: string,
+    cancelText?: string
+  ) => void;
+  ConfirmDialog: () => JSX.Element;
+} {
   const [dialogState, setDialogState] = useState<{
     open: boolean;
     title: string;

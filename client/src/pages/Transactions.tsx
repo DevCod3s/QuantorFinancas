@@ -26,7 +26,7 @@ import { apiRequest } from '../lib/queryClient';
 import { motion, AnimatePresence } from "framer-motion";
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale, PieChart } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale, PieChart, Loader2 } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -238,6 +238,11 @@ export function Transactions() {
   const [dailyDetailsModalOpen, setDailyDetailsModalOpen] = useState(false);
   const [dailyDetailsDate, setDailyDetailsDate] = useState<string | null>(null);
   const [dailyDetailsType, setDailyDetailsType] = useState<'income' | 'expense' | null>(null);
+
+  // Modal de Exclusão Inteligente (Cascata)
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [transactionToDelete, setTransactionToDelete] = useState<any | null>(null);
+  const [deleteMode, setDeleteMode] = useState<'single' | 'future' | 'all'>('single');
 
   // Controle flexível para "Salvar e Adicionar Novo"
   const keepModalOpenRef = useRef(false);
@@ -496,6 +501,7 @@ export function Transactions() {
   const [showExpenseSubcategory, setShowExpenseSubcategory] = useState(false);
   const [showIncomeSubcategory, setShowIncomeSubcategory] = useState(false);
   const [showAccountFlow, setShowAccountFlow] = useState(false);
+  const [accountFlowMode, setAccountFlowMode] = useState<'caixa' | 'competencia'>('caixa');
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
   const [showPaidPayables, setShowPaidPayables] = useState(false);
@@ -743,6 +749,7 @@ export function Transactions() {
       company: t.relationship?.socialName || 'Não Declarado',
       cnpj: t.relationship?.document || '-',
       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
+      liquidationDate: t.liquidationDate ? format(toLocalDate(t.liquidationDate), 'dd/MM/yyyy') : '-',
       product: t.description,
       type: t.repeticao,
       status: t.status === 'pago' ? 'Pago' : (toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente'),
@@ -757,6 +764,7 @@ export function Transactions() {
       company: t.relationship?.socialName || 'Não Declarado',
       cnpj: t.relationship?.document || '-',
       dueDate: format(toLocalDate(t.date), 'dd/MM/yyyy'),
+      liquidationDate: t.liquidationDate ? format(toLocalDate(t.liquidationDate), 'dd/MM/yyyy') : '-',
       product: t.description,
       type: t.repeticao,
       status: t.status === 'pago' ? 'Recebido' : (toLocalDate(t.date) < new Date() ? 'Vencida' : 'Pendente'),
@@ -975,10 +983,12 @@ export function Transactions() {
   });
 
   // Movimentação por conta bancária no período filtrado
-  const buildAccountFlow = (typeFilter?: 'income' | 'expense') => {
+  const buildAccountFlow = (typeFilter?: 'income' | 'expense', onlyPaid?: boolean) => {
     const flowByAccount: Record<number, { name: string; flow: number }> = {};
     filteredTransactions.forEach(t => {
       if (typeFilter && t.type !== typeFilter) return;
+      // Regime de Caixa: considera apenas lançamentos efetivamente pagos
+      if (onlyPaid && t.status !== 'pago') return;
       const accId = t.bankAccountId;
       if (!accId) return;
       const account = dashboardData?.bankAccounts?.find((a: any) => a.id === accId);
@@ -987,8 +997,6 @@ export function Transactions() {
         flowByAccount[accId] = { name: account.name, flow: 0 };
       }
       const amount = parseFloat(t.amount || '0');
-      // Sem filtro (Visão Geral): despesas subtraem do fluxo
-      // Com filtro: sempre soma (o sinal é tratado no template)
       if (!typeFilter && t.type === 'expense') {
         flowByAccount[accId].flow -= amount;
       } else {
@@ -1002,9 +1010,20 @@ export function Transactions() {
     }));
   };
 
-  const accountFlowStats = buildAccountFlow();
-  const accountFlowExpenseStats = buildAccountFlow('expense');
-  const accountFlowIncomeStats = buildAccountFlow('income');
+  // Regime de Caixa (somente pagos) — dados corretos para o fluxo real
+  const cashFlowStats = buildAccountFlow(undefined, true);
+  const cashFlowExpenseStats = buildAccountFlow('expense', true);
+  const cashFlowIncomeStats = buildAccountFlow('income', true);
+
+  // Regime de Competência (todos do período, incluindo pendentes)
+  const competenciaFlowStats = buildAccountFlow(undefined, false);
+  const competenciaFlowExpenseStats = buildAccountFlow('expense', false);
+  const competenciaFlowIncomeStats = buildAccountFlow('income', false);
+
+  // Resolve o conjunto ativo baseado no modo selecionado pelo usuário
+  const accountFlowStats = accountFlowMode === 'caixa' ? cashFlowStats : competenciaFlowStats;
+  const accountFlowExpenseStats = accountFlowMode === 'caixa' ? cashFlowExpenseStats : competenciaFlowExpenseStats;
+  const accountFlowIncomeStats = accountFlowMode === 'caixa' ? cashFlowIncomeStats : competenciaFlowIncomeStats;
 
   const safeCustomBanks = Array.isArray(customBanks) ? customBanks : [];
   const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...safeCustomBanks].map(item => [item.code, item])).values())
@@ -1089,8 +1108,8 @@ export function Transactions() {
 
   // Mutation para atualizar transação
   const updateTransactionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number, data: any }) =>
-      fetch(`/api/transactions/${id}`, {
+    mutationFn: ({ id, data, mode = 'single' }: { id: number, data: any, mode?: 'single' | 'future' | 'all' }) =>
+      fetch(`/api/transactions/${id}?mode=${mode}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -1113,15 +1132,17 @@ export function Transactions() {
 
   // Mutation para excluir transação
   const deleteTransactionMutation = useMutation({
-    mutationFn: (id: number) =>
-      fetch(`/api/transactions/${id}`, {
+    mutationFn: ({ id, mode = 'single' }: { id: number, mode?: 'single' | 'future' | 'all' }) =>
+      fetch(`/api/transactions/${id}?mode=${mode}`, {
         method: 'DELETE',
         credentials: 'include',
-      }).then(res => res.ok ? res.json() : Promise.reject('Erro ao excluir')),
+      }).then(res => res.ok ? res.status === 204 ? {} : res.json() : Promise.reject('Erro ao excluir')),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ['/api/bank-accounts'], refetchType: 'all' });
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard'], refetchType: 'all' });
+      setDeleteModalOpen(false);
+      setTransactionToDelete(null);
       showSuccess('Transação excluída com sucesso!', "");
     },
     onError: (error: any) => {
@@ -1201,6 +1222,7 @@ export function Transactions() {
         businessCategoryId: transactionData.businessCategoria ? parseInt(transactionData.businessCategoria) : null,
         businessSubcategoryId: transactionData.businessSubcategoria ? parseInt(transactionData.businessSubcategoria) : null,
         status: transactionData.status || 'pago',
+        liquidationDate: transactionData.liquidationDate ? transactionData.liquidationDate.split('/').reverse().join('-') : null,
 
         // Campos de repetição e parcelamento
         repeticao: transactionData.repeticao || 'Única',
@@ -1227,9 +1249,12 @@ export function Transactions() {
       };
 
       if (editingTransaction) {
+        // Pega o updateMode despachado pelo EditConfirmationModal do form, assumindo 'single' como fallback
+        const mode = transactionData.updateMode || 'single';
         await updateTransactionMutation.mutateAsync({ 
           id: editingTransaction.id, 
-          data: transactionPayload 
+          data: transactionPayload,
+          mode
         });
       } else {
         await createTransactionMutation.mutateAsync(transactionPayload);
@@ -1747,30 +1772,63 @@ export function Transactions() {
                       {/* Card Contas - Saldo / Movimentação */}
                       <Card className="shadow-md border-gray-100/50 hover:shadow-lg transition-all duration-300 ease-in-out">
                         <CardHeader className="pb-2 pt-3 px-4">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-sm font-semibold">
-                              {showAccountFlow ? 'Movimentação' : 'Saldos em Contas'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showAccountFlow ? 'gold' : 'primary'}
-                              onClick={() => setShowAccountFlow(!showAccountFlow)}
-                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
-                              className="p-1"
-                            />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <CardTitle className="text-sm font-semibold">
+                                {showAccountFlow
+                                  ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
+                                  : 'Saldos em Contas'}
+                              </CardTitle>
+                              <IButtonPrime
+                                icon={<Layers className="h-3.5 w-3.5" />}
+                                variant={showAccountFlow ? 'gold' : 'primary'}
+                                onClick={() => setShowAccountFlow(!showAccountFlow)}
+                                title={showAccountFlow ? 'Ver saldos consolidados' : 'Ver fluxo por período'}
+                                className="p-1"
+                              />
+                            </div>
+                            {/* Sub-toggle Caixa / Competência (só visível no modo de fluxo) */}
+                            {showAccountFlow && (
+                              <div className="flex items-center bg-gray-100 rounded-full p-0.5 gap-0.5">
+                                <button
+                                  onClick={() => setAccountFlowMode('caixa')}
+                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                    accountFlowMode === 'caixa'
+                                      ? 'bg-white text-green-700 shadow-sm'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Caixa
+                                </button>
+                                <button
+                                  onClick={() => setAccountFlowMode('competencia')}
+                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                    accountFlowMode === 'competencia'
+                                      ? 'bg-white text-amber-700 shadow-sm'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Competência
+                                </button>
+                              </div>
+                            )}
                           </div>
                           <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : filterPeriod === 'Diário' ? 'Posição acumulada diária' : filterPeriod === 'Semanal' ? 'Posição acumulada semanal' : filterPeriod === 'Anual' ? 'Posição acumulada anual' : filterPeriod === 'Período' ? 'Posição acumulada do período' : 'Posição acumulada mensal'}
+                            {showAccountFlow
+                              ? accountFlowMode === 'caixa'
+                                ? 'Apenas lançamentos pagos no período'
+                                : 'Competência — inclui pendentes'
+                              : filterPeriod === 'Diário' ? 'Posição acumulada diária' : filterPeriod === 'Semanal' ? 'Posição acumulada semanal' : filterPeriod === 'Anual' ? 'Posição acumulada posicional anual' : filterPeriod === 'Período' ? 'Posição acumulada do período' : 'Posição acumulada mensal'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          <div className="space-y-1 curtain-enter" key={showAccountFlow ? 'flow' : 'balance'}>
+                          <div className="space-y-1 curtain-enter" key={showAccountFlow ? `flow-${accountFlowMode}` : 'balance'}>
                             {showAccountFlow ? (
                               accountFlowStats.length > 0 ? (
                                 accountFlowStats.map((account) => (
                                   <div key={account.id} className="flex items-center justify-between py-0.5 animate-in fade-in duration-300">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-2 h-2 bg-[#B59363] rounded-full"></div>
+                                      <div className={`w-2 h-2 rounded-full ${accountFlowMode === 'caixa' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
                                       <span className="text-xs truncate">{account.name}</span>
                                     </div>
                                     <div className={`text-xs font-medium ${account.flow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -1780,7 +1838,9 @@ export function Transactions() {
                                 ))
                               ) : (
                                 <div className="text-center py-2 text-xs text-gray-500">
-                                  Sem movimentações no período
+                                  {accountFlowMode === 'caixa'
+                                    ? 'Nenhum lançamento pago no período'
+                                    : 'Sem movimentações no período'}
                                 </div>
                               )
                             ) : (
@@ -1804,7 +1864,9 @@ export function Transactions() {
                             )}
                             <div className="border-t pt-1 mt-1">
                               <div className="flex items-center justify-between font-semibold text-xs">
-                                <span>{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
+                                <span>{showAccountFlow
+                                  ? (accountFlowMode === 'caixa' ? 'Total Caixa' : 'Total Competência')
+                                  : 'Total Geral'}</span>
                                 {(() => {
                                   if (showAccountFlow) {
                                     const totalFlow = accountFlowStats.reduce((sum, acc) => sum + acc.flow, 0);
@@ -2343,24 +2405,48 @@ export function Transactions() {
                       {/* Card 2 - Bancos e saldos */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-base font-semibold">
-                              {showAccountFlow ? 'Movimentação' : 'Contas'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showAccountFlow ? 'gold' : 'primary'}
-                              onClick={() => setShowAccountFlow(!showAccountFlow)}
-                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
-                              className="p-1"
-                            />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <CardTitle className="text-base font-semibold">
+                                {showAccountFlow
+                                  ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
+                                  : 'Contas'}
+                              </CardTitle>
+                              <IButtonPrime
+                                icon={<Layers className="h-3.5 w-3.5" />}
+                                variant={showAccountFlow ? 'gold' : 'primary'}
+                                onClick={() => setShowAccountFlow(!showAccountFlow)}
+                                title={showAccountFlow ? 'Ver saldos' : 'Ver fluxo por período'}
+                                className="p-1"
+                              />
+                            </div>
+                            {showAccountFlow && (
+                              <div className="flex items-center bg-gray-100 rounded-full p-0.5 gap-0.5">
+                                <button
+                                  onClick={() => setAccountFlowMode('caixa')}
+                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                    accountFlowMode === 'caixa' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >Caixa</button>
+                                <button
+                                  onClick={() => setAccountFlowMode('competencia')}
+                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                    accountFlowMode === 'competencia' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >Competência</button>
+                              </div>
+                            )}
                           </div>
                           <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Total a pagar'}
+                            {showAccountFlow
+                              ? accountFlowMode === 'caixa'
+                                ? 'Apenas despesas pagas no período'
+                                : 'Competência — inclui pendentes'
+                              : 'Total a pagar'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="curtain-enter space-y-3" key={showAccountFlow ? 'flow' : 'balance'}>
+                          <div className="curtain-enter space-y-3" key={showAccountFlow ? `flow-p-${accountFlowMode}` : 'balance-p'}>
                           {showAccountFlow ? (
                             accountFlowExpenseStats.length > 0 ? accountFlowExpenseStats.map((account) => (
                               <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
@@ -2397,7 +2483,9 @@ export function Transactions() {
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
+                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow
+                                ? (accountFlowMode === 'caixa' ? 'Total Caixa' : 'Total Competência')
+                                : 'Total Geral'}</span>
                               {(() => {
                                 if (showAccountFlow) {
                                   const totalFlow = accountFlowExpenseStats.reduce((sum, acc) => sum + acc.flow, 0);
@@ -2600,23 +2688,30 @@ export function Transactions() {
                                 sortable: true,
                                 render: (item: any) => (
                                   <div>
-                                    <div className="font-medium text-xs">{item.company}</div>
-                                    <div className="text-xs text-gray-500">{item.cnpj}</div>
+                                    <div className="font-bold text-[10px] leading-tight">{item.company}</div>
+                                    <div className="text-[9px] text-gray-500">{item.cnpj}</div>
                                   </div>
                                 )
                               },
                               {
-                                label: "Vencimento",
-                                key: "dueDate",
+                                label: showPaidPayables ? "Liquidado" : "Vencimento",
+                                key: showPaidPayables ? "liquidationDate" : "dueDate",
                                 align: "left",
                                 width: "11%",
-                                sortable: true
+                                sortable: true,
+                                render: (item: any) => showPaidPayables ? (
+                                  <span className="text-xs font-medium text-green-700">
+                                    {item.liquidationDate !== '-' ? item.liquidationDate : item.dueDate}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-700">{item.dueDate}</span>
+                                )
                               },
                               {
                                 label: "Produto",
                                 key: "product",
                                 align: "left",
-                                width: "16%",
+                                width: "14%",
                                 sortable: true
                               },
                               {
@@ -2704,7 +2799,14 @@ export function Transactions() {
                                   variant="red"
                                   title="Excluir"
                                   className="!p-2"
-                                  onClick={() => console.log('Delete', item.id)}
+                                  onClick={() => {
+                                    const tx = transactions.find(t => t.id === item.id);
+                                    if (tx) {
+                                      setTransactionToDelete(tx);
+                                      setDeleteMode('single'); // Reset manual
+                                      setDeleteModalOpen(true);
+                                    }
+                                  }}
                                 />
                               </div>
                             )}
@@ -2750,27 +2852,51 @@ export function Transactions() {
                         </CardContent>
                       </Card>
 
-                      {/* Card 2 - Bancos e saldos */}
+                      {/* Card 2 - Bancos e saldos (À Receber) */}
                       <Card className="shadow-lg">
                         <CardHeader className="pb-3">
-                          <div className="flex items-center gap-1.5">
-                            <CardTitle className="text-base font-semibold">
-                              {showAccountFlow ? 'Movimentação' : 'Contas'}
-                            </CardTitle>
-                            <IButtonPrime
-                              icon={<Layers className="h-3.5 w-3.5" />}
-                              variant={showAccountFlow ? 'gold' : 'primary'}
-                              onClick={() => setShowAccountFlow(!showAccountFlow)}
-                              title={showAccountFlow ? 'Ver saldos' : 'Ver movimentação do período'}
-                              className="p-1"
-                            />
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1.5">
+                              <CardTitle className="text-base font-semibold">
+                                {showAccountFlow
+                                  ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
+                                  : 'Contas'}
+                              </CardTitle>
+                              <IButtonPrime
+                                icon={<Layers className="h-3.5 w-3.5" />}
+                                variant={showAccountFlow ? 'gold' : 'primary'}
+                                onClick={() => setShowAccountFlow(!showAccountFlow)}
+                                title={showAccountFlow ? 'Ver saldos' : 'Ver fluxo por período'}
+                                className="p-1"
+                              />
+                            </div>
+                            {showAccountFlow && (
+                              <div className="flex items-center bg-gray-100 rounded-full p-0.5 gap-0.5">
+                                <button
+                                  onClick={() => setAccountFlowMode('caixa')}
+                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                    accountFlowMode === 'caixa' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >Caixa</button>
+                                <button
+                                  onClick={() => setAccountFlowMode('competencia')}
+                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
+                                    accountFlowMode === 'competencia' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >Competência</button>
+                              </div>
+                            )}
                           </div>
                           <CardDescription className="text-xs text-gray-500">
-                            {showAccountFlow ? 'Fluxo do período selecionado' : 'Total a receber'}
+                            {showAccountFlow
+                              ? accountFlowMode === 'caixa'
+                                ? 'Apenas receitas recebidas no período'
+                                : 'Competência — inclui pendentes'
+                              : 'Total a receber'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="curtain-enter space-y-3" key={showAccountFlow ? 'flow-r' : 'balance-r'}>
+                          <div className="curtain-enter space-y-3" key={showAccountFlow ? `flow-r-${accountFlowMode}` : 'balance-r'}>
                           {showAccountFlow ? (
                             accountFlowIncomeStats.length > 0 ? accountFlowIncomeStats.map((account) => (
                               <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
@@ -2807,7 +2933,9 @@ export function Transactions() {
 
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
-                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow ? 'Total Movimentação' : 'Total Geral'}</span>
+                              <span className="text-xs text-gray-700 font-medium">{showAccountFlow
+                                ? (accountFlowMode === 'caixa' ? 'Total Caixa' : 'Total Competência')
+                                : 'Total Geral'}</span>
                               {(() => {
                                 if (showAccountFlow) {
                                   const totalFlow = accountFlowIncomeStats.reduce((sum, acc) => sum + acc.flow, 0);
@@ -3010,23 +3138,30 @@ export function Transactions() {
                                 sortable: true,
                                 render: (item: any) => (
                                   <div>
-                                    <div className="font-medium text-xs">{item.company}</div>
-                                    <div className="text-xs text-gray-500">{item.cnpj}</div>
+                                    <div className="font-bold text-[10px] leading-tight">{item.company}</div>
+                                    <div className="text-[9px] text-gray-500">{item.cnpj}</div>
                                   </div>
                                 )
                               },
                               {
-                                label: "Vencimento",
-                                key: "dueDate",
+                                label: showPaidReceivables ? "Liquidado" : "Vencimento",
+                                key: showPaidReceivables ? "liquidationDate" : "dueDate",
                                 align: "left",
                                 width: "11%",
-                                sortable: true
+                                sortable: true,
+                                render: (item: any) => showPaidReceivables ? (
+                                  <span className="text-xs font-medium text-green-700">
+                                    {item.liquidationDate !== '-' ? item.liquidationDate : item.dueDate}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-gray-700">{item.dueDate}</span>
+                                )
                               },
                               {
                                 label: "Produto",
                                 key: "product",
                                 align: "left",
-                                width: "16%",
+                                width: "14%",
                                 sortable: true
                               },
                               {
@@ -3116,7 +3251,14 @@ export function Transactions() {
                                   variant="red"
                                   title="Excluir"
                                   className="!p-2"
-                                  onClick={() => console.log('Delete', item.id)}
+                                  onClick={() => {
+                                    const tx = transactions.find(t => t.id === item.id);
+                                    if (tx) {
+                                      setTransactionToDelete(tx);
+                                      setDeleteMode('single'); // Reset manual
+                                      setDeleteModalOpen(true);
+                                    }
+                                  }}
                                 />
                               </div>
                             )}
@@ -3308,6 +3450,113 @@ export function Transactions() {
         transaction={editingTransaction}
         entryType={activeMovimentacoesSubTab === 'a-pagar' ? 'payable' : 'receivable'}
       />
+
+
+      {/* Modal Inteligente de Excluir Movimentação - Excluir Esta, Próximas ou Todas */}
+      {deleteModalOpen && transactionToDelete && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 transition-opacity">
+          <div className="bg-white rounded-xl w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="bg-red-50 p-5 pt-6 border-b border-red-100 flex gap-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 leading-tight">Excluir Lançamento</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  Tem certeza que deseja excluir <strong>{transactionToDelete.description}</strong> no valor de <strong>R$ {parseFloat(transactionToDelete.amount).toFixed(2).replace('.', ',')}</strong>?
+                </p>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {transactionToDelete.repeticao !== 'Única' && (
+                <div className="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                  <p className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-[#B59363]" />
+                    Opções de exclusão em série:
+                  </p>
+                  
+                  <label className="flex items-start gap-3 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-colors">
+                    <input 
+                      type="radio" 
+                      name="deleteMode" 
+                      value="single" 
+                      checked={deleteMode === 'single'} 
+                      onChange={() => setDeleteMode('single')}
+                      className="mt-1 flex-shrink-0 cursor-pointer text-[#B59363] focus:ring-[#B59363]"
+                    />
+                    <div>
+                      <span className="block text-sm font-medium text-gray-900">Somente esta ocorrência</span>
+                      <span className="block text-xs text-gray-500">As demais parcelas/recorrências continuarão existindo.</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-colors">
+                    <input 
+                      type="radio" 
+                      name="deleteMode" 
+                      value="future" 
+                      checked={deleteMode === 'future'} 
+                      onChange={() => setDeleteMode('future')}
+                      className="mt-1 flex-shrink-0 cursor-pointer text-[#B59363] focus:ring-[#B59363]"
+                    />
+                    <div>
+                      <span className="block text-sm font-medium text-gray-900">Esta e as próximas</span>
+                      <span className="block text-xs text-gray-500">Excluirá esta e todas as parcelas com data de vencimento maior que esta.</span>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 cursor-pointer p-2 hover:bg-white rounded border border-transparent hover:border-gray-200 transition-colors">
+                    <input 
+                      type="radio" 
+                      name="deleteMode" 
+                      value="all" 
+                      checked={deleteMode === 'all'} 
+                      onChange={() => setDeleteMode('all')}
+                      className="mt-1 flex-shrink-0 cursor-pointer text-[#B59363] focus:ring-[#B59363]"
+                    />
+                    <div>
+                      <span className="block text-sm font-medium text-gray-900">Todas as ocorrências</span>
+                      <span className="block text-xs text-red-500">Excluirá todo o grupo deste parcelamento ou recorrência, independentemente do status.</span>
+                    </div>
+                  </label>
+                </div>
+              )}
+
+              {transactionToDelete.repeticao === 'Única' && (
+                <p className="text-sm text-gray-600 mb-6 bg-red-50 p-3 rounded border border-red-100">
+                  Esta ação não poderá ser desfeita. O valor será permanentemente removido dos seus registros financeiros.
+                </p>
+              )}
+
+              <div className="flex justify-end gap-3 mt-2">
+                <button
+                  onClick={() => {
+                    setDeleteModalOpen(false);
+                    setTransactionToDelete(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B59363] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => deleteTransactionMutation.mutate({ id: transactionToDelete.id, mode: deleteMode })}
+                  disabled={deleteTransactionMutation.isPending}
+                  className="px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:bg-red-400 min-w-[100px] transition-colors"
+                >
+                  {deleteTransactionMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </>
+                  ) : (
+                    "Confirmar Exclusão"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de Liquidação */}
       <TransactionLiquidateModal
@@ -3836,7 +4085,7 @@ function ChartOfAccountsContent({
   });
 
   const handleGenerateAiChart = () => {
-    showConfirm(
+    (showConfirm as any)(
       'Gerar Plano de Contas com Inteligência Artificial?',
       'A IA vai ler seu histórico financeiro, criar um Plano DRE para sua empresa e recategorizar todas movimentações automaticamente. O plano atual será reescrito. Deseja iniciar a mágica?',
       () => generateChartOfAccountsMutation.mutate(),
@@ -4588,7 +4837,6 @@ function ChartOfAccountsContent({
           </div>
         </div>
       )}
-
 
 
       {/* Componentes de Diálogo */}

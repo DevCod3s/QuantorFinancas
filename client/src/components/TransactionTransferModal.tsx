@@ -151,8 +151,8 @@ export function TransactionTransferModal({ open, onClose, onSave, bankAccounts }
       </Box>
 
       {/* Conteúdo */}
-      <CardContent sx={{ p: 3 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
+      <CardContent sx={{ p: 3, pt: 4 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4, alignItems: 'flex-end' }}>
           <TextField
             variant="standard"
             label="Valor (R$)"
@@ -166,46 +166,43 @@ export function TransactionTransferModal({ open, onClose, onSave, bankAccounts }
             label="Data de Transferência"
             value={data}
             onChange={setData}
-            required
           />
         </Box>
 
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2 }}>
-          <FormControl variant="standard" fullWidth required>
-            <InputLabel sx={{ color: '#1D3557' }}>Conta Origem</InputLabel>
-            <Autocomplete
-              options={bankAccounts}
-              getOptionLabel={(acc: any) => acc.name || 'Conta'}
-              value={bankAccounts.find((a: any) => a.id.toString() === sourceAccount.toString()) || null}
-              onChange={(_, newValue: any) => setSourceAccount(newValue ? newValue.id.toString() : '')}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="standard"
-                  sx={{ '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
-                />
-              )}
-              componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
-            />
-          </FormControl>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3, mb: 4, alignItems: 'flex-end' }}>
+          <Autocomplete
+            options={bankAccounts}
+            getOptionLabel={(acc: any) => acc.name || 'Conta'}
+            value={bankAccounts.find((a: any) => a.id.toString() === sourceAccount.toString()) || null}
+            onChange={(_, newValue: any) => setSourceAccount(newValue ? newValue.id.toString() : '')}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Conta Origem *"
+                variant="standard"
+                InputLabelProps={{ sx: { color: '#1D3557' } }}
+                sx={{ '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
+              />
+            )}
+            componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
+          />
 
-          <FormControl variant="standard" fullWidth required>
-            <InputLabel sx={{ color: '#1D3557' }}>Conta Destino</InputLabel>
-            <Autocomplete
-              options={bankAccounts}
-              getOptionLabel={(acc: any) => acc.name || 'Conta'}
-              value={bankAccounts.find((a: any) => a.id.toString() === destinationAccount.toString()) || null}
-              onChange={(_, newValue: any) => setDestinationAccount(newValue ? newValue.id.toString() : '')}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="standard"
-                  sx={{ '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
-                />
-              )}
-              componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
-            />
-          </FormControl>
+          <Autocomplete
+            options={bankAccounts}
+            getOptionLabel={(acc: any) => acc.name || 'Conta'}
+            value={bankAccounts.find((a: any) => a.id.toString() === destinationAccount.toString()) || null}
+            onChange={(_, newValue: any) => setDestinationAccount(newValue ? newValue.id.toString() : '')}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Conta Destino *"
+                variant="standard"
+                InputLabelProps={{ sx: { color: '#1D3557' } }}
+                sx={{ '& .MuiInput-underline:after': { borderBottomColor: '#B59363' } }}
+              />
+            )}
+            componentsProps={{ paper: { sx: { zIndex: 1400 } } }}
+          />
         </Box>
 
         <Box sx={{ mb: 2 }}>
