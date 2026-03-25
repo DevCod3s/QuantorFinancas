@@ -233,10 +233,45 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
       });
       
       if (data && data.suggestedId) {
-        setPlanoContas(data.suggestedId.toString());
+        const sid = String(data.suggestedId);
+        // Verifica se o ID sugerido existe nas opções filtradas por tipo
+        const allAccounts = chartOfAccounts as any[];
+        const typeFilter = tipo.includes('receita') ? ['receita', 'receitas'] : ['despesa', 'despesas'];
+        const filtered = allAccounts.filter((a: any) => typeFilter.includes(a.type?.toLowerCase()));
+        
+        // Tenta match por ID direto
+        let match = filtered.find((a: any) => String(a.id) === sid);
+        
+        // Fallback: busca em todas as contas (sem filtro de tipo)
+        if (!match) {
+          match = allAccounts.find((a: any) => String(a.id) === sid);
+        }
+        
+        // Fallback: AI pode ter retornado o code em vez do id
+        if (!match) {
+          match = filtered.find((a: any) => String(a.code) === sid) 
+               || allAccounts.find((a: any) => String(a.code) === sid);
+        }
+
+        if (match) {
+          setPlanoContas(String(match.id));
+          toast({
+            title: "Sugestão da IA aplicada",
+            description: data.reason || "Categoria selecionada com base na descrição.",
+          });
+        } else {
+          console.warn("IA sugeriu ID não encontrado:", data.suggestedId, "Contas disponíveis:", allAccounts.map((a: any) => ({ id: a.id, code: a.code, name: a.name })));
+          toast({
+            title: "Sugestão não encontrada",
+            description: `A IA sugeriu a conta ID ${data.suggestedId}, mas ela não existe no seu Plano de Contas. ${data.reason || ''}`,
+            variant: "destructive"
+          });
+        }
+      } else {
         toast({
-          title: "Sugestão da IA aplicada",
-          description: data.reason || "Categoria selecionada com base na descrição.",
+          title: "Sem sugestão",
+          description: "A IA não conseguiu determinar uma conta adequada.",
+          variant: "destructive"
         });
       }
     } catch (error) {
@@ -402,12 +437,21 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
   const selectedProduct = (productsServices as any[]).find((p: any) => String(p.id) === String(produtoServico));
 
   // Filtragem do Plano de Contas por tipo da transação (inclui todos os níveis para permitir seleção precisa pela IA)
-  const filteredPlanoContas = (chartOfAccounts as any[]).filter((account: any) => {
-    const accountType = account.type?.toLowerCase();
-    if (tipo.includes('receita')) return accountType === 'receita' || accountType === 'receitas';
-    if (tipo.includes('despesa')) return accountType === 'despesa' || accountType === 'despesas';
-    return true;
-  });
+  const filteredPlanoContas = React.useMemo(() => {
+    const allAccounts = chartOfAccounts as any[];
+    const filtered = allAccounts.filter((account: any) => {
+      const accountType = account.type?.toLowerCase();
+      if (tipo.includes('receita')) return accountType === 'receita' || accountType === 'receitas';
+      if (tipo.includes('despesa')) return accountType === 'despesa' || accountType === 'despesas';
+      return true;
+    });
+    // Garante que a conta selecionada (ex: via IA) esteja sempre nas opções
+    if (planoContas && !filtered.find((a: any) => String(a.id) === String(planoContas))) {
+      const selected = allAccounts.find((a: any) => String(a.id) === String(planoContas));
+      if (selected) filtered.push(selected);
+    }
+    return filtered;
+  }, [chartOfAccounts, tipo, planoContas]);
 
   // Filtragem das Categorias de Negócio por tipo (income/expense) e appliedTo (product/service/both)
   const filteredBusinessCategories = (businessCategories as any[]).filter((cat: any) => {

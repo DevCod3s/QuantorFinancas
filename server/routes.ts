@@ -1754,6 +1754,10 @@ router.get("/debug-server-logs", async (req, res) => {
 router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
+    const { levels } = req.body || {};
+
+    // Validar parâmetro de níveis (2-4 ou 'auto')
+    const maxLevels = levels === 'auto' || !levels ? null : Math.min(Math.max(Number(levels) || 2, 2), 4);
 
     // 1. Coleta das transações do usuário (Contexto Proposto)
     // Limite superior de transações recentes para evitar extrapolar limite de tokens e de tempo 
@@ -1790,10 +1794,15 @@ router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res)
       });
     }
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY?.trim() });
-    
+
+    // Instrução de níveis hierárquicos baseada na escolha do usuário
+    const levelsInstruction = maxLevels
+      ? `A estrutura DEVE ter EXATAMENTE ${maxLevels} níveis hierárquicos (de level 1 até level ${maxLevels}). Não crie contas com level maior que ${maxLevels}.`
+      : `Analise a complexidade e diversidade das transações fornecidas e defina AUTOMATICAMENTE a melhor quantidade de níveis hierárquicos (entre 2 e 4). Use mais níveis se houver muita diversidade de categorias, menos se for uma empresa simples.`;
+
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
-      max_tokens: 8192,
+      max_tokens: 4096,
       system: `Você é uma Especialista em Gestão Contábil DRE de alto nível.
 Seu trabalho é analisar os tipos e descrições das transações fornecidas e criar um Plano de Contas PERFEITO e EXAUSTIVO para a empresa, totalmente focado no DRE.
 Você DEVE retornar APENAS um JSON puro, sem marcarções markdown, sem texto antes ou depois. Formato exigido:
@@ -1807,12 +1816,13 @@ Você DEVE retornar APENAS um JSON puro, sem marcarções markdown, sem texto an
 }
 
 Regras IMPORTANTES:
-1. Estrutura hierárquica com níveis 1, 2 e opcionalmente 3.
+1. ${levelsInstruction}
 2. O campo 'type' SÓ pode ser: 'receita', 'despesa', 'ativo' ou 'passivo'.
 3. 'tempId' deve ser uma string única.
 4. 'parentTempId' referencia o 'tempId' de uma conta-pai existente (não use em level 1).
 5. Não inclua nenhum array 'transactionMappings'. Retorne SOMENTE o 'chartOfAccounts'.
-6. Não invente dados. Retorne SOMENTE o JSON válido.`,
+6. Não invente dados. Retorne SOMENTE o JSON válido.
+7. Crie subcategorias específicas baseadas nas descrições reais das transações (não genéricas).`,
       messages: [
         {
           role: "user",
@@ -1928,11 +1938,15 @@ router.post("/ai/suggest-category", requireAuth, async (req: any, res) => {
     }
     const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim() });
     
+    const chartData = filteredChart.map(c => ({ id: c.id, code: c.code, name: c.name, type: c.type, level: c.level }));
+    
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
       max_tokens: 1024,
-      system: `Você é um assistente contábil. Sua tarefa é sugerir o ID da conta mais adequada do Plano de Contas para uma transação.
-Retorne APENAS o JSON: { "suggestedId": number, "reason": "breve explicação" }`,
+      system: `Você é um assistente contábil. Sua tarefa é sugerir o campo "id" (numérico) da conta mais adequada do Plano de Contas para uma transação.
+IMPORTANTE: Sempre prefira contas de nível mais específico (level 2 ou 3) ao invés de categorias genéricas de nível 1.
+O campo "id" é o identificador numérico do banco de dados, NÃO confunda com o campo "code" (que é texto como "2.1").
+Retorne APENAS o JSON puro sem markdown: { "suggestedId": <number do campo id>, "reason": "breve explicação" }`,
       messages: [
         {
           role: "user",
@@ -1941,10 +1955,10 @@ Descrição: ${description}
 Valor: ${amount}
 Tipo: ${type}
 
-Plano de Contas disponível:
-${JSON.stringify(filteredChart.map(c => ({ id: c.id, code: c.code, name: c.name, type: c.type })))}
+Plano de Contas disponível (use o campo "id" para suggestedId):
+${JSON.stringify(chartData)}
 
-Qual o ID da conta mais adequada?`
+Qual o "id" da conta mais adequada?`
         }
       ]
     });
@@ -1956,6 +1970,19 @@ Qual o ID da conta mais adequada?`
     
     const cleaned = aiResponse.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
     const result = JSON.parse(cleaned);
+
+    // Valida que o suggestedId é um ID real que existe no plano de contas
+    const suggestedId = Number(result.suggestedId);
+    const validAccount = userChart.find(c => c.id === suggestedId);
+    if (!validAccount) {
+      // Fallback: tenta encontrar por code caso a IA tenha confundido id com code
+      const byCode = userChart.find(c => String(c.code) === String(result.suggestedId));
+      if (byCode) {
+        result.suggestedId = byCode.id;
+      } else {
+        console.warn("IA sugeriu ID inválido:", result.suggestedId, "IDs disponíveis:", userChart.map(c => c.id));
+      }
+    }
 
     res.json(result);
   } catch (error) {

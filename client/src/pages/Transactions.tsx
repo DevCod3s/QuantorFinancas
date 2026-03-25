@@ -26,7 +26,7 @@ import { apiRequest } from '../lib/queryClient';
 import { motion, AnimatePresence } from "framer-motion";
 
 // Importações de ícones Lucide
-import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale, PieChart, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Search, Filter, Eye, TrendingUp, TrendingDown, DollarSign, CreditCard, Building, Target, Activity, FileText, Clock, CheckCircle, CheckCheck, Calendar, Settings, ChevronLeft, ChevronRight, Save, X, ChevronDown, ChevronRight as ChevronRightIcon, ArrowUpDown, AlertTriangle, Building2, FolderDown, LogOut, HandCoins, Coins, Link, Layers, Scale, PieChart, Loader2, CircleDollarSign, Wallet, BadgeCheck, HandCoins as HandCoinsIcon, Receipt } from "lucide-react";
 
 // Importações Material-UI
 import TextField from '@mui/material/TextField';
@@ -72,6 +72,7 @@ import { ptBR } from "date-fns/locale";
 import { SuccessDialog, useSuccessDialog } from "@/components/ui/success-dialog";
 import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
 import { AiLoadingDialog } from "@/components/ui/ai-loading-dialog";
+import { AiChartLevelsDialog } from "@/components/ui/ai-chart-levels-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
 import { TransactionViewModal } from "@/components/TransactionViewModal";
@@ -79,6 +80,7 @@ import { TransactionLiquidateModal } from "@/components/TransactionLiquidateModa
 import { TransactionModal } from "@/components/TransactionModal";
 import { MultiActionButton } from "@/components/MultiActionButton";
 import { TransactionTransferModal } from "@/components/TransactionTransferModal";
+import { BankStatementModal } from "@/components/BankStatementModal";
 import { DateInput } from "@/components/DateInput";
 import { localDateStr, toLocalDateStr, toLocalDate } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -223,6 +225,8 @@ export function Transactions() {
   const [chartAccountModalOpen, setChartAccountModalOpen] = useState(false);
   const [bankAccountModalOpen, setBankAccountModalOpen] = useState(false);
   const [editingBankAccount, setEditingBankAccount] = useState<any>(null);
+  const [bankStatementOpen, setBankStatementOpen] = useState(false);
+  const [bankStatementAccount, setBankStatementAccount] = useState<any>(null);
   const [newBankModalOpen, setNewBankModalOpen] = useState(false);
   
   // Modal states perdidos na compilação do HEAD das 14:20hs
@@ -501,7 +505,6 @@ export function Transactions() {
   const [showExpenseSubcategory, setShowExpenseSubcategory] = useState(false);
   const [showIncomeSubcategory, setShowIncomeSubcategory] = useState(false);
   const [showAccountFlow, setShowAccountFlow] = useState(false);
-  const [accountFlowMode, setAccountFlowMode] = useState<'caixa' | 'competencia'>('caixa');
   const [regimeContabil, setRegimeContabil] = useState<'caixa' | 'competencia'>('caixa');
   const [batchModePayables, setBatchModePayables] = useState(false);
   const [batchModeReceivables, setBatchModeReceivables] = useState(false);
@@ -578,6 +581,11 @@ export function Transactions() {
     const monthShort = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
+    // Regime de Caixa: apenas transações pagas | Competência: todas
+    const baseTransactions = regimeContabil === 'caixa'
+      ? transactions.filter(t => t.status === 'pago')
+      : transactions;
+
     type Bucket = { label: string; income: number; expense: number };
     let buckets: Bucket[] = [];
 
@@ -590,7 +598,7 @@ export function Transactions() {
         const chartEnd = new Date(start);
         chartEnd.setHours(23, 59, 59, 999);
 
-        const dailyTransactions = transactions.filter(t => {
+        const dailyTransactions = baseTransactions.filter(t => {
           const d = getEffectiveDate(t);
           return d >= chartStart && d <= chartEnd;
         });
@@ -613,7 +621,7 @@ export function Transactions() {
         break;
       }
       case 'Semanal': {
-        const weekTransactions = transactions.filter(t => {
+        const weekTransactions = baseTransactions.filter(t => {
           const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
@@ -635,7 +643,7 @@ export function Transactions() {
         break;
       }
       case 'Mensal': {
-        const monthTransactions = transactions.filter(t => {
+        const monthTransactions = baseTransactions.filter(t => {
           const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
@@ -656,7 +664,7 @@ export function Transactions() {
         break;
       }
       case 'Anual': {
-        const yearTransactions = transactions.filter(t => {
+        const yearTransactions = baseTransactions.filter(t => {
           const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
@@ -674,7 +682,7 @@ export function Transactions() {
         break;
       }
       case 'Período': {
-        const periodTransactions = transactions.filter(t => {
+        const periodTransactions = baseTransactions.filter(t => {
           const d = getEffectiveDate(t);
           return d >= start && d <= end;
         });
@@ -787,19 +795,21 @@ export function Transactions() {
   const resultMonth = totalReceivablesMonth - totalPayablesMonth;
 
   // AGREGAÇÕES DINÂMICAS PARA CARDS E GRÁFICOS
-  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras) - REGIME DE CAIXA
+  // 1. Resumo Diário (para Demonstrativo e Gráfico de Barras) - RESPEITA REGIME CONTÁBIL
   
-  // Apenas transações que já foram liquidadas (Regime de Caixa)
-  const demonstrativoTransactions = safeTransactions.filter((t: any) => t.status === 'pago');
+  // Regime de Caixa: apenas liquidadas | Competência: todas as transações do período
+  const demonstrativoTransactions = regimeContabil === 'caixa'
+    ? safeTransactions.filter((t: any) => t.status === 'pago')
+    : safeTransactions;
 
   const { start: filterRangeStart, end: filterRangeEnd } = getFilterDateRange();
 
   // 1. O saldo de abertura (da criação da conta) de todas as contas somadas
   const totalStartingBalance = bankAccounts.reduce((sum: number, acc: any) => sum + (parseFloat(acc.currentBalance) || 0), 0);
   
-  // 2. Transações pagas que ocorreram ANTES do período filtrado
+  // 2. Transações que ocorreram ANTES do período filtrado (respeita regime)
   const transactionsBeforeStart = demonstrativoTransactions.filter(t => {
-      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+      const effectiveDate = getEffectiveDate(t);
       return effectiveDate < filterRangeStart; 
   });
 
@@ -872,9 +882,14 @@ export function Transactions() {
   const totalResultadoDemonstrativo = dailySummary.reduce((sum, d) => sum + d.resultado, 0);
   const totalSaldoDemonstrativo = dailySummary.length > 0 ? dailySummary[dailySummary.length - 1].saldo : 0;
 
-  // 2. Agregação por Categoria (para Gráficos de Rosca)
+  // 2. Agregação por Categoria (para Gráficos de Rosca) - RESPEITA REGIME CONTÁBIL
   const getStatsByCategory = (type: 'income' | 'expense') => {
-    const data = filteredTransactions.filter(t => t.type === type);
+    const data = filteredTransactions.filter(t => {
+      if (t.type !== type) return false;
+      // Regime de Caixa: apenas transações pagas
+      if (regimeContabil === 'caixa' && t.status !== 'pago') return false;
+      return true;
+    });
     const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
 
     const categories = data.reduce((acc: any, t) => {
@@ -893,9 +908,13 @@ export function Transactions() {
   const incomeStats = getStatsByCategory('income');
   const expenseStats = getStatsByCategory('expense');
 
-  // Agregação por Subcategoria
+  // Agregação por Subcategoria - RESPEITA REGIME CONTÁBIL
   const getStatsBySubcategory = (type: 'income' | 'expense') => {
-    const data = filteredTransactions.filter(t => t.type === type);
+    const data = filteredTransactions.filter(t => {
+      if (t.type !== type) return false;
+      if (regimeContabil === 'caixa' && t.status !== 'pago') return false;
+      return true;
+    });
     const total = data.reduce((sum, t) => sum + parseFloat(t.amount || '0'), 0);
 
     const subcategories = data.reduce((acc: any, t) => {
@@ -1030,10 +1049,10 @@ export function Transactions() {
   const competenciaFlowExpenseStats = buildAccountFlow('expense', false);
   const competenciaFlowIncomeStats = buildAccountFlow('income', false);
 
-  // Resolve o conjunto ativo baseado no modo selecionado pelo usuário
-  const accountFlowStats = accountFlowMode === 'caixa' ? cashFlowStats : competenciaFlowStats;
-  const accountFlowExpenseStats = accountFlowMode === 'caixa' ? cashFlowExpenseStats : competenciaFlowExpenseStats;
-  const accountFlowIncomeStats = accountFlowMode === 'caixa' ? cashFlowIncomeStats : competenciaFlowIncomeStats;
+  // Resolve o conjunto ativo baseado no regime contábil unificado
+  const accountFlowStats = regimeContabil === 'caixa' ? cashFlowStats : competenciaFlowStats;
+  const accountFlowExpenseStats = regimeContabil === 'caixa' ? cashFlowExpenseStats : competenciaFlowExpenseStats;
+  const accountFlowIncomeStats = regimeContabil === 'caixa' ? cashFlowIncomeStats : competenciaFlowIncomeStats;
 
   const safeCustomBanks = Array.isArray(customBanks) ? customBanks : [];
   const banksList = Array.from(new Map([...BRAZILIAN_BANKS, ...safeCustomBanks].map(item => [item.code, item])).values())
@@ -1586,9 +1605,35 @@ export function Transactions() {
                               <CardTitle className="text-lg font-semibold">Fluxo de caixa</CardTitle>
                               <CardDescription className="text-sm text-gray-500">
                                 {filterPeriod === 'Diário' ? 'Evolução diária' : filterPeriod === 'Semanal' ? 'Evolução semanal' : filterPeriod === 'Anual' ? 'Evolução anual' : filterPeriod === 'Período' ? 'Evolução do período' : 'Evolução mensal'}
+                                {' '}— <span className="font-medium">{regimeContabil === 'caixa' ? 'Regime de Caixa' : 'Competência'}</span>
                               </CardDescription>
                             </div>
                             <div className="flex items-center gap-3">
+                              {/* Toggle de Regime Contábil — ícones */}
+                              <div className="hidden md:flex items-center gap-1">
+                                <button 
+                                  onClick={() => setRegimeContabil('caixa')}
+                                  className={`p-2 rounded-lg transition-all duration-300 focus:outline-none ${
+                                    regimeContabil === 'caixa'
+                                      ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110'
+                                      : 'text-gray-300 hover:text-gray-400'
+                                  }`}
+                                  title="Regime de Caixa"
+                                >
+                                  <Coins className="h-5 w-5" />
+                                </button>
+                                <button 
+                                  onClick={() => setRegimeContabil('competencia')}
+                                  className={`p-2 rounded-lg transition-all duration-300 focus:outline-none ${
+                                    regimeContabil === 'competencia'
+                                      ? 'text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] scale-110'
+                                      : 'text-gray-300 hover:text-gray-400'
+                                  }`}
+                                  title="Competência"
+                                >
+                                  <Scale className="h-5 w-5" />
+                                </button>
+                              </div>
                               {/* Navegação de período */}
                               <div className="flex items-center gap-1">
                                 {filterPeriod !== 'Período' && (
@@ -1786,7 +1831,7 @@ export function Transactions() {
                             <div className="flex items-center gap-1.5">
                               <CardTitle className="text-sm font-semibold">
                                 {showAccountFlow
-                                  ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
+                                  ? (regimeContabil === 'caixa' ? 'Regime de Caixa' : 'Competência')
                                   : 'Saldos em Contas'}
                               </CardTitle>
                               <IButtonPrime
@@ -1801,9 +1846,9 @@ export function Transactions() {
                             {showAccountFlow && (
                               <div className="flex items-center bg-gray-100 rounded-full p-0.5 gap-0.5">
                                 <button
-                                  onClick={() => setAccountFlowMode('caixa')}
+                                  onClick={() => setRegimeContabil('caixa')}
                                   className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
-                                    accountFlowMode === 'caixa'
+                                    regimeContabil === 'caixa'
                                       ? 'bg-white text-green-700 shadow-sm'
                                       : 'text-gray-500 hover:text-gray-700'
                                   }`}
@@ -1811,9 +1856,9 @@ export function Transactions() {
                                   Caixa
                                 </button>
                                 <button
-                                  onClick={() => setAccountFlowMode('competencia')}
+                                  onClick={() => setRegimeContabil('competencia')}
                                   className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
-                                    accountFlowMode === 'competencia'
+                                    regimeContabil === 'competencia'
                                       ? 'bg-white text-amber-700 shadow-sm'
                                       : 'text-gray-500 hover:text-gray-700'
                                   }`}
@@ -1825,20 +1870,20 @@ export function Transactions() {
                           </div>
                           <CardDescription className="text-xs text-gray-500">
                             {showAccountFlow
-                              ? accountFlowMode === 'caixa'
+                              ? regimeContabil === 'caixa'
                                 ? 'Apenas lançamentos pagos no período'
                                 : 'Competência — inclui pendentes'
                               : filterPeriod === 'Diário' ? 'Posição acumulada diária' : filterPeriod === 'Semanal' ? 'Posição acumulada semanal' : filterPeriod === 'Anual' ? 'Posição acumulada posicional anual' : filterPeriod === 'Período' ? 'Posição acumulada do período' : 'Posição acumulada mensal'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="pt-0 px-4 pb-3">
-                          <div className="space-y-1 curtain-enter" key={showAccountFlow ? `flow-${accountFlowMode}` : 'balance'}>
+                          <div className="space-y-1 curtain-enter" key={showAccountFlow ? `flow-${regimeContabil}` : 'balance'}>
                             {showAccountFlow ? (
                               accountFlowStats.length > 0 ? (
                                 accountFlowStats.map((account) => (
                                   <div key={account.id} className="flex items-center justify-between py-0.5 animate-in fade-in duration-300">
                                     <div className="flex items-center gap-2">
-                                      <div className={`w-2 h-2 rounded-full ${accountFlowMode === 'caixa' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
+                                      <div className={`w-2 h-2 rounded-full ${regimeContabil === 'caixa' ? 'bg-green-500' : 'bg-amber-500'}`}></div>
                                       <span className="text-xs truncate">{account.name}</span>
                                     </div>
                                     <div className={`text-xs font-medium ${account.flow >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -1848,7 +1893,7 @@ export function Transactions() {
                                 ))
                               ) : (
                                 <div className="text-center py-2 text-xs text-gray-500">
-                                  {accountFlowMode === 'caixa'
+                                  {regimeContabil === 'caixa'
                                     ? 'Nenhum lançamento pago no período'
                                     : 'Sem movimentações no período'}
                                 </div>
@@ -1875,7 +1920,7 @@ export function Transactions() {
                             <div className="border-t pt-1 mt-1">
                               <div className="flex items-center justify-between font-semibold text-xs">
                                 <span>{showAccountFlow
-                                  ? (accountFlowMode === 'caixa' ? 'Total Caixa' : 'Total Competência')
+                                  ? (regimeContabil === 'caixa' ? 'Total Caixa' : 'Total Competência')
                                   : 'Total Geral'}</span>
                                 {(() => {
                                   if (showAccountFlow) {
@@ -1917,7 +1962,9 @@ export function Transactions() {
                                   className="p-1"
                                 />
                               </div>
-                              <CardDescription className="text-xs text-gray-500 mt-1">Gastos projetados</CardDescription>
+                              <CardDescription className="text-xs text-gray-500 mt-1">
+                                {regimeContabil === 'caixa' ? 'Gastos efetivados (caixa)' : 'Gastos projetados (competência)'}
+                              </CardDescription>
                             </div>
                             <IButtonPrime
                               icon={isExpensePieMode ? <PieChart className="h-4 w-4" /> : <PieChart className="h-4 w-4 text-gray-400" />}
@@ -2003,7 +2050,9 @@ export function Transactions() {
                                   className="p-1"
                                 />
                               </div>
-                              <CardDescription className="text-xs text-gray-500 mt-1">Entradas projetadas</CardDescription>
+                              <CardDescription className="text-xs text-gray-500 mt-1">
+                                {regimeContabil === 'caixa' ? 'Entradas efetivadas (caixa)' : 'Entradas projetadas (competência)'}
+                              </CardDescription>
                             </div>
                             <IButtonPrime
                               icon={isIncomePieMode ? <PieChart className="h-4 w-4" /> : <PieChart className="h-4 w-4 text-gray-400" />}
@@ -2095,19 +2144,29 @@ export function Transactions() {
                             </CardDescription>
                           </div>
                           <div className="flex items-center gap-3">
-                            {/* Toggle de Regime Contábil */}
-                            <div className="hidden md:flex border shadow-sm rounded-lg overflow-hidden bg-white mx-2">
+                            {/* Toggle de Regime Contábil — ícones */}
+                            <div className="hidden md:flex items-center gap-1 mx-2">
                               <button 
                                 onClick={() => setRegimeContabil('caixa')}
-                                className={`px-4 py-1.5 text-xs font-semibold focus:outline-none transition-colors ${regimeContabil === 'caixa' ? 'bg-[#1D3557] text-white' : 'bg-transparent text-gray-500 hover:bg-gray-50'}`}
+                                className={`p-2 rounded-lg transition-all duration-300 focus:outline-none ${
+                                  regimeContabil === 'caixa'
+                                    ? 'text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)] scale-110'
+                                    : 'text-gray-300 hover:text-gray-400'
+                                }`}
+                                title="Regime de Caixa"
                               >
-                                Regime de Caixa
+                                <Coins className="h-5 w-5" />
                               </button>
                               <button 
                                 onClick={() => setRegimeContabil('competencia')}
-                                className={`px-4 py-1.5 text-xs font-semibold focus:outline-none border-l transition-colors ${regimeContabil === 'competencia' ? 'bg-[#1D3557] text-white' : 'bg-transparent text-gray-500 hover:bg-gray-50'}`}
+                                className={`p-2 rounded-lg transition-all duration-300 focus:outline-none ${
+                                  regimeContabil === 'competencia'
+                                    ? 'text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] scale-110'
+                                    : 'text-gray-300 hover:text-gray-400'
+                                }`}
+                                title="Competência"
                               >
-                                Competência
+                                <Scale className="h-5 w-5" />
                               </button>
                             </div>
 
@@ -2435,7 +2494,7 @@ export function Transactions() {
                             <div className="flex items-center gap-1.5">
                               <CardTitle className="text-sm font-semibold">
                                 {showAccountFlow
-                                  ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
+                                  ? (regimeContabil === 'caixa' ? 'Regime de Caixa' : 'Competência')
                                   : 'Contas'}
                               </CardTitle>
                               <IButtonPrime
@@ -2447,32 +2506,38 @@ export function Transactions() {
                               />
                             </div>
                             {showAccountFlow && (
-                              <div className="flex items-center bg-gray-100 rounded-full p-0.5 gap-0.5">
+                              <div className="flex items-center gap-0.5">
                                 <button
-                                  onClick={() => setAccountFlowMode('caixa')}
-                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
-                                    accountFlowMode === 'caixa' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  onClick={() => setRegimeContabil('caixa')}
+                                  className={`p-1 transition-all duration-300 focus:outline-none ${
+                                    regimeContabil === 'caixa'
+                                      ? 'text-emerald-500 drop-shadow-[0_0_6px_rgba(16,185,129,0.5)] scale-110'
+                                      : 'text-gray-300 hover:text-gray-400'
                                   }`}
-                                >Caixa</button>
+                                  title="Caixa"
+                                ><Coins className="h-3.5 w-3.5" /></button>
                                 <button
-                                  onClick={() => setAccountFlowMode('competencia')}
-                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
-                                    accountFlowMode === 'competencia' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  onClick={() => setRegimeContabil('competencia')}
+                                  className={`p-1 transition-all duration-300 focus:outline-none ${
+                                    regimeContabil === 'competencia'
+                                      ? 'text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.5)] scale-110'
+                                      : 'text-gray-300 hover:text-gray-400'
                                   }`}
-                                >Competência</button>
+                                  title="Competência"
+                                ><Scale className="h-3.5 w-3.5" /></button>
                               </div>
                             )}
                           </div>
                           <CardDescription className="text-xs text-gray-500">
                             {showAccountFlow
-                              ? accountFlowMode === 'caixa'
+                              ? regimeContabil === 'caixa'
                                 ? 'Apenas despesas pagas no período'
                                 : 'Competência — inclui pendentes'
                               : 'Total a pagar'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="curtain-enter space-y-3" key={showAccountFlow ? `flow-p-${accountFlowMode}` : 'balance-p'}>
+                          <div className="curtain-enter space-y-3" key={showAccountFlow ? `flow-p-${regimeContabil}` : 'balance-p'}>
                           {showAccountFlow ? (
                             accountFlowExpenseStats.length > 0 ? accountFlowExpenseStats.map((account) => (
                               <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
@@ -2510,7 +2575,7 @@ export function Transactions() {
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">{showAccountFlow
-                                ? (accountFlowMode === 'caixa' ? 'Total Caixa' : 'Total Competência')
+                                ? (regimeContabil === 'caixa' ? 'Total Caixa' : 'Total Competência')
                                 : 'Total Geral'}</span>
                               {(() => {
                                 if (showAccountFlow) {
@@ -2550,17 +2615,21 @@ export function Transactions() {
                                 className="flex items-center gap-3"
                               >
                                 <div>
-                                  <CardTitle className="text-lg font-semibold flex items-center">
-                                    <span className="mr-4">{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
+                                  <CardTitle className="text-lg font-semibold flex items-center gap-3">
+                                    <span>{showPaidPayables ? 'Contas Pagas' : 'Contas À Pagar'}</span>
                                     <button 
                                       onClick={() => {
                                         setShowPaidPayables(!showPaidPayables);
                                         setShowPaidReceivables(!showPaidPayables);
                                       }}
-                                      className="flex items-center justify-center bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 rounded px-2.5 py-1.5 transition-all shadow-sm group"
-                                      title={showPaidPayables ? "Alternar para pendentes" : "Alternar para pagas"}
+                                      className="focus:outline-none transition-all duration-500"
+                                      title={showPaidPayables ? 'Alternar para pendentes' : 'Alternar para pagas'}
                                     >
-                                      <Scale className={`h-4 w-4 transition-transform duration-500 ease-in-out ${showPaidPayables ? 'text-green-600 rotate-180' : 'text-slate-600 group-hover:text-slate-800'}`} />
+                                      {showPaidPayables ? (
+                                        <BadgeCheck className="h-5 w-5 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)] transition-all duration-500" />
+                                      ) : (
+                                        <CircleDollarSign className="h-5 w-5 text-red-400 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)] animate-pulse transition-all duration-500" />
+                                      )}
                                     </button>
                                   </CardTitle>
                                   <CardDescription>
@@ -2885,7 +2954,7 @@ export function Transactions() {
                             <div className="flex items-center gap-1.5">
                               <CardTitle className="text-sm font-semibold">
                                 {showAccountFlow
-                                  ? (accountFlowMode === 'caixa' ? 'Regime de Caixa' : 'Competência')
+                                  ? (regimeContabil === 'caixa' ? 'Regime de Caixa' : 'Competência')
                                   : 'Contas'}
                               </CardTitle>
                               <IButtonPrime
@@ -2897,32 +2966,38 @@ export function Transactions() {
                               />
                             </div>
                             {showAccountFlow && (
-                              <div className="flex items-center bg-gray-100 rounded-full p-0.5 gap-0.5">
+                              <div className="flex items-center gap-0.5">
                                 <button
-                                  onClick={() => setAccountFlowMode('caixa')}
-                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
-                                    accountFlowMode === 'caixa' ? 'bg-white text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  onClick={() => setRegimeContabil('caixa')}
+                                  className={`p-1 transition-all duration-300 focus:outline-none ${
+                                    regimeContabil === 'caixa'
+                                      ? 'text-emerald-500 drop-shadow-[0_0_6px_rgba(16,185,129,0.5)] scale-110'
+                                      : 'text-gray-300 hover:text-gray-400'
                                   }`}
-                                >Caixa</button>
+                                  title="Caixa"
+                                ><Coins className="h-3.5 w-3.5" /></button>
                                 <button
-                                  onClick={() => setAccountFlowMode('competencia')}
-                                  className={`text-[9px] font-semibold px-2 py-0.5 rounded-full transition-colors ${
-                                    accountFlowMode === 'competencia' ? 'bg-white text-amber-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                                  onClick={() => setRegimeContabil('competencia')}
+                                  className={`p-1 transition-all duration-300 focus:outline-none ${
+                                    regimeContabil === 'competencia'
+                                      ? 'text-amber-500 drop-shadow-[0_0_6px_rgba(245,158,11,0.5)] scale-110'
+                                      : 'text-gray-300 hover:text-gray-400'
                                   }`}
-                                >Competência</button>
+                                  title="Competência"
+                                ><Scale className="h-3.5 w-3.5" /></button>
                               </div>
                             )}
                           </div>
                           <CardDescription className="text-xs text-gray-500">
                             {showAccountFlow
-                              ? accountFlowMode === 'caixa'
+                              ? regimeContabil === 'caixa'
                                 ? 'Apenas receitas recebidas no período'
                                 : 'Competência — inclui pendentes'
                               : 'Total a receber'}
                           </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                          <div className="curtain-enter space-y-3" key={showAccountFlow ? `flow-r-${accountFlowMode}` : 'balance-r'}>
+                          <div className="curtain-enter space-y-3" key={showAccountFlow ? `flow-r-${regimeContabil}` : 'balance-r'}>
                           {showAccountFlow ? (
                             accountFlowIncomeStats.length > 0 ? accountFlowIncomeStats.map((account) => (
                               <div key={account.id} className="flex items-center justify-between group animate-in fade-in duration-300">
@@ -2960,7 +3035,7 @@ export function Transactions() {
                           <div className="border-t pt-3">
                             <div className="flex items-center justify-between">
                               <span className="text-xs text-gray-700 font-medium">{showAccountFlow
-                                ? (accountFlowMode === 'caixa' ? 'Total Caixa' : 'Total Competência')
+                                ? (regimeContabil === 'caixa' ? 'Total Caixa' : 'Total Competência')
                                 : 'Total Geral'}</span>
                               {(() => {
                                 if (showAccountFlow) {
@@ -3000,17 +3075,21 @@ export function Transactions() {
                                 className="flex items-center gap-3"
                               >
                                 <div>
-                                  <CardTitle className="text-lg font-semibold flex items-center">
-                                    <span className="mr-4">{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
+                                  <CardTitle className="text-lg font-semibold flex items-center gap-3">
+                                    <span>{showPaidReceivables ? 'Valores Recebidos' : 'Valores À Receber'}</span>
                                     <button 
                                       onClick={() => {
                                         setShowPaidReceivables(!showPaidReceivables);
                                         setShowPaidPayables(!showPaidReceivables);
                                       }}
-                                      className="flex items-center justify-center bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300 rounded px-2.5 py-1.5 transition-all shadow-sm group"
-                                      title={showPaidReceivables ? "Alternar para pendentes" : "Alternar para recebidos"}
+                                      className="focus:outline-none transition-all duration-500"
+                                      title={showPaidReceivables ? 'Alternar para pendentes' : 'Alternar para recebidos'}
                                     >
-                                      <Scale className={`h-4 w-4 transition-transform duration-500 ease-in-out ${showPaidReceivables ? 'text-blue-600 rotate-180' : 'text-slate-600 group-hover:text-slate-800'}`} />
+                                      {showPaidReceivables ? (
+                                        <Wallet className="h-5 w-5 text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)] transition-all duration-500" />
+                                      ) : (
+                                        <Clock className="h-5 w-5 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse transition-all duration-500" />
+                                      )}
                                     </button>
                                   </CardTitle>
                                   <CardDescription>
@@ -3398,6 +3477,16 @@ export function Transactions() {
                   }}
                   title="Editar Conta"
                 />
+                <button
+                  onClick={() => {
+                    setBankStatementAccount(account);
+                    setBankStatementOpen(true);
+                  }}
+                  className="p-2 transition-all duration-300 focus:outline-none text-[#B59363] hover:text-[#96783F] drop-shadow-[0_0_6px_rgba(181,147,99,0.4)] hover:drop-shadow-[0_0_10px_rgba(181,147,99,0.6)] hover:scale-110"
+                  title="Extrato da Conta"
+                >
+                  <Receipt className="h-4 w-4" />
+                </button>
                 <IButtonPrime
                   icon={<Trash2 className="h-3.5 w-3.5" />}
                   variant="red"
@@ -3912,6 +4001,19 @@ export function Transactions() {
         onAddPaymentMethod={(name: string) => createPaymentMethodMutation.mutate(name)}
       />
 
+      {/* Modal de Extrato Bancário */}
+      <BankStatementModal
+        open={bankStatementOpen}
+        onClose={() => {
+          setBankStatementOpen(false);
+          setBankStatementAccount(null);
+        }}
+        account={bankStatementAccount}
+        transactions={transactions}
+        formatCurrency={formatCurrency}
+        formatCurrencyNumber={formatCurrencyNumber}
+      />
+
       {/* Modal de Detalhes do Demonstrativo Diário */}
       {dailyDetailsModalOpen && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -3945,9 +4047,9 @@ export function Transactions() {
                 </div>
 
                 <div className="divide-y max-h-[50vh] overflow-y-auto">
-                  {safeTransactions
+                  {demonstrativoTransactions
                     .filter((t: any) => {
-                      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+                      const effectiveDate = getEffectiveDate(t);
                       const dateStr = format(effectiveDate, 'dd/MM/yyyy');
                       return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
                     })
@@ -3967,8 +4069,8 @@ export function Transactions() {
                         </div>
                       </div>
                     ))}
-                    {safeTransactions.filter((t: any) => {
-                      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+                    {demonstrativoTransactions.filter((t: any) => {
+                      const effectiveDate = getEffectiveDate(t);
                       const dateStr = format(effectiveDate, 'dd/MM/yyyy');
                       return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
                     }).length === 0 && (
@@ -3980,8 +4082,8 @@ export function Transactions() {
                 
                 {/* Totalizador no rodapé da tabela */}
                 {(() => {
-                  const filtered = safeTransactions.filter((t: any) => {
-                      const effectiveDate = t.liquidationDate ? toLocalDate(t.liquidationDate) : toLocalDate(t.date);
+                  const filtered = demonstrativoTransactions.filter((t: any) => {
+                      const effectiveDate = getEffectiveDate(t);
                       const dateStr = format(effectiveDate, 'dd/MM/yyyy');
                       return dateStr === dailyDetailsDate && t.type === dailyDetailsType;
                   });
@@ -4081,12 +4183,14 @@ function ChartOfAccountsContent({
 
   // Mutation para Gerar Plano de Contas com IA (Migrada do parent)
   const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isLevelsDialogOpen, setIsLevelsDialogOpen] = useState(false);
   
   const generateChartOfAccountsMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (levels: number | 'auto') =>
       fetch('/api/ai/generate-chart-of-accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ levels }),
       }).then(res => {
         if (!res.ok) {
           return res.json().then(err => Promise.reject(err));
@@ -4114,10 +4218,14 @@ function ChartOfAccountsContent({
     (showConfirm as any)(
       'Gerar Plano de Contas com Inteligência Artificial?',
       'A IA vai ler seu histórico financeiro, criar um Plano DRE para sua empresa e recategorizar todas movimentações automaticamente. O plano atual será reescrito. Deseja iniciar a mágica?',
-      () => generateChartOfAccountsMutation.mutate(),
+      () => setIsLevelsDialogOpen(true),
       'Continuar com I.A',
       'Cancelar'
     );
+  };
+
+  const handleLevelsConfirm = (levels: number | 'auto') => {
+    generateChartOfAccountsMutation.mutate(levels);
   };
 
   // --- FUNÇÕES AUXILIARES UNIFICADAS DO PLANO DE CONTAS ---
@@ -4617,6 +4725,11 @@ function ChartOfAccountsContent({
   return (
     <>
       <AiLoadingDialog open={isAiLoading} />
+      <AiChartLevelsDialog
+        open={isLevelsDialogOpen}
+        onClose={() => setIsLevelsDialogOpen(false)}
+        onConfirm={handleLevelsConfirm}
+      />
       <Card className="border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-300 bg-white rounded-xl">
       <CardContent className="p-6 space-y-6">
         {/* Lista de contas em tabela - Migrado para TabelaItens Oficial */}
