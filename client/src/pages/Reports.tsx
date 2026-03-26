@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar, TrendingUp, PieChart } from "lucide-react";
+import { Download, Calendar, TrendingUp, PieChart, Landmark } from "lucide-react";
+import { getBankBranding, BankLogoWithFallback } from "@/lib/bankBranding";
 
 export function Reports() {
   const [period, setPeriod] = useState<"month" | "year">("month");
@@ -10,6 +11,17 @@ export function Reports() {
   const { data: reportData, isLoading } = useQuery({
     queryKey: ["/api/reports", period],
   });
+
+  const { data: bankAccounts } = useQuery<any[]>({
+    queryKey: ["/api/bank-accounts"],
+  });
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(value);
+  };
 
   return (
     <div className="space-y-6">
@@ -166,6 +178,64 @@ export function Reports() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Contas Bancárias */}
+      {bankAccounts && bankAccounts.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Landmark className="h-5 w-5" />
+              Contas Bancárias
+            </CardTitle>
+            <CardDescription>
+              Visão geral das suas contas com identificação por instituição
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {bankAccounts.map((account: any) => {
+                const brand = getBankBranding(account.bank);
+                const balance = account.balance ?? parseFloat(account.currentBalance || '0');
+                return (
+                  <div
+                    key={account.id}
+                    className="rounded-xl overflow-hidden shadow-md border border-gray-100"
+                  >
+                    {/* Header com cor do banco */}
+                    <div
+                      className="px-4 py-3 flex items-center gap-3"
+                      style={{ background: `linear-gradient(135deg, ${brand.gradientFrom}, ${brand.gradientTo})` }}
+                    >
+                      <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                        <BankLogoWithFallback bankCode={account.bank} customLogoUrl={account.customLogoUrl} size={28} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-bold text-sm truncate">{account.name}</div>
+                        <div className="text-white/70 text-[10px] uppercase tracking-wider">
+                          {account.accountType === 'conta_corrente' ? 'Conta Corrente' :
+                            account.accountType === 'conta_poupanca' ? 'Conta Poupança' :
+                              account.accountType === 'conta_investimento' ? 'Investimento' : 'Conta'}
+                          {account.agency && ` • AG ${account.agency}`}
+                          {account.accountNumber && ` • CC ${account.accountNumber}`}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Conteúdo */}
+                    <div className="px-4 py-3 bg-white">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-500">Saldo Atual</span>
+                        <span className={`text-sm font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {formatCurrency(balance)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

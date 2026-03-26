@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, LogOut } from 'lucide-react';
+import { X, Save, LogOut, ImageUp, Trash2 } from 'lucide-react';
 import TextField from '@mui/material/TextField';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -10,7 +10,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { DateInput } from './DateInput';
 import { IButtonPrime } from './ui/i-ButtonPrime';
 
-export type FieldType = 'text' | 'currency' | 'select' | 'autocomplete' | 'date' | 'radio';
+export type FieldType = 'text' | 'currency' | 'select' | 'autocomplete' | 'date' | 'radio' | 'image';
 
 export interface DynamicField {
     name: string;
@@ -29,6 +29,7 @@ export interface DynamicField {
         onClick: () => void;
         title: string;
     };
+    maxFileSize?: number; // Tamanho máximo em bytes para campo 'image' (padrão: 512KB)
     endIcon?: React.ReactNode; // Ícone dentro do campo (MUI Adornment)
     transform?: (val: string, currentData: any) => string; // Transformação simples ao digitar
     onChangeOverride?: (val: any, currentData: any, setFormData: React.Dispatch<React.SetStateAction<any>>) => void; // Para efeitos colaterais complexos
@@ -284,6 +285,95 @@ export function DynamicModal({
                         </div>
                     </div>
                 );
+            case 'image': {
+                const currentValue = formData[field.name] || '';
+                const LOGO_SIZE = 128; // Tamanho padrão do logo no sistema
+                const processImage = (file: File): Promise<string> => {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            canvas.width = LOGO_SIZE;
+                            canvas.height = LOGO_SIZE;
+                            const ctx = canvas.getContext('2d')!;
+
+                            // Fundo transparente
+                            ctx.clearRect(0, 0, LOGO_SIZE, LOGO_SIZE);
+
+                            // Calcular escala mantendo proporção (fit dentro do quadrado)
+                            const scale = Math.min(LOGO_SIZE / img.width, LOGO_SIZE / img.height);
+                            const w = img.width * scale;
+                            const h = img.height * scale;
+                            const x = (LOGO_SIZE - w) / 2;
+                            const y = (LOGO_SIZE - h) / 2;
+
+                            // Suavização de alta qualidade
+                            ctx.imageSmoothingEnabled = true;
+                            ctx.imageSmoothingQuality = 'high';
+                            ctx.drawImage(img, x, y, w, h);
+
+                            // PNG para manter transparência, ou WebP para menor tamanho
+                            const hasTrans = file.type === 'image/png' || file.type === 'image/svg+xml' || file.type === 'image/webp';
+                            const dataUrl = hasTrans
+                                ? canvas.toDataURL('image/png')
+                                : canvas.toDataURL('image/webp', 0.9);
+                            resolve(dataUrl);
+                        };
+                        img.onerror = () => reject(new Error('Erro ao carregar imagem'));
+                        img.src = URL.createObjectURL(file);
+                    });
+                };
+                const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (!file.type.startsWith('image/')) return;
+                    try {
+                        const dataUrl = await processImage(file);
+                        handleChange(field.name, dataUrl, field);
+                    } catch {
+                        alert('Erro ao processar a imagem. Tente outro arquivo.');
+                    }
+                    e.target.value = '';
+                };
+                return (
+                    <div className="space-y-2">
+                        <label className="text-xs text-gray-500">{label}</label>
+                        {currentValue ? (
+                            <div className="flex items-center gap-3">
+                                <img
+                                    src={currentValue}
+                                    alt="Logo"
+                                    className="w-12 h-12 rounded-lg object-contain border border-gray-200 bg-white p-1"
+                                />
+                                <button
+                                    type="button"
+                                    disabled={isFieldDisabled}
+                                    onClick={() => handleChange(field.name, '', field)}
+                                    className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 transition-colors disabled:opacity-50"
+                                >
+                                    <Trash2 size={14} />
+                                    Remover
+                                </button>
+                            </div>
+                        ) : (
+                            <label
+                                className={`flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-[#B59363] hover:bg-[#B59363]/5 transition-colors text-sm text-gray-500 ${isFieldDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                <ImageUp size={18} className="text-[#B59363]" />
+                                <span>{field.placeholder || 'Selecionar imagem...'}</span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    disabled={isFieldDisabled}
+                                    onChange={handleImageSelect}
+                                />
+                            </label>
+                        )}
+                        {helperText && <div className="text-[10px] mt-1 text-gray-400">{helperText}</div>}
+                    </div>
+                );
+            }
             default:
                 return null;
         }

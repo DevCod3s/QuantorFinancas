@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
 import { X, TrendingUp, TrendingDown, ArrowUpDown, Calendar, Search, Receipt, ArrowLeftRight } from "lucide-react";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
-import { format, isWithinInterval, startOfDay, endOfDay, parseISO } from "date-fns";
+import { getBankBranding, BankLogoWithFallback } from "@/lib/bankBranding";
+import { format, isWithinInterval, startOfDay, endOfDay, startOfMonth, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -28,6 +29,29 @@ export function BankStatementModal({
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<string>('');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Período efetivo: usa filtros do usuário ou mês atual como padrão
+  const effectiveDateFrom = useMemo(() => {
+    if (dateFrom) return dateFrom;
+    const firstOfMonth = startOfMonth(new Date());
+    return format(firstOfMonth, 'yyyy-MM-dd');
+  }, [dateFrom]);
+
+  const effectiveDateTo = useMemo(() => {
+    if (dateTo) return dateTo;
+    return format(new Date(), 'yyyy-MM-dd');
+  }, [dateTo]);
 
   // Filtra transações da conta selecionada
   const accountTransactions = useMemo(() => {
@@ -62,60 +86,76 @@ export function BankStatementModal({
       );
     }
 
-    // Filtro por período
-    if (dateFrom) {
-      const from = startOfDay(new Date(dateFrom + 'T00:00:00'));
-      filtered = filtered.filter((t: any) => {
-        const tDate = new Date(t.date);
-        return tDate >= from;
-      });
-    }
-    if (dateTo) {
-      const to = endOfDay(new Date(dateTo + 'T00:00:00'));
-      filtered = filtered.filter((t: any) => {
-        const tDate = new Date(t.date);
-        return tDate <= to;
-      });
-    }
+    // Filtro por período efetivo (sempre aplica — mês atual ou manual)
+    const from = startOfDay(new Date(effectiveDateFrom + 'T00:00:00'));
+    filtered = filtered.filter((t: any) => new Date(t.date) >= from);
+
+    const to = endOfDay(new Date(effectiveDateTo + 'T00:00:00'));
+    filtered = filtered.filter((t: any) => new Date(t.date) <= to);
 
     // Ordena por data (mais recente primeiro)
     filtered.sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     return filtered;
-  }, [transactions, account?.id, filterType, dateFrom, dateTo, searchTerm]);
+  }, [transactions, account?.id, filterType, effectiveDateFrom, effectiveDateTo, searchTerm]);
 
-  // Calcula saldo progressivo (de baixo para cima)
+  // ── Saldo real da conta (calculado pelo servidor — fonte da verdade) ──
+  const serverBalance = parseFloat(account?.balance ?? account?.realBalance ?? '0');
+
+  // Todas as transações pagas desta conta, ordenadas cronologicamente
+  const allAccountTxSorted = useMemo(() => {
+    if (!account) return [];
+    return transactions
+      .filter((t: any) => t.bankAccountId === account.id && t.status === 'pago')
+      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [transactions, account]);
+
+  // Calcula saldo progressivo DE TRÁS PRA FRENTE a partir do saldo do servidor
   const transactionsWithBalance = useMemo(() => {
     if (!account) return [];
-    const initialBalance = parseFloat(account.currentBalance || '0');
-    const balanceSign = account.balanceType === 'devedor' ? -1 : 1;
-    const startBalance = initialBalance * balanceSign;
 
-    // Calcula saldo progressivo — apenas efetivadas (pagas, até hoje)
-    const today = new Date();
-    today.setHours(23, 59, 59, 999);
-    const allAccountTx = transactions
-      .filter((t: any) => t.bankAccountId === account.id && t.status === 'pago' && new Date(t.date) <= today)
-      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    let runningBalance = startBalance;
     const balanceMap = new Map<number, number>();
-    
-    for (const t of allAccountTx) {
+    let bal = serverBalance;
+
+    // Percorre do mais recente para o mais antigo, desfazendo cada transação
+    for (let i = allAccountTxSorted.length - 1; i >= 0; i--) {
+      const t = allAccountTxSorted[i];
+      balanceMap.set(t.id, bal); // saldo APÓS esta transação
       const amount = parseFloat(t.amount || '0');
       if (t.type === 'income' || t.type === 'transfer-in') {
-        runningBalance += amount;
+        bal -= amount; // desfaz entrada
       } else {
-        runningBalance -= amount;
+        bal += amount; // desfaz saída
       }
-      balanceMap.set(t.id, runningBalance);
     }
 
-    return accountTransactions.map((t: any) => ({
+    const withBalance = accountTransactions.map((t: any) => ({
       ...t,
       runningBalance: balanceMap.get(t.id) ?? 0,
     }));
-  }, [accountTransactions, transactions, account]);
+
+    // Ordenação
+    if (sortField) {
+      withBalance.sort((a: any, b: any) => {
+        let aVal: any, bVal: any;
+        switch (sortField) {
+          case 'date': aVal = a.date || ''; bVal = b.date || ''; break;
+          case 'description': aVal = (a.description || '').toLowerCase(); bVal = (b.description || '').toLowerCase(); break;
+          case 'category': aVal = (a.chartAccount?.name || a.category?.name || '').toLowerCase(); bVal = (b.chartAccount?.name || b.category?.name || '').toLowerCase(); break;
+          case 'relationship': aVal = (a.relationship?.socialName || '').toLowerCase(); bVal = (b.relationship?.socialName || '').toLowerCase(); break;
+          case 'type': aVal = a.type || ''; bVal = b.type || ''; break;
+          case 'amount': aVal = parseFloat(a.amount || '0'); bVal = parseFloat(b.amount || '0'); break;
+          case 'balance': aVal = a.runningBalance; bVal = b.runningBalance; break;
+          default: return 0;
+        }
+        if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return withBalance;
+  }, [accountTransactions, allAccountTxSorted, account, serverBalance, sortField, sortDirection]);
 
   // Totais
   const totalEntradas = accountTransactions
@@ -128,34 +168,43 @@ export function BankStatementModal({
     .filter((t: any) => t.type === 'transfer-in' || t.type === 'transfer-out')
     .length;
 
-  // Saldo inicial do período e saldo atual da conta
+  // Saldo inicial e final do período (baseado no saldo do servidor)
   const { saldoInicioPeriodo, saldoAtual } = useMemo(() => {
     if (!account) return { saldoInicioPeriodo: 0, saldoAtual: 0 };
-    const initialBalance = parseFloat(account.currentBalance || '0');
-    const balanceSign = account.balanceType === 'devedor' ? -1 : 1;
-    const startBalance = initialBalance * balanceSign;
 
     const today = new Date();
     today.setHours(23, 59, 59, 999);
-    const allAccountTx = transactions
-      .filter((t: any) => t.bankAccountId === account.id && t.status === 'pago' && new Date(t.date) <= today)
-      .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const periodStart = startOfDay(new Date(effectiveDateFrom + 'T00:00:00'));
+    const periodEnd = endOfDay(new Date(effectiveDateTo + 'T00:00:00'));
 
-    // Saldo atual = saldo inicial + todas as movimentações efetivadas
-    let currentBalance = startBalance;
-    for (const t of allAccountTx) {
-      const amount = parseFloat(t.amount || '0');
-      if (t.type === 'income' || t.type === 'transfer-in') {
-        currentBalance += amount;
-      } else {
-        currentBalance -= amount;
+    // Se o período termina hoje ou depois, o saldo final = saldo do servidor (fonte da verdade)
+    // Porque o servidor já calculou currentBalance + TODAS as tx pagas (incluindo futuras)
+    let balanceEndOfPeriod: number;
+
+    if (periodEnd >= today) {
+      // Período inclui hoje: saldo final = saldo real do servidor
+      balanceEndOfPeriod = serverBalance;
+    } else {
+      // Período histórico: subtrair transações DEPOIS do final do período
+      let deltaAfterPeriod = 0;
+      for (const t of allAccountTxSorted) {
+        if (new Date(t.date) > periodEnd) {
+          const amount = parseFloat(t.amount || '0');
+          if (t.type === 'income' || t.type === 'transfer-in') {
+            deltaAfterPeriod += amount;
+          } else {
+            deltaAfterPeriod -= amount;
+          }
+        }
       }
+      balanceEndOfPeriod = serverBalance - deltaAfterPeriod;
     }
 
-    // Saldo início do período = saldo atual - movimentações do período filtrado
-    // (somamos de volta tudo que está no período visível)
+    // Movimentação DENTRO do período (apenas tx visíveis, sem filtro de tipo/busca)
     let periodMovement = 0;
-    for (const t of accountTransactions) {
+    for (const t of allAccountTxSorted) {
+      const tDate = new Date(t.date);
+      if (tDate < periodStart || tDate > periodEnd) continue;
       const amount = parseFloat(t.amount || '0');
       if (t.type === 'income' || t.type === 'transfer-in') {
         periodMovement += amount;
@@ -164,28 +213,11 @@ export function BankStatementModal({
       }
     }
 
-    // Se tem filtro de data, calcula saldo antes do período
-    // Saldo antes = saldo atual - soma de tudo que veio DEPOIS do início do filtro
-    let balanceBeforePeriod = startBalance;
-    if (dateFrom) {
-      const from = new Date(dateFrom + 'T00:00:00');
-      const txBeforePeriod = allAccountTx.filter((t: any) => new Date(t.date) < from);
-      let bal = startBalance;
-      for (const t of txBeforePeriod) {
-        const amount = parseFloat(t.amount || '0');
-        if (t.type === 'income' || t.type === 'transfer-in') {
-          bal += amount;
-        } else {
-          bal -= amount;
-        }
-      }
-      balanceBeforePeriod = bal;
-    } else {
-      balanceBeforePeriod = startBalance;
-    }
+    // Saldo início do período = saldo final - movimentação do período
+    const balanceBeforePeriod = balanceEndOfPeriod - periodMovement;
 
-    return { saldoInicioPeriodo: balanceBeforePeriod, saldoAtual: currentBalance };
-  }, [transactions, account, accountTransactions, dateFrom]);
+    return { saldoInicioPeriodo: balanceBeforePeriod, saldoAtual: balanceEndOfPeriod };
+  }, [allAccountTxSorted, serverBalance, effectiveDateFrom, effectiveDateTo]);
 
   const filterButtons: { value: FilterType; label: string; icon: any; activeColor: string }[] = [
     { value: 'todos', label: 'Todos', icon: ArrowUpDown, activeColor: 'text-[#1D3557] bg-[#1D3557]/10' },
@@ -195,6 +227,8 @@ export function BankStatementModal({
   ];
 
   if (!open || !account) return null;
+
+  const bankBrand = getBankBranding(account.bank);
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -207,10 +241,10 @@ export function BankStatementModal({
         className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden relative z-10"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-[#1D3557] to-[#2B4A7A]">
+        <div className="flex items-center justify-between p-6 border-b" style={{ background: `linear-gradient(to right, ${bankBrand.gradientFrom}, ${bankBrand.gradientTo})` }}>
           <div className="flex items-center gap-4">
-            <div className="p-2.5 bg-white/15 rounded-lg backdrop-blur-sm">
-              <Receipt className="h-6 w-6 text-white" />
+            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm">
+              <BankLogoWithFallback bankCode={account.bank} customLogoUrl={account.customLogoUrl} size={32} className="rounded" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight">
@@ -277,16 +311,16 @@ export function BankStatementModal({
               <span className="text-xs font-medium text-gray-500">Período:</span>
               <input
                 type="date"
-                value={dateFrom}
+                value={dateFrom || effectiveDateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
-                className="text-xs border-0 bg-transparent focus:outline-none text-gray-700 w-[120px]"
+                className={`text-xs border-0 bg-transparent focus:outline-none w-[120px] ${dateFrom ? 'text-gray-700' : 'text-gray-400'}`}
               />
               <span className="text-xs text-gray-400">até</span>
               <input
                 type="date"
-                value={dateTo}
+                value={dateTo || effectiveDateTo}
                 onChange={(e) => setDateTo(e.target.value)}
-                className="text-xs border-0 bg-transparent focus:outline-none text-gray-700 w-[120px]"
+                className={`text-xs border-0 bg-transparent focus:outline-none w-[120px] ${dateTo ? 'text-gray-700' : 'text-gray-400'}`}
               />
             </div>
 
@@ -325,13 +359,34 @@ export function BankStatementModal({
           <div className="bg-white">
             {/* Header da tabela */}
             <div className="grid grid-cols-12 gap-3 px-6 py-3 border-b bg-gray-50/50 text-[11px] font-semibold text-gray-500 uppercase tracking-wider sticky top-0 z-10">
-              <div className="col-span-2">Data</div>
-              <div className="col-span-3">Descrição</div>
-              <div className="col-span-2">Categoria</div>
-              <div className="col-span-2">Cliente / Fornecedor</div>
-              <div className="col-span-1 text-center">Tipo</div>
-              <div className="col-span-1 text-right">Valor</div>
-              <div className="col-span-1 text-right">Saldo</div>
+              <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('date')}>
+                <span>Data</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'date' ? 'text-[#1D3557]' : ''}`} />
+              </div>
+              <div className="col-span-3 flex items-center gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('description')}>
+                <span>Descrição</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'description' ? 'text-[#1D3557]' : ''}`} />
+              </div>
+              <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('category')}>
+                <span>Categoria</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'category' ? 'text-[#1D3557]' : ''}`} />
+              </div>
+              <div className="col-span-2 flex items-center gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('relationship')}>
+                <span>Cliente / Fornecedor</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'relationship' ? 'text-[#1D3557]' : ''}`} />
+              </div>
+              <div className="col-span-1 flex items-center justify-center gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('type')}>
+                <span>Tipo</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'type' ? 'text-[#1D3557]' : ''}`} />
+              </div>
+              <div className="col-span-1 flex items-center justify-end gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('amount')}>
+                <span>Valor</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'amount' ? 'text-[#1D3557]' : ''}`} />
+              </div>
+              <div className="col-span-1 flex items-center justify-end gap-1 cursor-pointer hover:text-gray-700 transition-colors select-none" onClick={() => handleSort('balance')}>
+                <span>Saldo</span>
+                <ArrowUpDown className={`h-3 w-3 ${sortField === 'balance' ? 'text-[#1D3557]' : ''}`} />
+              </div>
             </div>
 
             {/* Linhas */}
@@ -427,7 +482,7 @@ export function BankStatementModal({
 
         {/* Rodapé com totais */}
         <div className="px-6 py-4 border-t bg-gray-50/80 space-y-2">
-          {/* Linha 1: Saldo inicial e saldo atual */}
+          {/* Linha 1: Saldo inicial e saldo final do período */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-gray-400"></div>

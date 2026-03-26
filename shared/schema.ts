@@ -417,6 +417,7 @@ export const bankAccounts = pgTable("bank_accounts", {
   creditLimit: decimal("credit_limit", { precision: 15, scale: 2 }), // Limite (R$)
   contactName: text("contact_name"), // Contato
   contactPhone: text("contact_phone"), // Telefone
+  customLogoUrl: text("custom_logo_url"), // Logo customizada da instituição
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });

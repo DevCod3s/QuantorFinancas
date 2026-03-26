@@ -49,6 +49,7 @@ import { MoneyBagIcon } from "@/components/icons/MoneyBagIcon";
 import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
+import { getBankBranding, BankLogoWithFallback } from "@/lib/bankBranding";
 
 // Importações de tipos
 import { Transaction } from "@shared/schema";
@@ -189,6 +190,7 @@ const BRAZILIAN_BANKS = [
   { code: '318', name: 'Banco BMG S.A.' },
   { code: '626', name: 'Banco Ficsa S.A.' },
   { code: '079', name: 'Banco Original do Agronegócio S.A.' },
+  { code: '197', name: 'Stone Pagamentos S.A.' },
   { code: '254', name: 'Paraná Banco S.A.' },
   { code: '477', name: 'Citibank N.A.' },
   { code: '999', name: 'Outro Banco' }
@@ -274,7 +276,8 @@ export function Transactions() {
     accountNumber: '',
     creditLimit: '',
     contactName: '',
-    contactPhone: ''
+    contactPhone: '',
+    customLogoUrl: ''
   });
 
   const { data: transactions = [], isLoading: isLoadingTransactions } = useQuery<any[]>({
@@ -383,7 +386,8 @@ export function Transactions() {
       accountNumber: '',
       creditLimit: '',
       contactName: '',
-      contactPhone: ''
+      contactPhone: '',
+      customLogoUrl: ''
     });
   };
 
@@ -3388,19 +3392,29 @@ export function Transactions() {
                 label: "Banco",
                 key: "bank",
                 width: "20%",
-                render: (account: any) => (
-                  <div className="font-medium text-gray-900">
-                    {banksList.find(b => b.code === account.bank)?.name ||
-                      (account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
-                        account.bank === 'caixa' ? 'Caixa Econômica Federal' :
-                          account.bank === 'santander' ? 'Santander' :
-                            account.bank === 'itau' ? 'Itaú' :
-                              account.bank === 'bradesco' ? 'Bradesco' :
-                                account.bank === 'nubank' ? 'Nubank' :
-                                  account.bank === 'inter' ? 'Banco Inter' :
-                                    account.bank || 'Banco não informado')}
-                  </div>
-                )
+                render: (account: any) => {
+                  const brand = getBankBranding(account.bank);
+                  const bankName = banksList.find(b => b.code === account.bank)?.name ||
+                    (account.bank === 'banco_do_brasil' ? 'Banco do Brasil' :
+                      account.bank === 'caixa' ? 'Caixa Econômica Federal' :
+                        account.bank === 'santander' ? 'Santander' :
+                          account.bank === 'itau' ? 'Itaú' :
+                            account.bank === 'bradesco' ? 'Bradesco' :
+                              account.bank === 'nubank' ? 'Nubank' :
+                                account.bank === 'inter' ? 'Banco Inter' :
+                                  account.bank || 'Banco não informado');
+                  return (
+                    <div className="flex items-center gap-2.5">
+                      <BankLogoWithFallback bankCode={account.bank} customLogoUrl={account.customLogoUrl} size={28} />
+                      <div>
+                        <div className="font-semibold text-xs" style={{ color: brand.primaryColor }}>
+                          {bankName}
+                        </div>
+                        <div className="text-[10px] text-gray-400">{account.bank}</div>
+                      </div>
+                    </div>
+                  );
+                }
               },
               {
                 label: "Nome da Conta Bancária",
@@ -3471,7 +3485,8 @@ export function Transactions() {
                       accountNumber: account.accountNumber || '',
                       creditLimit: formatForModal(account.creditLimit),
                       contactName: account.contactName || '',
-                      contactPhone: account.contactPhone || ''
+                      contactPhone: account.contactPhone || '',
+                      customLogoUrl: account.customLogoUrl || ''
                     });
                     setBankAccountModalOpen(true);
                   }}
@@ -3814,7 +3829,8 @@ export function Transactions() {
             ],
             // Sexta linha
             [
-              { name: 'contactPhone', label: 'Telefone do contato', type: 'text', colSpan: 12 }
+              { name: 'contactPhone', label: 'Telefone do contato', type: 'text', colSpan: 6 },
+              { name: 'customLogoUrl', label: 'Logo da Instituição (opcional)', type: 'image', colSpan: 6, placeholder: 'Selecionar logo...', helperText: 'Qualquer tamanho — será ajustada automaticamente' }
             ]
           ]}
       />
