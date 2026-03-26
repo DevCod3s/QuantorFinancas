@@ -55,6 +55,7 @@ import { getBankBranding, BankLogoWithFallback } from "@/lib/bankBranding";
 import { Transaction } from "@shared/schema";
 import { DashboardData } from "@/types";
 import { ChartOfAccountsTree, ChartOfAccountNode, SAMPLE_CHART_OF_ACCOUNTS } from "@/types/ChartOfAccountsTree";
+import { DREContent } from "@/components/DREContent";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -74,6 +75,7 @@ import { SuccessDialog, useSuccessDialog } from "@/components/ui/success-dialog"
 import { ErrorDialog, useErrorDialog } from "@/components/ui/error-dialog";
 import { AiLoadingDialog } from "@/components/ui/ai-loading-dialog";
 import { AiChartLevelsDialog } from "@/components/ui/ai-chart-levels-dialog";
+import { AiClassifyDialog } from "@/components/ui/ai-classify-dialog";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TransactionCard } from "@/components/TransactionCard";
 import { TransactionViewModal } from "@/components/TransactionViewModal";
@@ -3549,18 +3551,10 @@ export function Transactions() {
                 label: "Demonstrativo de Resultados",
                 icon: <Activity className="h-4 w-4" />,
                 content: (
-                  <div className="space-y-6">
-                    {/* Conteúdo da aba Demonstrativo de Resultados será desenvolvido posteriormente */}
-                    <Card>
-                      <CardContent className="flex flex-col items-center justify-center py-12">
-                        <Activity className="h-12 w-12 text-gray-400 mb-4" />
-                        <h3 className="text-lg font-medium text-gray-600 mb-2">Demonstrativo de Resultados</h3>
-                        <p className="text-sm text-gray-500 text-center">
-                          Conteúdo em desenvolvimento
-                        </p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <DREContent
+                    transactions={safeTransactions}
+                    formatCurrencyNumber={formatCurrencyNumber}
+                  />
                 )
               }
             ]}
@@ -4200,13 +4194,15 @@ function ChartOfAccountsContent({
   // Mutation para Gerar Plano de Contas com IA (Migrada do parent)
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isLevelsDialogOpen, setIsLevelsDialogOpen] = useState(false);
+  const [isClassifyDialogOpen, setIsClassifyDialogOpen] = useState(false);
+  const [classifyWithGeneration, setClassifyWithGeneration] = useState(false);
   
   const generateChartOfAccountsMutation = useMutation({
-    mutationFn: (levels: number | 'auto') =>
+    mutationFn: ({ levels, classifyTransactions }: { levels: number | 'auto'; classifyTransactions?: boolean }) =>
       fetch('/api/ai/generate-chart-of-accounts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ levels }),
+        body: JSON.stringify({ levels, classifyTransactions }),
       }).then(res => {
         if (!res.ok) {
           return res.json().then(err => Promise.reject(err));
@@ -4241,7 +4237,55 @@ function ChartOfAccountsContent({
   };
 
   const handleLevelsConfirm = (levels: number | 'auto') => {
-    generateChartOfAccountsMutation.mutate(levels);
+    generateChartOfAccountsMutation.mutate({ levels, classifyTransactions: classifyWithGeneration });
+    setClassifyWithGeneration(false);
+  };
+
+  // Mutation para classificação em lote
+  const batchClassifyMutation = useMutation({
+    mutationFn: () =>
+      fetch('/api/ai/batch-classify-transactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      }).then(res => {
+        if (!res.ok) return res.json().then(err => Promise.reject(err));
+        return res.json();
+      }),
+    onMutate: () => setIsAiLoading(true),
+    onSuccess: (data) => {
+      setIsAiLoading(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard'] });
+      showSuccess('Classificação Concluída! ✨', data.message || 'Transações classificadas com sucesso!');
+    },
+    onError: (error: any) => {
+      setIsAiLoading(false);
+      const errorMsg = error?.error || error?.message || 'Falha na classificação em lote.';
+      showError('Erro na Classificação', errorMsg);
+    }
+  });
+
+  // Handler para abrir dialog de classificação
+  const handleOpenClassifyDialog = () => {
+    setIsClassifyDialogOpen(true);
+  };
+
+  // Opção A: Classificar ao gerar plano
+  const handleClassifyWithGeneration = () => {
+    setClassifyWithGeneration(true);
+    handleGenerateAiChart();
+  };
+
+  // Opção B: Classificação em lote
+  const handleBatchClassify = () => {
+    (showConfirm as any)(
+      'Classificação em Lote',
+      'O Assistente vai analisar todas as transações sem classificação e vinculá-las ao Plano de Contas atual. Deseja continuar?',
+      () => batchClassifyMutation.mutate(),
+      'Classificar',
+      'Cancelar'
+    );
   };
 
   // --- FUNÇÕES AUXILIARES UNIFICADAS DO PLANO DE CONTAS ---
@@ -4746,6 +4790,13 @@ function ChartOfAccountsContent({
         onClose={() => setIsLevelsDialogOpen(false)}
         onConfirm={handleLevelsConfirm}
       />
+      <AiClassifyDialog
+        open={isClassifyDialogOpen}
+        onClose={() => setIsClassifyDialogOpen(false)}
+        onClassifyWithGeneration={handleClassifyWithGeneration}
+        onBatchClassify={handleBatchClassify}
+        hasChartAccounts={safeChartAccountsData.length > 0}
+      />
       <Card className="border border-gray-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-0.5 transition-all duration-300 bg-white rounded-xl">
       <CardContent className="p-6 space-y-6">
         {/* Lista de contas em tabela - Migrado para TabelaItens Oficial */}
@@ -4764,17 +4815,26 @@ function ChartOfAccountsContent({
                 <Plus className="h-4 w-4" />
               </button>
             </div>
-            <button
-              onClick={handleGenerateAiChart}
-              disabled={isAiLoading}
-              title="Assistente de Inteligência Artificial para Plano de Contas"
-              className={`flex items-center justify-center p-1 bg-transparent border-none outline-none transform transition-all duration-200 ${isAiLoading ? 'opacity-70 cursor-wait' : 'hover:scale-110 active:scale-95'}`}
-            >
-              <PsychologyAltIcon 
-                 sx={{ fontSize: 34 }} 
-                 className={`text-[#8B7355] drop-shadow-[2px_3px_2px_rgba(0,0,0,0.3)] hover:drop-shadow-[3px_5px_4px_rgba(0,0,0,0.4)] ${isAiLoading ? 'animate-pulse scale-110 brightness-150' : ''}`} 
+            <div className="flex items-center gap-2">
+              <IButtonPrime
+                icon={<FolderDown className="h-4 w-4" />}
+                variant="teal"
+                title="Classificar Transações"
+                onClick={handleOpenClassifyDialog}
+                disabled={isAiLoading}
               />
-            </button>
+              <button
+                onClick={handleGenerateAiChart}
+                disabled={isAiLoading}
+                title="Assistente de Inteligência Artificial para Plano de Contas"
+                className={`flex items-center justify-center p-1 bg-transparent border-none outline-none transform transition-all duration-200 ${isAiLoading ? 'opacity-70 cursor-wait' : 'hover:scale-110 active:scale-95'}`}
+              >
+                <PsychologyAltIcon 
+                   sx={{ fontSize: 34 }} 
+                   className={`text-[#8B7355] drop-shadow-[2px_3px_2px_rgba(0,0,0,0.3)] hover:drop-shadow-[3px_5px_4px_rgba(0,0,0,0.4)] ${isAiLoading ? 'animate-pulse scale-110 brightness-150' : ''}`} 
+                />
+              </button>
+            </div>
           </div>
           
           <div className="p-4 bg-white rounded-b-lg">

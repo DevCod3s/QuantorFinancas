@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { X, TrendingUp, TrendingDown, ArrowUpDown, Calendar, Search, Receipt, ArrowLeftRight } from "lucide-react";
+import { X, TrendingUp, TrendingDown, ArrowUpDown, Calendar, Search, Receipt, ArrowLeftRight, LogOut } from "lucide-react";
 import { IButtonPrime } from "@/components/ui/i-ButtonPrime";
 import { getBankBranding, BankLogoWithFallback } from "@/lib/bankBranding";
 import { format, isWithinInterval, startOfDay, endOfDay, startOfMonth, parseISO } from "date-fns";
@@ -258,12 +258,12 @@ export function BankStatementModal({
               </p>
             </div>
           </div>
-          <button
+          <IButtonPrime
+            icon={<LogOut className="h-4 w-4" />}
+            variant="red"
+            title="Sair"
             onClick={onClose}
-            className="text-white/60 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          />
         </div>
 
         {/* Barra de filtros */}
@@ -528,9 +528,9 @@ export function BankStatementModal({
               </div>
             </div>
             <IButtonPrime
-              icon={<X className="h-4 w-4" />}
+              icon={<LogOut className="h-4 w-4" />}
               variant="red"
-              title="Fechar"
+              title="Sair"
               onClick={onClose}
             />
           </div>

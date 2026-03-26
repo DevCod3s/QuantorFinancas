@@ -39,7 +39,7 @@ import { insertCategorySchema, insertTransactionSchema, insertBudgetSchema, inse
 import * as schema from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
-import { eq, and, or, ilike, desc } from "drizzle-orm";
+import { eq, and, or, ilike, desc, isNull } from "drizzle-orm";
 
 /**
  * Parseia uma string de data para Date local (Brasília)
@@ -1754,7 +1754,7 @@ router.get("/debug-server-logs", async (req, res) => {
 router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res) => {
   try {
     const userId = req.user.id;
-    const { levels } = req.body || {};
+    const { levels, classifyTransactions } = req.body || {};
 
     // Validar parâmetro de níveis (2-4 ou 'auto')
     const maxLevels = levels === 'auto' || !levels ? null : Math.min(Math.max(Number(levels) || 2, 2), 4);
@@ -1800,9 +1800,14 @@ router.post("/ai/generate-chart-of-accounts", requireAuth, async (req: any, res)
       ? `A estrutura DEVE ter EXATAMENTE ${maxLevels} níveis hierárquicos (de level 1 até level ${maxLevels}). Não crie contas com level maior que ${maxLevels}.`
       : `Analise a complexidade e diversidade das transações fornecidas e defina AUTOMATICAMENTE a melhor quantidade de níveis hierárquicos (entre 2 e 4). Use mais níveis se houver muita diversidade de categorias, menos se for uma empresa simples.`;
 
+    // Instrução de mapeamento de transações baseada na opção do usuário
+    const classifyInstruction = classifyTransactions
+      ? `5. INCLUA um array 'transactionMappings' no JSON. Para CADA transação fornecida, mapeie para a conta mais específica do plano usando o campo 'id' da transação e o 'tempId' da conta. Formato: { "transactionId": <id>, "chartAccountTempId": "<tempId>" }. Classifique TODAS as transações.`
+      : `5. Não inclua nenhum array 'transactionMappings'. Retorne SOMENTE o 'chartOfAccounts'.`;
+
     const response = await anthropic.messages.create({
       model: "claude-3-haiku-20240307",
-      max_tokens: 4096,
+      max_tokens: classifyTransactions ? 8192 : 4096,
       system: `Você é uma Especialista em Gestão Contábil DRE de alto nível.
 Seu trabalho é analisar os tipos e descrições das transações fornecidas e criar um Plano de Contas PERFEITO e EXAUSTIVO para a empresa, totalmente focado no DRE.
 Você DEVE retornar APENAS um JSON puro, sem marcarções markdown, sem texto antes ou depois. Formato exigido:
@@ -1812,7 +1817,10 @@ Você DEVE retornar APENAS um JSON puro, sem marcarções markdown, sem texto an
     { "tempId": "temp1_1", "code": "1.1", "name": "Vendas de Produtos", "type": "receita", "level": 2, "parentTempId": "temp1", "description": "" },
     { "tempId": "temp2", "code": "2", "name": "Despesas", "type": "despesa", "level": 1, "description": "" },
     { "tempId": "temp2_1", "code": "2.1", "name": "Custos Operacionais", "type": "despesa", "level": 2, "parentTempId": "temp2", "description": "" }
-  ]
+  ]${classifyTransactions ? `,
+  "transactionMappings": [
+    { "transactionId": 1, "chartAccountTempId": "temp1_1" }
+  ]` : ''}
 }
 
 Regras IMPORTANTES:
@@ -1820,7 +1828,7 @@ Regras IMPORTANTES:
 2. O campo 'type' SÓ pode ser: 'receita', 'despesa', 'ativo' ou 'passivo'.
 3. 'tempId' deve ser uma string única.
 4. 'parentTempId' referencia o 'tempId' de uma conta-pai existente (não use em level 1).
-5. Não inclua nenhum array 'transactionMappings'. Retorne SOMENTE o 'chartOfAccounts'.
+${classifyInstruction}
 6. Não invente dados. Retorne SOMENTE o JSON válido.
 7. Crie subcategorias específicas baseadas nas descrições reais das transações (não genéricas).`,
       messages: [
@@ -1988,6 +1996,124 @@ Qual o "id" da conta mais adequada?`
   } catch (error) {
     console.error("Erro na sugestão de categoria IA:", error);
     res.status(500).json({ error: "Falha na sugestão da IA" });
+  }
+});
+
+// ==========================================
+// Classificação em Lote de Transações via IA
+// ==========================================
+router.post("/ai/batch-classify-transactions", requireAuth, async (req: any, res) => {
+  try {
+    const userId = req.user.id;
+
+    // 1. Buscar Plano de Contas do usuário
+    const userChart = await db
+      .select()
+      .from(schema.chartOfAccounts)
+      .where(and(
+        eq(schema.chartOfAccounts.userId, userId),
+        eq(schema.chartOfAccounts.isActive, true)
+      ));
+
+    if (!userChart || userChart.length === 0) {
+      return res.status(400).json({ error: "Plano de Contas não encontrado. Gere um primeiro." });
+    }
+
+    // 2. Buscar transações sem classificação
+    const unclassifiedTxs = await db
+      .select({
+        id: schema.transactions.id,
+        description: schema.transactions.description,
+        type: schema.transactions.type,
+        amount: schema.transactions.amount,
+        date: schema.transactions.date,
+      })
+      .from(schema.transactions)
+      .where(and(
+        eq(schema.transactions.userId, userId),
+        isNull(schema.transactions.chartAccountId)
+      ))
+      .orderBy(desc(schema.transactions.date))
+      .limit(200);
+
+    if (!unclassifiedTxs || unclassifiedTxs.length === 0) {
+      return res.json({ success: true, classified: 0, message: "Todas as transações já estão classificadas!" });
+    }
+
+    // 3. Montar contextos
+    const chartData = userChart.map(c => ({ id: c.id, code: c.code, name: c.name, type: c.type, level: c.level }));
+    const txsContext = unclassifiedTxs.map(t => ({
+      id: t.id,
+      description: t.description || 'Sem descrição',
+      type: t.type,
+      amount: t.amount,
+      date: t.date ? new Date(t.date).toISOString().split('T')[0] : null
+    }));
+
+    // 4. Acionamento do Agente LLM
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(503).json({ error: "IA não configurada (.env)" });
+    }
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY.trim() });
+
+    const response = await anthropic.messages.create({
+      model: "claude-3-haiku-20240307",
+      max_tokens: 8192,
+      system: `Você é um assistente contábil especialista em classificação de transações financeiras.
+Sua tarefa é mapear CADA transação para a conta mais específica do Plano de Contas fornecido.
+SEMPRE prefira contas de nível mais específico (level 2, 3 ou 4) ao invés de categorias genéricas de nível 1.
+Transações do tipo 'income' devem ser mapeadas para contas do tipo 'receita'.
+Transações do tipo 'expense' devem ser mapeadas para contas do tipo 'despesa'.
+Retorne APENAS um JSON puro sem markdown: { "mappings": [ { "transactionId": <number>, "chartAccountId": <number> } ] }
+Classifique TODAS as transações fornecidas. Use o campo "id" do Plano de Contas (NÃO confunda com "code").`,
+      messages: [
+        {
+          role: "user",
+          content: `Plano de Contas (use o campo "id" para chartAccountId):\n${JSON.stringify(chartData)}\n\nTransações para classificar:\n${JSON.stringify(txsContext)}`
+        }
+      ]
+    });
+
+    const textBlock = response.content.find(block => block.type === 'text');
+    const aiResponse = textBlock && 'text' in textBlock ? textBlock.text : null;
+
+    if (!aiResponse) throw new Error("Sem resposta da IA");
+
+    const cleaned = aiResponse.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
+    const result = JSON.parse(cleaned);
+
+    // 5. Aplicar mapeamentos
+    let classified = 0;
+    const validIds = new Set(userChart.map(c => c.id));
+
+    if (result.mappings && Array.isArray(result.mappings)) {
+      for (const mapping of result.mappings) {
+        const chartId = Number(mapping.chartAccountId);
+        const txId = Number(mapping.transactionId);
+
+        if (validIds.has(chartId) && txId) {
+          await db.update(schema.transactions)
+            .set({ chartAccountId: chartId })
+            .where(
+              and(
+                eq(schema.transactions.id, txId),
+                eq(schema.transactions.userId, userId)
+              )
+            );
+          classified++;
+        }
+      }
+    }
+
+    res.json({
+      success: true,
+      classified,
+      total: unclassifiedTxs.length,
+      message: `${classified} de ${unclassifiedTxs.length} transações foram classificadas com sucesso!`
+    });
+  } catch (error) {
+    console.error("Erro na classificação em lote:", error);
+    res.status(500).json({ error: "Falha na classificação em lote da IA. Verifique o log do terminal." });
   }
 });
 

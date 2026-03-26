@@ -1,5 +1,5 @@
 import { Box, Card, Chip, IconButton, Typography } from "@mui/material";
-import { X, User, Calendar, Clock, DollarSign, FileText, Building2, AlertTriangle, Repeat, Layers, TrendingUp, TrendingDown, Tag, Percent, LogOut } from "lucide-react";
+import { X, User, Calendar, Clock, DollarSign, FileText, Building2, AlertTriangle, Repeat, Layers, TrendingUp, TrendingDown, Tag, Percent, LogOut, BookOpen, CheckCircle, FolderOpen } from "lucide-react";
 import PsychologyAltIcon from '@mui/icons-material/PsychologyAlt';
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -223,6 +223,28 @@ export function TransactionViewModal({ open, onClose, transaction, userName }: T
               }
             />
 
+            {/* Data de Liquidação e Valor Pago com Atraso */}
+            {transaction.status === 'pago' && transaction.liquidationDate && (
+              <Field
+                icon={<CheckCircle className="h-3.5 w-3.5" />}
+                label="Data de Liquidação"
+                value={format(toLocalDate(transaction.liquidationDate), "dd/MM/yyyy", { locale: ptBR })}
+                color="#16a34a"
+              />
+            )}
+            {transaction.status === 'pago' && totalEncargos > 0 && (
+              <Field
+                icon={<DollarSign className="h-3.5 w-3.5" />}
+                label="Valor Pago (c/ Encargos)"
+                value={fmt(updatedAmount)}
+                color="#b45309"
+              />
+            )}
+            {transaction.status === 'pago' && transaction.liquidationDate && totalEncargos === 0 && !(
+              transaction.status === 'pago' && totalEncargos > 0
+            ) && <Box />}
+
+            {/* Plano de Contas */}
             {transaction.chartAccount && (
               <Field
                 icon={<Layers className="h-3.5 w-3.5" />}
@@ -236,6 +258,23 @@ export function TransactionViewModal({ open, onClose, transaction, userName }: T
                 full
               />
             )}
+
+            {/* Categoria e Subcategoria */}
+            {transaction.businessCategory && (
+              <Field
+                icon={<BookOpen className="h-3.5 w-3.5" />}
+                label="Categoria"
+                value={transaction.businessCategory.name}
+              />
+            )}
+            {transaction.businessSubcategory && (
+              <Field
+                icon={<FolderOpen className="h-3.5 w-3.5" />}
+                label="Subcategoria"
+                value={transaction.businessSubcategory.name}
+              />
+            )}
+            {transaction.businessCategory && !transaction.businessSubcategory && <Box />}
 
             {/* Repetição / Parcelamento */}
             {transaction.repeticao && transaction.repeticao !== 'Única' && (

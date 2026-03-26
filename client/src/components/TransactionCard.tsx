@@ -1541,18 +1541,10 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
               </div>
 
               <div className="flex justify-end gap-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditModalOpen(false);
-                    setPendingTransactionData(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B59363] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
+                <IButtonPrime
+                  icon={<Save className="h-4 w-4" />}
+                  variant="gold"
+                  title="Salvar"
                   onClick={async () => {
                     try {
                       // Anexa o updateMode e dispara o prop para o formulário Pai
@@ -1565,10 +1557,16 @@ export function TransactionCard({ open, onClose, onSave, entryType, transaction,
                       console.error('Falha na Submissão em Cascata:', err);
                     }
                   }}
-                  className="px-4 py-2 flex items-center justify-center gap-2 text-sm font-medium text-white bg-[#B59363] border border-transparent rounded hover:bg-[#a07c4e] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#B59363] transition-colors"
-                >
-                  Confirmar e Salvar
-                </button>
+                />
+                <IButtonPrime
+                  icon={<LogOut className="h-4 w-4" />}
+                  variant="red"
+                  title="Sair"
+                  onClick={() => {
+                    setEditModalOpen(false);
+                    setPendingTransactionData(null);
+                  }}
+                />
               </div>
             </div>
           </div>
